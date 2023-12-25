@@ -14,7 +14,18 @@
               file="Source/GUI/MainComponent.cpp"/>
         <FILE id="ZPS2SJ" name="MainComponent.h" compile="0" resource="0" file="Source/GUI/MainComponent.h"/>
       </GROUP>
-      <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple"/>
+      <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
+        <GROUP id="{458A692C-DEA2-B7CD-4A7E-1884F885B2B2}" name="Data">
+          <FILE id="i7e6mx" name="DefaultMetaData.xml" compile="0" resource="1"
+                file="Source/SquidSalmple/Data/DefaultMetaData.xml"/>
+          <FILE id="Vl02jy" name="MaxMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MaxMetaData.xml"/>
+          <FILE id="bSksYa" name="MinMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MinMetaData.xml"/>
+        </GROUP>
+        <FILE id="TszEpp" name="SquidMetaDataProperties.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/SquidMetaDataProperties.cpp"/>
+        <FILE id="bgUtNF" name="SquidMetaDataProperties.h" compile="0" resource="0"
+              file="Source/SquidSalmple/SquidMetaDataProperties.h"/>
+      </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
         <FILE id="Z9idaO" name="CustomComboBox.cpp" compile="1" resource="0"
