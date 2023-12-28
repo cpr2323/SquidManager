@@ -217,6 +217,8 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setRate (sourceMetaDataProperties.getRate (), false);
     setSpeed (sourceMetaDataProperties.getSpeed (), false);
     setFilter (sourceMetaDataProperties.getFilter (), false);
+    setFilterFrequency (sourceMetaDataProperties.getFilterFrequency (), false);
+    setFilterResonance (sourceMetaDataProperties.getFilterResonance (), false);
     setQuant (sourceMetaDataProperties.getQuant (), false);
     setLoop (sourceMetaDataProperties.getLoop (), false);
     setXfade (sourceMetaDataProperties.getXfade (), false);

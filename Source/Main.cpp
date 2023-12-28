@@ -12,6 +12,7 @@
 
 // for testing
 #include "SquidSalmple/SquidMetaDataProperties.h"
+#include "SquidSalmple/SquidMetaDataReader.h"
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -24,6 +25,14 @@ void crashHandler (void* /*data*/)
     FlushDebugLog ();
     juce::Logger::writeToLog (juce::SystemStats::getStackBacktrace ());
     FlushDebugLog ();
+}
+
+void runSquidMetaDataReadTest (juce::File testFolder)
+{
+    SquidMetaDataReader squidMetaDataReader;
+    SquidMetaDataProperties squidMetaDataProperties { squidMetaDataReader.read (testFolder.getChildFile("MetaDataTest.wav")),
+                                                       SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+
 }
 
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer
@@ -42,6 +51,9 @@ public:
         initPropertyRoots ();
         initAudio ();
         initSquidSalmple ();
+
+        runSquidMetaDataReadTest (appDirectory);
+
         initUi ();
 
         // async quit timer
@@ -97,27 +109,27 @@ public:
 //         xmlToWrite->writeTo (squidMetaDataXmlFile, {});
 
 // TEST CODE TO VERIFY PARSING OF DEFAULT, MIN, and MAX
-        auto getMetaDataProperties = [] (const char* parameterPresetXml)
-        {
-            juce::XmlDocument xmlDoc { parameterPresetXml };
-            auto xmlElement { xmlDoc.getDocumentElement (false) };
-            //             if (auto parseError { xmlDoc.getLastParseError () }; parseError != "")
-            //                 juce::Logger::outputDebugString ("XML Parsing Error for ParameterPreset type '" + parameterPresetType + "': " + parseError);
-                        // NOTE: this is a hard failure, which indicates there is a problem in the file the parameterPresetXml passed in
-            jassert (xmlDoc.getLastParseError () == "");
-            if (xmlElement == nullptr)
-                return juce::ValueTree ();
-
-            auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
-            return parameterPreset;
-        };
-
-        auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
-        SquidMetaDataProperties defaultProperties { defaultMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-        auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
-        SquidMetaDataProperties minProperties { minMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-        auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
-        SquidMetaDataProperties maxProperties { maxMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         auto getMetaDataProperties = [] (const char* parameterPresetXml)
+//         {
+//             juce::XmlDocument xmlDoc { parameterPresetXml };
+//             auto xmlElement { xmlDoc.getDocumentElement (false) };
+//             //             if (auto parseError { xmlDoc.getLastParseError () }; parseError != "")
+//             //                 juce::Logger::outputDebugString ("XML Parsing Error for ParameterPreset type '" + parameterPresetType + "': " + parseError);
+//                         // NOTE: this is a hard failure, which indicates there is a problem in the file the parameterPresetXml passed in
+//             jassert (xmlDoc.getLastParseError () == "");
+//             if (xmlElement == nullptr)
+//                 return juce::ValueTree ();
+// 
+//             auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
+//             return parameterPreset;
+//         };
+// 
+//         auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
+//         SquidMetaDataProperties defaultProperties { defaultMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
+//         SquidMetaDataProperties minProperties { minMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
+//         SquidMetaDataProperties maxProperties { maxMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
     }
 
     void initUi ()
