@@ -1,13 +1,14 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "BusyChunkReader.h"
 
-class BusyChunkReader
+class BusyChunkWriter
 {
 public:
-    BusyChunkReader () = default;
+    BusyChunkWriter () = default;
 
-    void read (juce::File sampleFile, juce::MemoryBlock& busyChunkData);
+    bool write (juce::File sampleFile, juce::MemoryBlock& busyChunkData);
 
 private:
     static inline char kBusyChunkType [4] { 'b', 'u', 's', 'y' };

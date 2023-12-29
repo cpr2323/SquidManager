@@ -2,6 +2,7 @@
 
 void BusyChunkReader::read (juce::File sampleFile, juce::MemoryBlock& busyChunkData)
 {
+    // TODO - handle error conditions
     auto sampleInputStream { sampleFile.createInputStream () };
     jassert (sampleInputStream != nullptr && sampleInputStream->openedOk ());
     auto busyChunkLocated { findChunk (sampleInputStream.get (), kBusyChunkType) };

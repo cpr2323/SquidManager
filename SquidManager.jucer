@@ -21,6 +21,10 @@
           <FILE id="Vl02jy" name="MaxMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MaxMetaData.xml"/>
           <FILE id="bSksYa" name="MinMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MinMetaData.xml"/>
         </GROUP>
+        <FILE id="gMqthz" name="BusyChunkWriter.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/BusyChunkWriter.cpp"/>
+        <FILE id="nMjXNZ" name="BusyChunkWriter.h" compile="0" resource="0"
+              file="Source/SquidSalmple/BusyChunkWriter.h"/>
         <FILE id="okqNxb" name="BusyChunkReader.cpp" compile="1" resource="0"
               file="Source/SquidSalmple/BusyChunkReader.cpp"/>
         <FILE id="lHt2lr" name="BusyChunkReader.h" compile="0" resource="0"
@@ -33,6 +37,10 @@
               file="Source/SquidSalmple/SquidMetaDataReader.cpp"/>
         <FILE id="ln2CM4" name="SquidMetaDataReader.h" compile="0" resource="0"
               file="Source/SquidSalmple/SquidMetaDataReader.h"/>
+        <FILE id="mYjWlR" name="SquidMetaDataWriter.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/SquidMetaDataWriter.cpp"/>
+        <FILE id="LgqEzM" name="SquidMetaDataWriter.h" compile="0" resource="0"
+              file="Source/SquidSalmple/SquidMetaDataWriter.h"/>
       </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
