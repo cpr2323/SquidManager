@@ -33,6 +33,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
 {
     jassert (inputSampleFile != outputSampleFile);
 
+    busyChunkData.setSize (21 * sizeof (uint16_t));
+
     SquidMetaDataProperties squidMetaDataProperties { squidMetaDataPropertiesVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no };
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getAttack ()), kAttackDataOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getBits ()), kBitsDataOffset);

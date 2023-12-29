@@ -10,13 +10,21 @@ bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSample
     // create/open temp file
     auto outputSampleStream { outputSampleFile.createOutputStream () };
     jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
+    juce::MemoryBlock chunkData;
 
     while (true)
     {
+        juce::Logger::outputDebugString ("offset: " + juce::String::toHexString (inputSampleStream->getPosition ()));
         auto chunk { getChunkData (inputSampleStream.get ()) };
-        if (!chunk.has_value ())
+        if (! chunk.has_value ())
             break;
         auto chunkInfo { chunk.value () };
+
+        chunkData.setSize (chunkInfo.chunkLength);
+        // read chunk data from input file
+        const auto bytesRead { inputSampleStream->read (chunkData.getData (), chunkInfo.chunkLength) };
+        jassert (bytesRead == static_cast<int> (chunkInfo.chunkLength));
+
         // write all non busy chunks (ie. skip old busy chunk, if one exists)
         if (std::memcmp (kBusyChunkType, chunkInfo.chunkType, 4) != 0)
         {
@@ -27,11 +35,6 @@ bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSample
             writeSuccess = outputSampleStream->write (&chunkLength, 4);
             jassert (writeSuccess == true);
 
-            juce::MemoryBlock chunkData;
-            chunkData.setSize (chunkInfo.chunkLength);
-            // read chunk data from input file
-            const auto bytesRead { inputSampleStream->read (&chunkData, chunkInfo.chunkLength) };
-            jassert (bytesRead == static_cast<int> (chunkInfo.chunkLength));
             // write chunk data to output file
             writeSuccess = outputSampleStream->write (chunkData.getData (), chunkData.getSize ());
             jassert (writeSuccess == true);

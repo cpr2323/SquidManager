@@ -13,6 +13,7 @@
 // for testing
 #include "SquidSalmple/SquidMetaDataProperties.h"
 #include "SquidSalmple/SquidMetaDataReader.h"
+#include "SquidSalmple/SquidMetaDataWriter.h"
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -29,10 +30,19 @@ void crashHandler (void* /*data*/)
 
 void runSquidMetaDataReadTest (juce::File testFolder)
 {
+    auto inputFile { testFolder.getChildFile ("MetaDataReadTest.wav") };
     SquidMetaDataReader squidMetaDataReader;
-    SquidMetaDataProperties squidMetaDataProperties { squidMetaDataReader.read (testFolder.getChildFile("MetaDataTest.wav")),
+    SquidMetaDataProperties squidMetaDataProperties { squidMetaDataReader.read (inputFile),
+                                                      SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+
+    auto outputFile { testFolder.getChildFile ("MetaDataWriteTest.wav") };
+    SquidMetaDataWriter squidMetaDataWriter;
+    squidMetaDataWriter.write (squidMetaDataProperties.getValueTree (), inputFile, outputFile);
+
+    SquidMetaDataProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
                                                        SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
 
+    jassert (squidMetaDataProperties2.getValueTree ().isEquivalentTo (squidMetaDataProperties.getValueTree ()));
 }
 
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer
