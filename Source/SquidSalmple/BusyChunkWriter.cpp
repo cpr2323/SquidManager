@@ -1,66 +1,51 @@
 #include "BusyChunkWriter.h"
 
-bool BusyChunkWriter::write (juce::File sampleFile, juce::MemoryBlock& busyChunkData)
+// TODO - handle error conditions
+bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData)
 {
-    const auto tempName { "_output_" + sampleFile.getFileNameWithoutExtension () };
-    auto outputFile { sampleFile.getParentDirectory ().getChildFile (tempName) };
+    // open input file
+    auto inputSampleStream { inputSampleFile.createInputStream () };
+    jassert (inputSampleStream != nullptr && inputSampleStream->openedOk ());
+
+    // create/open temp file
+    auto outputSampleStream { outputSampleFile.createOutputStream () };
+    jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
+
+    while (true)
     {
-        // open input file
-        // TODO - handle error conditions
-        auto sampleInputStream { sampleFile.createInputStream () };
-        jassert (sampleInputStream != nullptr && sampleInputStream->openedOk ());
-
-        // create/open temp file
-        auto sampleOutputStream { outputFile.createOutputStream () };
-        jassert (sampleOutputStream != nullptr && sampleOutputStream->openedOk ());
-
-        while (true)
+        auto chunk { getChunkData (inputSampleStream.get ()) };
+        if (!chunk.has_value ())
+            break;
+        auto chunkInfo { chunk.value () };
+        // write all non busy chunks (ie. skip old busy chunk, if one exists)
+        if (std::memcmp (kBusyChunkType, chunkInfo.chunkType, 4) != 0)
         {
-            auto chunk { getChunkData (sampleInputStream.get ()) };
-            if (!chunk.has_value ())
-                break;
-            auto chunkInfo { chunk.value () };
-
             // write chunk header
-            auto writeSuccess { sampleOutputStream->write (chunkInfo.chunkType, 4) };
+            auto writeSuccess { outputSampleStream->write (chunkInfo.chunkType, 4) };
             jassert (writeSuccess == true);
             uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (chunkInfo.chunkLength) };
-            writeSuccess = sampleOutputStream->write (&chunkLength, 4);
+            writeSuccess = outputSampleStream->write (&chunkLength, 4);
             jassert (writeSuccess == true);
 
-            if (std::memcmp (kBusyChunkType, chunkInfo.chunkType, 4) == 0)
-            {
-                // write new busyChunk
-                writeSuccess = sampleOutputStream->write (busyChunkData.getData (), busyChunkData.getSize ());
-                jassert (writeSuccess == true);
-            }
-            else
-            {
-                juce::MemoryBlock chunkData;
-                chunkData.setSize (chunkInfo.chunkLength);
-                // read chunk data from input file
-                const auto bytesRead { sampleInputStream->read (&chunkData, chunkInfo.chunkLength) };
-                jassert (bytesRead == static_cast<int> (chunkInfo.chunkLength));
-                // write chunk data to output file
-                writeSuccess = sampleOutputStream->write (chunkData.getData (), chunkData.getSize ());
-                jassert (writeSuccess == true);
-            }
+            juce::MemoryBlock chunkData;
+            chunkData.setSize (chunkInfo.chunkLength);
+            // read chunk data from input file
+            const auto bytesRead { inputSampleStream->read (&chunkData, chunkInfo.chunkLength) };
+            jassert (bytesRead == static_cast<int> (chunkInfo.chunkLength));
+            // write chunk data to output file
+            writeSuccess = outputSampleStream->write (chunkData.getData (), chunkData.getSize ());
+            jassert (writeSuccess == true);
         }
     }
-
-    // input and output streams have been closed by exiting scope
-
-    // rename input file
-    const auto originalName { sampleFile.getFullPathName () };
-    const auto backupName { "_backup_" + sampleFile.getFileNameWithoutExtension () };
-    auto success { sampleFile.moveFileTo (sampleFile.getParentDirectory ().getChildFile (backupName)) };
-    jassert (success == true);
-    // rename output file
-    auto success2 { outputFile.moveFileTo (sampleFile.getParentDirectory ().getChildFile (originalName)) };
-    jassert (success2 == true);
-    // delete renamed input file
-    sampleFile.deleteFile ();
-
+    // write new busy chunk
+    auto writeSuccess { outputSampleStream->write (kBusyChunkType, 4) };
+    jassert (writeSuccess == true);
+    uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (static_cast<uint32_t> (4)) };
+    writeSuccess = outputSampleStream->write (&chunkLength, 4);
+    jassert (writeSuccess == true);
+    // write new busyChunk
+    writeSuccess = outputSampleStream->write (busyChunkData.getData (), busyChunkData.getSize ());
+    jassert (writeSuccess == true);
     return true;
 }
 

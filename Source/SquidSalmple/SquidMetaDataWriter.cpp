@@ -29,8 +29,10 @@ const auto kSpeedDataOffset { 36 };
 const auto kStepsDataOffset { 38 };
 const auto kXfadeDataOffset { 40 };
 
-bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce::File sampleFile)
+bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce::File inputSampleFile, juce::File outputSampleFile)
 {
+    jassert (inputSampleFile != outputSampleFile);
+
     SquidMetaDataProperties squidMetaDataProperties { squidMetaDataPropertiesVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no };
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getAttack ()), kAttackDataOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getBits ()), kBitsDataOffset);
@@ -55,7 +57,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getXfade ()), kXfadeDataOffset);
 
     BusyChunkWriter busyChunkWriter;
-    jassert (busyChunkWriter.write (sampleFile, busyChunkData) == true);
+    jassert (busyChunkWriter.write (inputSampleFile, outputSampleFile, busyChunkData) == true);
 
     return true;
 }

@@ -9,7 +9,7 @@ class SquidMetaDataWriter
 public:
     SquidMetaDataWriter () = default;
 
-    bool write (juce::ValueTree squidMetaDataPropertiesVT, juce::File sampleFile);
+    bool write (juce::ValueTree squidMetaDataPropertiesVT, juce::File inputSampleFile, juce::File outputSampleFile);
 
 private:
     juce::MemoryBlock busyChunkData;

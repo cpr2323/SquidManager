@@ -8,7 +8,7 @@ class BusyChunkWriter
 public:
     BusyChunkWriter () = default;
 
-    bool write (juce::File sampleFile, juce::MemoryBlock& busyChunkData);
+    bool write (juce::File inputSampleFile, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData);
 
 private:
     static inline char kBusyChunkType [4] { 'b', 'u', 's', 'y' };
@@ -18,6 +18,5 @@ private:
         uint32_t chunkLength { 0 };
     };
 
-    std::optional<uint32_t> findChunk (juce::InputStream* is, char* chunkType);
     std::optional<ChunkInfo> getChunkData (juce::InputStream* is);
 };
