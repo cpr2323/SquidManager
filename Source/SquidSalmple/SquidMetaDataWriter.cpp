@@ -70,7 +70,7 @@ void SquidMetaDataWriter::setUInt8 (uint8_t value, int offset)
 void SquidMetaDataWriter::setUInt16 (uint16_t value, int offset)
 {
     busyChunkData [offset]     = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value && 0x00ff);
+    busyChunkData [offset + 1] = static_cast<uint8_t>(value);
 }
 
 void SquidMetaDataWriter::setUInt32 (uint32_t value, int offset)
@@ -78,7 +78,7 @@ void SquidMetaDataWriter::setUInt32 (uint32_t value, int offset)
     busyChunkData [offset + 0] = static_cast<uint8_t>(value >> 24);
     busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 16);
     busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 3] = static_cast<uint8_t>(value && 0x00ff);
+    busyChunkData [offset + 3] = static_cast<uint8_t>(value);
 }
 
 void SquidMetaDataWriter::setUInt64 (uint64_t value, int offset)
@@ -90,5 +90,5 @@ void SquidMetaDataWriter::setUInt64 (uint64_t value, int offset)
     busyChunkData [offset + 4] = static_cast<uint8_t>(value >> 24);
     busyChunkData [offset + 5] = static_cast<uint8_t>(value >> 16);
     busyChunkData [offset + 6] = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 7] = static_cast<uint8_t>(value && 0x00ff);
+    busyChunkData [offset + 7] = static_cast<uint8_t>(value);
 }
