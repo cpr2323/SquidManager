@@ -91,17 +91,17 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
     }
     quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (quantComboBox, "Quantize", [] () {}); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
-    setupLabel (filterLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
     {
         auto filterId { 1 };
-        filterComboBox.addItem ("Off", filterId++);
-        filterComboBox.addItem ("Low Pass", filterId++);
-        filterComboBox.addItem ("Band Pass", filterId++);
-        filterComboBox.addItem ("Notch", filterId++);
-        filterComboBox.addItem ("High Pass", filterId++);
+        filterTypeComboBox.addItem ("Off", filterId++);
+        filterTypeComboBox.addItem ("Low Pass", filterId++);
+        filterTypeComboBox.addItem ("Band Pass", filterId++);
+        filterTypeComboBox.addItem ("Notch", filterId++);
+        filterTypeComboBox.addItem ("High Pass", filterId++);
     }
-    filterComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (filterComboBox, "Filter", [] () {}); // Off, LP, BP, NT, HP (0-4)
+    filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    setupComboBox (filterTypeComboBox, "Filter", [] () {}); // Off, LP, BP, NT, HP (0-4)
     setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
     setupLabel (filterResonanceLabel, "RESO", kMediumLabelSize, juce::Justification::centred);
@@ -126,12 +126,12 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     setupButton (reverseButton, "REVERSE", "Reverse", [] () {}); // 0-1
-    setupLabel (sampleStartLabel, "START", kMediumLabelSize, juce::Justification::centred);
-    setupTextEditor (sampleStartTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
-    setupLabel (loopLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
-    setupTextEditor (loopTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
-    setupLabel (sampleEndLabel, "END", kMediumLabelSize, juce::Justification::centred);
-    setupTextEditor (sampleEndTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
+    setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
+    setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
+    setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
+    setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
+    setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
+    setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
 
     startTimer (250);
 }
@@ -139,7 +139,7 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
 {
     loopModeComboBox.setLookAndFeel (nullptr);
-    filterComboBox.setLookAndFeel (nullptr);
+    filterTypeComboBox.setLookAndFeel (nullptr);
     quantComboBox.setLookAndFeel (nullptr);
     rateComboBox.setLookAndFeel (nullptr);
 }
@@ -175,19 +175,212 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
 
-//     idDataChanged (presetProperties.getId ());
-//     midiSetupDataChanged (presetProperties.getMidiSetup ());
-//     nameDataChanged (presetProperties.getName ());
+    attackDataChanged (squidMetaDataProperties.getAttack());
+    bitsDataChanged (squidMetaDataProperties.getBits ());
+    decayDataChanged (squidMetaDataProperties.getDecay ());
+    endCueDataChanged (squidMetaDataProperties.getEndCue ());
+    filterTypeDataChanged (squidMetaDataProperties.getFilterType ());
+    filterFrequencyDataChanged (squidMetaDataProperties.getFilterFrequency ());
+    filterResonanceDataChanged (squidMetaDataProperties.getFilterResonance ());
+    levelDataChanged (squidMetaDataProperties.getLevel ());
+    loopCueDataChanged (squidMetaDataProperties.getLoopCue ());
+    loopModeDataChanged (squidMetaDataProperties.getLoopMode ());
+    quantDataChanged (squidMetaDataProperties.getQuant ());
+    rateDataChanged (squidMetaDataProperties.getRate ());
+    reverseDataChanged (squidMetaDataProperties.getReverse ());
+    speedDataChanged (squidMetaDataProperties.getSpeed ());
+    startCueDataChanged (squidMetaDataProperties.getStartCue ());
+    xfadeDataChanged (squidMetaDataProperties.getXfade ());
+}
+
+void SquidMetaDataEditorComponent::initializeCallbacks ()
+{
+    jassert (squidMetaDataProperties.isValid ());
+    squidMetaDataProperties.onAttackChange = [this] (int attack) { attackDataChanged (attack); };
+    squidMetaDataProperties.onBitsChange = [this] (int bits) { bitsDataChanged (bits); };
+    squidMetaDataProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
+    squidMetaDataProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
+    squidMetaDataProperties.onFilterTypeChange = [this] (int filter) { filterTypeDataChanged (filter); };
+    squidMetaDataProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
+    squidMetaDataProperties.onFilterResonanceChange = [this] (int filterResonance) { filterResonanceDataChanged (filterResonance); };
+    squidMetaDataProperties.onLevelChange = [this] (int level) { levelDataChanged (level); };
+    squidMetaDataProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
+    squidMetaDataProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
+    squidMetaDataProperties.onQuantChange = [this] (int quant) { quantDataChanged (quant); };
+    squidMetaDataProperties.onRateChange = [this] (int rate) { rateDataChanged (rate); };
+    squidMetaDataProperties.onReverseChange = [this] (int reverse) { reverseDataChanged (reverse); };
+    squidMetaDataProperties.onSpeedChange = [this] (int speed) { speedDataChanged (speed); };
+    squidMetaDataProperties.onStartCueChange = [this] (int startCue) { startCueDataChanged (startCue); };
+    squidMetaDataProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
+}
+
+void SquidMetaDataEditorComponent::attackDataChanged (int attack)
+{
+    attackTextEditor.setText (juce::String(attack), false);
+}
+
+void SquidMetaDataEditorComponent::bitsDataChanged (int bits)
+{
+    bitsTextEditor.setText (juce::String (bits), false);
+}
+
+void SquidMetaDataEditorComponent::decayDataChanged (int decay)
+{
+    decayTextEditor.setText (juce::String (decay), false);
+}
+
+void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
+{
+    endCueTextEditor.setText (juce::String (endCue), false);
+}
+
+void SquidMetaDataEditorComponent::filterTypeDataChanged (int filterType)
+{
+    filterTypeComboBox.setSelectedItemIndex (filterType, juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::filterFrequencyDataChanged (int filterFrequency)
+{
+    filterFrequencyTextEditor.setText (juce::String (filterFrequency), false);
+}
+
+void SquidMetaDataEditorComponent::filterResonanceDataChanged (int filterResonance)
+{
+    filterResonanceTextEditor.setText (juce::String (filterResonance), false);
+}
+
+void SquidMetaDataEditorComponent::levelDataChanged (int level)
+{
+    levelTextEditor.setText (juce::String (level), false);
+}
+
+void SquidMetaDataEditorComponent::loopCueDataChanged (int loopCue)
+{
+    loopCueTextEditor.setText (juce::String (loopCue), false);
+}
+
+void SquidMetaDataEditorComponent::loopModeDataChanged (int loopMode)
+{
+    loopModeComboBox.setSelectedItemIndex (loopMode, juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::quantDataChanged (int quant)
+{
+    quantComboBox.setSelectedItemIndex (quant, juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::rateDataChanged (int rate)
+{
+    rateComboBox.setSelectedItemIndex (rate, juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::reverseDataChanged (int reverse)
+{
+    reverseButton.setToggleState (reverse == 1, juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::speedDataChanged (int speed)
+{
+    speedTextEditor.setText (juce::String (speed), juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::startCueDataChanged (int startCue)
+{
+    startCueTextEditor.setText (juce::String (startCue), juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::xfadeDataChanged (int xfade)
+{
+    xfadeTextEditor.setText (juce::String (xfade), juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::attackUiChanged (int attack)
+{
+    squidMetaDataProperties.setAttack (attack, false);
+}
+
+void SquidMetaDataEditorComponent::bitsUiChanged (int bits)
+{
+    squidMetaDataProperties.setBits (bits, false);
+}
+
+void SquidMetaDataEditorComponent::decayUiChanged (int decay)
+{
+    squidMetaDataProperties.setDecay (decay, false);
+}
+
+void SquidMetaDataEditorComponent::endCueUiChanged (int endCue)
+{
+    squidMetaDataProperties.setEndCue (endCue, false);
+}
+
+void SquidMetaDataEditorComponent::filterTypeUiChanged (int filter)
+{
+    squidMetaDataProperties.setFilterType (filter, false);
+}
+
+void SquidMetaDataEditorComponent::filterFrequencyUiChanged (int filterFrequency)
+{
+    squidMetaDataProperties.setFilterFrequency (filterFrequency, false);
+}
+
+void SquidMetaDataEditorComponent::filterResonanceUiChanged (int filterResonance)
+{
+    squidMetaDataProperties.setFilterResonance (filterResonance, false);
+}
+
+void SquidMetaDataEditorComponent::levelUiChanged (int level)
+{
+    squidMetaDataProperties.setLevel (level, false);
+}
+
+void SquidMetaDataEditorComponent::loopCueUiChanged (int loopCue)
+{
+    squidMetaDataProperties.setLoopCue (loopCue, false);
+}
+
+void SquidMetaDataEditorComponent::loopModeUiChanged (int loopMode)
+{
+    squidMetaDataProperties.setLoopMode (loopMode, false);
+}
+
+void SquidMetaDataEditorComponent::quantUiChanged (int quant)
+{
+    squidMetaDataProperties.setQuant (quant, false);
+}
+
+void SquidMetaDataEditorComponent::rateUiChanged (int rate)
+{
+    squidMetaDataProperties.setRate (rate, false);
+}
+
+void SquidMetaDataEditorComponent::reverseUiChanged (int reverse)
+{
+    squidMetaDataProperties.setReverse (reverse, false);
+}
+
+void SquidMetaDataEditorComponent::speedUiChanged (int speed)
+{
+    squidMetaDataProperties.setSpeed (speed, false);
+}
+
+void SquidMetaDataEditorComponent::startCueUiChanged (int startCue)
+{
+    squidMetaDataProperties.setStartCue (startCue, false);
+}
+
+void SquidMetaDataEditorComponent::xfadeUiChanged (int xfade)
+{
+    squidMetaDataProperties.setXfade (xfade, false);
 }
 
 void SquidMetaDataEditorComponent::timerCallback ()
 {
-
+    // check if data has changed
 }
 
 void SquidMetaDataEditorComponent::resized ()
 {
-
     const auto columnWidth { 160 };
     const auto spaceBetweenColumns { 40 };
 
@@ -211,9 +404,9 @@ void SquidMetaDataEditorComponent::resized ()
     quantLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
     quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = quantComboBox.getBottom () + 3;
-    filterLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterComboBox.setBounds (filterLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterComboBox.getBottom () + 3;
+    filterTypeLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterTypeComboBox.setBounds (filterTypeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = filterTypeComboBox.getBottom () + 3;
     filterFrequencyLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
     filterFrequencyTextEditor.setBounds (filterFrequencyLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = filterFrequencyTextEditor.getBottom () + 3;
@@ -240,14 +433,14 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = xfadeTextEditor.getBottom () + 3;
     reverseButton.setBounds (xOffSet + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
     yOffset = reverseButton.getBottom () + 3;
-    sampleStartLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
-    sampleStartTextEditor.setBounds (sampleStartLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = sampleStartTextEditor.getBottom () + 3;
-    loopLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
-    loopTextEditor.setBounds (loopLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = loopTextEditor.getBottom () + 3;
-    sampleEndLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
-    sampleEndTextEditor.setBounds (sampleEndLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    startCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    startCueTextEditor.setBounds (startCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = startCueTextEditor.getBottom () + 3;
+    loopCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    loopCueTextEditor.setBounds (loopCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = loopCueTextEditor.getBottom () + 3;
+    endCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 }
 
 void SquidMetaDataEditorComponent::paint (juce::Graphics& g)

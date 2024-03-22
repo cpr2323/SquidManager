@@ -32,16 +32,18 @@ private:
     CustomTextEditorInt bitsTextEditor; // 1-16
     juce::Label decayLabel;
     CustomTextEditorInt decayTextEditor; // 0-99
-    juce::Label filterLabel;
-    CustomComboBox filterComboBox; // Off, LP, BP, NT, HP (0-4)
+    juce::Label endCueLabel;
+    CustomTextEditorInt endCueTextEditor; // sampleStart - sample length
+    juce::Label filterTypeLabel;
+    CustomComboBox filterTypeComboBox; // Off, LP, BP, NT, HP (0-4)
     juce::Label filterFrequencyLabel;
     CustomTextEditorInt filterFrequencyTextEditor; // 1-99?
     juce::Label filterResonanceLabel;
     CustomTextEditorInt filterResonanceTextEditor; // 1-99?
     juce::Label levelLabel;
     CustomTextEditorInt levelTextEditor; // 1-99
-    juce::Label loopLabel;
-    CustomTextEditorInt loopTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
+    juce::Label loopCueLabel;
+    CustomTextEditorInt loopCueTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
     juce::Label loopModeLabel;
     CustomComboBox loopModeComboBox; // none, normal, zigZag, gate, zigZagGate (0-4)
     juce::Label quantLabel;
@@ -49,16 +51,50 @@ private:
     juce::Label rateLabel;
     CustomComboBox rateComboBox; // 4, 6, 7, 9, 11, 14, 22, 44
     juce::TextButton reverseButton; // 0-1
-    juce::Label sampleEndLabel;
-    CustomTextEditorInt sampleEndTextEditor; // sampleStart - sample length
-    juce::Label sampleStartLabel;
-    CustomTextEditorInt sampleStartTextEditor;  // 0 - sampleEnd
     juce::Label speedLabel;
     CustomTextEditorInt speedTextEditor; // 1 - 99 (50 is normal?, below that is negative speed? above is positive?)
+    juce::Label startCueLabel;
+    CustomTextEditorInt startCueTextEditor;  // 0 - sampleEnd
     juce::Label xfadeLabel;
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
+
+    void initializeCallbacks ();
+
+    void attackDataChanged (int attack);
+    void bitsDataChanged (int bits);
+    void decayDataChanged (int decay);
+    void endCueDataChanged (int endCue);
+    void filterTypeDataChanged (int filterType);
+    void filterFrequencyDataChanged (int filterFrequency);
+    void filterResonanceDataChanged (int filterResonance);
+    void levelDataChanged (int level);
+    void loopCueDataChanged (int loopCue);
+    void loopModeDataChanged (int loopMode);
+    void quantDataChanged (int quant);
+    void rateDataChanged (int rate);
+    void reverseDataChanged (int reverse);
+    void speedDataChanged (int speed);
+    void startCueDataChanged (int startCue);
+    void xfadeDataChanged (int xfade);
+
+    void attackUiChanged (int attack);
+    void bitsUiChanged (int bits);
+    void decayUiChanged (int decay);
+    void endCueUiChanged (int endCue);
+    void filterTypeUiChanged (int filterType);
+    void filterFrequencyUiChanged (int filterFrequency);
+    void filterResonanceUiChanged (int filterResonance);
+    void levelUiChanged (int level);
+    void loopCueUiChanged (int loopCue);
+    void loopModeUiChanged (int loopMode);
+    void quantUiChanged (int quant);
+    void rateUiChanged (int rate);
+    void reverseUiChanged (int reverse);
+    void speedUiChanged (int speed);
+    void startCueUiChanged (int startCue);
+    void xfadeUiChanged (int xfade);
 
     void timerCallback () override;
     void resized () override;

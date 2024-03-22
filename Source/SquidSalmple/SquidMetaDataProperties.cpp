@@ -15,11 +15,6 @@ void SquidMetaDataProperties::setSpeed (int speed, bool includeSelfCallback)
     setValue (speed, SpeedPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setFilter (int filter, bool includeSelfCallback)
-{
-    setValue (filter, FilterPropertyId, includeSelfCallback);
-}
-
 void SquidMetaDataProperties::setFilterFrequency (int filterFrequency, bool includeSelfCallback)
 {
     setValue (filterFrequency, FilterFrequencyPropertyId, includeSelfCallback);
@@ -30,14 +25,19 @@ void SquidMetaDataProperties::setFilterResonance (int filterResonance, bool incl
     setValue (filterResonance, FilterResonancePropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::setFilterType (int filter, bool includeSelfCallback)
+{
+    setValue (filter, FilterTypePropertyId, includeSelfCallback);
+}
+
 void SquidMetaDataProperties::setQuant (int quant, bool includeSelfCallback)
 {
     setValue (quant, QuantPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setLoop (int loop, bool includeSelfCallback)
+void SquidMetaDataProperties::setLoopMode (int loopMode, bool includeSelfCallback)
 {
-    setValue (loop, LoopPropertyId, includeSelfCallback);
+    setValue (loopMode, LoopModePropertyId, includeSelfCallback);
 }
 
 void SquidMetaDataProperties::setXfade (int xfade, bool includeSelfCallback)
@@ -75,19 +75,19 @@ void SquidMetaDataProperties::setSteps (int steps, bool includeSelfCallback)
     setValue (steps, StepsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setCueStart (int cueStart, bool includeSelfCallback)
+void SquidMetaDataProperties::setStartCue (int startCue, bool includeSelfCallback)
 {
-    setValue (cueStart, CueStartPropertyId, includeSelfCallback);
+    setValue (startCue, StartCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setCueEnd (int cueEnd, bool includeSelfCallback)
+void SquidMetaDataProperties::setEndCue (int endCue, bool includeSelfCallback)
 {
-    setValue (cueEnd, CueEndPropertyId, includeSelfCallback);
+    setValue (endCue, EndCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setCueLoop (int cueLoop, bool includeSelfCallback)
+void SquidMetaDataProperties::setLoopCue (int loopCue, bool includeSelfCallback)
 {
-    setValue (cueLoop, CueLoopPropertyId, includeSelfCallback);
+    setValue (loopCue, LoopCuePropertyId, includeSelfCallback);
 }
 
 void SquidMetaDataProperties::setCv1 (int cv1, bool includeSelfCallback)
@@ -120,11 +120,6 @@ int SquidMetaDataProperties::getSpeed ()
     return getValue<int> (SpeedPropertyId);
 }
 
-int SquidMetaDataProperties::getFilter ()
-{
-    return getValue<int> (FilterPropertyId);
-}
-
 int SquidMetaDataProperties::getFilterFrequency ()
 {
     return getValue<int> (FilterFrequencyPropertyId);
@@ -135,14 +130,19 @@ int SquidMetaDataProperties::getFilterResonance ()
     return getValue<int> (FilterResonancePropertyId);
 }
 
+int SquidMetaDataProperties::getFilterType ()
+{
+    return getValue<int> (FilterTypePropertyId);
+}
+
 int SquidMetaDataProperties::getQuant ()
 {
     return getValue<int> (QuantPropertyId);
 }
 
-int SquidMetaDataProperties::getLoop ()
+int SquidMetaDataProperties::getLoopMode ()
 {
-    return getValue<int> (LoopPropertyId);
+    return getValue<int> (LoopModePropertyId);
 }
 
 int SquidMetaDataProperties::getXfade ()
@@ -180,19 +180,19 @@ int SquidMetaDataProperties::getSteps ()
     return getValue<int> (StepsPropertyId);
 }
 
-int SquidMetaDataProperties::getCueStart ()
+int SquidMetaDataProperties::getStartCue ()
 {
-    return getValue<int> (CueStartPropertyId);
+    return getValue<int> (StartCuePropertyId);
 }
 
-int SquidMetaDataProperties::getCueEnd ()
+int SquidMetaDataProperties::getEndCue ()
 {
-    return getValue<int> (CueEndPropertyId);
+    return getValue<int> (EndCuePropertyId);
 }
 
-int SquidMetaDataProperties::getCueLoop ()
+int SquidMetaDataProperties::getLoopCue ()
 {
-    return getValue<int> (CueLoopPropertyId);
+    return getValue<int> (LoopCuePropertyId);
 }
 
 int SquidMetaDataProperties::getCv1 ()
@@ -216,11 +216,11 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setBits (sourceMetaDataProperties.getBits (), false);
     setRate (sourceMetaDataProperties.getRate (), false);
     setSpeed (sourceMetaDataProperties.getSpeed (), false);
-    setFilter (sourceMetaDataProperties.getFilter (), false);
     setFilterFrequency (sourceMetaDataProperties.getFilterFrequency (), false);
     setFilterResonance (sourceMetaDataProperties.getFilterResonance (), false);
+    setFilterType (sourceMetaDataProperties.getFilterType (), false);
     setQuant (sourceMetaDataProperties.getQuant (), false);
-    setLoop (sourceMetaDataProperties.getLoop (), false);
+    setLoopMode (sourceMetaDataProperties.getLoopMode (), false);
     setXfade (sourceMetaDataProperties.getXfade (), false);
     setReverse (sourceMetaDataProperties.getReverse (), false);
     setLevel (sourceMetaDataProperties.getLevel (), false);
@@ -228,9 +228,9 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setDecay (sourceMetaDataProperties.getDecay (), false);
     setEuclidianTrigger (sourceMetaDataProperties.getEuclidianTrigger (), false);
     setSteps (sourceMetaDataProperties.getSteps (), false);
-    setCueStart (sourceMetaDataProperties.getCueStart (), false);
-    setCueEnd (sourceMetaDataProperties.getCueEnd (), false);
-    setCueLoop (sourceMetaDataProperties.getCueLoop (), false);
+    setStartCue (sourceMetaDataProperties.getStartCue (), false);
+    setEndCue (sourceMetaDataProperties.getEndCue (), false);
+    setLoopCue (sourceMetaDataProperties.getLoopCue (), false);
     setCv1 (sourceMetaDataProperties.getCv1 (), false);
     setCv2 (sourceMetaDataProperties.getCv2 (), false);
     setCv3 (sourceMetaDataProperties.getCv3 (), false);
@@ -247,11 +247,11 @@ void SquidMetaDataProperties::initValueTree ()
     setBits (0, false);
     setRate (0, false);
     setSpeed (0, false);
-    setFilter (0, false);
+    setFilterType (0, false);
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
     setQuant (0, false);
-    setLoop (0, false);
+    setLoopMode (0, false);
     setXfade (0, false);
     setReverse (0, false);
     setLevel (0, false);
@@ -259,9 +259,9 @@ void SquidMetaDataProperties::initValueTree ()
     setDecay (0, false);
     setEuclidianTrigger (0, false);
     setSteps (0, false);
-    setCueStart (0, false);
-    setCueEnd (0, false);
-    setCueLoop (0, false);
+    setStartCue (0, false);
+    setEndCue (0, false);
+    setLoopCue (0, false);
     setCv1 (0, false);
     setCv2 (0, false);
     setCv3 (0, false);
@@ -287,10 +287,10 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
         if (onSpeedChange != nullptr)
             onSpeedChange (getSpeed ());
     }
-    else if (property == FilterPropertyId)
+    else if (property == FilterTypePropertyId)
     {
-        if (onFilterChange != nullptr)
-            onFilterChange (getFilter ());
+        if (onFilterTypeChange != nullptr)
+            onFilterTypeChange (getFilterType ());
     }
     else if (property == FilterFrequencyPropertyId)
     {
@@ -307,10 +307,10 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
         if (onQuantChange != nullptr)
             onQuantChange (getQuant ());
     }
-    else if (property == LoopPropertyId)
+    else if (property == LoopModePropertyId)
     {
-        if (onLoopChange != nullptr)
-            onLoopChange (getLoop ());
+        if (onLoopModeChange != nullptr)
+            onLoopModeChange (getLoopMode ());
     }
     else if (property == XfadePropertyId)
     {
@@ -347,20 +347,20 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
         if (onStepsChange != nullptr)
             onStepsChange (getSteps ());
     }
-    else if (property == CueStartPropertyId)
+    else if (property == StartCuePropertyId)
     {
-        if (onCueStartChange != nullptr)
-            onCueStartChange (getCueStart ());
+        if (onStartCueChange != nullptr)
+            onStartCueChange (getStartCue ());
     }
-    else if (property == CueEndPropertyId)
+    else if (property == EndCuePropertyId)
     {
-        if (onCueEndChange != nullptr)
-            onCueEndChange (getCueEnd ());
+        if (onEndCueChange != nullptr)
+            onEndCueChange (getEndCue ());
     }
-    else if (property == CueLoopPropertyId)
+    else if (property == LoopCuePropertyId)
     {
-        if (onCueLoopChange != nullptr)
-            onCueLoopChange (getCueLoop ());
+        if (onLoopCueChange != nullptr)
+            onLoopCueChange (getLoopCue ());
     }
     else if (property == Cv1PropertyId)
     {
