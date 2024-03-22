@@ -112,6 +112,11 @@ public:
 
     void initSquidSalmple ()
     {
+        // TEST CODE
+        // put a SquidMetaDataProperties on the runtime root
+        SquidMetaDataProperties squidMetaDataProperties ({}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no);
+        runtimeRootProperties.getValueTree ().addChild (squidMetaDataProperties.getValueTree (), -1, nullptr);
+
 // TEST CODE TO WRITE OUT empty SquidMetaDataProperties
 //         SquidMetaDataProperties squidMetaDataProperties { {}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
 //         auto xmlToWrite { squidMetaDataProperties.getValueTree ().createXml () };

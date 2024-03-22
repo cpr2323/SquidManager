@@ -10,6 +10,10 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
 
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
+    RuntimeRootProperties runtimeRootProperties (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
+
+    addAndMakeVisible (squidMetaDataEditorComponent);
+    squidMetaDataEditorComponent.init (rootPropertiesVT);
 
     restoreLayout ();
 }
@@ -29,4 +33,5 @@ void MainComponent::paint ([[maybe_unused]] juce::Graphics& g)
 
 void MainComponent::resized ()
 {
+    squidMetaDataEditorComponent.setBounds (getLocalBounds ());
 }

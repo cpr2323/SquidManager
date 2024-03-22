@@ -10,6 +10,8 @@ bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSample
     // create/open temp file
     auto outputSampleStream { outputSampleFile.createOutputStream () };
     jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
+    outputSampleStream->setPosition (0);
+    outputSampleStream->truncate ();
     juce::MemoryBlock chunkData;
 
     while (true)
@@ -28,22 +30,23 @@ bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSample
         // write all non busy chunks (ie. skip old busy chunk, if one exists)
         if (std::memcmp (kBusyChunkType, chunkInfo.chunkType, 4) != 0)
         {
-            // write chunk header
+            // write chunk identifier
             auto writeSuccess { outputSampleStream->write (chunkInfo.chunkType, 4) };
             jassert (writeSuccess == true);
+            // write length
             uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (chunkInfo.chunkLength) };
             writeSuccess = outputSampleStream->write (&chunkLength, 4);
             jassert (writeSuccess == true);
-
             // write chunk data to output file
             writeSuccess = outputSampleStream->write (chunkData.getData (), chunkData.getSize ());
             jassert (writeSuccess == true);
         }
     }
-    // write new busy chunk
+    // write new busy chunk identifier
     auto writeSuccess { outputSampleStream->write (kBusyChunkType, 4) };
     jassert (writeSuccess == true);
-    uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (static_cast<uint32_t> (4)) };
+    // write length
+    uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (static_cast<uint32_t> (busyChunkData.getSize ())) };
     writeSuccess = outputSampleStream->write (&chunkLength, 4);
     jassert (writeSuccess == true);
     // write new busyChunk

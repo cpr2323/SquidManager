@@ -6,7 +6,12 @@
   <MAINGROUP id="GjwloP" name="SquidManager">
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
-        <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple"/>
+        <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple">
+          <FILE id="nW16RK" name="SquidMetaDataEditor.cpp" compile="1" resource="0"
+                file="Source/GUI/SquidSalmple/SquidMetaDataEditor.cpp"/>
+          <FILE id="gLCtHn" name="SquidMetaDataEditor.h" compile="0" resource="0"
+                file="Source/GUI/SquidSalmple/SquidMetaDataEditor.h"/>
+        </GROUP>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>
         <FILE id="J2fZpV" name="GuiProperties.h" compile="0" resource="0" file="Source/GUI/GuiProperties.h"/>
@@ -41,6 +46,8 @@
               file="Source/SquidSalmple/SquidMetaDataWriter.cpp"/>
         <FILE id="LgqEzM" name="SquidMetaDataWriter.h" compile="0" resource="0"
               file="Source/SquidSalmple/SquidMetaDataWriter.h"/>
+        <FILE id="uLTfkh" name="SquidSalmpleDefs.h" compile="0" resource="0"
+              file="Source/SquidSalmple/SquidSalmpleDefs.h"/>
       </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
@@ -48,8 +55,10 @@
               file="Source/Utility/CustomComboBox.cpp"/>
         <FILE id="lIOZBb" name="CustomComboBox.h" compile="0" resource="0"
               file="Source/Utility/CustomComboBox.h"/>
-        <FILE id="m3WWSy" name="CustomTextEditor.cpp" compile="1" resource="0"
-              file="Source/Utility/CustomTextEditor.cpp"/>
+        <FILE id="yHH07Z" name="CustomComponentMouseHandler.cpp" compile="1"
+              resource="0" file="Source/Utility/CustomComponentMouseHandler.cpp"/>
+        <FILE id="vDZYHZ" name="CustomComponentMouseHandler.h" compile="0"
+              resource="0" file="Source/Utility/CustomComponentMouseHandler.h"/>
         <FILE id="kMKyq3" name="CustomTextEditor.h" compile="0" resource="0"
               file="Source/Utility/CustomTextEditor.h"/>
         <FILE id="lgXY3V" name="DebugLog.cpp" compile="1" resource="0" file="Source/Utility/DebugLog.cpp"/>
@@ -66,6 +75,9 @@
               file="Source/Utility/DirectoryValueTree.h"/>
         <FILE id="WCPbT4" name="DumpStack.cpp" compile="1" resource="0" file="Source/Utility/DumpStack.cpp"/>
         <FILE id="ZxmPEU" name="DumpStack.h" compile="0" resource="0" file="Source/Utility/DumpStack.h"/>
+        <FILE id="b4e8so" name="ErrorHelpers.cpp" compile="1" resource="0"
+              file="Source/Utility/ErrorHelpers.cpp"/>
+        <FILE id="ors7BG" name="ErrorHelpers.h" compile="0" resource="0" file="Source/Utility/ErrorHelpers.h"/>
         <FILE id="tCzDZJ" name="LambdaThread.h" compile="0" resource="0" file="Source/Utility/LambdaThread.h"/>
         <FILE id="XnRC3h" name="NoArrowComboBoxLnF.h" compile="0" resource="0"
               file="Source/Utility/NoArrowComboBoxLnF.h"/>

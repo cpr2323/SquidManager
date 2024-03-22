@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "GuiProperties.h"
+#include "SquidSalmple/SquidMetaDataEditor.h"
 #include "../Utility/SplitWindowComponent.h"
 
 class MainComponent : public juce::Component
@@ -12,6 +13,7 @@ public:
 
 private:
     GuiProperties guiProperties;
+    SquidMetaDataEditorComponent squidMetaDataEditorComponent;
 
     juce::TooltipWindow tooltipWindow;
 
