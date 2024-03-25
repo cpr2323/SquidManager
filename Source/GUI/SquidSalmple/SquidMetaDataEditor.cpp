@@ -1,4 +1,5 @@
 #include "SquidMetaDataEditor.h"
+#include "../../SquidSalmple/SquidMetaDataReader.h"
 #include "../../Utility/PersistentRootProperties.h"
 
 const auto kLargeLabelSize { 20.0f };
@@ -15,7 +16,20 @@ const auto kInitialYOffset { 5 };
 SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 {
     setOpaque (true);
+    setupComponents ();
+    startTimer (250); // 
+}
 
+SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
+{
+    loopModeComboBox.setLookAndFeel (nullptr);
+    filterTypeComboBox.setLookAndFeel (nullptr);
+    quantComboBox.setLookAndFeel (nullptr);
+    rateComboBox.setLookAndFeel (nullptr);
+}
+
+void SquidMetaDataEditorComponent::setupComponents ()
+{
     auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
     {
         const auto textColor { juce::Colours::white };
@@ -78,7 +92,7 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
         quantComboBox.addItem ("Full Octave", quantId++);
         quantComboBox.addItem ("Major", quantId++);
         quantComboBox.addItem ("Minor", quantId++);
-        quantComboBox.addItem ("Harmionic Minor", quantId++);
+        quantComboBox.addItem ("Harmonic Minor", quantId++);
         quantComboBox.addItem ("Pentatonic Major", quantId++);
         quantComboBox.addItem ("Pentatonic Minor", quantId++);
         quantComboBox.addItem ("Lydian", quantId++);
@@ -133,15 +147,30 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
 
-    startTimer (250);
-}
+    loadButton.setButtonText ("LOAD");
+    loadButton.onClick = [this] ()
+    {
+        fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
+        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
+        {
+            if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
+            {
+                auto wavFileToLoad { fc.getURLResults () [0].getLocalFile () };
+                appProperties.addRecentlyUsedFile (wavFileToLoad.getFullPathName ());
 
-SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
-{
-    loopModeComboBox.setLookAndFeel (nullptr);
-    filterTypeComboBox.setLookAndFeel (nullptr);
-    quantComboBox.setLookAndFeel (nullptr);
-    rateComboBox.setLookAndFeel (nullptr);
+                // TODO - check for import errors and handle accordingly
+                SquidMetaDataReader squidMetaDataReader;
+                SquidMetaDataProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
+                                                                        SquidMetaDataProperties::WrapperType::owner,
+                                                                        SquidMetaDataProperties::EnableCallbacks::no };
+
+                // copy imported preset to current preset
+                squidMetaDataProperties.getValueTree ().copyPropertiesFrom (loadedSquidMetaDataProperties.getValueTree (), nullptr);
+            }
+        }, nullptr);
+    };
+    addAndMakeVisible (loadButton);
+    addAndMakeVisible (waveformDisplay);
 }
 
 void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
@@ -165,8 +194,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     {
 //         //DebugLog ("Assimil8orEditorComponent", "Assimil8orEditorComponent::init/appProperties.onMostRecentFileChange: " + fileName);
 //         //dumpStacktrace (-1, [this] (juce::String logLine) { DebugLog ("Assimil8orEditorComponent", logLine); });
-//         audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
-//         channelTabs.setCurrentTabIndex (0);
+        waveformDisplay.init (fileName);
     };
 
 //     PresetManagerProperties presetManagerProperties (runtimeRootProperties.getValueTree (), PresetManagerProperties::WrapperType::owner, PresetManagerProperties::EnableCallbacks::no);
@@ -175,6 +203,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
 
+    // put initial data into the UI
     attackDataChanged (squidMetaDataProperties.getAttack());
     bitsDataChanged (squidMetaDataProperties.getBits ());
     decayDataChanged (squidMetaDataProperties.getDecay ());
@@ -191,6 +220,8 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     speedDataChanged (squidMetaDataProperties.getSpeed ());
     startCueDataChanged (squidMetaDataProperties.getStartCue ());
     xfadeDataChanged (squidMetaDataProperties.getXfade ());
+
+    initializeCallbacks ();
 }
 
 void SquidMetaDataEditorComponent::initializeCallbacks ()
@@ -214,6 +245,7 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     squidMetaDataProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 }
 
+// Data Changed functions
 void SquidMetaDataEditorComponent::attackDataChanged (int attack)
 {
     attackTextEditor.setText (juce::String(attack), false);
@@ -294,6 +326,7 @@ void SquidMetaDataEditorComponent::xfadeDataChanged (int xfade)
     xfadeTextEditor.setText (juce::String (xfade), juce::NotificationType::dontSendNotification);
 }
 
+// UI Changed functions
 void SquidMetaDataEditorComponent::attackUiChanged (int attack)
 {
     squidMetaDataProperties.setAttack (attack, false);
@@ -388,59 +421,68 @@ void SquidMetaDataEditorComponent::resized ()
     auto xInitialOffSet { 15 };
     auto yInitialOffSet { 15 };
 
-    auto xOffSet { xInitialOffSet };
+    auto xOffset { xInitialOffSet };
     auto yOffset { kInitialYOffset };
 
     // column one
-    bitsLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = bitsTextEditor.getBottom () + 3;
-    rateLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = rateComboBox.getBottom () + 3;
-    speedLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    speedLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     speedTextEditor.setBounds (speedLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = speedTextEditor.getBottom () + 3;
-    quantLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = quantComboBox.getBottom () + 3;
-    filterTypeLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterTypeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     filterTypeComboBox.setBounds (filterTypeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = filterTypeComboBox.getBottom () + 3;
-    filterFrequencyLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterFrequencyLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     filterFrequencyTextEditor.setBounds (filterFrequencyLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = filterFrequencyTextEditor.getBottom () + 3;
-    filterResonanceLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterResonanceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     filterResonanceTextEditor.setBounds (filterResonanceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = filterResonanceTextEditor.getBottom () + 3;
-    levelLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    levelLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     levelTextEditor.setBounds (levelLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
-    xOffSet += columnWidth + 10;
+    xOffset += columnWidth + 10;
     yOffset = kInitialYOffset;
     // column two
-    attackLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    attackLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     attackTextEditor.setBounds (attackLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = attackTextEditor.getBottom () + 3;
-    decayLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    decayLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     decayTextEditor.setBounds (decayLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = decayTextEditor.getBottom () + 3;
-    loopModeLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    loopModeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     loopModeComboBox.setBounds (loopModeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = loopModeComboBox.getBottom () + 3;
-    xfadeLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    xfadeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     xfadeTextEditor.setBounds (xfadeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = xfadeTextEditor.getBottom () + 3;
-    reverseButton.setBounds (xOffSet + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
+    reverseButton.setBounds (xOffset + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
     yOffset = reverseButton.getBottom () + 3;
-    startCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    startCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     startCueTextEditor.setBounds (startCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = startCueTextEditor.getBottom () + 3;
-    loopCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    loopCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     loopCueTextEditor.setBounds (loopCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = loopCueTextEditor.getBottom () + 3;
-    endCueLabel.setBounds (xOffSet, yOffset, fieldWidth, kMediumLabelIntSize);
+    endCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+
+
+    xOffset += columnWidth + 10;
+    yOffset = kInitialYOffset;
+    loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);
+
+    xOffset = xInitialOffSet ;
+    yOffset = levelTextEditor.getBottom () + 10;
+    waveformDisplay.setBounds (xOffset, yOffset, getWidth () - (xOffset * 2), getHeight () - yOffset - xOffset);
 }
 
 void SquidMetaDataEditorComponent::paint (juce::Graphics& g)

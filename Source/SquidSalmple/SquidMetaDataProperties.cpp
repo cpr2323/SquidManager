@@ -75,19 +75,19 @@ void SquidMetaDataProperties::setSteps (int steps, bool includeSelfCallback)
     setValue (steps, StepsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setStartCue (int startCue, bool includeSelfCallback)
+void SquidMetaDataProperties::setStartCue (uint32_t startCue, bool includeSelfCallback)
 {
-    setValue (startCue, StartCuePropertyId, includeSelfCallback);
+    setValue (static_cast<juce::int64> (startCue), StartCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setEndCue (int endCue, bool includeSelfCallback)
+void SquidMetaDataProperties::setEndCue (uint32_t endCue, bool includeSelfCallback)
 {
-    setValue (endCue, EndCuePropertyId, includeSelfCallback);
+    setValue (static_cast<juce::int64> (endCue), EndCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setLoopCue (int loopCue, bool includeSelfCallback)
+void SquidMetaDataProperties::setLoopCue (uint32_t loopCue, bool includeSelfCallback)
 {
-    setValue (loopCue, LoopCuePropertyId, includeSelfCallback);
+    setValue (static_cast<juce::int64> (loopCue), LoopCuePropertyId, includeSelfCallback);
 }
 
 void SquidMetaDataProperties::setCv1 (int cv1, bool includeSelfCallback)
@@ -180,19 +180,19 @@ int SquidMetaDataProperties::getSteps ()
     return getValue<int> (StepsPropertyId);
 }
 
-int SquidMetaDataProperties::getStartCue ()
+uint32_t SquidMetaDataProperties::getStartCue ()
 {
-    return getValue<int> (StartCuePropertyId);
+    return static_cast<uint32_t> (getValue<juce::int64> (StartCuePropertyId));
 }
 
-int SquidMetaDataProperties::getEndCue ()
+uint32_t SquidMetaDataProperties::getEndCue ()
 {
-    return getValue<int> (EndCuePropertyId);
+    return static_cast<uint32_t> (getValue<juce::int64> (EndCuePropertyId));
 }
 
-int SquidMetaDataProperties::getLoopCue ()
+uint32_t SquidMetaDataProperties::getLoopCue ()
 {
-    return getValue<int> (LoopCuePropertyId);
+    return static_cast<uint32_t> (getValue<juce::int64> (LoopCuePropertyId));
 }
 
 int SquidMetaDataProperties::getCv1 ()

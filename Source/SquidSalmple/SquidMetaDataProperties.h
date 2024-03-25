@@ -21,19 +21,19 @@ public:
     void setCv2 (int cv2, bool includeSelfCallback);
     void setCv3 (int cv3, bool includeSelfCallback);
     void setDecay (int decay, bool includeSelfCallback);
-    void setEndCue (int endCue, bool includeSelfCallback);
+    void setEndCue (uint32_t endCue, bool includeSelfCallback);
     void setEuclidianTrigger (int euclidianTrigger, bool includeSelfCallback);
     void setFilterFrequency (int filterFrequency, bool includeSelfCallback);
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
     void setLevel (int level, bool includeSelfCallback);
-    void setLoopCue (int loopCue, bool includeSelfCallback);
+    void setLoopCue (uint32_t loopCue, bool includeSelfCallback);
     void setLoopMode (int loopMode, bool includeSelfCallback);
     void setQuant (int quant, bool includeSelfCallback);
     void setRate (int rate, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
     void setSpeed (int speed, bool includeSelfCallback);
-    void setStartCue (int startCue, bool includeSelfCallback);
+    void setStartCue (uint32_t startCue, bool includeSelfCallback);
     void setSteps (int steps, bool includeSelfCallback);
     void setXfade (int xfade, bool includeSelfCallback);
 
@@ -43,19 +43,19 @@ public:
     int getCv2 ();
     int getCv3 ();
     int getDecay ();
-    int getEndCue ();
+    uint32_t getEndCue ();
     int getEuclidianTrigger ();
     int getFilterFrequency ();
     int getFilterResonance ();
     int getFilterType ();
     int getLevel ();
-    int getLoopCue ();
+    uint32_t getLoopCue ();
     int getLoopMode ();
     int getQuant ();
     int getRate ();
     int getReverse ();
     int getSpeed ();
-    int getStartCue ();
+    uint32_t getStartCue ();
     int getSteps ();
     int getXfade ();
 
@@ -65,19 +65,19 @@ public:
     std::function<void (int cv2)> onCv2Change;
     std::function<void (int cv3)> onCv3Change;
     std::function<void (int decay)> onDecayChange;
-    std::function<void (int endCue)> onEndCueChange;
+    std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int euclidianTrigger)> onEuclidianTriggerChange;
     std::function<void (int filterFrequency)> onFilterFrequencyChange;
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
     std::function<void (int level)> onLevelChange;
-    std::function<void (int loopCue)> onLoopCueChange;
+    std::function<void (uint32_t loopCue)> onLoopCueChange;
     std::function<void (int loopMode)> onLoopModeChange;
     std::function<void (int quant)> onQuantChange;
     std::function<void (int rate)> onRateChange;
     std::function<void (int reverse)> onReverseChange;
     std::function<void (int speed)> onSpeedChange;
-    std::function<void (int startCue)> onStartCueChange;
+    std::function<void (uint32_t startCue)> onStartCueChange;
     std::function<void (int steps)> onStepsChange;
     std::function<void (int xfade)> onXfadeChange;
 

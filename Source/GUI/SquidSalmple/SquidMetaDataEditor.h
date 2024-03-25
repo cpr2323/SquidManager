@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "CueSets/WaveformDisplay.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/SquidMetaDataProperties.h"
 #include "../../Utility/CustomComboBox.h"
@@ -22,6 +23,7 @@ private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
     SquidMetaDataProperties squidMetaDataProperties;
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     juce::TextButton saveButton;
 
@@ -57,8 +59,10 @@ private:
     CustomTextEditorInt startCueTextEditor;  // 0 - sampleEnd
     juce::Label xfadeLabel;
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
+    WaveformDisplay waveformDisplay;
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
+    juce::TextButton loadButton;
 
     void initializeCallbacks ();
 
@@ -95,6 +99,8 @@ private:
     void speedUiChanged (int speed);
     void startCueUiChanged (int startCue);
     void xfadeUiChanged (int xfade);
+
+    void setupComponents ();
 
     void timerCallback () override;
     void resized () override;
