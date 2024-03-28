@@ -281,7 +281,7 @@ void SquidMetaDataEditorComponent::filterFrequencyDataChanged (int filterFrequen
 
 void SquidMetaDataEditorComponent::filterResonanceDataChanged (int filterResonance)
 {
-    filterResonanceTextEditor.setText (juce::String (filterResonance), false);
+    filterResonanceTextEditor.setText (juce::String (static_cast <int> (filterResonance / kScaleMax * 100.)), false);
 }
 
 void SquidMetaDataEditorComponent::levelDataChanged (int level)
@@ -364,7 +364,8 @@ void SquidMetaDataEditorComponent::filterFrequencyUiChanged (int filterFrequency
 
 void SquidMetaDataEditorComponent::filterResonanceUiChanged (int filterResonance)
 {
-    squidMetaDataProperties.setFilterResonance (filterResonance, false);
+    const auto newResonanceValue { static_cast<int> (filterResonance/ 100. * kScaleMax) };
+    squidMetaDataProperties.setFilterResonance (newResonanceValue, false);
 }
 
 void SquidMetaDataEditorComponent::levelUiChanged (int level)
