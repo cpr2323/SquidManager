@@ -7,7 +7,9 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     busyChunkReader.read (sampleFile, busyChunkData);
     //const auto rawChunkData { static_cast<uint8_t*>(busyChunkData.getData ()) };
     const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
-    jassert (busyChunkVersion == kSignatureAndVersionCurrent);
+    //jassert (busyChunkVersion == kSignatureAndVersionCurrent);
+    if (busyChunkVersion != kSignatureAndVersionCurrent)
+        juce::Logger::outputDebugString ("Earlier version of fw: " + juce::String(busyChunkVersion & 0xFF) + ". expected " + juce::String (kSignatureAndVersionCurrent & 0xFF));
 
     SquidMetaDataProperties squidMetaDataProperties { {}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
 

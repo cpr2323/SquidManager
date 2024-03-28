@@ -13,6 +13,8 @@ const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };
 const auto kInitialYOffset { 5 };
 
+const auto kScaleMax { 65500. };
+
 SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 {
     setOpaque (true);
@@ -248,7 +250,8 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
 // Data Changed functions
 void SquidMetaDataEditorComponent::attackDataChanged (int attack)
 {
-    attackTextEditor.setText (juce::String(attack), false);
+
+    attackTextEditor.setText (juce::String(static_cast <int> (attack / kScaleMax * 100.)), false);
 }
 
 void SquidMetaDataEditorComponent::bitsDataChanged (int bits)
@@ -258,7 +261,7 @@ void SquidMetaDataEditorComponent::bitsDataChanged (int bits)
 
 void SquidMetaDataEditorComponent::decayDataChanged (int decay)
 {
-    decayTextEditor.setText (juce::String (decay), false);
+    decayTextEditor.setText (juce::String (static_cast <int> (decay / kScaleMax * 100.)), false);
 }
 
 void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
@@ -329,7 +332,8 @@ void SquidMetaDataEditorComponent::xfadeDataChanged (int xfade)
 // UI Changed functions
 void SquidMetaDataEditorComponent::attackUiChanged (int attack)
 {
-    squidMetaDataProperties.setAttack (attack, false);
+    const auto newAttackValue { static_cast<int> (attack / 100. * kScaleMax) };
+    squidMetaDataProperties.setAttack (newAttackValue, false);
 }
 
 void SquidMetaDataEditorComponent::bitsUiChanged (int bits)
@@ -339,7 +343,8 @@ void SquidMetaDataEditorComponent::bitsUiChanged (int bits)
 
 void SquidMetaDataEditorComponent::decayUiChanged (int decay)
 {
-    squidMetaDataProperties.setDecay (decay, false);
+    const auto newDecayValue { static_cast<int> (decay / 100. * kScaleMax) };
+    squidMetaDataProperties.setDecay (newDecayValue, false);
 }
 
 void SquidMetaDataEditorComponent::endCueUiChanged (int endCue)

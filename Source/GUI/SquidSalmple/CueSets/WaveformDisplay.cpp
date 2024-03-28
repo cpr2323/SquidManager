@@ -90,15 +90,35 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
 
         g.setColour (juce::Colours::black);
         // TODO - get proper end pixel if sample ends before end of display
+        auto curSampleValue { readPtr [0] };
         for (auto pixelIndex { 0 }; pixelIndex < numPixels - 1; ++pixelIndex)
         {
             if ((pixelIndex + 1) * samplesPerPixel < numSamples)
             {
                 const auto pixelOffset { pixelIndex + 1 };
+#if 0
+                const auto nextSampleValue = [this, pixelIndex, readPtr] ()
+                {
+                    auto newSampleValue { 0.f };
+                    for (auto curSampleIndexOffset { 0 }; curSampleIndexOffset < samplesPerPixel; ++curSampleIndexOffset)
+                    {
+                        const auto sampleIndex { pixelIndex + 1 + curSampleIndexOffset };
+                        //juce::Logger::outputDebugString ("  sample [" + juce::String (sampleIndex) + "] : " + juce::String (readPtr [sampleIndex]));
+                        newSampleValue += readPtr [sampleIndex];
+                    }
+                    return newSampleValue / samplesPerPixel;
+                } ();
+                //juce::Logger::outputDebugString ("nextSampleValue: " + juce::String (nextSampleValue));
+                g.drawLine (static_cast<float> (pixelOffset),     static_cast<float> (static_cast<int> (halfHeight + (curSampleValue * halfHeight))),
+                            static_cast<float> (pixelOffset + 1), static_cast<float> (static_cast<int> (halfHeight + (nextSampleValue * halfHeight))));
+                curSampleValue = nextSampleValue;
+#else
                 g.drawLine (static_cast<float> (pixelOffset),
                     static_cast<float> (static_cast<int> (halfHeight + (readPtr [pixelIndex * samplesPerPixel] * halfHeight))),
                     static_cast<float> (pixelOffset + 1),
                     static_cast<float> (static_cast<int> (halfHeight + (readPtr [(pixelIndex + 1) * samplesPerPixel] * halfHeight))));
+
+#endif
             }
             else
             {
