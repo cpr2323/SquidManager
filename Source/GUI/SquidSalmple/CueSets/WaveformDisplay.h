@@ -10,7 +10,7 @@ public:
     WaveformDisplay ();
 
     void init (juce::File theTestFile);
-    void setCurCue (int cueSetIndex);
+    void setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd);
 
 private:
     enum class EditHandleIndex
@@ -20,16 +20,11 @@ private:
         kLoop = 1,
         kEnd = 2,
     };
-    struct CueSet
-    {
-        juce::int64 start { 0 };
-        juce::int64 loop { 0 };
-        juce::int64 end { 0 };
-    };
     juce::File testFile;
-    int numCueSets { 0 }; // should it default to 1?
-    int curCueSet { 0 };
-    std::array<CueSet, 64> cueSets;
+
+    juce::int64 cueStart { 0 };
+    juce::int64 cueLoop { 0 };
+    juce::int64 cueEnd { 0 };
 
     juce::AudioFormatManager audioFormatManager;
     AudioBufferType audioBuffer;

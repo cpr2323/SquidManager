@@ -173,6 +173,31 @@ void SquidMetaDataEditorComponent::setupComponents ()
     };
     addAndMakeVisible (loadButton);
     addAndMakeVisible (waveformDisplay);
+    numCueSets = 64; // TODO - REMOVE - it is just test code
+    for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
+    {
+        cueSetButtons [cueSetIndex].setButtonText (juce::String (cueSetIndex + 1));
+        cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
+        cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
+        cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+        cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+        cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
+        cueSets [cueSetIndex].start = cueSetIndex * 200;
+        cueSets [cueSetIndex].loop = cueSets [cueSetIndex].start + 500;
+        cueSets [cueSetIndex].end = cueSets [cueSetIndex].start + 1000;
+        addAndMakeVisible (cueSetButtons [cueSetIndex]);
+    }
+}
+
+void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
+{
+    if (numCueSets > 0 && cueSetIndex < numCueSets)
+    {
+        cueSetButtons [curCueSet].setToggleState (false, juce::NotificationType::dontSendNotification);
+        curCueSet = cueSetIndex;
+        cueSetButtons [curCueSet].setToggleState (true, juce::NotificationType::dontSendNotification);
+        waveformDisplay.setCuePoints (cueSets [curCueSet].start, cueSets [curCueSet].loop, cueSets [curCueSet].end);
+    }
 }
 
 void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
@@ -204,6 +229,8 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 //     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+
+    setCurCue (0);
 
     // put initial data into the UI
     attackDataChanged (squidMetaDataProperties.getAttack());
@@ -486,9 +513,18 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = kInitialYOffset;
     loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);
 
-    xOffset = xInitialOffSet ;
-    yOffset = levelTextEditor.getBottom () + 10;
-    waveformDisplay.setBounds (xOffset, yOffset, getWidth () - (xOffset * 2), getHeight () - yOffset - xOffset);
+    const auto kHeightOfCueSetButton { 20 };
+    const auto kWidthOfCueSetButton { 30 };
+    const auto kWidthOfWaveformEditor { 960 };
+    xOffset = xInitialOffSet;
+    yOffset = levelTextEditor.getBottom () + 10 + kHeightOfCueSetButton;
+    waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, getHeight () - yOffset - (kHeightOfCueSetButton * 2));
+    for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
+    {
+        const auto buttonX { xOffset + cueSetIndex * kWidthOfCueSetButton };
+        cueSetButtons [cueSetIndex].setBounds (buttonX, waveformDisplay.getY () - kHeightOfCueSetButton, kWidthOfCueSetButton, kHeightOfCueSetButton);
+        cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
+    }
 }
 
 void SquidMetaDataEditorComponent::paint (juce::Graphics& g)

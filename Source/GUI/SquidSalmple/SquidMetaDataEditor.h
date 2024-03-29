@@ -60,9 +60,20 @@ private:
     juce::Label xfadeLabel;
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
     WaveformDisplay waveformDisplay;
+    std::array<juce::TextButton, 64> cueSetButtons;
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
     juce::TextButton loadButton;
+
+    struct CueSet
+    {
+        juce::int64 start { 0 };
+        juce::int64 loop { 0 };
+        juce::int64 end { 0 };
+    };
+    int numCueSets { 0 }; // should it default to 1?
+    int curCueSet { 0 };
+    std::array<CueSet, 64> cueSets;
 
     void initializeCallbacks ();
 
@@ -102,6 +113,7 @@ private:
 
     void setupComponents ();
 
+    void setCurCue (int cueSetIndex);
     void timerCallback () override;
     void resized () override;
     void paint (juce::Graphics& g) override;

@@ -25,22 +25,15 @@ void WaveformDisplay::init (juce::File theTestFile)
     }
 
     jassert (numSamples > 0);
-    cueSets [0].start = 0;
-    cueSets [0].loop = numSamples / 2;
-    cueSets [0].end = numSamples - 1;
-    numCueSets = 1;
-    setCurCue (0);
 }
 
-void WaveformDisplay::setCurCue (int cueSetIndex)
+void WaveformDisplay::setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd)
 {
-    if (numCueSets > 0 && cueSetIndex < numCueSets)
-    {
-        curCueSet = cueSetIndex;
-
-        resized ();
-        repaint ();
-    }
+    cueStart = newCueStart;
+    cueLoop = newCueLoop;
+    cueEnd = newCueEnd;
+    resized ();
+    repaint ();
 }
 
 void WaveformDisplay::updateData ()
@@ -67,15 +60,15 @@ void WaveformDisplay::resized ()
     const auto markerHandleSize { 5 };
 
     // draw sample start marker
-    sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueSets [curCueSet].start) / static_cast<float> (numSamples) * numPixels));
+    sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
     sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
 
     // draw loop start marker
-    sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueSets [curCueSet].loop) / static_cast<float> (numSamples) * numPixels));
+    sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
     sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
 
     // draw sample end marker
-    sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueSets [curCueSet].end) / static_cast<float> (numSamples) * numPixels));
+    sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
     sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
 
     samplesPerPixel = static_cast<int> (numSamples / getWidth ());
