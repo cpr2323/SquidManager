@@ -173,7 +173,6 @@ void SquidMetaDataEditorComponent::setupComponents ()
     };
     addAndMakeVisible (loadButton);
     addAndMakeVisible (waveformDisplay);
-    numCueSets = 64; // TODO - REMOVE - it is just test code
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
     {
         cueSetButtons [cueSetIndex].setButtonText (juce::String (cueSetIndex + 1));
@@ -182,6 +181,8 @@ void SquidMetaDataEditorComponent::setupComponents ()
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
         cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
+
+        // TODO - REMOVE TEST CODE
         cueSets [cueSetIndex].start = cueSetIndex * 200;
         cueSets [cueSetIndex].loop = cueSets [cueSetIndex].start + 500;
         cueSets [cueSetIndex].end = cueSets [cueSetIndex].start + 1000;
@@ -230,6 +231,10 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 //     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+
+    numCueSets = 12; // TODO - REMOVE TEST CODE
+    for (auto cueSetButtonIndex { 0 }; cueSetButtonIndex < cueSetButtons.size (); ++cueSetButtonIndex)
+        cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 
     setCurCue (0);
 

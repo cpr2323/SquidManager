@@ -112,8 +112,8 @@ private:
     void xfadeUiChanged (int xfade);
 
     void setupComponents ();
-
     void setCurCue (int cueSetIndex);
+
     void timerCallback () override;
     void resized () override;
     void paint (juce::Graphics& g) override;
