@@ -207,6 +207,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     runtimeRootProperties.onSystemRequestedQuit = [this] ()
     {
+            // TODO - add code to check if data needs to be saved before exiting
 //         runtimeRootProperties.setPreferredQuitState (RuntimeRootProperties::QuitState::idle, false);
 //         overwritePresetOrCancel ([this] ()
 //         {
