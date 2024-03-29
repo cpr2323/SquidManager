@@ -1,5 +1,7 @@
 #include "WaveformDisplay.h"
 
+const auto markerHandleSize { 5 };
+
 WaveformDisplay::WaveformDisplay ()
 {
     audioFormatManager.registerBasicFormats ();
@@ -56,8 +58,6 @@ void WaveformDisplay::resized ()
     markerEndY = getHeight () - 2;
     const auto dashSize { getHeight () / 11.f };
     dashedSpec = { dashSize, dashSize };
-
-    const auto markerHandleSize { 5 };
 
     // draw sample start marker
     sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
@@ -184,23 +184,32 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kStart:
         {
-            //const auto newSampleStart { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            //const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<juce::int64> (0), zoneProperties.getSampleEnd ().value_or (sampleProperties.getLengthInSamples ()) - 1) };
-            //zoneProperties.setSampleStart (clampedSampleStart == 0 ? -1 : clampedSampleStart, true);
+            const auto newSampleStart { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            cueStart = clampedSampleStart;
+            sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
+            sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
+            repaint ();
         }
         break;
         case EditHandleIndex::kLoop:
         {
-            //const auto newLoopLength { static_cast<double> ((e.getPosition ().getX () * samplesPerPixel) - zoneProperties.getLoopStart ().value_or (0)) };
-            //const auto clampedLoopLength { std::clamp (newLoopLength, 4.0, static_cast<double> (sampleProperties.getLengthInSamples () - zoneProperties.getLoopStart ().value_or (0))) };
-            //zoneProperties.setLoopLength (clampedLoopLength == sampleProperties.getLengthInSamples () ? -1.0 : clampedLoopLength, true);
+            const auto newLoop { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedLoopLength { std::clamp (newLoop, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            cueLoop = clampedLoopLength;
+            sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
+            sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
+            repaint ();
         }
         break;
         case EditHandleIndex::kEnd:
         {
-            //const auto newSampleEnd { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            //const auto clampedSampleEnd { std::clamp (newSampleEnd, zoneProperties.getSampleStart ().value_or (0) + 1, sampleProperties.getLengthInSamples ()) };
-            //zoneProperties.setSampleEnd (clampedSampleEnd == sampleProperties.getLengthInSamples () ? -1 : clampedSampleEnd, true);
+            const auto newSampleEnd { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            cueEnd = clampedSampleEnd;
+            sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
+            sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
+            repaint ();
         }
         break;
     }
