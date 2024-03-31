@@ -12,6 +12,9 @@ public:
     void init (juce::File theTestFile);
     void setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd);
 
+    std::function<void (int startPoint)> onStartPointChange;
+    std::function<void (int loopPoint)> onLoopPointChange;
+    std::function<void (int endPoint)> onEndPointChange;
 private:
     enum class EditHandleIndex
     {
@@ -47,9 +50,7 @@ private:
 
     void displayWaveform (juce::Graphics& g);
     void displayMarkers (juce::Graphics& g);
-    void updateData ();
 
-    void mouseDown (const juce::MouseEvent& e) override;
     void mouseDrag (const juce::MouseEvent& e) override;
     void mouseMove (const juce::MouseEvent& e) override;
     void resized () override;

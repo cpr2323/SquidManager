@@ -38,91 +38,84 @@ void WaveformDisplay::setCuePoints (juce::int64 newCueStart, juce::int64 newCueL
     repaint ();
 }
 
-void WaveformDisplay::updateData ()
-{
-    if (audioBufferPtr != nullptr)
-    {
-//         numSamples  = sampleProperties.getLengthInSamples ();
-//         sampleStart = zoneProperties.getSampleStart ().value_or (0);
-//         sampleEnd = zoneProperties.getSampleEnd ().value_or (numSamples);
-//         sampleLoop = zoneProperties.getLoopStart ().value_or (0);
-        samplesPerPixel = static_cast<int> (numSamples / getWidth ());
-    }
-}
-
 void WaveformDisplay::resized ()
 {
     halfHeight = getHeight () / 2;
     numPixels = getWidth () - 2;
-    samplesPerPixel = static_cast<int> (numSamples / getWidth ());
     markerEndY = getHeight () - 2;
     const auto dashSize { getHeight () / 11.f };
     dashedSpec = { dashSize, dashSize };
 
-    // draw sample start marker
-    sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
+    if (audioBufferPtr == nullptr)
+    {
+        samplesPerPixel = 0;
+        sampleStartMarkerX = 0;
+        sampleLoopMarkerX = 0;
+        sampleEndMarkerX = 0;
+    }
+    else
+    {
+        samplesPerPixel = static_cast<int> (numSamples / getWidth ());
+        sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
+        sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
+        sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
+    }
     sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
-
-    // draw loop start marker
-    sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
     sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
-
-    // draw sample end marker
-    sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
     sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
-
-    samplesPerPixel = static_cast<int> (numSamples / getWidth ());
 }
 
 void WaveformDisplay::displayWaveform (juce::Graphics& g)
 {
-    if (audioBufferPtr != nullptr)
-    {
-        // TODO - implement side selection
-        auto readPtr { audioBufferPtr->getReadPointer (0) };
+    if (audioBufferPtr == nullptr)
+        return;
+    // TODO - implement side selection
+    auto readPtr { audioBufferPtr->getReadPointer (0) };
 
-        g.setColour (juce::Colours::black);
-        // TODO - get proper end pixel if sample ends before end of display
-        auto curSampleValue { readPtr [0] };
-        for (auto pixelIndex { 0 }; pixelIndex < numPixels - 1; ++pixelIndex)
+    g.setColour (juce::Colours::black);
+    // TODO - get proper end pixel if sample ends before end of display
+    auto curSampleValue { readPtr [0] };
+    for (auto pixelIndex { 0 }; pixelIndex < numPixels - 1; ++pixelIndex)
+    {
+        if ((pixelIndex + 1) * samplesPerPixel < numSamples)
         {
-            if ((pixelIndex + 1) * samplesPerPixel < numSamples)
-            {
-                const auto pixelOffset { pixelIndex + 1 };
+            const auto pixelOffset { pixelIndex + 1 };
 #if 0
-                const auto nextSampleValue = [this, pixelIndex, readPtr] ()
+            const auto nextSampleValue = [this, pixelIndex, readPtr] ()
+            {
+                auto newSampleValue { 0.f };
+                for (auto curSampleIndexOffset { 0 }; curSampleIndexOffset < samplesPerPixel; ++curSampleIndexOffset)
                 {
-                    auto newSampleValue { 0.f };
-                    for (auto curSampleIndexOffset { 0 }; curSampleIndexOffset < samplesPerPixel; ++curSampleIndexOffset)
-                    {
-                        const auto sampleIndex { pixelIndex + 1 + curSampleIndexOffset };
-                        //juce::Logger::outputDebugString ("  sample [" + juce::String (sampleIndex) + "] : " + juce::String (readPtr [sampleIndex]));
-                        newSampleValue += readPtr [sampleIndex];
-                    }
-                    return newSampleValue / samplesPerPixel;
-                } ();
-                //juce::Logger::outputDebugString ("nextSampleValue: " + juce::String (nextSampleValue));
-                g.drawLine (static_cast<float> (pixelOffset),     static_cast<float> (static_cast<int> (halfHeight + (curSampleValue * halfHeight))),
-                            static_cast<float> (pixelOffset + 1), static_cast<float> (static_cast<int> (halfHeight + (nextSampleValue * halfHeight))));
-                curSampleValue = nextSampleValue;
+                    const auto sampleIndex { pixelIndex + 1 + curSampleIndexOffset };
+                    //juce::Logger::outputDebugString ("  sample [" + juce::String (sampleIndex) + "] : " + juce::String (readPtr [sampleIndex]));
+                    newSampleValue += readPtr [sampleIndex];
+                }
+                return newSampleValue / samplesPerPixel;
+            } ();
+            //juce::Logger::outputDebugString ("nextSampleValue: " + juce::String (nextSampleValue));
+            g.drawLine (static_cast<float> (pixelOffset),     static_cast<float> (static_cast<int> (halfHeight + (curSampleValue * halfHeight))),
+                        static_cast<float> (pixelOffset + 1), static_cast<float> (static_cast<int> (halfHeight + (nextSampleValue * halfHeight))));
+            curSampleValue = nextSampleValue;
 #else
-                g.drawLine (static_cast<float> (pixelOffset),
-                    static_cast<float> (static_cast<int> (halfHeight + (readPtr [pixelIndex * samplesPerPixel] * halfHeight))),
-                    static_cast<float> (pixelOffset + 1),
-                    static_cast<float> (static_cast<int> (halfHeight + (readPtr [(pixelIndex + 1) * samplesPerPixel] * halfHeight))));
+            g.drawLine (static_cast<float> (pixelOffset),
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [pixelIndex * samplesPerPixel] * halfHeight))),
+                        static_cast<float> (pixelOffset + 1),
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [(pixelIndex + 1) * samplesPerPixel] * halfHeight))));
 
 #endif
-            }
-            else
-            {
-                break;
-            }
+        }
+        else
+        {
+            break;
         }
     }
 }
 
 void WaveformDisplay::displayMarkers (juce::Graphics& g)
 {
+    if (audioBufferPtr == nullptr)
+        return;
+
     g.setColour (juce::Colours::white);
 
     // draw sample start marker
@@ -152,29 +145,26 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
 void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
 {
-    if (audioBufferPtr != nullptr)
-    {
-        if (sampleStartHandle.contains (e.getPosition ()))
-            handleIndex = EditHandleIndex::kStart;
-        else if (sampleLoopHandle.contains (e.getPosition ()))
-            handleIndex = EditHandleIndex::kLoop;
-        else if (sampleEndHandle.contains (e.getPosition ()))
-            handleIndex = EditHandleIndex::kEnd;
-        else
-            handleIndex = EditHandleIndex::kNone;
-        repaint ();
-        //DebugLog ("WaveformDisplay", "mouseMove - handleIndex: " + juce::String (handleIndex));
-    }
-}
-
-void WaveformDisplay::mouseDown ([[maybe_unused]] const juce::MouseEvent& e)
-{
-    if (handleIndex == EditHandleIndex::kNone)
+    if (audioBufferPtr == nullptr)
         return;
+
+    if (sampleStartHandle.contains (e.getPosition ()))
+        handleIndex = EditHandleIndex::kStart;
+    else if (sampleLoopHandle.contains (e.getPosition ()))
+        handleIndex = EditHandleIndex::kLoop;
+    else if (sampleEndHandle.contains (e.getPosition ()))
+        handleIndex = EditHandleIndex::kEnd;
+    else
+        handleIndex = EditHandleIndex::kNone;
+    repaint ();
+    //DebugLog ("WaveformDisplay", "mouseMove - handleIndex: " + juce::String (handleIndex));
 }
 
 void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
 {
+    if (audioBufferPtr == nullptr)
+        return;
+
     switch (handleIndex)
     {
         case EditHandleIndex::kNone:
@@ -185,30 +175,52 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         case EditHandleIndex::kStart:
         {
             const auto newSampleStart { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<juce::int64> (0), static_cast<juce::int64> (cueEnd)) };
             cueStart = clampedSampleStart;
+            if (cueStart > cueLoop)
+            {
+                cueLoop = cueStart;
+                sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
+                sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
+                if (onLoopPointChange != nullptr)
+                    onLoopPointChange (cueLoop);
+            }
             sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
             sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
+            if (onStartPointChange != nullptr)
+                onStartPointChange (cueStart);
             repaint ();
         }
         break;
         case EditHandleIndex::kLoop:
         {
             const auto newLoop { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedLoopLength { std::clamp (newLoop, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            const auto clampedLoopLength { std::clamp (newLoop, static_cast<juce::int64> (cueStart), static_cast<juce::int64> (cueEnd)) };
             cueLoop = clampedLoopLength;
             sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
             sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
+            if (onLoopPointChange != nullptr)
+                onLoopPointChange (cueLoop);
             repaint ();
         }
         break;
         case EditHandleIndex::kEnd:
         {
             const auto newSampleEnd { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<juce::int64> (0), static_cast<juce::int64> (5000)) };
+            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<juce::int64> (cueStart), static_cast<juce::int64> (audioBufferPtr->getNumSamples ())) };
             cueEnd = clampedSampleEnd;
+            if (cueEnd < cueLoop)
+            {
+                cueLoop = cueEnd;
+                sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
+                sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
+                if (onLoopPointChange != nullptr)
+                    onLoopPointChange (cueLoop);
+            }
             sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
             sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
+            if (onEndPointChange != nullptr)
+                onEndPointChange (cueEnd);
             repaint ();
         }
         break;

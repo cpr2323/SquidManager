@@ -118,15 +118,15 @@ namespace SquidSalmple
         const auto kResonanceOffset { kCutoffFrequencyOffset + kCutoffFrequencySize };
         const auto kResonanceSize { k16BitSize };
         const auto kRateOffset { kResonanceOffset + kResonanceSize };
-        const auto kRateSize { k16BitSize };
-        const auto k_Reserved7Offset { kRateOffset + kRateSize }; // rate count (1), pad (1), rate inc (2)
-        const auto k_Reserved7Size { 4 * k8BitSize };
+        const auto kRateSize { k8BitSize };
+        const auto k_Reserved7Offset { kRateOffset + kRateSize }; // rate count (1), rate inc (2)
+        const auto k_Reserved7Size { 3 * k8BitSize };
         const auto kSpeedOffset { k_Reserved7Offset + k_Reserved7Size };
         const auto kSpeedSize { k16BitSize };
         const auto kLevelOffset { kSpeedOffset + kSpeedSize };
         const auto kLevelSize { k16BitSize };
-        const auto k_Reserved8Offset { kLevelOffset + kLevelSize }; // bank src, bank dest, pad, banksavedstart, banksavedend, banksavedloop
-        const auto k_Reserved8Size { 16 * k8BitSize };
+        const auto k_Reserved8Offset { kLevelOffset + kLevelSize }; // bank src, bank dest, banksavedstart, banksavedend, banksavedloop
+        const auto k_Reserved8Size { 14 * k8BitSize };
         const auto k_Reserved8aOffset { k_Reserved8Offset + k_Reserved8Size }; // cvflags
         const auto k_Reserved8aSize { 8 * k16BitSize };
         const auto k_Reserved8bOffset { k_Reserved8aOffset + k_Reserved8aSize }; // cvparams
@@ -149,9 +149,9 @@ namespace SquidSalmple
         const auto k_Reserved10Size { k8BitSize };
         const auto kChokeOffset { k_Reserved10Offset + k_Reserved10Size };
         const auto kChokeSize { k8BitSize };
-        const auto kPadXOffset { kChokeOffset + kChokeSize };
-        const auto kPadXSize { 2 * k8BitSize };
-        const auto kCuesOffset { kPadXOffset + kPadXSize };
+        const auto k_PadXOffset { kChokeOffset + kChokeSize };
+        const auto k_PadXSize { 2 * k8BitSize };
+        const auto kCuesOffset { k_PadXOffset + k_PadXSize };
         const auto kCuesSize { (kCueNumSets * 3) * k32BitSize };
         const auto kCuesCountOffset { kCuesOffset + kCuesSize };
         const auto kCuesCountSize { k8BitSize };
@@ -159,9 +159,9 @@ namespace SquidSalmple
         const auto kCuesQueuedSize { k8BitSize };
         const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
         const auto kCuesSelectedSize { k8BitSize };
-        const auto kPadYOffset { kCuesSelectedOffset + kCuesSelectedSize };
-        const auto kPadYSize { k8BitSize };
-        const auto k_Reserved11Offset { kPadYOffset + kPadYSize };
+        const auto k_PadYOffset { kCuesSelectedOffset + kCuesSelectedSize };
+        const auto k_PadYSize { k8BitSize };
+        const auto k_Reserved11Offset { k_PadYOffset + k_PadYSize };
         const auto k_Reserved11Size { 63 * k32BitSize };
         const auto kEndOfData { k_Reserved11Offset + k_Reserved11Size };
 

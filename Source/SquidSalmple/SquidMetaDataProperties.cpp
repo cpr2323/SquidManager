@@ -1,8 +1,31 @@
 #include "SquidMetaDataProperties.h"
+#include "../Utility/ValueTreeHelpers.h"
 
 void SquidMetaDataProperties::setBits (int bits, bool includeSelfCallback)
 {
     setValue (bits, BitsPropertyId, includeSelfCallback);
+}
+
+void SquidMetaDataProperties::setCuePoints (int cueSet, juce::int64 start, juce::int64 loop, juce::int64 end)
+{
+    if (getNumCues () <= cueSet)
+        return;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueSet, start, loop, end, &cueListCount] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueSet)
+        {
+            cueSetVT.setProperty (CueSetStartPropertyId, start, nullptr);
+            cueSetVT.setProperty (CueSetLoopPropertyId, loop, nullptr);
+            cueSetVT.setProperty (CueSetEndPropertyId, end, nullptr);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
 }
 
 void SquidMetaDataProperties::setRate (int rate, bool includeSelfCallback)
@@ -55,6 +78,21 @@ void SquidMetaDataProperties::setLevel (int level, bool includeSelfCallback)
     setValue (level, LevelPropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::addCueSet (juce::int64 startCue, juce::int64 loopCue, juce::int64 endCue)
+{
+    const auto numCues { getNumCues () };
+    if (getNumCues () >= 64)
+        return;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    juce::ValueTree cueSet { CueSetTypeId };
+    cueSet.setProperty (CueSetIdPropertyId, numCues, nullptr);
+    cueSet.setProperty (CueSetStartPropertyId, startCue, nullptr);
+    cueSet.setProperty (CueSetLoopPropertyId, loopCue, nullptr);
+    cueSet.setProperty (CueSetEndPropertyId, endCue, nullptr);
+    cueSetListVT.addChild (cueSet, -1, nullptr);
+}
+
 void SquidMetaDataProperties::setAttack (int attack, bool includeSelfCallback)
 {
     setValue (attack, AttackPropertyId, includeSelfCallback);
@@ -90,19 +128,64 @@ void SquidMetaDataProperties::setLoopCue (uint32_t loopCue, bool includeSelfCall
     setValue (static_cast<juce::int64> (loopCue), LoopCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setCv1 (int cv1, bool includeSelfCallback)
+void SquidMetaDataProperties::setStartCueSet (int cueIndex, uint32_t startCue, bool includeSelfCallback)
 {
-    setValue (cv1, Cv1PropertyId, includeSelfCallback);
+    if (getNumCues () <= cueIndex)
+        return;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, startCue, &cueListCount] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            cueSetVT.setProperty (CueSetStartPropertyId, static_cast<juce::int64>(startCue), nullptr);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
 }
 
-void SquidMetaDataProperties::setCv2 (int cv2, bool includeSelfCallback)
+void SquidMetaDataProperties::setEndCueSet (int cueIndex, uint32_t endCue, bool includeSelfCallback)
 {
-    setValue (cv2, Cv2PropertyId, includeSelfCallback);
+    if (getNumCues () <= cueIndex)
+        return;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, endCue, &cueListCount] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            cueSetVT.setProperty (CueSetEndPropertyId, static_cast<juce::int64>(endCue), nullptr);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
 }
 
-void SquidMetaDataProperties::setCv3 (int cv3, bool includeSelfCallback)
+void SquidMetaDataProperties::setLoopCueSet (int cueIndex, uint32_t loopCue, bool includeSelfCallback)
 {
-    setValue (cv3, Cv3PropertyId, includeSelfCallback);
+    if (getNumCues () <= cueIndex)
+        return;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, loopCue, &cueListCount] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            cueSetVT.setProperty (CueSetLoopPropertyId, static_cast<juce::int64>(loopCue), nullptr);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
 }
 
 int SquidMetaDataProperties::getBits ()
@@ -143,6 +226,19 @@ int SquidMetaDataProperties::getQuant ()
 int SquidMetaDataProperties::getLoopMode ()
 {
     return getValue<int> (LoopModePropertyId);
+}
+
+int SquidMetaDataProperties::getNumCues ()
+{
+    auto cueSetListVT {data.getChildWithName(CueSetListTypeId)};
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, &cueListCount] (juce::ValueTree cueSetVT)
+    {
+        ++cueListCount;
+        return true;
+    });
+    return cueListCount;
 }
 
 int SquidMetaDataProperties::getXfade ()
@@ -195,19 +291,73 @@ uint32_t SquidMetaDataProperties::getLoopCue ()
     return static_cast<uint32_t> (getValue<juce::int64> (LoopCuePropertyId));
 }
 
-int SquidMetaDataProperties::getCv1 ()
+uint32_t SquidMetaDataProperties::getStartCueSet (int cueIndex)
 {
-    return getValue<int> (Cv1PropertyId);
+    if (getNumCues () <= cueIndex)
+        return 0;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    auto startCue { -1 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, &cueListCount, &startCue] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            startCue = cueSetVT.getProperty (CueSetStartPropertyId);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
+
+    return startCue;
 }
 
-int SquidMetaDataProperties::getCv2 ()
+uint32_t SquidMetaDataProperties::getEndCueSet (int cueIndex)
 {
-    return getValue<int> (Cv2PropertyId);
+    if (getNumCues () <= cueIndex)
+        return 0;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    auto endCue { -1 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, &cueListCount, &endCue] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            endCue = cueSetVT.getProperty (CueSetEndPropertyId);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
+
+    return endCue;
 }
 
-int SquidMetaDataProperties::getCv3 ()
+uint32_t SquidMetaDataProperties::getLoopCueSet (int cueIndex)
 {
-    return getValue<int> (Cv3PropertyId);
+    if (getNumCues () <= cueIndex)
+        return 0;
+
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    jassert (CueSetListTypeId.isValid ());
+    auto cueListCount { 0 };
+    auto loopCue { -1 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueIndex, &cueListCount, &loopCue] (juce::ValueTree cueSetVT)
+    {
+        if (cueListCount == cueIndex)
+        {
+            loopCue = cueSetVT.getProperty (CueSetLoopPropertyId);
+            return false;
+        }
+        ++cueListCount;
+        return true;
+    });
+
+    return loopCue;
 }
 
 void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
@@ -231,9 +381,6 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setStartCue (sourceMetaDataProperties.getStartCue (), false);
     setEndCue (sourceMetaDataProperties.getEndCue (), false);
     setLoopCue (sourceMetaDataProperties.getLoopCue (), false);
-    setCv1 (sourceMetaDataProperties.getCv1 (), false);
-    setCv2 (sourceMetaDataProperties.getCv2 (), false);
-    setCv3 (sourceMetaDataProperties.getCv3 (), false);
 }
 
 juce::ValueTree SquidMetaDataProperties::create ()
@@ -262,9 +409,9 @@ void SquidMetaDataProperties::initValueTree ()
     setStartCue (0, false);
     setEndCue (0, false);
     setLoopCue (0, false);
-    setCv1 (0, false);
-    setCv2 (0, false);
-    setCv3 (0, false);
+
+    juce::ValueTree cueSetList { CueSetListTypeId };
+    data.addChild (cueSetList, -1, nullptr);
 }
 
 void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
@@ -361,20 +508,5 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
     {
         if (onLoopCueChange != nullptr)
             onLoopCueChange (getLoopCue ());
-    }
-    else if (property == Cv1PropertyId)
-    {
-        if (onCv1Change != nullptr)
-            onCv1Change (getCv1 ());
-    }
-    else if (property == Cv2PropertyId)
-    {
-        if (onCv2Change != nullptr)
-            onCv2Change (getCv2 ());
-    }
-    else if (property == Cv3PropertyId)
-    {
-        if (onCv3Change != nullptr)
-            onCv3Change (getCv3 ());
     }
 }

@@ -6,6 +6,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     BusyChunkReader busyChunkReader;
     busyChunkReader.read (sampleFile, busyChunkData);
     //const auto rawChunkData { static_cast<uint8_t*>(busyChunkData.getData ()) };
+    jassert (busyChunkData.getSize ()/* + 4*/ == SquidSalmple::DataLayout::kEndOfData);
     const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
     //jassert (busyChunkVersion == kSignatureAndVersionCurrent);
     if (busyChunkVersion != kSignatureAndVersionCurrent)
@@ -32,6 +33,18 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     squidMetaDataProperties.setSpeed (getValue <SquidSalmple::DataLayout::kSpeedSize> (SquidSalmple::DataLayout::kSpeedOffset), false);
     squidMetaDataProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
     squidMetaDataProperties.setXfade (getValue <SquidSalmple::DataLayout::kXfadeSize> (SquidSalmple::DataLayout::kXfadeOffset), false);
+
+    // TODO - remove test code - hard coding 5 for now
+    const auto actualNumCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
+    jassert (actualNumCues > 0);
+    const auto numCues { 5 }; //  { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
+    for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
+    {
+        const auto startCue { getValue <4> (SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 0) };
+        const auto loopCue { getValue <4> (SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 4) };
+        const auto endCue { getValue <4> (SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12)) + 8};
+        squidMetaDataProperties.addCueSet (startCue, loopCue, endCue);
+    }
 
     return squidMetaDataProperties.getValueTree ();
 }
