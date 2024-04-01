@@ -86,7 +86,7 @@ void SquidMetaDataProperties::addCueSet (juce::int64 startCue, juce::int64 loopC
 
     auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
     juce::ValueTree cueSet { CueSetTypeId };
-    cueSet.setProperty (CueSetIdPropertyId, numCues, nullptr);
+    cueSet.setProperty (CueSetIdPropertyId, numCues + 1, nullptr);
     cueSet.setProperty (CueSetStartPropertyId, startCue, nullptr);
     cueSet.setProperty (CueSetLoopPropertyId, loopCue, nullptr);
     cueSet.setProperty (CueSetEndPropertyId, endCue, nullptr);

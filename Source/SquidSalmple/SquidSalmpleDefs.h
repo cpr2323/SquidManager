@@ -164,6 +164,5 @@ namespace SquidSalmple
         const auto k_Reserved11Offset { k_PadYOffset + k_PadYSize };
         const auto k_Reserved11Size { 63 * k32BitSize };
         const auto kEndOfData { k_Reserved11Offset + k_Reserved11Size };
-
     };
 };

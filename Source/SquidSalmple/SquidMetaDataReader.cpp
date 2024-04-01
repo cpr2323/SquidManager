@@ -4,6 +4,7 @@
 juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
 {
     BusyChunkReader busyChunkReader;
+    busyChunkData.reset ();
     busyChunkReader.read (sampleFile, busyChunkData);
     //const auto rawChunkData { static_cast<uint8_t*>(busyChunkData.getData ()) };
     jassert (busyChunkData.getSize ()/* + 4*/ == SquidSalmple::DataLayout::kEndOfData);
@@ -34,10 +35,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     squidMetaDataProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
     squidMetaDataProperties.setXfade (getValue <SquidSalmple::DataLayout::kXfadeSize> (SquidSalmple::DataLayout::kXfadeOffset), false);
 
-    // TODO - remove test code - hard coding 5 for now
-    const auto actualNumCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
-    jassert (actualNumCues > 0);
-    const auto numCues { 5 }; //  { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
+    const auto numCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         const auto startCue { getValue <4> (SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 0) };
