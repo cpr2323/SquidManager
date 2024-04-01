@@ -103,6 +103,7 @@ private:
     void startCueUiChanged (int startCue);
     void xfadeUiChanged (int xfade);
 
+    void initCueSets ();
     void setupComponents ();
     void setCurCue (int cueSetIndex);
 

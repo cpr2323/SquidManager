@@ -166,7 +166,6 @@ void SquidMetaDataEditorComponent::setupComponents ()
                                                                         SquidMetaDataProperties::WrapperType::owner,
                                                                         SquidMetaDataProperties::EnableCallbacks::no };
 
-                // copy imported preset to current preset
                 auto oldCueSetsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
                 jassert (oldCueSetsVT.isValid ());
                 oldCueSetsVT.removeAllChildren (nullptr);
@@ -178,6 +177,8 @@ void SquidMetaDataEditorComponent::setupComponents ()
                     oldCueSetsVT.addChild (cueSetVT.createCopy (), -1, nullptr);
                     return true;
                 });
+                initCueSets ();
+                setCurCue (0);
             }
         }, nullptr);
     };
@@ -219,6 +220,14 @@ void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
     waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
 }
 
+void SquidMetaDataEditorComponent::initCueSets ()
+{
+    const auto numCueSets { squidMetaDataProperties.getNumCues () };
+    for (auto cueSetButtonIndex { 0 }; cueSetButtonIndex < cueSetButtons.size (); ++cueSetButtonIndex)
+        cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
+
+};
+
 void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
@@ -236,22 +245,12 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 //         });
     };
 
-    auto initCueSets = [this] ()
-    {
-        const auto numCueSets { squidMetaDataProperties.getNumCues () };
-        for (auto cueSetButtonIndex { 0 }; cueSetButtonIndex < cueSetButtons.size (); ++cueSetButtonIndex)
-            cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
-
-    };
-
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-    appProperties.onMostRecentFileChange = [this, initCueSets] (juce::String fileName)
+    appProperties.onMostRecentFileChange = [this] (juce::String fileName)
     {
 //         //DebugLog ("Assimil8orEditorComponent", "Assimil8orEditorComponent::init/appProperties.onMostRecentFileChange: " + fileName);
 //         //dumpStacktrace (-1, [this] (juce::String logLine) { DebugLog ("Assimil8orEditorComponent", logLine); });
         waveformDisplay.init (fileName);
-        initCueSets ();
-        setCurCue (0);
     };
 
 //     PresetManagerProperties presetManagerProperties (runtimeRootProperties.getValueTree (), PresetManagerProperties::WrapperType::owner, PresetManagerProperties::EnableCallbacks::no);
