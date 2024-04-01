@@ -7,11 +7,16 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     busyChunkData.reset ();
     busyChunkReader.read (sampleFile, busyChunkData);
     //const auto rawChunkData { static_cast<uint8_t*>(busyChunkData.getData ()) };
-    jassert (busyChunkData.getSize ()/* + 4*/ == SquidSalmple::DataLayout::kEndOfData);
+    jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
     const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
     //jassert (busyChunkVersion == kSignatureAndVersionCurrent);
-    if (busyChunkVersion != kSignatureAndVersionCurrent)
-        juce::Logger::outputDebugString ("Earlier version of fw: " + juce::String(busyChunkVersion & 0xFF) + ". expected " + juce::String (kSignatureAndVersionCurrent & 0xFF));
+    if ((busyChunkVersion & 0xFFFFFF00) != (kSignatureAndVersionCurrent & 0xFFFFFF00))
+    {
+        juce::Logger::outputDebugString ("'busy' metadata chunk has wrong signature");
+        return {};
+    }
+    if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
+        juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version" + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
 
     SquidMetaDataProperties squidMetaDataProperties { {}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
 

@@ -5,9 +5,10 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
 {
     jassert (inputSampleFile != outputSampleFile);
 
-    busyChunkData.setSize (SquidSalmple::DataLayout::kEndOfData);
+    busyChunkData.setSize (SquidSalmple::DataLayout::kEndOfData, true);
 
     SquidMetaDataProperties squidMetaDataProperties { squidMetaDataPropertiesVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no };
+    setUInt32 (static_cast<uint32_t> (kSignatureAndVersionCurrent), SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getAttack ()), SquidSalmple::DataLayout::kAttackOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getBits ()), SquidSalmple::DataLayout::kQualityOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getDecay ()), SquidSalmple::DataLayout::kDecayOffset);
@@ -50,26 +51,26 @@ void SquidMetaDataWriter::setUInt8 (uint8_t value, int offset)
 
 void SquidMetaDataWriter::setUInt16 (uint16_t value, int offset)
 {
-    busyChunkData [offset]     = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value);
+    busyChunkData [offset]     = static_cast<uint8_t>(value); 
+    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8);
 }
 
 void SquidMetaDataWriter::setUInt32 (uint32_t value, int offset)
 {
-    busyChunkData [offset + 0] = static_cast<uint8_t>(value >> 24);
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 16);
-    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 3] = static_cast<uint8_t>(value);
+    busyChunkData [offset + 0] = static_cast<uint8_t>(value); 
+    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8);
+    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 16); 
+    busyChunkData [offset + 3] = static_cast<uint8_t>(value >> 24);
 }
 
 void SquidMetaDataWriter::setUInt64 (uint64_t value, int offset)
 {
-    busyChunkData [offset + 0] = static_cast<uint8_t>(value >> 56);
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 48);
-    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 40);
-    busyChunkData [offset + 3] = static_cast<uint8_t>(value >> 32);
-    busyChunkData [offset + 4] = static_cast<uint8_t>(value >> 24);
-    busyChunkData [offset + 5] = static_cast<uint8_t>(value >> 16);
-    busyChunkData [offset + 6] = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 7] = static_cast<uint8_t>(value);
+    busyChunkData [offset + 0] = static_cast<uint8_t>(value); 
+    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8); 
+    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 16); 
+    busyChunkData [offset + 3] = static_cast<uint8_t>(value >> 24); 
+    busyChunkData [offset + 4] = static_cast<uint8_t>(value >> 32);
+    busyChunkData [offset + 5] = static_cast<uint8_t>(value >> 40);
+    busyChunkData [offset + 6] = static_cast<uint8_t>(value >> 48);
+    busyChunkData [offset + 7] = static_cast<uint8_t>(value >> 56);
 }

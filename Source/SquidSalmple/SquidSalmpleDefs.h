@@ -13,7 +13,7 @@ const auto kCvInputsExtra { 5 };
 const auto kCvParamsCount { 16 };
 const auto kCvParamsExtra { 4 };
 
-const uint64_t kSignatureAndVersionCurrent { 0x12345676 };
+const uint32_t kSignatureAndVersionCurrent { 0x12345676 };
 
 enum class FilterType
 {
