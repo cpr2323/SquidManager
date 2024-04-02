@@ -85,7 +85,7 @@ enum CvAssignedFlag
     endCue    = 0x0200,
     loopCue   = 0x0400,
     attack    = 0x0800,
-    reserved1 = 0x1000, // unused
+    cueSet    = 0x1000,
     eTrig     = 0x2000,
     filtFreq  = 0x4000,
     filtRes   = 0x8000,

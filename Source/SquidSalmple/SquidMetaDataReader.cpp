@@ -83,10 +83,9 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         {
             addCvAssignString ("Attack");
         }
-        if (cvAssignFlags & CvAssignedFlag::reserved1)
+        if (cvAssignFlags & CvAssignedFlag::cueSet)
         {
-            // this value is not yet mapped
-            jassertfalse;
+            addCvAssignString ("Cue Set");
         }
         if (cvAssignFlags & CvAssignedFlag::eTrig)
         {
