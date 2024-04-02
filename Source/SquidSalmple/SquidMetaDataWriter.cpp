@@ -33,8 +33,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getStartCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 0);
-        setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getLoopCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 4);
-        setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getEndCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 8);
+        setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getEndCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 4);
+        setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getLoopCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 8);
     }
 
     BusyChunkWriter busyChunkWriter;
