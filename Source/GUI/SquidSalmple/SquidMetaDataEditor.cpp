@@ -311,22 +311,22 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
 // Data Changed functions
 void SquidMetaDataEditorComponent::attackDataChanged (int attack)
 {
-    attackTextEditor.setText (juce::String(static_cast <int> (attack / kScaleMax * 100.)), false);
+    attackTextEditor.setText (juce::String(static_cast <int> (attack / kScaleMax * 100.)), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::bitsDataChanged (int bits)
 {
-    bitsTextEditor.setText (juce::String (bits), false);
+    bitsTextEditor.setText (juce::String (bits), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::decayDataChanged (int decay)
 {
-    decayTextEditor.setText (juce::String (static_cast <int> (decay / kScaleMax * 100.)), false);
+    decayTextEditor.setText (juce::String (static_cast <int> (decay / kScaleMax * 100.)), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
 {
-    endCueTextEditor.setText (juce::String (endCue), false);
+    endCueTextEditor.setText (juce::String (endCue), juce::NotificationType::dontSendNotification);
     if (curCueSet == 0)
         waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endCue);
 }
@@ -338,17 +338,17 @@ void SquidMetaDataEditorComponent::filterTypeDataChanged (int filterType)
 
 void SquidMetaDataEditorComponent::filterFrequencyDataChanged (int filterFrequency)
 {
-    filterFrequencyTextEditor.setText (juce::String (filterFrequency), false);
+    filterFrequencyTextEditor.setText (juce::String (filterFrequency), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::filterResonanceDataChanged (int filterResonance)
 {
-    filterResonanceTextEditor.setText (juce::String (static_cast <int> (filterResonance / kScaleMax * 100.)), false);
+    filterResonanceTextEditor.setText (juce::String (static_cast <int> (filterResonance / kScaleMax * 100.)), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::levelDataChanged (int level)
 {
-    levelTextEditor.setText (juce::String (level), false);
+    levelTextEditor.setText (juce::String (static_cast <int> (level / kScaleMax * 100.)), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::loopCueDataChanged (int loopCue)
@@ -380,7 +380,7 @@ void SquidMetaDataEditorComponent::reverseDataChanged (int reverse)
 
 void SquidMetaDataEditorComponent::speedDataChanged (int speed)
 {
-    speedTextEditor.setText (juce::String (speed), juce::NotificationType::dontSendNotification);
+    speedTextEditor.setText (juce::String (static_cast <int> (speed / kScaleMax * 100.)), juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::startCueDataChanged (int startCue)
@@ -436,7 +436,8 @@ void SquidMetaDataEditorComponent::filterResonanceUiChanged (int filterResonance
 
 void SquidMetaDataEditorComponent::levelUiChanged (int level)
 {
-    squidMetaDataProperties.setLevel (level, false);
+    const auto newLevelValue { static_cast<int> (level / 100. * kScaleMax) };
+    squidMetaDataProperties.setLevel (newLevelValue, false);
 }
 
 void SquidMetaDataEditorComponent::loopCueUiChanged (int loopCue)
@@ -466,7 +467,8 @@ void SquidMetaDataEditorComponent::reverseUiChanged (int reverse)
 
 void SquidMetaDataEditorComponent::speedUiChanged (int speed)
 {
-    squidMetaDataProperties.setSpeed (speed, false);
+    const auto newSpeedValue { static_cast<int> (speed/ 100. * kScaleMax) };
+    squidMetaDataProperties.setSpeed (newSpeedValue, false);
 }
 
 void SquidMetaDataEditorComponent::startCueUiChanged (int startCue)
