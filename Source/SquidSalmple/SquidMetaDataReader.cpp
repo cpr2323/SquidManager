@@ -50,23 +50,127 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     squidMetaDataProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
     squidMetaDataProperties.setXfade (getValue <SquidSalmple::DataLayout::kXfadeSize> (SquidSalmple::DataLayout::kXfadeOffset), false);
 
+    ////////////////////////////////////
+    //  CV Stuff
+    // uint16_t array of 8 cv flags - 16 bits of bit flags for a parameter to be enabled
+    // cv params are stored in array of two u16int_t offset and attenuation
+    //      values are
+    //          0 - 99
+    //          101 - 199 = -1 - -199
+    for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
+    {
+        juce::String cvAssigns;
+
+        auto addCvAssignString = [this, &cvAssigns] (juce::String cvAssignName)
+        {
+            cvAssigns.isEmpty () ? cvAssigns = "CV assigns: " : cvAssigns += ", ";
+            cvAssigns += cvAssignName;
+        };
+        auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInput)) };
+        if (cvAssignFlags & CvAssignedFlag::startCue)
+        {
+            addCvAssignString ("StartCue");
+        }
+        if (cvAssignFlags & CvAssignedFlag::endCue)
+        {
+            addCvAssignString ("EndCue");
+        }
+        if (cvAssignFlags & CvAssignedFlag::loopCue)
+        {
+            addCvAssignString ("LoopCue");
+        }
+        if (cvAssignFlags & CvAssignedFlag::attack)
+        {
+            addCvAssignString ("Attack");
+        }
+        if (cvAssignFlags & CvAssignedFlag::reserved1)
+        {
+            // this value is not yet mapped
+            jassertfalse;
+        }
+        if (cvAssignFlags & CvAssignedFlag::eTrig)
+        {
+            addCvAssignString ("ETrig");
+        }
+        if (cvAssignFlags & CvAssignedFlag::filtFreq)
+        {
+            addCvAssignString ("FilterFrequency");
+        }
+        if (cvAssignFlags & CvAssignedFlag::filtRes)
+        {
+            addCvAssignString ("FilterResonance");
+        }
+        if (cvAssignFlags & CvAssignedFlag::reserved2)
+        {
+            // this value is not yet mapped
+            jassertfalse;
+        }
+        if (cvAssignFlags & CvAssignedFlag::bits)
+        {
+            addCvAssignString ("Bits");
+        }
+        if (cvAssignFlags & CvAssignedFlag::rate)
+        {
+            addCvAssignString ("Rate");
+        }
+        if (cvAssignFlags & CvAssignedFlag::level)
+        {
+            addCvAssignString ("Level");
+        }
+        if (cvAssignFlags & CvAssignedFlag::decay)
+        {
+            addCvAssignString ("Decay");
+        }
+        if (cvAssignFlags & CvAssignedFlag::speed)
+        {
+            addCvAssignString ("Speed");
+        }
+        if (cvAssignFlags & CvAssignedFlag::loopMode)
+        {
+            addCvAssignString ("LoopMode");
+        }
+        if (cvAssignFlags & CvAssignedFlag::reserved3)
+        {
+            // this value is not yet mapped
+            jassertfalse;
+        }
+        if (cvAssigns.isNotEmpty())
+            LogReader (cvAssigns);
+#if 0
+        const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
+        juce::String cvParamsString;
+        for (auto curCvParams { 0 }; curCvParams < rowSize; ++curCvParams)
+        {
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (curCvParams * 4)};
+            const auto offset { getValue <2> (cvParamOffset + 0) };
+            int16_t attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            if (attenuation > 99)
+                attenuation = 100 - attenuation;
+            cvParamsString += (cvParamsString.isEmpty () ? "" : ", ") + juce::String("off: ") + juce::String (offset) + ", att: " + juce::String (attenuation);
+        };
+        LogReader ("read - CV" + juce::String (curCvInput + 1) + ": " + cvParamsString);
+#endif
+    }
+
+    ////////////////////////////////////
+    // cue set stuff
     const auto playPosition { getValue <SquidSalmple::DataLayout::k_Reserved2Size> (SquidSalmple::DataLayout::k_Reserved2Offset) };
-    LogReader ("read - play position meta data = " + juce::String (playPosition).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (playPosition).paddedLeft ('0', 6) + "]");
+    //LogReader ("read - play position meta data = " + juce::String (playPosition).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (playPosition).paddedLeft ('0', 6) + "]");
     const auto endOfSample { getValue <SquidSalmple::DataLayout::kEndOfSampleSize> (SquidSalmple::DataLayout::kEndOfSampleOffset) };
-    LogReader ("read - end of sample meta data = " + juce::String (endOfSample).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endOfSample).paddedLeft ('0', 6) + "]");
+    //LogReader ("read - end of sample meta data = " + juce::String (endOfSample).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endOfSample).paddedLeft ('0', 6) + "]");
     auto logCueSet = [this] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
     {
-        LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
-                   juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+        //LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
+        //           juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
         jassert (startCue <= loopCue && loopCue < endCue);
     };
 
     const auto numCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
     const auto curCue { getValue <SquidSalmple::DataLayout::kCuesSelectedSize> (SquidSalmple::DataLayout::kCuesSelectedOffset) };
-    LogReader ("read - cue meta data (cue set " + juce::String(curCue) + "):");
+    //LogReader ("read - cue meta data (cue set " + juce::String(curCue) + "):");
     logCueSet (0, squidMetaDataProperties.getStartCue (), squidMetaDataProperties.getLoopCue (), squidMetaDataProperties.getEndCue ());
 
-    LogReader ("read - Cue List: " + juce::String (numCues));
+    //LogReader ("read - Cue List: " + juce::String (numCues));
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         const auto cueSetOffset { SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) };

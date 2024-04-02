@@ -1,4 +1,5 @@
 #include "WaveformDisplay.h"
+#include "../../../Utility/DebugLog.h"
 
 const auto markerHandleSize { 5 };
 
@@ -14,6 +15,9 @@ void WaveformDisplay::init (juce::File theTestFile)
     if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (testFile) }; sampleFileReader != nullptr)
     {
         numSamples = sampleFileReader->lengthInSamples;
+        DebugLog ("WaveformDisplay", "init [" + testFile.getFileName () + "] - numSamples = " + juce::String (numSamples).paddedLeft ('0', 6) +
+                  " [0x" + juce::String::toHexString (numSamples).paddedLeft ('0', 6) + "], bitDepth = " + juce::String (sampleFileReader->bitsPerSample) +
+                  ", sampleRate = " + juce::String (sampleFileReader->sampleRate));
 
         // read in audio data
         audioBuffer.setSize (sampleFileReader->numChannels, static_cast<int> (numSamples), false, true, false);

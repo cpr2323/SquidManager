@@ -42,6 +42,7 @@ void runSquidMetaDataReadTest (juce::File testFolder)
     SquidMetaDataProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
                                                        SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
 
+    jassert (ValueTreeHelpers::compareChidrenAndThierPropertiesUnordered (squidMetaDataProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
     jassert (squidMetaDataProperties2.getValueTree ().isEquivalentTo (squidMetaDataProperties.getValueTree ()));
 }
 

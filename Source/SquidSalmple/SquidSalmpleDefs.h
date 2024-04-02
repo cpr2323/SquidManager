@@ -70,6 +70,27 @@ constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
 constexpr auto k32BitSize { static_cast<int> (sizeof (uint32_t)) };
 constexpr auto k64BitSize { static_cast<int> (sizeof (uint64_t)) };
 
+enum CvAssignedFlag
+{
+    none      = 0x0000,
+    reserved2 = 0x0001, // unused
+    bits      = 0x0002,
+    rate      = 0x0004,
+    level     = 0x0008,
+    decay     = 0x0010,
+    speed     = 0x0020,
+    loopMode  = 0x0040,
+    reserved3 = 0x0080, // unused
+    startCue  = 0x0100,
+    endCue    = 0x0200,
+    loopCue   = 0x0400,
+    attack    = 0x0800,
+    reserved1 = 0x1000, // unused
+    eTrig     = 0x2000,
+    filtFreq  = 0x4000,
+    filtRes   = 0x8000,
+};
+
 // Field offsets and size
 namespace SquidSalmple
 {
@@ -127,11 +148,11 @@ namespace SquidSalmple
         const auto kLevelSize { k16BitSize };
         const auto k_Reserved8Offset { kLevelOffset + kLevelSize }; // bank src, bank dest, banksavedstart, banksavedend, banksavedloop
         const auto k_Reserved8Size { 14 * k8BitSize };
-        const auto k_Reserved8aOffset { k_Reserved8Offset + k_Reserved8Size }; // cvflags
-        const auto k_Reserved8aSize { 8 * k16BitSize };
-        const auto k_Reserved8bOffset { k_Reserved8aOffset + k_Reserved8aSize }; // cvparams
-        const auto k_Reserved8bSize { 8 * 40 * k16BitSize };
-        const auto k_Reserved8cOffset { k_Reserved8bOffset + k_Reserved8bSize }; // CvParamsOriginalValue
+        const auto kCvFlagsOffset  { k_Reserved8Offset + k_Reserved8Size }; // cvflags
+        const auto kCvFlagsSize { 8 * k16BitSize };
+        const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
+        const auto kCvParamsSize { 8 * 40 * k16BitSize };
+        const auto k_Reserved8cOffset { kCvParamsOffset + kCvParamsSize }; // CvParamsOriginalValue
         const auto k_Reserved8cSize { 20 * k32BitSize };
         const auto k_Reserved8dOffset { k_Reserved8cOffset + k_Reserved8cSize }; // flags
         const auto k_Reserved8dSize { k16BitSize };
