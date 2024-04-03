@@ -24,6 +24,7 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 
 SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
 {
+    chokeComboBox.setLookAndFeel (nullptr);
     loopModeComboBox.setLookAndFeel (nullptr);
     filterTypeComboBox.setLookAndFeel (nullptr);
     quantComboBox.setLookAndFeel (nullptr);

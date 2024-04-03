@@ -108,6 +108,11 @@ void SquidMetaDataProperties::setDecay (int decay, bool includeSelfCallback)
     setValue (decay, DecayPropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::setETrig (int eTrig, bool includeSelfCallback)
+{
+    setValue (eTrig, ETrigPropertyId, includeSelfCallback);
+}
+
 void SquidMetaDataProperties::setEuclidianTrigger (int euclidianTrigger, bool includeSelfCallback)
 {
     setValue (euclidianTrigger, EuclidianTriggerPropertyId, includeSelfCallback);
@@ -276,6 +281,11 @@ int SquidMetaDataProperties::getDecay ()
     return getValue<int> (DecayPropertyId);
 }
 
+int SquidMetaDataProperties::getETrig ()
+{
+    return getValue<int> (ETrigPropertyId);
+}
+
 int SquidMetaDataProperties::getEuclidianTrigger ()
 {
     return getValue<int> (EuclidianTriggerPropertyId);
@@ -438,6 +448,11 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
     {
         if (onChokeChange != nullptr)
             onChokeChange (getChoke ());
+    }
+    else if (property == ETrigPropertyId)
+    {
+        if (onETrigChange!= nullptr)
+            onETrigChange (getETrig ());
     }
     else if (property == RatePropertyId)
     {

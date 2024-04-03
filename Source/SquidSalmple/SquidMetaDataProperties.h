@@ -21,6 +21,7 @@ public:
     void setChoke (int chokeChannel, bool includeSelfCallback);
     void setCuePoints (int cueSet, juce::int64 start, juce::int64 loop, juce::int64 end);
     void setDecay (int decay, bool includeSelfCallback);
+    void setETrig (int eTrig, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
     void setEndCueSet (int cueIndex, uint32_t endCue, bool includeSelfCallback);
     void setEuclidianTrigger (int euclidianTrigger, bool includeSelfCallback);
@@ -44,6 +45,7 @@ public:
     int getBits ();
     int getChoke ();
     int getDecay ();
+    int getETrig ();
     uint32_t getEndCue ();
     uint32_t getEndCueSet (int cueIndex);
     int getEuclidianTrigger ();
@@ -68,6 +70,7 @@ public:
     std::function<void (int bits)> onBitsChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int decay)> onDecayChange;
+    std::function<void (int eTrig)> onETrigChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int cueIndex, uint32_t endCue)> onEndCueSetChange;
     std::function<void (int euclidianTrigger)> onEuclidianTriggerChange;
@@ -98,6 +101,7 @@ public:
     static inline const juce::Identifier Cv2PropertyId              { "cv2" };
     static inline const juce::Identifier Cv3PropertyId              { "cv3" };
     static inline const juce::Identifier DecayPropertyId            { "decay" };
+    static inline const juce::Identifier ETrigPropertyId            { "eTrig" };
     static inline const juce::Identifier EndCuePropertyId           { "endCue" };
     static inline const juce::Identifier EuclidianTriggerPropertyId { "euclidianTrig" };
     static inline const juce::Identifier FilterFrequencyPropertyId  { "filterFrequency" };
