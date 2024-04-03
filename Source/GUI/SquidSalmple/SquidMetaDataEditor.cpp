@@ -24,6 +24,7 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 
 SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
 {
+    eTrigComboBox.setLookAndFeel (nullptr);
     chokeComboBox.setLookAndFeel (nullptr);
     loopModeComboBox.setLookAndFeel (nullptr);
     filterTypeComboBox.setLookAndFeel (nullptr);
@@ -164,13 +165,29 @@ void SquidMetaDataEditorComponent::setupComponents ()
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
-    chokeComboBox.addItem ("Off", 1);
     {
-        for (auto channelIndex {0}; channelIndex < 8; ++channelIndex)
-            chokeComboBox.addItem ("C" + juce::String (channelIndex + 1), channelIndex + 2);
+        for (auto curChannelIndex {0}; curChannelIndex < 8; ++curChannelIndex)
+        {
+            // TODO - only the 'other channels' should show in this list
+            //if (channelIndex != curChannelIndex)
+            chokeComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 1);
+        }
     }
+    chokeComboBox.addItem ("Off", 9);
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (chokeComboBox, "Choke", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7
+    // ETrig
+    setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
+    eTrigComboBox.addItem ("Off", 1);
+    for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
+    {
+        // TODO - only the 'other channels' should show in this list
+        //if (channelIndex != curChannelIndex)
+        eTrigComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 2);
+    }
+    eTrigComboBox.addItem ("On", 10);
+    eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7
 
     // FILE LOAD BUTTON
     loadButton.setButtonText ("LOAD");
@@ -293,6 +310,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     bitsDataChanged (squidMetaDataProperties.getBits ());
     decayDataChanged (squidMetaDataProperties.getDecay ());
     endCueDataChanged (squidMetaDataProperties.getEndCue ());
+    eTrigDataChanged (squidMetaDataProperties.getETrig ());
     filterTypeDataChanged (squidMetaDataProperties.getFilterType ());
     filterFrequencyDataChanged (squidMetaDataProperties.getFilterFrequency ());
     filterResonanceDataChanged (squidMetaDataProperties.getFilterResonance ());
@@ -318,6 +336,7 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     squidMetaDataProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
     squidMetaDataProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
     squidMetaDataProperties.onEndCueSetChange = [this] (int cueIndex, int endCue) { if (cueIndex == curCueSet) endCueDataChanged (endCue); };
+    squidMetaDataProperties.onETrigChange = [this] (int eTrig) { eTrigDataChanged (eTrig); };
     squidMetaDataProperties.onFilterTypeChange = [this] (int filter) { filterTypeDataChanged (filter); };
     squidMetaDataProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
     squidMetaDataProperties.onFilterResonanceChange = [this] (int filterResonance) { filterResonanceDataChanged (filterResonance); };
@@ -360,6 +379,11 @@ void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
     endCueTextEditor.setText (juce::String (endCue), juce::NotificationType::dontSendNotification);
     if (curCueSet == 0)
         waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endCue);
+}
+
+void SquidMetaDataEditorComponent::eTrigDataChanged (int eTrig)
+{
+    eTrigComboBox.setSelectedItemIndex (eTrig, juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::filterTypeDataChanged (int filterType)
@@ -452,6 +476,11 @@ void SquidMetaDataEditorComponent::decayUiChanged (int decay)
 void SquidMetaDataEditorComponent::endCueUiChanged (int endCue)
 {
     squidMetaDataProperties.setEndCue (endCue, false);
+}
+
+void SquidMetaDataEditorComponent::eTrigUiChanged (int eTrig)
+{
+    squidMetaDataProperties.setETrig (eTrig, false);
 }
 
 void SquidMetaDataEditorComponent::filterTypeUiChanged (int filter)
@@ -590,6 +619,9 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = kInitialYOffset;
     chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = chokeComboBox.getBottom () + 3;
+    eTrigLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    eTrigComboBox.setBounds (eTrigLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
     // column four
     xOffset += columnWidth + 10;

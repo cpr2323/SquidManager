@@ -38,6 +38,8 @@ private:
     CustomTextEditorInt decayTextEditor; // 0-99
     juce::Label endCueLabel;
     CustomTextEditorInt endCueTextEditor; // sampleStart - sample length
+    juce::Label eTrigLabel;
+    CustomComboBox eTrigComboBox; // Off, C1, C2, C3, C4, C5, C6, C7, C8
     juce::Label filterTypeLabel;
     CustomComboBox filterTypeComboBox; // Off, LP, BP, NT, HP (0-4)
     juce::Label filterFrequencyLabel;
@@ -76,6 +78,7 @@ private:
     void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
     void endCueDataChanged (int endCue);
+    void eTrigDataChanged (int eTrig);
     void filterTypeDataChanged (int filterType);
     void filterFrequencyDataChanged (int filterFrequency);
     void filterResonanceDataChanged (int filterResonance);
@@ -94,6 +97,7 @@ private:
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (int endCue);
+    void eTrigUiChanged (int eTrig);
     void filterTypeUiChanged (int filterType);
     void filterFrequencyUiChanged (int filterFrequency);
     void filterResonanceUiChanged (int filterResonance);
