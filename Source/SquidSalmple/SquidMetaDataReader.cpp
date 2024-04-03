@@ -32,10 +32,9 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
 
     squidMetaDataProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
     squidMetaDataProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
+    squidMetaDataProperties.setChoke (getValue <SquidSalmple::DataLayout::kChokeSize> (SquidSalmple::DataLayout::kChokeOffset), false);
     squidMetaDataProperties.setDecay (getValue <SquidSalmple::DataLayout::kDecaySize> (SquidSalmple::DataLayout::kDecayOffset), false);
     squidMetaDataProperties.setEndCue (getValue <SquidSalmple::DataLayout::kSampleEndSize> (SquidSalmple::DataLayout::kSampleEndOffset), false);
-    // TODO: verify ordering bits freq/type or type/freq
-    // 12bits of filter frequency and 4 bits of filter type
     uint16_t frequencyAndType { getValue <SquidSalmple::DataLayout::kCutoffFrequencySize> (SquidSalmple::DataLayout::kCutoffFrequencyOffset) };
     squidMetaDataProperties.setFilterType (frequencyAndType & 0x000F, false);
     squidMetaDataProperties.setFilterFrequency (frequencyAndType >> 4, false);

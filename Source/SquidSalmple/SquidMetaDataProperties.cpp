@@ -6,6 +6,11 @@ void SquidMetaDataProperties::setBits (int bits, bool includeSelfCallback)
     setValue (bits, BitsPropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::setChoke (int chokeChannel, bool includeSelfCallback)
+{
+    setValue (chokeChannel, ChokePropertyId, includeSelfCallback);
+}
+
 void SquidMetaDataProperties::setCuePoints (int cueSet, juce::int64 start, juce::int64 loop, juce::int64 end)
 {
     if (getNumCues () <= cueSet)
@@ -191,6 +196,11 @@ void SquidMetaDataProperties::setLoopCueSet (int cueIndex, uint32_t loopCue, boo
 int SquidMetaDataProperties::getBits ()
 {
     return getValue<int> (BitsPropertyId);
+}
+
+int SquidMetaDataProperties::getChoke ()
+{
+    return getValue<int> (ChokePropertyId);
 }
 
 int SquidMetaDataProperties::getRate ()
@@ -423,6 +433,11 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
     {
         if (onBitsChange != nullptr)
             onBitsChange (getBits ());
+    }
+    else if (property == ChokePropertyId)
+    {
+        if (onChokeChange != nullptr)
+            onChokeChange (getChoke ());
     }
     else if (property == RatePropertyId)
     {

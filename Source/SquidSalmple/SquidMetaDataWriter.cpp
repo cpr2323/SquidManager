@@ -10,11 +10,10 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     SquidMetaDataProperties squidMetaDataProperties { squidMetaDataPropertiesVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no };
     setUInt32 (static_cast<uint32_t> (kSignatureAndVersionCurrent), SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getAttack ()), SquidSalmple::DataLayout::kAttackOffset);
+    setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getChoke ()), SquidSalmple::DataLayout::kChokeOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getBits ()), SquidSalmple::DataLayout::kQualityOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getDecay ()), SquidSalmple::DataLayout::kDecayOffset);
     setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getEndCue ()), SquidSalmple::DataLayout::kSampleEndOffset);
-    // TODO: verify ordering bits freq/type or type/freq
-    // 12bits of filter frequency and 4 bits of filter type
     uint16_t frequencyAndType { static_cast<uint16_t> ((squidMetaDataProperties.getFilterFrequency () << 4) + squidMetaDataProperties.getFilterType ()) };
     setUInt16 (frequencyAndType, SquidSalmple::DataLayout::kCutoffFrequencyOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getFilterResonance ()), SquidSalmple::DataLayout::kResonanceOffset);

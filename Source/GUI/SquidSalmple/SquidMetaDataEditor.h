@@ -32,6 +32,8 @@ private:
     CustomTextEditorInt attackTextEditor; // 0-99
     juce::Label bitsLabel;
     CustomTextEditorInt bitsTextEditor; // 1-16
+    juce::Label chokeLabel;
+    CustomComboBox chokeComboBox; // Off, C1, C2, C3, C4, C5, C6, C7, C8
     juce::Label decayLabel;
     CustomTextEditorInt decayTextEditor; // 0-99
     juce::Label endCueLabel;
@@ -71,6 +73,7 @@ private:
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
+    void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
     void endCueDataChanged (int endCue);
     void filterTypeDataChanged (int filterType);
@@ -88,6 +91,7 @@ private:
 
     void attackUiChanged (int attack);
     void bitsUiChanged (int bits);
+    void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (int endCue);
     void filterTypeUiChanged (int filterType);

@@ -86,6 +86,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
     // SPEED
     setupLabel (speedLabel, "SPEED", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
+    // QUANTIZE
     setupLabel (quantLabel, "QUANT", kMediumLabelSize, juce::Justification::centred);
     {
         auto quantId { 1 };
@@ -107,6 +108,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
     }
     quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (quantComboBox, "Quantize", [] () {}); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
+    // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
     {
         auto filterId { 1 };
@@ -118,16 +120,22 @@ void SquidMetaDataEditorComponent::setupComponents ()
     }
     filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (filterTypeComboBox, "Filter", [] () {}); // Off, LP, BP, NT, HP (0-4)
+    // FILTER FREQUENCY
     setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
+    // FILTER RESONANCE
     setupLabel (filterResonanceLabel, "RESO", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
+    // LEVEL
     setupLabel (levelLabel, "LEVEL", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
+    // ATTACK
     setupLabel (attackLabel, "ATTACK", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
+    // DECAY
     setupLabel (decayLabel, "DECAY", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
+    // LOOP MODE
     setupLabel (loopModeLabel, "LOOP MODE", kMediumLabelSize, juce::Justification::centred);
     {
         auto loopId { 1 };
@@ -139,16 +147,31 @@ void SquidMetaDataEditorComponent::setupComponents ()
     }
     loopModeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (loopModeComboBox, "LoopMode", [] () {}); // none, normal, zigZag, gate, zigZagGate (0-4)
+    // XFADE
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
+    // REVERSE
     setupButton (reverseButton, "REVERSE", "Reverse", [] () {}); // 0-1
+    // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
+    // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
+    // END
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
+    // CHOKE
+    setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
+    chokeComboBox.addItem ("Off", 1);
+    {
+        for (auto channelIndex {0}; channelIndex < 8; ++channelIndex)
+            chokeComboBox.addItem ("C" + juce::String (channelIndex + 1), channelIndex + 2);
+    }
+    chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    setupComboBox (chokeComboBox, "Choke", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7
 
+    // FILE LOAD BUTTON
     loadButton.setButtonText ("LOAD");
     loadButton.onClick = [this] ()
     {
@@ -265,6 +288,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 
     // put initial data into the UI
     attackDataChanged (squidMetaDataProperties.getAttack());
+    chokeDataChanged (squidMetaDataProperties.getChoke ());
     bitsDataChanged (squidMetaDataProperties.getBits ());
     decayDataChanged (squidMetaDataProperties.getDecay ());
     endCueDataChanged (squidMetaDataProperties.getEndCue ());
@@ -289,6 +313,7 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     jassert (squidMetaDataProperties.isValid ());
     squidMetaDataProperties.onAttackChange = [this] (int attack) { attackDataChanged (attack); };
     squidMetaDataProperties.onBitsChange = [this] (int bits) { bitsDataChanged (bits); };
+    squidMetaDataProperties.onChokeChange = [this] (int bits) { chokeDataChanged (bits); };
     squidMetaDataProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
     squidMetaDataProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
     squidMetaDataProperties.onEndCueSetChange = [this] (int cueIndex, int endCue) { if (cueIndex == curCueSet) endCueDataChanged (endCue); };
@@ -317,6 +342,11 @@ void SquidMetaDataEditorComponent::attackDataChanged (int attack)
 void SquidMetaDataEditorComponent::bitsDataChanged (int bits)
 {
     bitsTextEditor.setText (juce::String (bits), juce::NotificationType::dontSendNotification);
+}
+
+void SquidMetaDataEditorComponent::chokeDataChanged (int choke)
+{
+    chokeComboBox.setSelectedItemIndex (choke, juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::decayDataChanged (int decay)
@@ -405,6 +435,11 @@ void SquidMetaDataEditorComponent::attackUiChanged (int attack)
 void SquidMetaDataEditorComponent::bitsUiChanged (int bits)
 {
     squidMetaDataProperties.setBits (bits, false);
+}
+
+void SquidMetaDataEditorComponent::chokeUiChanged (int choke)
+{
+    squidMetaDataProperties.setChoke (choke, false);
 }
 
 void SquidMetaDataEditorComponent::decayUiChanged (int decay)
@@ -549,7 +584,13 @@ void SquidMetaDataEditorComponent::resized ()
     endCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
+    // column three
+    xOffset += columnWidth + 10;
+    yOffset = kInitialYOffset;
+    chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
+    // column four
     xOffset += columnWidth + 10;
     yOffset = kInitialYOffset;
     loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);

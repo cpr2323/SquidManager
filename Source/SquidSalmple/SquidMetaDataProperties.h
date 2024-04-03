@@ -18,6 +18,7 @@ public:
     void addCueSet (juce::int64 startCue, juce::int64 loopCue, juce::int64 endCue);
     void setAttack (int attack, bool includeSelfCallback);
     void setBits (int bits, bool includeSelfCallback);
+    void setChoke (int chokeChannel, bool includeSelfCallback);
     void setCuePoints (int cueSet, juce::int64 start, juce::int64 loop, juce::int64 end);
     void setDecay (int decay, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
@@ -41,6 +42,7 @@ public:
 
     int getAttack ();
     int getBits ();
+    int getChoke ();
     int getDecay ();
     uint32_t getEndCue ();
     uint32_t getEndCueSet (int cueIndex);
@@ -64,6 +66,7 @@ public:
 
     std::function<void (int attack)> onAttackChange;
     std::function<void (int bits)> onBitsChange;
+    std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int decay)> onDecayChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int cueIndex, uint32_t endCue)> onEndCueSetChange;
@@ -90,6 +93,7 @@ public:
     static inline const juce::Identifier SquidMetaDataTypeId { "SquidMetaData" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };
     static inline const juce::Identifier BitsPropertyId             { "bits" };
+    static inline const juce::Identifier ChokePropertyId            { "choke" };
     static inline const juce::Identifier Cv1PropertyId              { "cv1" };
     static inline const juce::Identifier Cv2PropertyId              { "cv2" };
     static inline const juce::Identifier Cv3PropertyId              { "cv3" };
