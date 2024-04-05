@@ -61,35 +61,35 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     {
         if (cvAssignFlag & CvAssignedFlag::startCue)
         {
-            return "StartCue";
+            return "startCue";
         }
         if (cvAssignFlag & CvAssignedFlag::endCue)
         {
-            return "EndCue";
+            return "endCue";
         }
         if (cvAssignFlag & CvAssignedFlag::loopCue)
         {
-            return "LoopCue";
+            return "loopCue";
         }
         if (cvAssignFlag & CvAssignedFlag::attack)
         {
-            return "Attack";
+            return "attack";
         }
         if (cvAssignFlag & CvAssignedFlag::cueSet)
         {
-            return "Cue Set";
+            return "cue Set";
         }
         if (cvAssignFlag & CvAssignedFlag::eTrig)
         {
-            return "ETrig";
+            return "eTrig";
         }
         if (cvAssignFlag & CvAssignedFlag::filtFreq)
         {
-            return "FilterFrequency";
+            return "filterFrequency";
         }
         if (cvAssignFlag & CvAssignedFlag::filtRes)
         {
-            return "FilterResonance";
+            return "filterResonance";
         }
         if (cvAssignFlag & CvAssignedFlag::reserved2)
         {
@@ -99,27 +99,27 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         }
         if (cvAssignFlag & CvAssignedFlag::bits)
         {
-            return "Bits";
+            return "bits";
         }
         if (cvAssignFlag & CvAssignedFlag::rate)
         {
-            return "Rate";
+            return "rate";
         }
         if (cvAssignFlag & CvAssignedFlag::level)
         {
-            return "Level";
+            return "level";
         }
         if (cvAssignFlag & CvAssignedFlag::decay)
         {
-            return "Decay";
+            return "decay";
         }
         if (cvAssignFlag & CvAssignedFlag::speed)
         {
-            return "Speed";
+            return "speed";
         }
         if (cvAssignFlag & CvAssignedFlag::loopMode)
         {
-            return "LoopMode";
+            return "loopMode";
         }
         if (cvAssignFlag & CvAssignedFlag::reserved3)
         {

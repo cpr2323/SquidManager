@@ -16,7 +16,7 @@ bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSample
 
     while (true)
     {
-        juce::Logger::outputDebugString ("offset: " + juce::String::toHexString (inputSampleStream->getPosition ()));
+        //juce::Logger::outputDebugString ("offset: " + juce::String::toHexString (inputSampleStream->getPosition ()));
         auto chunk { getChunkData (inputSampleStream.get ()) };
         if (! chunk.has_value ())
             break;
