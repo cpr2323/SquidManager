@@ -57,92 +57,128 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     //      values are
     //          0 - 99
     //          101 - 199 = -1 - -199
+    auto getParameterName = [] (CvAssignedFlag cvAssignFlag) -> juce::String
+    {
+        if (cvAssignFlag & CvAssignedFlag::startCue)
+        {
+            return "StartCue";
+        }
+        if (cvAssignFlag & CvAssignedFlag::endCue)
+        {
+            return "EndCue";
+        }
+        if (cvAssignFlag & CvAssignedFlag::loopCue)
+        {
+            return "LoopCue";
+        }
+        if (cvAssignFlag & CvAssignedFlag::attack)
+        {
+            return "Attack";
+        }
+        if (cvAssignFlag & CvAssignedFlag::cueSet)
+        {
+            return "Cue Set";
+        }
+        if (cvAssignFlag & CvAssignedFlag::eTrig)
+        {
+            return "ETrig";
+        }
+        if (cvAssignFlag & CvAssignedFlag::filtFreq)
+        {
+            return "FilterFrequency";
+        }
+        if (cvAssignFlag & CvAssignedFlag::filtRes)
+        {
+            return "FilterResonance";
+        }
+        if (cvAssignFlag & CvAssignedFlag::reserved2)
+        {
+            // this value is not yet mapped
+            jassertfalse;
+            return "<error - bit 1>";
+        }
+        if (cvAssignFlag & CvAssignedFlag::bits)
+        {
+            return "Bits";
+        }
+        if (cvAssignFlag & CvAssignedFlag::rate)
+        {
+            return "Rate";
+        }
+        if (cvAssignFlag & CvAssignedFlag::level)
+        {
+            return "Level";
+        }
+        if (cvAssignFlag & CvAssignedFlag::decay)
+        {
+            return "Decay";
+        }
+        if (cvAssignFlag & CvAssignedFlag::speed)
+        {
+            return "Speed";
+        }
+        if (cvAssignFlag & CvAssignedFlag::loopMode)
+        {
+            return "LoopMode";
+        }
+        if (cvAssignFlag & CvAssignedFlag::reserved3)
+        {
+            // this value is not yet mapped
+            jassertfalse;
+            return "<error - bit 8>";
+        }
+    };
+    juce::ValueTree cvAssignsVT { "CvAssigns" };
+    const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
     for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
     {
-        juce::String cvAssigns;
+        juce::ValueTree cvInputVT { "CvInput" };
+        cvInputVT.setProperty ("id", curCvInput + 1, nullptr);
 
-        auto addCvAssignString = [this, &cvAssigns] (juce::String cvAssignName)
+        juce::String cvAssignsLogString;
+        std::array<CvAssignedFlag, 14> cvAssignedFlagList { CvAssignedFlag::bits, CvAssignedFlag::rate, CvAssignedFlag::level, CvAssignedFlag::decay,
+                                                            CvAssignedFlag::speed, CvAssignedFlag::loopMode, CvAssignedFlag::startCue, CvAssignedFlag::endCue,
+                                                            CvAssignedFlag::loopCue, CvAssignedFlag::attack, CvAssignedFlag::cueSet, CvAssignedFlag::eTrig,
+                                                            CvAssignedFlag::filtFreq, CvAssignedFlag::filtRes };
+        auto paramIndex { 0 };
+        for (auto cvAssignFlag : cvAssignedFlagList)
         {
-            cvAssigns.isEmpty () ? cvAssigns = "CV assigns: " : cvAssigns += ", ";
-            cvAssigns += cvAssignName;
-        };
-        auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInput)) };
-        if (cvAssignFlags & CvAssignedFlag::startCue)
-        {
-            addCvAssignString ("StartCue");
-        }
-        if (cvAssignFlags & CvAssignedFlag::endCue)
-        {
-            addCvAssignString ("EndCue");
-        }
-        if (cvAssignFlags & CvAssignedFlag::loopCue)
-        {
-            addCvAssignString ("LoopCue");
-        }
-        if (cvAssignFlags & CvAssignedFlag::attack)
-        {
-            addCvAssignString ("Attack");
-        }
-        if (cvAssignFlags & CvAssignedFlag::cueSet)
-        {
-            addCvAssignString ("Cue Set");
-        }
-        if (cvAssignFlags & CvAssignedFlag::eTrig)
-        {
-            addCvAssignString ("ETrig");
-        }
-        if (cvAssignFlags & CvAssignedFlag::filtFreq)
-        {
-            addCvAssignString ("FilterFrequency");
-        }
-        if (cvAssignFlags & CvAssignedFlag::filtRes)
-        {
-            addCvAssignString ("FilterResonance");
-        }
-        if (cvAssignFlags & CvAssignedFlag::reserved2)
-        {
-            // this value is not yet mapped
-            jassertfalse;
-        }
-        if (cvAssignFlags & CvAssignedFlag::bits)
-        {
-            addCvAssignString ("Bits");
-        }
-        if (cvAssignFlags & CvAssignedFlag::rate)
-        {
-            addCvAssignString ("Rate");
-        }
-        if (cvAssignFlags & CvAssignedFlag::level)
-        {
-            addCvAssignString ("Level");
-        }
-        if (cvAssignFlags & CvAssignedFlag::decay)
-        {
-            addCvAssignString ("Decay");
-        }
-        if (cvAssignFlags & CvAssignedFlag::speed)
-        {
-            addCvAssignString ("Speed");
-        }
-        if (cvAssignFlags & CvAssignedFlag::loopMode)
-        {
-            addCvAssignString ("LoopMode");
-        }
-        if (cvAssignFlags & CvAssignedFlag::reserved3)
-        {
-            // this value is not yet mapped
-            jassertfalse;
-        }
-        if (cvAssigns.isNotEmpty())
-            LogReader (cvAssigns);
+            juce::ValueTree parameterVT { "Parameter" };
+            parameterVT.setProperty ("name", getParameterName (cvAssignFlag), nullptr);
+            auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInput)) };
+            parameterVT.setProperty ("enabled", cvAssignFlags & cvAssignFlag ? "true" : "false", nullptr);
 #if 0
-        const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
+            auto addCvAssignString = [this, &cvAssignsLogString] (juce::String cvAssignName)
+            {
+                cvAssignsLogString.isEmpty () ? cvAssignsLogString = "CV assigns: " : cvAssignsLogString += ", ";
+                cvAssignsLogString += cvAssignName;
+            };
+            addCvAssignString (getParameterName (cvAssignFlag));
+#endif
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (paramIndex * 4) };
+            const auto offset { getValue <2> (cvParamOffset + 0) };
+            auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            if (attenuation > 99)
+                attenuation = 100 - attenuation;
+            parameterVT.setProperty ("attenuate", attenuation, nullptr);
+            parameterVT.setProperty ("offset", offset, nullptr);
+            cvInputVT.addChild (parameterVT, -1, nullptr);
+
+            // TODO - this is probably not the parameter indecies are ordered, but it allows for testing of the code until the correct order is known
+            ++paramIndex;
+        }
+        cvAssignsVT.addChild (cvInputVT, -1, nullptr);
+
+#if 0
+        if (cvAssignsLogString.isNotEmpty ())
+            LogReader (cvAssignsLogString);
+
         juce::String cvParamsString;
         for (auto curCvParams { 0 }; curCvParams < rowSize; ++curCvParams)
         {
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (curCvParams * 4)};
             const auto offset { getValue <2> (cvParamOffset + 0) };
-            int16_t attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
             if (attenuation > 99)
                 attenuation = 100 - attenuation;
             cvParamsString += (cvParamsString.isEmpty () ? "" : ", ") + juce::String("off: ") + juce::String (offset) + ", att: " + juce::String (attenuation);
@@ -150,6 +186,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         LogReader ("read - CV" + juce::String (curCvInput + 1) + ": " + cvParamsString);
 #endif
     }
+    squidMetaDataProperties.getValueTree ().addChild (cvAssignsVT, -1, nullptr);
 
     ////////////////////////////////////
     // cue set stuff

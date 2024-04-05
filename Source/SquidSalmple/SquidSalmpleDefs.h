@@ -65,11 +65,6 @@ enum class ExternalTrigger {
     on
 };
 
-constexpr auto k8BitSize  { static_cast<int> (sizeof (uint8_t)) };
-constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
-constexpr auto k32BitSize { static_cast<int> (sizeof (uint32_t)) };
-constexpr auto k64BitSize { static_cast<int> (sizeof (uint64_t)) };
-
 enum CvAssignedFlag
 {
     none      = 0x0000,
@@ -90,6 +85,11 @@ enum CvAssignedFlag
     filtFreq  = 0x4000,
     filtRes   = 0x8000,
 };
+
+constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
+constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
+constexpr auto k32BitSize { static_cast<int> (sizeof (uint32_t)) };
+constexpr auto k64BitSize { static_cast<int> (sizeof (uint64_t)) };
 
 // Field offsets and size
 namespace SquidSalmple
