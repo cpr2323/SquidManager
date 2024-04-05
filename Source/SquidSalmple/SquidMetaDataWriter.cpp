@@ -28,6 +28,23 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getStartCue ()), SquidSalmple::DataLayout::kSampleStartOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getXfade ()), SquidSalmple::DataLayout::kXfadeOffset);
 
+    // CV Assigns
+    auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName ("CvAssigns") };
+    jassert (cvAssignsVT.isValid ());
+    const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
+    ValueTreeHelpers::forEachChildOfType (cvAssignsVT, "CvInput", [this] (juce::ValueTree cvInputVT)
+    {
+        const auto cvId { static_cast<int> (cvInputVT.getProperty ("id")) };
+        juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
+        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this] (juce::ValueTree parameterVT)
+        {
+            juce::Logger::outputDebugString (" processing parameter: " + juce::String (parameterVT.getProperty("name").toString()));
+            return true;
+        });
+        return true;
+    });
+
+    // Cue Sets
     const auto numCues { squidMetaDataProperties.getNumCues () };
     setUInt8 (static_cast<uint8_t> (numCues), SquidSalmple::DataLayout::kCuesCountOffset);
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
