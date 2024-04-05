@@ -38,9 +38,20 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
         juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
         ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this] (juce::ValueTree parameterVT)
         {
-            juce::Logger::outputDebugString (" processing parameter: " + juce::String (parameterVT.getProperty("name").toString()));
+            const auto parameterName { parameterVT.getProperty ("name").toString () };
+            const auto enabled { static_cast<bool> (parameterVT.getProperty ("enabled")) };
+            const auto attenuation { static_cast<int> (parameterVT.getProperty ("attenuate")) };
+            const auto offset { static_cast<int> (parameterVT.getProperty ("offset")) };
+            juce::Logger::outputDebugString (" processing parameter: " + parameterName);
+            if (enabled)
+            {
+                // set enabled bit in appropriate CvFlags
+            }
+            // determine proper data offsets for current channel and parameter
+            // write attenuation and offset values to MemoryBlock
             return true;
         });
+        // write CvFlags to MemoryBlock
         return true;
     });
 
