@@ -31,27 +31,74 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     // CV Assigns
     auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName ("CvAssigns") };
     jassert (cvAssignsVT.isValid ());
-    const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
     ValueTreeHelpers::forEachChildOfType (cvAssignsVT, "CvInput", [this] (juce::ValueTree cvInputVT)
     {
         const auto cvId { static_cast<int> (cvInputVT.getProperty ("id")) };
         juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
-        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this] (juce::ValueTree parameterVT)
+        uint16_t cvAssignedFlags { CvAssignedFlag::none };
+        auto paramIndex { 0 };
+        const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
+        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this, cvId, parameterRowSize, &paramIndex, &cvAssignedFlags] (juce::ValueTree parameterVT)
         {
             const auto parameterName { parameterVT.getProperty ("name").toString () };
             const auto enabled { static_cast<bool> (parameterVT.getProperty ("enabled")) };
-            const auto attenuation { static_cast<int> (parameterVT.getProperty ("attenuate")) };
             const auto offset { static_cast<int> (parameterVT.getProperty ("offset")) };
+            auto attenuation { static_cast<int> (parameterVT.getProperty ("attenuate")) };
+            // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
+            //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
+            // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
+            // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
+            if (attenuation < 0)
+                attenuation = 100 + std::abs (attenuation);
             juce::Logger::outputDebugString (" processing parameter: " + parameterName);
             if (enabled)
             {
-                // set enabled bit in appropriate CvFlags
+                auto getFlagBitFromParameterName = [] (juce::String parameterName) -> uint16_t
+                {
+                    if (parameterName == "startCue")
+                        return CvAssignedFlag::startCue;
+                    if (parameterName == "endCue")
+                        return CvAssignedFlag::endCue;
+                    if (parameterName == "loopCue")
+                        return CvAssignedFlag::loopCue;
+                    if (parameterName == "attack")
+                        return CvAssignedFlag::attack;
+                    if (parameterName == "cue Set")
+                        return CvAssignedFlag::cueSet;
+                    if (parameterName == "eTrig")
+                        return CvAssignedFlag::eTrig;
+                    if (parameterName == "filterFrequency")
+                        return CvAssignedFlag::filtFreq;
+                    if (parameterName == "filterResonance")
+                        return CvAssignedFlag::filtRes;
+                    if (parameterName == "bits")
+                        return CvAssignedFlag::bits;
+                    if (parameterName == "rate")
+                        return CvAssignedFlag::rate;
+                    if (parameterName == "level")
+                        return CvAssignedFlag::level;
+                    if (parameterName == "decay")
+                        return CvAssignedFlag::decay;
+                    if (parameterName == "speed")
+                        return CvAssignedFlag::speed;
+                    if (parameterName == "loopMode")
+                        return CvAssignedFlag::loopMode;
+                    // unknown parameter name
+                    jassertfalse;
+                    return CvAssignedFlag::none;
+                };
+                cvAssignedFlags |= getFlagBitFromParameterName (parameterName);
             }
-            // determine proper data offsets for current channel and parameter
-            // write attenuation and offset values to MemoryBlock
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (paramIndex * 4) };
+            setUInt16 (offset, cvParamOffset + 0);
+            setUInt16 (attenuation, cvParamOffset + 2);
+            // TODO - this is probably not how the parameter index are ordered, but it allows for testing of the code until the correct order is known
+            // ****** this produces bad metadata though, so until it is fixed, be careful what files you write to
+            ++paramIndex;
             return true;
         });
         // write CvFlags to MemoryBlock
+        setUInt16 (cvAssignedFlags, SquidSalmple::DataLayout::kCvFlagsOffset + (cvId - 1) * 2);
         return true;
     });
 

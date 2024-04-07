@@ -57,7 +57,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     //      values are
     //          0 - 99
     //          101 - 199 = -1 - -199
-    auto getParameterName = [] (CvAssignedFlag cvAssignFlag) -> juce::String
+    auto getParameterName = [] (uint16_t cvAssignFlag) -> juce::String
     {
         if (cvAssignFlag & CvAssignedFlag::startCue)
         {
@@ -136,7 +136,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         cvInputVT.setProperty ("id", curCvInput + 1, nullptr);
 
         juce::String cvAssignsLogString;
-        std::array<CvAssignedFlag, 14> cvAssignedFlagList { CvAssignedFlag::bits, CvAssignedFlag::rate, CvAssignedFlag::level, CvAssignedFlag::decay,
+        std::array<uint16_t, 14> cvAssignedFlagList { CvAssignedFlag::bits, CvAssignedFlag::rate, CvAssignedFlag::level, CvAssignedFlag::decay,
                                                             CvAssignedFlag::speed, CvAssignedFlag::loopMode, CvAssignedFlag::startCue, CvAssignedFlag::endCue,
                                                             CvAssignedFlag::loopCue, CvAssignedFlag::attack, CvAssignedFlag::cueSet, CvAssignedFlag::eTrig,
                                                             CvAssignedFlag::filtFreq, CvAssignedFlag::filtRes };
@@ -158,13 +158,18 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (paramIndex * 4) };
             const auto offset { getValue <2> (cvParamOffset + 0) };
             auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
+            //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
+            // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
+            // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
             if (attenuation > 99)
                 attenuation = 100 - attenuation;
             parameterVT.setProperty ("attenuate", attenuation, nullptr);
             parameterVT.setProperty ("offset", offset, nullptr);
             cvInputVT.addChild (parameterVT, -1, nullptr);
 
-            // TODO - this is probably not the parameter indecies are ordered, but it allows for testing of the code until the correct order is known
+            // TODO - this is probably not how the parameter index are ordered, but it allows for testing of the code until the correct order is known
+            // ****** this produces bad metadata though, so until it is fixed, be careful what files you write to
             ++paramIndex;
         }
         cvAssignsVT.addChild (cvInputVT, -1, nullptr);

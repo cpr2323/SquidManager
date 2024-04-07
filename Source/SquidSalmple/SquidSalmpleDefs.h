@@ -65,26 +65,26 @@ enum class ExternalTrigger {
     on
 };
 
-enum CvAssignedFlag
+namespace CvAssignedFlag
 {
-    none      = 0x0000,
-    reserved2 = 0x0001, // unused
-    bits      = 0x0002,
-    rate      = 0x0004,
-    level     = 0x0008,
-    decay     = 0x0010,
-    speed     = 0x0020,
-    loopMode  = 0x0040,
-    reserved3 = 0x0080, // unused
-    startCue  = 0x0100,
-    endCue    = 0x0200,
-    loopCue   = 0x0400,
-    attack    = 0x0800,
-    cueSet    = 0x1000,
-    eTrig     = 0x2000,
-    filtFreq  = 0x4000,
-    filtRes   = 0x8000,
-};
+    constexpr uint16_t none      { 0x0000 };
+    constexpr uint16_t reserved2 { 0x0001 }; // unused
+    constexpr uint16_t bits      { 0x0002 };
+    constexpr uint16_t rate      { 0x0004 };
+    constexpr uint16_t level     { 0x0008 };
+    constexpr uint16_t decay     { 0x0010 };
+    constexpr uint16_t speed     { 0x0020 };
+    constexpr uint16_t loopMode  { 0x0040 };
+    constexpr uint16_t reserved3 { 0x0080 }; // unused
+    constexpr uint16_t startCue  { 0x0100 };
+    constexpr uint16_t endCue    { 0x0200 };
+    constexpr uint16_t loopCue   { 0x0400 };
+    constexpr uint16_t attack    { 0x0800 };
+    constexpr uint16_t cueSet    { 0x1000 };
+    constexpr uint16_t eTrig     { 0x2000 };
+    constexpr uint16_t filtFreq  { 0x4000 };
+    constexpr uint16_t filtRes   { 0x8000 };
+}
 
 constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
 constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
