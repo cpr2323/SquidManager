@@ -61,6 +61,8 @@ private:
     CustomTextEditorInt speedTextEditor; // 1 - 99 (50 is normal?, below that is negative speed? above is positive?)
     juce::Label startCueLabel;
     CustomTextEditorInt startCueTextEditor;  // 0 - sampleEnd
+    juce::Label stepsLabel;
+    CustomComboBox stepsComboBox; // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     juce::Label xfadeLabel;
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
     WaveformDisplay waveformDisplay;
@@ -90,6 +92,7 @@ private:
     void reverseDataChanged (int reverse);
     void speedDataChanged (int speed);
     void startCueDataChanged (int startCue);
+    void stepsDataChanged (int steps);
     void xfadeDataChanged (int xfade);
 
     void attackUiChanged (int attack);
@@ -109,6 +112,7 @@ private:
     void reverseUiChanged (int reverse);
     void speedUiChanged (int speed);
     void startCueUiChanged (int startCue);
+    void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
 
     void initCueSets ();

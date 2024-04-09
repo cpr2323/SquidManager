@@ -24,6 +24,7 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
 
 SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
 {
+    stepsComboBox.setLookAndFeel (nullptr);
     eTrigComboBox.setLookAndFeel (nullptr);
     chokeComboBox.setLookAndFeel (nullptr);
     loopModeComboBox.setLookAndFeel (nullptr);
@@ -180,14 +181,17 @@ void SquidMetaDataEditorComponent::setupComponents ()
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
     eTrigComboBox.addItem ("Off", 1);
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
-    {
-        // TODO - only the 'other channels' should show in this list
-        //if (channelIndex != curChannelIndex)
         eTrigComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 2);
-    }
     eTrigComboBox.addItem ("On", 10);
     eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7
+    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7, On
+    // Steps 
+    setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
+    stepsComboBox.addItem ("Off", 1);
+    for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
+        stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
+    stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    setupComboBox (stepsComboBox, "Steps", [] () {}); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
 
     // FILE LOAD BUTTON
     loadButton.setButtonText ("LOAD");
@@ -322,6 +326,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     reverseDataChanged (squidMetaDataProperties.getReverse ());
     speedDataChanged (squidMetaDataProperties.getSpeed ());
     startCueDataChanged (squidMetaDataProperties.getStartCue ());
+    stepsDataChanged (squidMetaDataProperties.getSteps ());
     xfadeDataChanged (squidMetaDataProperties.getXfade ());
 
     initializeCallbacks ();
@@ -350,6 +355,7 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     squidMetaDataProperties.onSpeedChange = [this] (int speed) { speedDataChanged (speed); };
     squidMetaDataProperties.onStartCueChange = [this] (int startCue) { startCueDataChanged (startCue); };
     squidMetaDataProperties.onStartCueSetChange = [this] (int cueIndex, int startCue) { if (cueIndex == curCueSet) startCueDataChanged (startCue); };
+    squidMetaDataProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidMetaDataProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 }
 
@@ -443,6 +449,11 @@ void SquidMetaDataEditorComponent::startCueDataChanged (int startCue)
     startCueTextEditor.setText (juce::String (startCue), juce::NotificationType::dontSendNotification);
     if (curCueSet == 0)
         waveformDisplay.setCuePoints (startCue, squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
+}
+
+void SquidMetaDataEditorComponent::stepsDataChanged (int steps)
+{
+    stepsComboBox.setSelectedItemIndex (steps, juce::NotificationType::dontSendNotification);
 }
 
 void SquidMetaDataEditorComponent::xfadeDataChanged (int xfade)
@@ -541,6 +552,11 @@ void SquidMetaDataEditorComponent::startCueUiChanged (int startCue)
     squidMetaDataProperties.setStartCue (startCue, false);
 }
 
+void SquidMetaDataEditorComponent::stepsUiChanged (int steps)
+{
+    squidMetaDataProperties.setSteps (steps, false);
+}
+
 void SquidMetaDataEditorComponent::xfadeUiChanged (int xfade)
 {
     squidMetaDataProperties.setXfade (xfade, false);
@@ -622,6 +638,9 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = chokeComboBox.getBottom () + 3;
     eTrigLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     eTrigComboBox.setBounds (eTrigLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = eTrigComboBox.getBottom () + 3;
+    stepsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    stepsComboBox.setBounds (stepsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
     // column four
     xOffset += columnWidth + 10;

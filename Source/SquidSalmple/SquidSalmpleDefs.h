@@ -158,7 +158,7 @@ namespace SquidSalmple
         const auto k_Reserved8dSize { k16BitSize };
         const auto kStepTrigCurOffset { k_Reserved8dOffset + k_Reserved8dSize }; 
         const auto kStepTrigCurSize { k8BitSize };
-        const auto kStepTrigNumOffset { kStepTrigCurOffset + kStepTrigCurSize };
+        const auto kStepTrigNumOffset { kStepTrigCurOffset + kStepTrigCurSize }; // Off, 2, 3, 4, 5, 6, 7 ,8
         const auto kStepTrigNumSize { k8BitSize };
         const auto k_Reserved9Offset { kStepTrigNumOffset + kStepTrigNumSize }; // misc3
         const auto k_Reserved9Size { k16BitSize };
