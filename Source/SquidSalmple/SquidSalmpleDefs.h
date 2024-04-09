@@ -75,7 +75,7 @@ namespace CvAssignedFlag
     constexpr uint16_t decay     { 0x0010 };
     constexpr uint16_t speed     { 0x0020 };
     constexpr uint16_t loopMode  { 0x0040 };
-    constexpr uint16_t reserved3 { 0x0080 }; // unused
+    constexpr uint16_t reverse   { 0x0080 };
     constexpr uint16_t startCue  { 0x0100 };
     constexpr uint16_t endCue    { 0x0200 };
     constexpr uint16_t loopCue   { 0x0400 };

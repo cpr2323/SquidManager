@@ -60,6 +60,34 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     //          101 - 199 = -1 - -199
     auto getParameterName = [] (uint16_t cvAssignFlag) -> juce::String
     {
+        if (cvAssignFlag & CvAssignedFlag::bits)
+        {
+            return "bits";
+        }
+        if (cvAssignFlag & CvAssignedFlag::rate)
+        {
+            return "rate";
+        }
+        if (cvAssignFlag & CvAssignedFlag::level)
+        {
+            return "level";
+        }
+        if (cvAssignFlag & CvAssignedFlag::decay)
+        {
+            return "decay";
+        }
+        if (cvAssignFlag & CvAssignedFlag::speed)
+        {
+            return "speed";
+        }
+        if (cvAssignFlag & CvAssignedFlag::loopMode)
+        {
+            return "loopMode";
+        }
+        if (cvAssignFlag & CvAssignedFlag::reverse)
+        {
+            return "reverse";
+        }
         if (cvAssignFlag & CvAssignedFlag::startCue)
         {
             return "startCue";
@@ -98,36 +126,6 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
             jassertfalse;
             return "<error - bit 1>";
         }
-        if (cvAssignFlag & CvAssignedFlag::bits)
-        {
-            return "bits";
-        }
-        if (cvAssignFlag & CvAssignedFlag::rate)
-        {
-            return "rate";
-        }
-        if (cvAssignFlag & CvAssignedFlag::level)
-        {
-            return "level";
-        }
-        if (cvAssignFlag & CvAssignedFlag::decay)
-        {
-            return "decay";
-        }
-        if (cvAssignFlag & CvAssignedFlag::speed)
-        {
-            return "speed";
-        }
-        if (cvAssignFlag & CvAssignedFlag::loopMode)
-        {
-            return "loopMode";
-        }
-        if (cvAssignFlag & CvAssignedFlag::reserved3)
-        {
-            // this value is not yet mapped
-            jassertfalse;
-            return "<error - bit 8>";
-        }
     };
     juce::ValueTree cvAssignsVT { "CvAssigns" };
     const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
@@ -137,10 +135,10 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         cvInputVT.setProperty ("id", curCvInput + 1, nullptr);
 
         juce::String cvAssignsLogString;
-        std::array<std::tuple<uint16_t, uint8_t>, 14> cvAssignedFlagList { { {CvAssignedFlag::bits, 0}, {CvAssignedFlag::rate, 1}, {CvAssignedFlag::level, 2}, {CvAssignedFlag::decay, 3},
-                                                                             {CvAssignedFlag::speed, 4}, {CvAssignedFlag::loopMode, 5}, {CvAssignedFlag::startCue, 7}, {CvAssignedFlag::endCue, 8},
-                                                                             {CvAssignedFlag::loopCue, 9}, {CvAssignedFlag::attack, 10}, {CvAssignedFlag::cueSet, 11}, {CvAssignedFlag::eTrig, 12},
-                                                                             {CvAssignedFlag::filtFreq, 13}, {CvAssignedFlag::filtRes, 14} } };
+        std::array<std::tuple<uint16_t, uint8_t>, 15> cvAssignedFlagList { { {CvAssignedFlag::bits, 0}, {CvAssignedFlag::rate, 1}, {CvAssignedFlag::level, 2}, {CvAssignedFlag::decay, 3},
+                                                                             {CvAssignedFlag::speed, 4}, {CvAssignedFlag::loopMode, 5}, {CvAssignedFlag::reverse, 6}, {CvAssignedFlag::startCue, 7},
+                                                                             {CvAssignedFlag::endCue, 8}, {CvAssignedFlag::loopCue, 9}, {CvAssignedFlag::attack, 10}, {CvAssignedFlag::cueSet, 11},
+                                                                             {CvAssignedFlag::eTrig, 12}, {CvAssignedFlag::filtFreq, 13}, {CvAssignedFlag::filtRes, 14} } };
         for (auto [cvAssignFlag, cvParamIndex] : cvAssignedFlagList)
         {
             juce::ValueTree parameterVT { "Parameter" };

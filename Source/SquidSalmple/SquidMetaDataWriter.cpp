@@ -65,6 +65,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
                     return { CvAssignedFlag::speed, 4 };
                 if (parameterName == "loopMode")
                     return { CvAssignedFlag::loopMode, 5 };
+                if (parameterName == "reverse")
+                    return { CvAssignedFlag::reverse, 6 };
                 if (parameterName == "startCue")
                     return { CvAssignedFlag::startCue, 7 };
                 if (parameterName == "endCue")
