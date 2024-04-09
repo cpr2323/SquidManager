@@ -48,6 +48,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     squidMetaDataProperties.setReverse (getValue <SquidSalmple::DataLayout::kReverseSize> (SquidSalmple::DataLayout::kReverseOffset), false);
     squidMetaDataProperties.setSpeed (getValue <SquidSalmple::DataLayout::kSpeedSize> (SquidSalmple::DataLayout::kSpeedOffset), false);
     squidMetaDataProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
+    squidMetaDataProperties.setSteps (getValue<SquidSalmple::DataLayout::kStepTrigNumSize> (SquidSalmple::DataLayout::kStepTrigNumOffset), false);
     squidMetaDataProperties.setXfade (getValue <SquidSalmple::DataLayout::kXfadeSize> (SquidSalmple::DataLayout::kXfadeOffset), false);
 
     ////////////////////////////////////
@@ -136,12 +137,11 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         cvInputVT.setProperty ("id", curCvInput + 1, nullptr);
 
         juce::String cvAssignsLogString;
-        std::array<uint16_t, 14> cvAssignedFlagList { CvAssignedFlag::bits, CvAssignedFlag::rate, CvAssignedFlag::level, CvAssignedFlag::decay,
-                                                            CvAssignedFlag::speed, CvAssignedFlag::loopMode, CvAssignedFlag::startCue, CvAssignedFlag::endCue,
-                                                            CvAssignedFlag::loopCue, CvAssignedFlag::attack, CvAssignedFlag::cueSet, CvAssignedFlag::eTrig,
-                                                            CvAssignedFlag::filtFreq, CvAssignedFlag::filtRes };
-        auto paramIndex { 0 };
-        for (auto cvAssignFlag : cvAssignedFlagList)
+        std::array<std::tuple<uint16_t, uint8_t>, 14> cvAssignedFlagList { { {CvAssignedFlag::bits, 0}, {CvAssignedFlag::rate, 1}, {CvAssignedFlag::level, 2}, {CvAssignedFlag::decay, 3},
+                                                                             {CvAssignedFlag::speed, 4}, {CvAssignedFlag::loopMode, 5}, {CvAssignedFlag::startCue, 7}, {CvAssignedFlag::endCue, 8},
+                                                                             {CvAssignedFlag::loopCue, 9}, {CvAssignedFlag::attack, 10}, {CvAssignedFlag::cueSet, 11}, {CvAssignedFlag::eTrig, 12},
+                                                                             {CvAssignedFlag::filtFreq, 13}, {CvAssignedFlag::filtRes, 14} } };
+        for (auto [cvAssignFlag, cvParamIndex] : cvAssignedFlagList)
         {
             juce::ValueTree parameterVT { "Parameter" };
             parameterVT.setProperty ("name", getParameterName (cvAssignFlag), nullptr);
@@ -155,7 +155,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
             };
             addCvAssignString (getParameterName (cvAssignFlag));
 #endif
-            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (paramIndex * 4) };
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInput * rowSize) + (cvParamIndex * 4) };
             const auto offset { getValue <2> (cvParamOffset + 0) };
             auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
             // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
@@ -167,10 +167,6 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
             parameterVT.setProperty ("attenuate", attenuation, nullptr);
             parameterVT.setProperty ("offset", offset, nullptr);
             cvInputVT.addChild (parameterVT, -1, nullptr);
-
-            // TODO - this is probably not how the parameter index are ordered, but it allows for testing of the code until the correct order is known
-            // ****** this produces bad metadata though, so until it is fixed, be careful what files you write to
-            ++paramIndex;
         }
         cvAssignsVT.addChild (cvInputVT, -1, nullptr);
 

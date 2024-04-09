@@ -26,6 +26,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getReverse ()), SquidSalmple::DataLayout::kReverseOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getSpeed ()), SquidSalmple::DataLayout::kSpeedOffset);
     setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getStartCue ()), SquidSalmple::DataLayout::kSampleStartOffset);
+    setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getSteps ()), SquidSalmple::DataLayout::kStepTrigNumOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getXfade ()), SquidSalmple::DataLayout::kXfadeOffset);
 
     // CV Assigns
@@ -36,9 +37,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
         const auto cvId { static_cast<int> (cvInputVT.getProperty ("id")) };
         juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
         uint16_t cvAssignedFlags { CvAssignedFlag::none };
-        auto paramIndex { 0 };
         const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
-        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this, cvId, parameterRowSize, &paramIndex, &cvAssignedFlags] (juce::ValueTree parameterVT)
+        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this, cvId, parameterRowSize, &cvAssignedFlags] (juce::ValueTree parameterVT)
         {
             const auto parameterName { parameterVT.getProperty ("name").toString () };
             const auto enabled { static_cast<bool> (parameterVT.getProperty ("enabled")) };
@@ -51,50 +51,48 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
             if (attenuation < 0)
                 attenuation = 100 + std::abs (attenuation);
             juce::Logger::outputDebugString (" processing parameter: " + parameterName);
-            if (enabled)
+            auto getFlagBitParamIndexFromParameterName = [] (juce::String parameterName) -> std::tuple<uint16_t, uint8_t>
             {
-                auto getFlagBitFromParameterName = [] (juce::String parameterName) -> uint16_t
-                {
-                    if (parameterName == "startCue")
-                        return CvAssignedFlag::startCue;
-                    if (parameterName == "endCue")
-                        return CvAssignedFlag::endCue;
-                    if (parameterName == "loopCue")
-                        return CvAssignedFlag::loopCue;
-                    if (parameterName == "attack")
-                        return CvAssignedFlag::attack;
-                    if (parameterName == "cue Set")
-                        return CvAssignedFlag::cueSet;
-                    if (parameterName == "eTrig")
-                        return CvAssignedFlag::eTrig;
-                    if (parameterName == "filterFrequency")
-                        return CvAssignedFlag::filtFreq;
-                    if (parameterName == "filterResonance")
-                        return CvAssignedFlag::filtRes;
-                    if (parameterName == "bits")
-                        return CvAssignedFlag::bits;
-                    if (parameterName == "rate")
-                        return CvAssignedFlag::rate;
-                    if (parameterName == "level")
-                        return CvAssignedFlag::level;
-                    if (parameterName == "decay")
-                        return CvAssignedFlag::decay;
-                    if (parameterName == "speed")
-                        return CvAssignedFlag::speed;
-                    if (parameterName == "loopMode")
-                        return CvAssignedFlag::loopMode;
-                    // unknown parameter name
-                    jassertfalse;
-                    return CvAssignedFlag::none;
-                };
-                cvAssignedFlags |= getFlagBitFromParameterName (parameterName);
-            }
-            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (paramIndex * 4) };
+                if (parameterName == "bits")
+                    return { CvAssignedFlag::bits, 0 };
+                if (parameterName == "rate")
+                    return { CvAssignedFlag::rate, 1 };
+                if (parameterName == "level")
+                    return { CvAssignedFlag::level, 2 };
+                if (parameterName == "decay")
+                    return { CvAssignedFlag::decay, 3 };
+                if (parameterName == "speed")
+                    return { CvAssignedFlag::speed, 4 };
+                if (parameterName == "loopMode")
+                    return { CvAssignedFlag::loopMode, 5 };
+                if (parameterName == "startCue")
+                    return { CvAssignedFlag::startCue, 7 };
+                if (parameterName == "endCue")
+                    return { CvAssignedFlag::endCue, 8 };
+                if (parameterName == "loopCue")
+                    return { CvAssignedFlag::loopCue, 9 };
+                if (parameterName == "attack")
+                    return { CvAssignedFlag::attack, 10 };
+                if (parameterName == "cue Set")
+                    return { CvAssignedFlag::cueSet, 11 };
+                if (parameterName == "eTrig")
+                    return { CvAssignedFlag::eTrig, 12 };
+                if (parameterName == "filterFrequency")
+                    return { CvAssignedFlag::filtFreq, 13 };
+                if (parameterName == "filterResonance")
+                    return { CvAssignedFlag::filtRes, 14 };
+                // unknown parameter name
+                jassertfalse;
+                return { CvAssignedFlag::none, 255 };
+            };
+            const auto [cvAssignedFlag, cvParamIndex] { getFlagBitParamIndexFromParameterName (parameterName) };
+    
+            if (enabled)
+                cvAssignedFlags |= cvAssignedFlag;
+            
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (cvParamIndex* 4) };
             setUInt16 (offset, cvParamOffset + 0);
             setUInt16 (attenuation, cvParamOffset + 2);
-            // TODO - this is probably not how the parameter index are ordered, but it allows for testing of the code until the correct order is known
-            // ****** this produces bad metadata though, so until it is fixed, be careful what files you write to
-            ++paramIndex;
             return true;
         });
         // write CvFlags to MemoryBlock
