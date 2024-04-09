@@ -170,21 +170,21 @@ void SquidMetaDataEditorComponent::setupComponents ()
         for (auto curChannelIndex {0}; curChannelIndex < 8; ++curChannelIndex)
         {
             // TODO - only the 'other channels' should show in this list
+            //        I think we want to display 'Off' for the current channel
             //if (channelIndex != curChannelIndex)
             chokeComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 1);
         }
     }
-    chokeComboBox.addItem ("Off", 9);
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (chokeComboBox, "Choke", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7
+    setupComboBox (chokeComboBox, "Choke", [] () {}); // C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
     eTrigComboBox.addItem ("Off", 1);
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
-        eTrigComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 2);
+        eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
     eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, C1, C2, C3, C4, C5, C6, C7, On
+    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps 
     setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
     stepsComboBox.addItem ("Off", 1);

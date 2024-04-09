@@ -162,13 +162,13 @@ namespace SquidSalmple
         const auto kStepTrigNumSize { k8BitSize };
         const auto k_Reserved9Offset { kStepTrigNumOffset + kStepTrigNumSize }; // misc3
         const auto k_Reserved9Size { k16BitSize };
-        const auto kExternalTriggerOffset { k_Reserved9Offset + k_Reserved9Size };
+        const auto kExternalTriggerOffset { k_Reserved9Offset + k_Reserved9Size }; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
         const auto kExternalTriggerSize { k8BitSize };
         const auto kQuantizeModeOffset { kExternalTriggerOffset + kExternalTriggerSize }; //     none, chromatic, octave, major, minor, harmonicMinor, pentatonicMajor, pentatonicMinor, lydian, phrygian, japanese, rootAndFifth, oneChord, fourChord, fiveChord
         const auto kQuantizeModeSize { k8BitSize };
         const auto k_Reserved10Offset { kQuantizeModeOffset + kQuantizeModeSize }; // zoom amount
         const auto k_Reserved10Size { k8BitSize };
-        const auto kChokeOffset { k_Reserved10Offset + k_Reserved10Size };
+        const auto kChokeOffset { k_Reserved10Offset + k_Reserved10Size }; // C1, C2, C3, C4, C5, C6, C7, C8
         const auto kChokeSize { k8BitSize };
         const auto k_PadXOffset { kChokeOffset + kChokeSize };
         const auto k_PadXSize { 2 * k8BitSize };
