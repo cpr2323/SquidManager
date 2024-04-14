@@ -68,7 +68,7 @@ enum class ExternalTrigger {
 namespace CvAssignedFlag
 {
     constexpr uint16_t none      { 0x0000 };
-    constexpr uint16_t reserved2 { 0x0001 }; // unused
+    constexpr uint16_t unused    { 0x0001 }; // unused
     constexpr uint16_t bits      { 0x0002 };
     constexpr uint16_t rate      { 0x0004 };
     constexpr uint16_t level     { 0x0008 };

@@ -519,7 +519,7 @@ juce::ValueTree SquidMetaDataProperties::create ()
 void SquidMetaDataProperties::initValueTree ()
 {
     setAttack (0, false);
-    setBits (0, false);
+    setBits (16, false);
     setChoke (0, false);
     setCurCueSet (0, false);
     setDecay (0, false);
@@ -529,11 +529,11 @@ void SquidMetaDataProperties::initValueTree ()
     setFilterType (0, false);
     setLoopCue (0, false);
     setLoopMode (0, false);
-    setLevel (0, false);
+    setLevel (30, false);
     setQuant (0, false);
-    setRate (0, false);
+    setRate (7, false); // 7 == 44.1k
     setReverse (0, false);
-    setSpeed (0, false);
+    setSpeed (50, false); 
     setStartCue (0, false);
     setSteps (0, false);
     setXfade (0, false);

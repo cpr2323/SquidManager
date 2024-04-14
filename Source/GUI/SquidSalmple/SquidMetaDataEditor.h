@@ -115,6 +115,8 @@ private:
     void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
 
+    int getUiValue (int internalValue);
+    int getInternalValue (int uiValue);
     void initCueSets ();
     void setupComponents ();
     void setFilterEnableState ();

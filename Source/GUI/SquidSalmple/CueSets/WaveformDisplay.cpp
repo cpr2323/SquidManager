@@ -17,6 +17,7 @@ void WaveformDisplay::init (juce::File theTestFile)
         numSamples = sampleFileReader->lengthInSamples;
         DebugLog ("WaveformDisplay", "init [" + testFile.getFileName () + "] - numSamples = " + juce::String (numSamples).paddedLeft ('0', 6) +
                   " [0x" + juce::String::toHexString (numSamples).paddedLeft ('0', 6) + "], bitDepth = " + juce::String (sampleFileReader->bitsPerSample) +
+                  ", channels = " + juce::String(sampleFileReader->numChannels) +
                   ", sampleRate = " + juce::String (sampleFileReader->sampleRate));
 
         // read in audio data

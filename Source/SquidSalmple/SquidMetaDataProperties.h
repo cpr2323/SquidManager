@@ -35,7 +35,7 @@ public:
     void setQuant (int quant, bool includeSelfCallback);
     void setRate (int rate, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
-    void setSpeed (int speed, bool includeSelfCallback);
+    void setSpeed (int speed, bool includeSelfCallback); // internally 1 - 65500, externally 1-99
     void setStartCue (uint32_t startCue, bool includeSelfCallback);
     void setStartCueSet (int cueIndex, uint32_t startCue, bool includeSelfCallback);
     void setSteps (int steps, bool includeSelfCallback);

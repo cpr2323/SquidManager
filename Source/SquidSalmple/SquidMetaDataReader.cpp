@@ -131,7 +131,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         {
             return "filterResonance";
         }
-        if (cvAssignFlag & CvAssignedFlag::reserved2)
+        if (cvAssignFlag & CvAssignedFlag::unused)
         {
             // this value is not yet mapped
             jassertfalse;
