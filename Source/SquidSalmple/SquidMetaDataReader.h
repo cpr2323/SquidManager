@@ -75,10 +75,4 @@ private:
     typename ReturnType<N>::type getValue (int value) {
         return ReturnType<N>::process (static_cast<uint8_t*>(busyChunkData.getData()), value);
     }
-
-//    juce::MemoryBlock busyChunkData;
-//     uint8_t getUInt8 (int offset);
-//     uint16_t getUInt16 (int offset);
-//     uint32_t getUInt32 (int offset);
-//     uint64_t getUInt64 (int offset);
 };

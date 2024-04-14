@@ -33,6 +33,11 @@ void SquidMetaDataProperties::setCuePoints (int cueSet, juce::int64 start, juce:
     });
 }
 
+void SquidMetaDataProperties::setCurCueSet (int cueSetIndex, bool includeSelfCallback)
+{
+    setValue (cueSetIndex, CurCueSetPropertyId, includeSelfCallback);
+}
+
 void SquidMetaDataProperties::setRate (int rate, bool includeSelfCallback)
 {
     setValue (rate, RatePropertyId, includeSelfCallback);
@@ -73,6 +78,59 @@ void SquidMetaDataProperties::setXfade (int xfade, bool includeSelfCallback)
     setValue (xfade, XfadePropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::setReserved1Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved1DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved2Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved2DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved3Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved3DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved4Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved4DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved5Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved5DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved6Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved6DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved7Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved7DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved8Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved8DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved9Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved9DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved10Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved10DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved11Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved11DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved12Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved12DataPropertyId, false);
+}
+void SquidMetaDataProperties::setReserved13Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved13DataPropertyId, false);
+}
+
 void SquidMetaDataProperties::setReverse (int reverse, bool includeSelfCallback)
 {
     setValue (reverse, ReversePropertyId, includeSelfCallback);
@@ -111,11 +169,6 @@ void SquidMetaDataProperties::setDecay (int decay, bool includeSelfCallback)
 void SquidMetaDataProperties::setETrig (int eTrig, bool includeSelfCallback)
 {
     setValue (eTrig, ETrigPropertyId, includeSelfCallback);
-}
-
-void SquidMetaDataProperties::setEuclidianTrigger (int euclidianTrigger, bool includeSelfCallback)
-{
-    setValue (euclidianTrigger, EuclidianTriggerPropertyId, includeSelfCallback);
 }
 
 void SquidMetaDataProperties::setSteps (int steps, bool includeSelfCallback)
@@ -208,6 +261,11 @@ int SquidMetaDataProperties::getChoke ()
     return getValue<int> (ChokePropertyId);
 }
 
+int SquidMetaDataProperties::getCurCueSet ()
+{
+    return getValue<int> (CurCueSetPropertyId);
+}
+
 int SquidMetaDataProperties::getRate ()
 {
     return getValue<int> (RatePropertyId);
@@ -261,6 +319,59 @@ int SquidMetaDataProperties::getXfade ()
     return getValue<int> (XfadePropertyId);
 }
 
+juce::String SquidMetaDataProperties::getReserved1Data ()
+{
+    return getValue<juce::String> (Reserved1DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved2Data ()
+{
+    return getValue<juce::String> (Reserved2DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved3Data ()
+{
+    return getValue<juce::String> (Reserved3DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved4Data ()
+{
+    return getValue<juce::String> (Reserved4DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved5Data ()
+{
+    return getValue<juce::String> (Reserved5DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved6Data ()
+{
+    return getValue<juce::String> (Reserved6DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved7Data ()
+{
+    return getValue<juce::String> (Reserved7DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved8Data ()
+{
+    return getValue<juce::String> (Reserved8DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved9Data ()
+{
+    return getValue<juce::String> (Reserved9DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved10Data ()
+{
+    return getValue<juce::String> (Reserved10DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved11Data ()
+{
+    return getValue<juce::String> (Reserved11DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved12Data ()
+{
+    return getValue<juce::String> (Reserved12DataPropertyId);
+}
+juce::String SquidMetaDataProperties::getReserved13Data ()
+{
+    return getValue<juce::String> (Reserved13DataPropertyId);
+}
+
 int SquidMetaDataProperties::getReverse ()
 {
     return getValue<int> (ReversePropertyId);
@@ -284,11 +395,6 @@ int SquidMetaDataProperties::getDecay ()
 int SquidMetaDataProperties::getETrig ()
 {
     return getValue<int> (ETrigPropertyId);
-}
-
-int SquidMetaDataProperties::getEuclidianTrigger ()
-{
-    return getValue<int> (EuclidianTriggerPropertyId);
 }
 
 int SquidMetaDataProperties::getSteps ()
@@ -383,24 +489,25 @@ uint32_t SquidMetaDataProperties::getLoopCueSet (int cueIndex)
 void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
 {
     SquidMetaDataProperties sourceMetaDataProperties (sourceVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no);
+    setAttack (sourceMetaDataProperties.getAttack (), false);
     setBits (sourceMetaDataProperties.getBits (), false);
-    setRate (sourceMetaDataProperties.getRate (), false);
-    setSpeed (sourceMetaDataProperties.getSpeed (), false);
+    setChoke (sourceMetaDataProperties.getChoke (), false);
+    setCurCueSet (sourceMetaDataProperties.getCurCueSet (), false);
+    setDecay (sourceMetaDataProperties.getDecay (), false);
+    setEndCue (sourceMetaDataProperties.getEndCue (), false);
     setFilterFrequency (sourceMetaDataProperties.getFilterFrequency (), false);
     setFilterResonance (sourceMetaDataProperties.getFilterResonance (), false);
     setFilterType (sourceMetaDataProperties.getFilterType (), false);
-    setQuant (sourceMetaDataProperties.getQuant (), false);
-    setLoopMode (sourceMetaDataProperties.getLoopMode (), false);
-    setXfade (sourceMetaDataProperties.getXfade (), false);
-    setReverse (sourceMetaDataProperties.getReverse (), false);
-    setLevel (sourceMetaDataProperties.getLevel (), false);
-    setAttack (sourceMetaDataProperties.getAttack (), false);
-    setDecay (sourceMetaDataProperties.getDecay (), false);
-    setEuclidianTrigger (sourceMetaDataProperties.getEuclidianTrigger (), false);
-    setSteps (sourceMetaDataProperties.getSteps (), false);
-    setStartCue (sourceMetaDataProperties.getStartCue (), false);
-    setEndCue (sourceMetaDataProperties.getEndCue (), false);
     setLoopCue (sourceMetaDataProperties.getLoopCue (), false);
+    setLoopMode (sourceMetaDataProperties.getLoopMode (), false);
+    setLevel (sourceMetaDataProperties.getLevel (), false);
+    setQuant (sourceMetaDataProperties.getQuant (), false);
+    setRate (sourceMetaDataProperties.getRate (), false);
+    setReverse (sourceMetaDataProperties.getReverse (), false);
+    setSpeed (sourceMetaDataProperties.getSpeed (), false);
+    setStartCue (sourceMetaDataProperties.getStartCue (), false);
+    setSteps (sourceMetaDataProperties.getSteps (), false);
+    setXfade (sourceMetaDataProperties.getXfade (), false);
 }
 
 juce::ValueTree SquidMetaDataProperties::create ()
@@ -411,24 +518,25 @@ juce::ValueTree SquidMetaDataProperties::create ()
 
 void SquidMetaDataProperties::initValueTree ()
 {
+    setAttack (0, false);
     setBits (0, false);
-    setRate (0, false);
-    setSpeed (0, false);
-    setFilterType (0, false);
+    setChoke (0, false);
+    setCurCueSet (0, false);
+    setDecay (0, false);
+    setEndCue (0, false);
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
-    setQuant (0, false);
-    setLoopMode (0, false);
-    setXfade (0, false);
-    setReverse (0, false);
-    setLevel (0, false);
-    setAttack (0, false);
-    setDecay (0, false);
-    setEuclidianTrigger (0, false);
-    setSteps (0, false);
-    setStartCue (0, false);
-    setEndCue (0, false);
+    setFilterType (0, false);
     setLoopCue (0, false);
+    setLoopMode (0, false);
+    setLevel (0, false);
+    setQuant (0, false);
+    setRate (0, false);
+    setReverse (0, false);
+    setSpeed (0, false);
+    setStartCue (0, false);
+    setSteps (0, false);
+    setXfade (0, false);
 
     juce::ValueTree cueSetList { CueSetListTypeId };
     data.addChild (cueSetList, -1, nullptr);
@@ -448,6 +556,11 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
     {
         if (onChokeChange != nullptr)
             onChokeChange (getChoke ());
+    }
+    else if (property == CurCueSetPropertyId)
+    {
+        if (onCurCueSetChange != nullptr)
+            onCurCueSetChange (getCurCueSet ());
     }
     else if (property == ETrigPropertyId)
     {
@@ -513,11 +626,6 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
     {
         if (onDecayChange != nullptr)
             onDecayChange (getDecay ());
-    }
-    else if (property == EuclidianTriggerPropertyId)
-    {
-        if (onEuclidianTriggerChange != nullptr)
-            onEuclidianTriggerChange (getEuclidianTrigger ());
     }
     else if (property == StepsPropertyId)
     {

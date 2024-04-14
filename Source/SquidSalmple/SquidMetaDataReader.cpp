@@ -12,6 +12,17 @@
 juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
+
+    auto numSamples { 0 };
+    {
+        juce::AudioFormatManager audioFormatManager;
+        audioFormatManager.registerBasicFormats ();
+        if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
+        {
+            numSamples = sampleFileReader->lengthInSamples;
+        }
+    }
+
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
     busyChunkReader.read (sampleFile, busyChunkData);
@@ -190,22 +201,24 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     ////////////////////////////////////
     // cue set stuff
     const auto playPosition { getValue <SquidSalmple::DataLayout::k_Reserved2Size> (SquidSalmple::DataLayout::k_Reserved2Offset) };
-    //LogReader ("read - play position meta data = " + juce::String (playPosition).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (playPosition).paddedLeft ('0', 6) + "]");
+    LogReader ("read - play position meta data = " + juce::String (playPosition).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (playPosition).paddedLeft ('0', 6) + "]");
     const auto endOfSample { getValue <SquidSalmple::DataLayout::kEndOfSampleSize> (SquidSalmple::DataLayout::kEndOfSampleOffset) };
-    //LogReader ("read - end of sample meta data = " + juce::String (endOfSample).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endOfSample).paddedLeft ('0', 6) + "]");
-    auto logCueSet = [this] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
+    LogReader ("read - end of sample meta data = " + juce::String (endOfSample).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endOfSample).paddedLeft ('0', 6) + "], ratio from numSamples = " + juce::String(endOfSample / numSamples));
+    auto logCueSet = [this, numSamples] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
     {
-        //LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
-        //           juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+        LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
+                   juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]" +
+                   ", ratio from numSamples = " + juce::String (endCue / numSamples));
         jassert (startCue <= loopCue && loopCue < endCue);
     };
 
     const auto numCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
     const auto curCue { getValue <SquidSalmple::DataLayout::kCuesSelectedSize> (SquidSalmple::DataLayout::kCuesSelectedOffset) };
-    //LogReader ("read - cue meta data (cue set " + juce::String(curCue) + "):");
+    squidMetaDataProperties.setCurCueSet (curCue, false);
+    LogReader ("read - cur cue meta data (cue set " + juce::String(curCue) + "):");
     logCueSet (0, squidMetaDataProperties.getStartCue (), squidMetaDataProperties.getLoopCue (), squidMetaDataProperties.getEndCue ());
 
-    //LogReader ("read - Cue List: " + juce::String (numCues));
+    LogReader ("read - Cue List: " + juce::String (numCues));
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         const auto cueSetOffset { SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) };
@@ -215,6 +228,28 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         logCueSet (curCueSet, startCue, loopCue, endCue);
         squidMetaDataProperties.addCueSet (startCue, loopCue, endCue);
     }
+
+    auto readReserved = [this, &squidMetaDataProperties] (int reservedDataOffset, int reservedDataSize, std::function<void(juce::String)> setter)
+    {
+        juce::MemoryBlock tempMemory;
+        tempMemory.replaceAll (static_cast<uint8_t*>(busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
+        auto textVersion { tempMemory.toBase64Encoding () };
+        setter (textVersion);
+    };
+    // read and store the 'reserved' sections
+    readReserved (SquidSalmple::DataLayout::k_Reserved1Offset, SquidSalmple::DataLayout::k_Reserved1Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved1Data (reservedData); } );
+    readReserved (SquidSalmple::DataLayout::k_Reserved2Offset, SquidSalmple::DataLayout::k_Reserved2Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved2Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved3Offset, SquidSalmple::DataLayout::k_Reserved3Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved3Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved4Offset, SquidSalmple::DataLayout::k_Reserved4Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved4Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved5Offset, SquidSalmple::DataLayout::k_Reserved5Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved5Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved6Offset, SquidSalmple::DataLayout::k_Reserved6Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved6Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved7Offset, SquidSalmple::DataLayout::k_Reserved7Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved7Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved8Offset, SquidSalmple::DataLayout::k_Reserved8Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved8Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved9Offset, SquidSalmple::DataLayout::k_Reserved9Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved9Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved10Offset, SquidSalmple::DataLayout::k_Reserved10Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved10Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved11Offset, SquidSalmple::DataLayout::k_Reserved11Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved11Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved12Offset, SquidSalmple::DataLayout::k_Reserved12Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved12Data (reservedData); });
+    readReserved (SquidSalmple::DataLayout::k_Reserved13Offset, SquidSalmple::DataLayout::k_Reserved13Size, [&squidMetaDataProperties] (juce::String reservedData) { squidMetaDataProperties.setReserved13Data (reservedData); });
 
     return squidMetaDataProperties.getValueTree ();
 }

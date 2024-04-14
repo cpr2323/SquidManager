@@ -112,6 +112,28 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
         setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getLoopCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 8);
     }
 
+    auto writeReserved = [this, &squidMetaDataProperties] (int reservedDataOffset, int reservedDataSize, std::function<juce::String ()> getter)
+    {
+        auto reservedData { getter () };
+        juce::MemoryBlock tempMemory;
+        tempMemory.fromBase64Encoding (reservedData);
+        std::memcpy (static_cast<uint8_t*>(busyChunkData.getData ()) + reservedDataOffset, tempMemory.getData (), reservedDataSize);
+    };
+    // write out the 'reserved' sections
+    writeReserved (SquidSalmple::DataLayout::k_Reserved1Offset, SquidSalmple::DataLayout::k_Reserved1Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved1Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved2Offset, SquidSalmple::DataLayout::k_Reserved2Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved2Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved3Offset, SquidSalmple::DataLayout::k_Reserved3Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved3Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved4Offset, SquidSalmple::DataLayout::k_Reserved4Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved4Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved5Offset, SquidSalmple::DataLayout::k_Reserved5Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved5Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved6Offset, SquidSalmple::DataLayout::k_Reserved6Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved6Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved7Offset, SquidSalmple::DataLayout::k_Reserved7Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved7Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved8Offset, SquidSalmple::DataLayout::k_Reserved8Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved8Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved9Offset, SquidSalmple::DataLayout::k_Reserved9Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved9Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved10Offset, SquidSalmple::DataLayout::k_Reserved10Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved10Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved11Offset, SquidSalmple::DataLayout::k_Reserved11Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved11Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved12Offset, SquidSalmple::DataLayout::k_Reserved12Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved12Data (); });
+    writeReserved (SquidSalmple::DataLayout::k_Reserved13Offset, SquidSalmple::DataLayout::k_Reserved13Size, [&squidMetaDataProperties] () { return squidMetaDataProperties.getReserved13Data (); });
+
     BusyChunkWriter busyChunkWriter;
     const auto writeSuccess { busyChunkWriter.write (inputSampleFile, outputSampleFile, busyChunkData) };
     jassert (writeSuccess == true);
