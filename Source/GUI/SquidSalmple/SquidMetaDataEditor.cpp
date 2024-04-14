@@ -197,6 +197,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
     loadButton.setButtonText ("LOAD");
     loadButton.onClick = [this] ()
     {
+#if 1
         fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
         fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
         {
@@ -223,22 +224,33 @@ void SquidMetaDataEditorComponent::setupComponents ()
                     return true;
                 });
                 initCueSets ();
-                setCurCue (0);
+                setCurCue (squidMetaDataProperties.getCurCueSet());
             }
         }, nullptr);
+#else
+        // I am hijacking the Load function to do a debug feature
+        fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
+        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
+        {
+            if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
+            {
+                // scan file system and open each wav file to process for Squid Salmple metadata
+            }
+        }, nullptr);
+#endif`
     };
     addAndMakeVisible (loadButton);
     waveformDisplay.onStartPointChange = [this] (int startPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, startPoint, squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
+        squidMetaDataProperties.setCuePoints (curCueSet, startPoint * 2, squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
     };
     waveformDisplay.onLoopPointChange = [this] (int loopPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), loopPoint, squidMetaDataProperties.getEndCueSet (curCueSet));
+        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), loopPoint * 2, squidMetaDataProperties.getEndCueSet (curCueSet));
     };
     waveformDisplay.onEndPointChange = [this] (int endPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endPoint);
+        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endPoint * 2);
     };
     addAndMakeVisible (waveformDisplay);
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
@@ -253,6 +265,12 @@ void SquidMetaDataEditorComponent::setupComponents ()
     }
 }
 
+void SquidMetaDataEditorComponent::setFilterEnableState ()
+{
+    filterFrequencyTextEditor.setEnabled (squidMetaDataProperties.getFilterType () != 0);
+    filterResonanceTextEditor.setEnabled (squidMetaDataProperties.getFilterType () != 0);
+}
+
 void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
 {
     if (squidMetaDataProperties.getNumCues () == 0)
@@ -262,7 +280,7 @@ void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
     cueSetButtons [curCueSet].setToggleState (false, juce::NotificationType::dontSendNotification);
     curCueSet = cueSetIndex;
     cueSetButtons [curCueSet].setToggleState (true, juce::NotificationType::dontSendNotification);
-    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
+    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
 }
 
 void SquidMetaDataEditorComponent::initCueSets ()
@@ -270,7 +288,6 @@ void SquidMetaDataEditorComponent::initCueSets ()
     const auto numCueSets { squidMetaDataProperties.getNumCues () };
     for (auto cueSetButtonIndex { 0 }; cueSetButtonIndex < cueSetButtons.size (); ++cueSetButtonIndex)
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
-
 };
 
 void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
@@ -305,8 +322,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
 
     initCueSets ();
-    // TODO - is 'cur cue' stored in the metadata, should I use it to initialize from and also update when changed in the UI?
-    setCurCue (0);
+    setCurCue (squidMetaDataProperties.getCurCueSet ());
 
     // put initial data into the UI
     attackDataChanged (squidMetaDataProperties.getAttack());
@@ -330,6 +346,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
     xfadeDataChanged (squidMetaDataProperties.getXfade ());
 
     initializeCallbacks ();
+    setFilterEnableState ();
 }
 
 void SquidMetaDataEditorComponent::initializeCallbacks ()
@@ -338,6 +355,7 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     squidMetaDataProperties.onAttackChange = [this] (int attack) { attackDataChanged (attack); };
     squidMetaDataProperties.onBitsChange = [this] (int bits) { bitsDataChanged (bits); };
     squidMetaDataProperties.onChokeChange = [this] (int bits) { chokeDataChanged (bits); };
+    squidMetaDataProperties.onCurCueSetChange = [this] (int cueSetIndex) { setCurCue (cueSetIndex); };
     squidMetaDataProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
     squidMetaDataProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
     squidMetaDataProperties.onEndCueSetChange = [this] (int cueIndex, int endCue) { if (cueIndex == curCueSet) endCueDataChanged (endCue); };
@@ -382,9 +400,10 @@ void SquidMetaDataEditorComponent::decayDataChanged (int decay)
 
 void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
 {
-    endCueTextEditor.setText (juce::String (endCue), juce::NotificationType::dontSendNotification);
+    endCueTextEditor.setText (juce::String (endCue / 2), juce::NotificationType::dontSendNotification);
+    // TODO - I am not sure why I put this logic here
     if (curCueSet == 0)
-        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endCue);
+        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, endCue / 2);
 }
 
 void SquidMetaDataEditorComponent::eTrigDataChanged (int eTrig)
@@ -395,6 +414,7 @@ void SquidMetaDataEditorComponent::eTrigDataChanged (int eTrig)
 void SquidMetaDataEditorComponent::filterTypeDataChanged (int filterType)
 {
     filterTypeComboBox.setSelectedItemIndex (filterType, juce::NotificationType::dontSendNotification);
+    setFilterEnableState ();
 }
 
 void SquidMetaDataEditorComponent::filterFrequencyDataChanged (int filterFrequency)
@@ -414,9 +434,10 @@ void SquidMetaDataEditorComponent::levelDataChanged (int level)
 
 void SquidMetaDataEditorComponent::loopCueDataChanged (int loopCue)
 {
-    loopCueTextEditor.setText (juce::String (loopCue), false);
+    loopCueTextEditor.setText (juce::String (loopCue / 2), false);
+    // TODO - I am not sure why I put this logic here
     if (curCueSet == 0)
-        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet), loopCue, squidMetaDataProperties.getEndCueSet (curCueSet));
+        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, loopCue / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
 }
 
 void SquidMetaDataEditorComponent::loopModeDataChanged (int loopMode)
@@ -446,9 +467,10 @@ void SquidMetaDataEditorComponent::speedDataChanged (int speed)
 
 void SquidMetaDataEditorComponent::startCueDataChanged (int startCue)
 {
-    startCueTextEditor.setText (juce::String (startCue), juce::NotificationType::dontSendNotification);
+    startCueTextEditor.setText (juce::String (startCue / 2), juce::NotificationType::dontSendNotification);
+    // TODO - I am not sure why I put this logic here
     if (curCueSet == 0)
-        waveformDisplay.setCuePoints (startCue, squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
+        waveformDisplay.setCuePoints (startCue / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
 }
 
 void SquidMetaDataEditorComponent::stepsDataChanged (int steps)
@@ -486,7 +508,7 @@ void SquidMetaDataEditorComponent::decayUiChanged (int decay)
 
 void SquidMetaDataEditorComponent::endCueUiChanged (int endCue)
 {
-    squidMetaDataProperties.setEndCue (endCue, false);
+    squidMetaDataProperties.setEndCue (endCue * 2, false);
 }
 
 void SquidMetaDataEditorComponent::eTrigUiChanged (int eTrig)
@@ -518,7 +540,7 @@ void SquidMetaDataEditorComponent::levelUiChanged (int level)
 
 void SquidMetaDataEditorComponent::loopCueUiChanged (int loopCue)
 {
-    squidMetaDataProperties.setLoopCue (loopCue, false);
+    squidMetaDataProperties.setLoopCue (loopCue * 2, false);
 }
 
 void SquidMetaDataEditorComponent::loopModeUiChanged (int loopMode)
@@ -549,7 +571,7 @@ void SquidMetaDataEditorComponent::speedUiChanged (int speed)
 
 void SquidMetaDataEditorComponent::startCueUiChanged (int startCue)
 {
-    squidMetaDataProperties.setStartCue (startCue, false);
+    squidMetaDataProperties.setStartCue (startCue * 2, false);
 }
 
 void SquidMetaDataEditorComponent::stepsUiChanged (int steps)

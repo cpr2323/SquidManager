@@ -117,6 +117,7 @@ private:
 
     void initCueSets ();
     void setupComponents ();
+    void setFilterEnableState ();
     void setCurCue (int cueSetIndex);
 
     void timerCallback () override;
