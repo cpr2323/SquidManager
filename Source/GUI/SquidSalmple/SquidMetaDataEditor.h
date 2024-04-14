@@ -37,7 +37,7 @@ private:
     juce::Label decayLabel;
     CustomTextEditorInt decayTextEditor; // 0-99
     juce::Label endCueLabel;
-    CustomTextEditorInt endCueTextEditor; // sampleStart - sample length
+    CustomTextEditorInt64 endCueTextEditor; // sampleStart - sample length
     juce::Label eTrigLabel;
     CustomComboBox eTrigComboBox; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     juce::Label filterTypeLabel;
@@ -49,7 +49,7 @@ private:
     juce::Label levelLabel;
     CustomTextEditorInt levelTextEditor; // 1-99
     juce::Label loopCueLabel;
-    CustomTextEditorInt loopCueTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
+    CustomTextEditorInt64 loopCueTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
     juce::Label loopModeLabel;
     CustomComboBox loopModeComboBox; // none, normal, zigZag, gate, zigZagGate (0-4)
     juce::Label quantLabel;
@@ -60,7 +60,7 @@ private:
     juce::Label speedLabel;
     CustomTextEditorInt speedTextEditor; // 1 - 99 (50 is normal?, below that is negative speed? above is positive?)
     juce::Label startCueLabel;
-    CustomTextEditorInt startCueTextEditor;  // 0 - sampleEnd
+    CustomTextEditorInt64 startCueTextEditor;  // 0 - sampleEnd
     juce::Label stepsLabel;
     CustomComboBox stepsComboBox; // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     juce::Label xfadeLabel;
@@ -79,19 +79,19 @@ private:
     void bitsDataChanged (int bits);
     void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
-    void endCueDataChanged (int endCue);
+    void endCueDataChanged (juce::int64 endCue);
     void eTrigDataChanged (int eTrig);
     void filterTypeDataChanged (int filterType);
     void filterFrequencyDataChanged (int filterFrequency);
     void filterResonanceDataChanged (int filterResonance);
     void levelDataChanged (int level);
-    void loopCueDataChanged (int loopCue);
+    void loopCueDataChanged (juce::int64 loopCue);
     void loopModeDataChanged (int loopMode);
     void quantDataChanged (int quant);
     void rateDataChanged (int rate);
     void reverseDataChanged (int reverse);
     void speedDataChanged (int speed);
-    void startCueDataChanged (int startCue);
+    void startCueDataChanged (juce::int64 startCue);
     void stepsDataChanged (int steps);
     void xfadeDataChanged (int xfade);
 
@@ -99,19 +99,19 @@ private:
     void bitsUiChanged (int bits);
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
-    void endCueUiChanged (int endCue);
+    void endCueUiChanged (juce::int64 endCue);
     void eTrigUiChanged (int eTrig);
     void filterTypeUiChanged (int filterType);
     void filterFrequencyUiChanged (int filterFrequency);
     void filterResonanceUiChanged (int filterResonance);
     void levelUiChanged (int level);
-    void loopCueUiChanged (int loopCue);
+    void loopCueUiChanged (juce::int64 loopCue);
     void loopModeUiChanged (int loopMode);
     void quantUiChanged (int quant);
     void rateUiChanged (int rate);
     void reverseUiChanged (int reverse);
     void speedUiChanged (int speed);
-    void startCueUiChanged (int startCue);
+    void startCueUiChanged (juce::int64 startCue);
     void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
 

@@ -22,14 +22,16 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
     setupComponents ();
     startTimer (250);
 
+#if 0
     // test our 1-99 scaling code
     for (auto uiValue { 1 }; uiValue < 100; ++uiValue)
     {
         const auto internalValue { getInternalValue (uiValue)};
         const auto recalculatedUiValue { getUiValue(internalValue) };
         jassert (uiValue == recalculatedUiValue);
-        DebugLog ("SquidMetaDataEditorComponent", juce::String (uiValue) + " : " + juce::String (internalValue) + " : " + juce::String(recalculatedUiValue));
+        DebugLog ("SquidMetaDataEditorComponent", juce::String (uiValue) + " : " + juce::String (internalValue) + " : " + juce::String (recalculatedUiValue));
     }
+#endif
 }
 
 SquidMetaDataEditorComponent::~SquidMetaDataEditorComponent ()
@@ -89,7 +91,16 @@ void SquidMetaDataEditorComponent::setupComponents ()
     bitsTextEditor.updateDataCallback = [this] (int value) { bitsUiChanged (value); };
     bitsTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
-        const auto newValue { squidMetaDataProperties.getBits () + direction };
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 1;
+            else
+                return 3;
+        } ();
+        const auto newValue { squidMetaDataProperties.getBits () + (multiplier * direction) };
         bitsTextEditor.setValue (newValue);
     };
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
@@ -105,7 +116,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
     rateComboBox.addItem ("44", 44);
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (rateComboBox, "Rate", [] () {}); // 4,6,7,9,11,14,22,44
-    // SPEED - internally
+    // SPEED
     setupLabel (speedLabel, "SPEED", kMediumLabelSize, juce::Justification::centred);
     speedTextEditor.getMinValueCallback = [this] () { return 1; };
     speedTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -113,8 +124,16 @@ void SquidMetaDataEditorComponent::setupComponents ()
     speedTextEditor.updateDataCallback = [this] (int value) { speedUiChanged (value); };
     speedTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
-        // static_cast <int> (speed / kScaleMax * 100.)
-        const auto newValue { getUiValue (squidMetaDataProperties.getSpeed ()) + (1 * direction) };
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidMetaDataProperties.getSpeed ()) + (multiplier * direction) };
         speedTextEditor.setValue (newValue);
     };
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
@@ -160,12 +179,66 @@ void SquidMetaDataEditorComponent::setupComponents ()
     setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
     // LEVEL
     setupLabel (levelLabel, "LEVEL", kMediumLabelSize, juce::Justification::centred);
+    levelTextEditor.getMinValueCallback = [this] () { return 1; };
+    levelTextEditor.getMaxValueCallback = [this] () { return 99; };
+    levelTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    levelTextEditor.updateDataCallback = [this] (int value) { levelUiChanged (value); };
+    levelTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidMetaDataProperties.getLevel ()) + (multiplier * direction) };
+        levelTextEditor.setValue (newValue);
+    };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
     // ATTACK
     setupLabel (attackLabel, "ATTACK", kMediumLabelSize, juce::Justification::centred);
+    attackTextEditor.getMinValueCallback = [this] () { return 1; };
+    attackTextEditor.getMaxValueCallback = [this] () { return 99; };
+    attackTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    attackTextEditor.updateDataCallback = [this] (int value) { attackUiChanged (value); };
+    attackTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidMetaDataProperties.getAttack ()) + (multiplier * direction) };
+        attackTextEditor.setValue (newValue);
+    };
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
     // DECAY
     setupLabel (decayLabel, "DECAY", kMediumLabelSize, juce::Justification::centred);
+    decayTextEditor.getMinValueCallback = [this] () { return 1; };
+    decayTextEditor.getMaxValueCallback = [this] () { return 99; };
+    decayTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    decayTextEditor.updateDataCallback = [this] (int value) { decayUiChanged (value); };
+    decayTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidMetaDataProperties.getDecay ()) + (multiplier * direction) };
+        decayTextEditor.setValue (newValue);
+    };
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
     // LOOP MODE
     setupLabel (loopModeLabel, "LOOP MODE", kMediumLabelSize, juce::Justification::centred);
@@ -181,17 +254,89 @@ void SquidMetaDataEditorComponent::setupComponents ()
     setupComboBox (loopModeComboBox, "LoopMode", [] () {}); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
+    xfadeTextEditor.getMinValueCallback = [this] () { return 0; };
+    xfadeTextEditor.getMaxValueCallback = [this] () { return 99; };
+    xfadeTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    xfadeTextEditor.updateDataCallback = [this] (int value) { xfadeUiChanged (value); };
+    xfadeTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { squidMetaDataProperties.getXfade() + (multiplier * direction) };
+        xfadeTextEditor.setValue (newValue);
+    };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
     setupButton (reverseButton, "REVERSE", "Reverse", [] () {}); // 0-1
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
+    startCueTextEditor.getMinValueCallback = [this] () { return 0; };
+    startCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    startCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
+    startCueTextEditor.updateDataCallback = [this] (juce::int64 value) { startCueUiChanged (value); };
+    startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidMetaDataProperties.getStartCue () / 2) + (multiplier * direction) };
+        startCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
+    loopCueTextEditor.getMinValueCallback = [this] () { return 0; };
+    loopCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    loopCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
+    loopCueTextEditor.updateDataCallback = [this] (juce::int64 value) { loopCueUiChanged (value); };
+    loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidMetaDataProperties.getLoopCue () / 2) + (multiplier * direction) };
+        loopCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
+    endCueTextEditor.getMinValueCallback = [this] () { return 0; };
+    endCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    endCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
+    endCueTextEditor.updateDataCallback = [this] (juce::int64 value) { endCueUiChanged (value); };
+    endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidMetaDataProperties.getEndCue () / 2) + (multiplier * direction) };
+        endCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
@@ -296,18 +441,19 @@ void SquidMetaDataEditorComponent::setupComponents ()
 
 int SquidMetaDataEditorComponent::getUiValue (int internalValue)
 {
-    return static_cast<int>(std::round (internalValue / kScaleStep));
+    return static_cast<int> (std::round (internalValue / kScaleStep));
 }
 
 int SquidMetaDataEditorComponent::getInternalValue (int uiValue)
 {
-    return uiValue * kScaleStep;
+    return static_cast<int> (uiValue * kScaleStep);
 }
 
 void SquidMetaDataEditorComponent::setFilterEnableState ()
 {
-    filterFrequencyTextEditor.setEnabled (squidMetaDataProperties.getFilterType () != 0);
-    filterResonanceTextEditor.setEnabled (squidMetaDataProperties.getFilterType () != 0);
+    const auto filterEnabled { squidMetaDataProperties.getFilterType () != 0 };
+    filterFrequencyTextEditor.setEnabled (filterEnabled);
+    filterResonanceTextEditor.setEnabled (filterEnabled);
 }
 
 void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
@@ -437,7 +583,7 @@ void SquidMetaDataEditorComponent::decayDataChanged (int decay)
     decayTextEditor.setText (juce::String (getUiValue (decay)), juce::NotificationType::dontSendNotification);
 }
 
-void SquidMetaDataEditorComponent::endCueDataChanged (int endCue)
+void SquidMetaDataEditorComponent::endCueDataChanged (juce::int64 endCue)
 {
     endCueTextEditor.setText (juce::String (endCue / 2), juce::NotificationType::dontSendNotification);
     // TODO - I am not sure why I put this logic here
@@ -471,7 +617,7 @@ void SquidMetaDataEditorComponent::levelDataChanged (int level)
     levelTextEditor.setText (juce::String (getUiValue (level)), juce::NotificationType::dontSendNotification);
 }
 
-void SquidMetaDataEditorComponent::loopCueDataChanged (int loopCue)
+void SquidMetaDataEditorComponent::loopCueDataChanged (juce::int64 loopCue)
 {
     loopCueTextEditor.setText (juce::String (loopCue / 2), false);
     // TODO - I am not sure why I put this logic here
@@ -504,7 +650,7 @@ void SquidMetaDataEditorComponent::speedDataChanged (int speed)
     speedTextEditor.setText (juce::String (getUiValue (speed)), juce::NotificationType::dontSendNotification);
 }
 
-void SquidMetaDataEditorComponent::startCueDataChanged (int startCue)
+void SquidMetaDataEditorComponent::startCueDataChanged (juce::int64 startCue)
 {
     startCueTextEditor.setText (juce::String (startCue / 2), juce::NotificationType::dontSendNotification);
     // TODO - I am not sure why I put this logic here
@@ -545,7 +691,7 @@ void SquidMetaDataEditorComponent::decayUiChanged (int decay)
     squidMetaDataProperties.setDecay (newDecayValue, false);
 }
 
-void SquidMetaDataEditorComponent::endCueUiChanged (int endCue)
+void SquidMetaDataEditorComponent::endCueUiChanged (juce::int64 endCue)
 {
     squidMetaDataProperties.setEndCue (endCue * 2, false);
 }
@@ -577,7 +723,7 @@ void SquidMetaDataEditorComponent::levelUiChanged (int level)
     squidMetaDataProperties.setLevel (newLevelValue, false);
 }
 
-void SquidMetaDataEditorComponent::loopCueUiChanged (int loopCue)
+void SquidMetaDataEditorComponent::loopCueUiChanged (juce::int64 loopCue)
 {
     squidMetaDataProperties.setLoopCue (loopCue * 2, false);
 }
@@ -608,7 +754,7 @@ void SquidMetaDataEditorComponent::speedUiChanged (int speed)
     squidMetaDataProperties.setSpeed (newSpeedValue, false);
 }
 
-void SquidMetaDataEditorComponent::startCueUiChanged (int startCue)
+void SquidMetaDataEditorComponent::startCueUiChanged (juce::int64 startCue)
 {
     squidMetaDataProperties.setStartCue (startCue * 2, false);
 }
