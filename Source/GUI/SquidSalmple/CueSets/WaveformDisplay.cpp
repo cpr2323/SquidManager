@@ -79,7 +79,7 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
 
     g.setColour (juce::Colours::black);
     // TODO - get proper end pixel if sample ends before end of display
-    auto curSampleValue { readPtr [0] };
+    //auto curSampleValue { readPtr [0] };
     for (auto pixelIndex { 0 }; pixelIndex < numPixels - 1; ++pixelIndex)
     {
         if ((pixelIndex + 1) * samplesPerPixel < numSamples)

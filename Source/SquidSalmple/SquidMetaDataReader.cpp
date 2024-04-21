@@ -214,19 +214,20 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
 
     const auto numCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
     const auto curCue { getValue <SquidSalmple::DataLayout::kCuesSelectedSize> (SquidSalmple::DataLayout::kCuesSelectedOffset) };
+    //squidMetaDataProperties.setNumCueSets (numCues, false); // don't do this, because the count is updated by squidMetaDataProperties.addCueSet
     squidMetaDataProperties.setCurCueSet (curCue, false);
     LogReader ("read - cur cue meta data (cue set " + juce::String(curCue) + "):");
     logCueSet (0, squidMetaDataProperties.getStartCue (), squidMetaDataProperties.getLoopCue (), squidMetaDataProperties.getEndCue ());
 
     LogReader ("read - Cue List: " + juce::String (numCues));
-    for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
+    for (auto curCueSetIndex { 0 }; curCueSetIndex < numCues; ++curCueSetIndex)
     {
-        const auto cueSetOffset { SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) };
+        const auto cueSetOffset { SquidSalmple::DataLayout::kCuesOffset + (curCueSetIndex * 12) };
         const auto startCue { getValue <4> (cueSetOffset + 0) };
         const auto endCue { getValue <4> (cueSetOffset + 4) };
         const auto loopCue { getValue <4> (cueSetOffset + 8) };
-        logCueSet (curCueSet, startCue, loopCue, endCue);
-        squidMetaDataProperties.addCueSet (startCue, loopCue, endCue);
+        logCueSet (curCueSetIndex, startCue, loopCue, endCue);
+        squidMetaDataProperties.setCuePoints (curCueSetIndex, startCue, loopCue, endCue);
     }
 
     auto readReserved = [this, &squidMetaDataProperties] (int reservedDataOffset, int reservedDataSize, std::function<void(juce::String)> setter)

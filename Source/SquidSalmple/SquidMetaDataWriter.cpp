@@ -35,7 +35,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     ValueTreeHelpers::forEachChildOfType (cvAssignsVT, "CvInput", [this] (juce::ValueTree cvInputVT)
     {
         const auto cvId { static_cast<int> (cvInputVT.getProperty ("id")) };
-        juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
+        //juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
         uint16_t cvAssignedFlags { CvAssignedFlag::none };
         const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
         ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this, cvId, parameterRowSize, &cvAssignedFlags] (juce::ValueTree parameterVT)
@@ -50,7 +50,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
             // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
             if (attenuation < 0)
                 attenuation = 100 + std::abs (attenuation);
-            juce::Logger::outputDebugString (" processing parameter: " + parameterName);
+            //juce::Logger::outputDebugString (" processing parameter: " + parameterName);
             auto getFlagBitParamIndexFromParameterName = [] (juce::String parameterName) -> std::tuple<uint16_t, uint8_t>
             {
                 if (parameterName == "bits")
@@ -103,7 +103,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     });
 
     // Cue Sets
-    const auto numCues { squidMetaDataProperties.getNumCues () };
+    const auto numCues { squidMetaDataProperties.getNumCueSets () };
     setUInt8 (static_cast<uint8_t> (numCues), SquidSalmple::DataLayout::kCuesCountOffset);
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {

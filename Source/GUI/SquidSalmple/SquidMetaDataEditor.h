@@ -71,7 +71,7 @@ private:
     NoArrowComboBoxLnF noArrowComboBoxLnF;
     juce::TextButton loadButton;
 
-    int curCueSet { 0 };
+    int curCueSetIndex { 0 };
 
     void initializeCallbacks ();
 
@@ -117,7 +117,7 @@ private:
 
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
-    void initCueSets ();
+    void initCueSetTabs ();
     void setupComponents ();
     void setFilterEnableState ();
     void setCurCue (int cueSetIndex);

@@ -15,29 +15,30 @@ public:
     {
     }
 
-    void addCueSet (juce::int64 startCue, juce::int64 loopCue, juce::int64 endCue);
+//    void addCueSet (uint32_t startCue, uint32_t loopCue, uint32_t endCue);
     void setAttack (int attack, bool includeSelfCallback);
     void setBits (int bits, bool includeSelfCallback);
     void setChoke (int chokeChannel, bool includeSelfCallback);
-    void setCuePoints (int cueSet, juce::int64 start, juce::int64 loop, juce::int64 end);
+    void setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
     void setDecay (int decay, bool includeSelfCallback);
     void setETrig (int eTrig, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
-    void setEndCueSet (int cueIndex, uint32_t endCue, bool includeSelfCallback);
+    void setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback);
     void setFilterFrequency (int filterFrequency, bool includeSelfCallback);
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
     void setLevel (int level, bool includeSelfCallback);
     void setLoopCue (uint32_t loopCue, bool includeSelfCallback);
-    void setLoopCueSet (int cueIndex, uint32_t loopCue, bool includeSelfCallback);
+    void setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback);
     void setLoopMode (int loopMode, bool includeSelfCallback);
+    void setNumCueSets (int numCues, bool includeSelfCallback);
     void setQuant (int quant, bool includeSelfCallback);
     void setRate (int rate, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
     void setSpeed (int speed, bool includeSelfCallback); // internally 1 - 65500, externally 1-99
     void setStartCue (uint32_t startCue, bool includeSelfCallback);
-    void setStartCueSet (int cueIndex, uint32_t startCue, bool includeSelfCallback);
+    void setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback);
     void setSteps (int steps, bool includeSelfCallback);
     void setXfade (int xfade, bool includeSelfCallback);
     void setReserved1Data (juce::String reservedData);
@@ -61,21 +62,21 @@ public:
     int getDecay ();
     int getETrig ();
     uint32_t getEndCue ();
-    uint32_t getEndCueSet (int cueIndex);
+    uint32_t getEndCueSet (int cueSetIndex);
     int getFilterFrequency ();
     int getFilterResonance ();
     int getFilterType ();
     int getLevel ();
     uint32_t getLoopCue ();
-    uint32_t getLoopCueSet (int cueIndex);
+    uint32_t getLoopCueSet (int cueSetIndex);
     int getLoopMode ();
-    int getNumCues ();
+    int getNumCueSets ();
     int getQuant ();
     int getRate ();
     int getReverse ();
     int getSpeed ();
     uint32_t getStartCue ();
-    uint32_t getStartCueSet (int cueIndex);
+    uint32_t getStartCueSet (int cueSetIndex);
     int getSteps ();
     int getXfade ();
     juce::String getReserved1Data ();
@@ -99,20 +100,21 @@ public:
     std::function<void (int decay)> onDecayChange;
     std::function<void (int eTrig)> onETrigChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
-    std::function<void (int cueIndex, uint32_t endCue)> onEndCueSetChange;
+    std::function<void (int cueSetIndex, uint32_t endCue)> onEndCueSetChange;
     std::function<void (int filterFrequency)> onFilterFrequencyChange;
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
     std::function<void (int level)> onLevelChange;
     std::function<void (uint32_t loopCue)> onLoopCueChange;
-    std::function<void (int cueIndex, uint32_t loopCue)> onLoopCueSetChange;
+    std::function<void (int cueSetIndex, uint32_t loopCue)> onLoopCueSetChange;
     std::function<void (int loopMode)> onLoopModeChange;
+    std::function<void (int numCueSets)> onNumCueSetsChange;
     std::function<void (int quant)> onQuantChange;
     std::function<void (int rate)> onRateChange;
     std::function<void (int reverse)> onReverseChange;
     std::function<void (int speed)> onSpeedChange;
     std::function<void (uint32_t startCue)> onStartCueChange;
-    std::function<void (int cueIndex, uint32_t startCue)> onStartCueSetChange;
+    std::function<void (int cueSetIndex, uint32_t startCue)> onStartCueSetChange;
     std::function<void (int steps)> onStepsChange;
     std::function<void (int xfade)> onXfadeChange;
 
@@ -133,6 +135,7 @@ public:
     static inline const juce::Identifier LevelPropertyId            { "level" };
     static inline const juce::Identifier LoopCuePropertyId          { "loopCue" };
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
+    static inline const juce::Identifier NumCueSetsPropertyId       { "numCueSets" };
     static inline const juce::Identifier QuantPropertyId            { "quant" };
     static inline const juce::Identifier RatePropertyId             { "rate" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
@@ -167,5 +170,7 @@ public:
     void processValueTree () {}
 
 private:
+    juce::ValueTree getCueSetVT (int cueSetIndex);
+
     void valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property) override;
 };

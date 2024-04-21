@@ -115,7 +115,12 @@ void SquidMetaDataEditorComponent::setupComponents ()
     rateComboBox.addItem ("22", 22);
     rateComboBox.addItem ("44", 44);
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (rateComboBox, "Rate", [] () {}); // 4,6,7,9,11,14,22,44
+    rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidMetaDataProperties.setRate (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1), true);
+    };
+    setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
     setupLabel (speedLabel, "SPEED", kMediumLabelSize, juce::Justification::centred);
     speedTextEditor.getMinValueCallback = [this] () { return 1; };
@@ -158,7 +163,12 @@ void SquidMetaDataEditorComponent::setupComponents ()
         quantComboBox.addItem ("VI Chord", quantId++);
     }
     quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (quantComboBox, "Quantize", [] () {}); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
+    quantComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidMetaDataProperties.setQuant (std::clamp (quantComboBox.getSelectedItemIndex () + scrollAmount, 0, quantComboBox.getNumItems () - 1), true);
+    };
+    setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
     {
@@ -170,7 +180,12 @@ void SquidMetaDataEditorComponent::setupComponents ()
         filterTypeComboBox.addItem ("High Pass", filterId++);
     }
     filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (filterTypeComboBox, "Filter", [] () {}); // Off, LP, BP, NT, HP (0-4)
+    filterTypeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidMetaDataProperties.setFilterType (std::clamp (filterTypeComboBox.getSelectedItemIndex () + scrollAmount, 0, filterTypeComboBox.getNumItems () - 1), true);
+    };
+    setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
     setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
@@ -389,7 +404,6 @@ void SquidMetaDataEditorComponent::setupComponents ()
                 auto oldCueSetsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
                 jassert (oldCueSetsVT.isValid ());
                 oldCueSetsVT.removeAllChildren (nullptr);
-                squidMetaDataProperties.getValueTree ().copyPropertiesFrom (loadedSquidMetaDataProperties.getValueTree (), nullptr);
                 auto newCueSetsVT { loadedSquidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
                 jassert (newCueSetsVT.isValid ());
                 ValueTreeHelpers::forEachChildOfType (newCueSetsVT, SquidMetaDataProperties::CueSetTypeId, [this, &oldCueSetsVT] (juce::ValueTree cueSetVT)
@@ -397,7 +411,9 @@ void SquidMetaDataEditorComponent::setupComponents ()
                     oldCueSetsVT.addChild (cueSetVT.createCopy (), -1, nullptr);
                     return true;
                 });
-                initCueSets ();
+                squidMetaDataProperties.getValueTree ().copyPropertiesFrom (loadedSquidMetaDataProperties.getValueTree (), nullptr);
+
+                initCueSetTabs ();
                 setCurCue (squidMetaDataProperties.getCurCueSet());
             }
         }, nullptr);
@@ -414,19 +430,30 @@ void SquidMetaDataEditorComponent::setupComponents ()
 #endif`
     };
     addAndMakeVisible (loadButton);
+    // WAVEFORM DISPLAY
     waveformDisplay.onStartPointChange = [this] (int startPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, startPoint * 2, squidMetaDataProperties.getLoopCueSet (curCueSet), squidMetaDataProperties.getEndCueSet (curCueSet));
+        const auto startCueByteOffset { startPoint * 2 };
+        //const auto curCueSetIndex { squidMetaDataProperties.getCurCueSet () };
+        squidMetaDataProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidMetaDataProperties.getLoopCueSet (curCueSetIndex), squidMetaDataProperties.getEndCueSet (curCueSetIndex));
+        squidMetaDataProperties.setStartCue (startCueByteOffset, true);
     };
     waveformDisplay.onLoopPointChange = [this] (int loopPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), loopPoint * 2, squidMetaDataProperties.getEndCueSet (curCueSet));
+        const auto loopCueByteOffset { loopPoint * 2 };
+        //const auto curCueSetIndex { squidMetaDataProperties.getCurCueSet () };
+        squidMetaDataProperties.setCuePoints (curCueSetIndex, squidMetaDataProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidMetaDataProperties.getEndCueSet (curCueSetIndex));
+        squidMetaDataProperties.setLoopCue (loopCueByteOffset, true);
     };
     waveformDisplay.onEndPointChange = [this] (int endPoint)
     {
-        squidMetaDataProperties.setCuePoints (curCueSet, squidMetaDataProperties.getStartCueSet (curCueSet), squidMetaDataProperties.getLoopCueSet (curCueSet), endPoint * 2);
+        const auto endCueByteOffset { endPoint * 2 };
+        //const auto curCueSetIndex { squidMetaDataProperties.getCurCueSet () };
+        squidMetaDataProperties.setCuePoints (curCueSetIndex, squidMetaDataProperties.getStartCueSet (curCueSetIndex), squidMetaDataProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
+        squidMetaDataProperties.setEndCue (endCueByteOffset, true);
     };
     addAndMakeVisible (waveformDisplay);
+    // WAVEFORM DISPLAY TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
     {
         cueSetButtons [cueSetIndex].setButtonText (juce::String (cueSetIndex + 1));
@@ -434,7 +461,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
-        cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
+        cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { /*if (! cueSetButtons [cueSetIndex] .getToggleState())*/ setCurCue (cueSetIndex); };
         addAndMakeVisible (cueSetButtons [cueSetIndex]);
     }
 }
@@ -458,19 +485,20 @@ void SquidMetaDataEditorComponent::setFilterEnableState ()
 
 void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
 {
-    if (squidMetaDataProperties.getNumCues () == 0)
-        return;
-    jassert (cueSetIndex < squidMetaDataProperties.getNumCues());
-
-    cueSetButtons [curCueSet].setToggleState (false, juce::NotificationType::dontSendNotification);
-    curCueSet = cueSetIndex;
-    cueSetButtons [curCueSet].setToggleState (true, juce::NotificationType::dontSendNotification);
-    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
+    jassert (cueSetIndex < squidMetaDataProperties.getNumCueSets());
+    cueSetButtons [curCueSetIndex].setToggleState (false, juce::NotificationType::dontSendNotification);
+    curCueSetIndex = cueSetIndex;
+    squidMetaDataProperties.setCurCueSet (cueSetIndex, false);
+    cueSetButtons [cueSetIndex].setToggleState (true, juce::NotificationType::dontSendNotification);
+    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (cueSetIndex) / 2, squidMetaDataProperties.getLoopCueSet (cueSetIndex) / 2, squidMetaDataProperties.getEndCueSet (cueSetIndex) / 2);
+    squidMetaDataProperties.setStartCue (squidMetaDataProperties.getStartCueSet (cueSetIndex), true);
+    squidMetaDataProperties.setLoopCue (squidMetaDataProperties.getLoopCueSet (cueSetIndex), true);
+    squidMetaDataProperties.setEndCue (squidMetaDataProperties.getEndCueSet (cueSetIndex), true);
 }
 
-void SquidMetaDataEditorComponent::initCueSets ()
+void SquidMetaDataEditorComponent::initCueSetTabs ()
 {
-    const auto numCueSets { squidMetaDataProperties.getNumCues () };
+    const auto numCueSets { squidMetaDataProperties.getNumCueSets () };
     for (auto cueSetButtonIndex { 0 }; cueSetButtonIndex < cueSetButtons.size (); ++cueSetButtonIndex)
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
@@ -506,7 +534,7 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
 
-    initCueSets ();
+    initCueSetTabs ();
     setCurCue (squidMetaDataProperties.getCurCueSet ());
 
     // put initial data into the UI
@@ -543,21 +571,33 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     squidMetaDataProperties.onCurCueSetChange = [this] (int cueSetIndex) { setCurCue (cueSetIndex); };
     squidMetaDataProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
     squidMetaDataProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
-    squidMetaDataProperties.onEndCueSetChange = [this] (int cueIndex, int endCue) { if (cueIndex == curCueSet) endCueDataChanged (endCue); };
+    squidMetaDataProperties.onEndCueSetChange = [this] (int cueIndex, int endCue)
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSetIndex) / 2, squidMetaDataProperties.getLoopCueSet (curCueSetIndex) / 2, endCue / 2);
+    };
     squidMetaDataProperties.onETrigChange = [this] (int eTrig) { eTrigDataChanged (eTrig); };
     squidMetaDataProperties.onFilterTypeChange = [this] (int filter) { filterTypeDataChanged (filter); };
     squidMetaDataProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
     squidMetaDataProperties.onFilterResonanceChange = [this] (int filterResonance) { filterResonanceDataChanged (filterResonance); };
     squidMetaDataProperties.onLevelChange = [this] (int level) { levelDataChanged (level); };
     squidMetaDataProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
-    squidMetaDataProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue) { if (cueIndex == curCueSet) loopCueDataChanged (loopCue); };
+    squidMetaDataProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue)
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidMetaDataProperties.getEndCueSet (curCueSetIndex) / 2);
+    };
     squidMetaDataProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
     squidMetaDataProperties.onQuantChange = [this] (int quant) { quantDataChanged (quant); };
     squidMetaDataProperties.onRateChange = [this] (int rate) { rateDataChanged (rate); };
     squidMetaDataProperties.onReverseChange = [this] (int reverse) { reverseDataChanged (reverse); };
     squidMetaDataProperties.onSpeedChange = [this] (int speed) { speedDataChanged (speed); };
     squidMetaDataProperties.onStartCueChange = [this] (int startCue) { startCueDataChanged (startCue); };
-    squidMetaDataProperties.onStartCueSetChange = [this] (int cueIndex, int startCue) { if (cueIndex == curCueSet) startCueDataChanged (startCue); };
+    squidMetaDataProperties.onStartCueSetChange = [this] (int cueIndex, int startCue)
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (startCue / 2, squidMetaDataProperties.getLoopCueSet (curCueSetIndex) / 2, squidMetaDataProperties.getEndCueSet (curCueSetIndex) / 2);
+    };
     squidMetaDataProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidMetaDataProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 }
@@ -586,9 +626,6 @@ void SquidMetaDataEditorComponent::decayDataChanged (int decay)
 void SquidMetaDataEditorComponent::endCueDataChanged (juce::int64 endCue)
 {
     endCueTextEditor.setText (juce::String (endCue / 2), juce::NotificationType::dontSendNotification);
-    // TODO - I am not sure why I put this logic here
-    if (curCueSet == 0)
-        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, endCue / 2);
 }
 
 void SquidMetaDataEditorComponent::eTrigDataChanged (int eTrig)
@@ -620,9 +657,6 @@ void SquidMetaDataEditorComponent::levelDataChanged (int level)
 void SquidMetaDataEditorComponent::loopCueDataChanged (juce::int64 loopCue)
 {
     loopCueTextEditor.setText (juce::String (loopCue / 2), false);
-    // TODO - I am not sure why I put this logic here
-    if (curCueSet == 0)
-        waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSet) / 2, loopCue / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
 }
 
 void SquidMetaDataEditorComponent::loopModeDataChanged (int loopMode)
@@ -653,9 +687,6 @@ void SquidMetaDataEditorComponent::speedDataChanged (int speed)
 void SquidMetaDataEditorComponent::startCueDataChanged (juce::int64 startCue)
 {
     startCueTextEditor.setText (juce::String (startCue / 2), juce::NotificationType::dontSendNotification);
-    // TODO - I am not sure why I put this logic here
-    if (curCueSet == 0)
-        waveformDisplay.setCuePoints (startCue / 2, squidMetaDataProperties.getLoopCueSet (curCueSet) / 2, squidMetaDataProperties.getEndCueSet (curCueSet) / 2);
 }
 
 void SquidMetaDataEditorComponent::stepsDataChanged (int steps)
@@ -693,7 +724,11 @@ void SquidMetaDataEditorComponent::decayUiChanged (int decay)
 
 void SquidMetaDataEditorComponent::endCueUiChanged (juce::int64 endCue)
 {
-    squidMetaDataProperties.setEndCue (endCue * 2, false);
+    const auto endCueByteOffset { endCue * 2 };
+    squidMetaDataProperties.setEndCue (endCueByteOffset, false);
+
+    squidMetaDataProperties.setCuePoints (curCueSetIndex, squidMetaDataProperties.getStartCueSet (curCueSetIndex), squidMetaDataProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
+    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSetIndex) / 2, squidMetaDataProperties.getLoopCueSet (curCueSetIndex) / 2, endCueByteOffset / 2);
 }
 
 void SquidMetaDataEditorComponent::eTrigUiChanged (int eTrig)
@@ -725,7 +760,11 @@ void SquidMetaDataEditorComponent::levelUiChanged (int level)
 
 void SquidMetaDataEditorComponent::loopCueUiChanged (juce::int64 loopCue)
 {
-    squidMetaDataProperties.setLoopCue (loopCue * 2, false);
+    const auto loopCueByteOffset { loopCue * 2 };
+    squidMetaDataProperties.setLoopCue (loopCueByteOffset, false);
+
+    squidMetaDataProperties.setCuePoints (curCueSetIndex, squidMetaDataProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidMetaDataProperties.getEndCueSet (curCueSetIndex));
+    waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSetIndex) / 2, loopCueByteOffset / 2, squidMetaDataProperties.getEndCueSet (curCueSetIndex) / 2);
 }
 
 void SquidMetaDataEditorComponent::loopModeUiChanged (int loopMode)
@@ -756,7 +795,11 @@ void SquidMetaDataEditorComponent::speedUiChanged (int speed)
 
 void SquidMetaDataEditorComponent::startCueUiChanged (juce::int64 startCue)
 {
-    squidMetaDataProperties.setStartCue (startCue * 2, false);
+    const auto startCueByteOffset { startCue * 2 };
+    squidMetaDataProperties.setStartCue (startCueByteOffset, false);
+
+    squidMetaDataProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidMetaDataProperties.getLoopCueSet (curCueSetIndex), squidMetaDataProperties.getEndCueSet (curCueSetIndex));
+    waveformDisplay.setCuePoints (startCueByteOffset / 2, squidMetaDataProperties.getLoopCueSet (curCueSetIndex) / 2, squidMetaDataProperties.getEndCueSet (curCueSetIndex) / 2);
 }
 
 void SquidMetaDataEditorComponent::stepsUiChanged (int steps)
