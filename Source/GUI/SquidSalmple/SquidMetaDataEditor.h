@@ -71,6 +71,9 @@ private:
     NoArrowComboBoxLnF noArrowComboBoxLnF;
     juce::TextButton loadButton;
 
+    juce::TextButton addCueSetButton;
+    juce::TextButton deleteCueSetButton;
+
     int curCueSetIndex { 0 };
 
     void initializeCallbacks ();

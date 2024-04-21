@@ -430,6 +430,14 @@ void SquidMetaDataEditorComponent::setupComponents ()
 #endif`
     };
     addAndMakeVisible (loadButton);
+
+    addCueSetButton.setButtonText("ADD CUE");
+    addCueSetButton.onClick = [] () {};
+    addAndMakeVisible (addCueSetButton);
+    deleteCueSetButton.setButtonText ("DELETE CUE");
+    deleteCueSetButton.onClick = [] () {};
+    addAndMakeVisible (deleteCueSetButton);
+
     // WAVEFORM DISPLAY
     waveformDisplay.onStartPointChange = [this] (int startPoint)
     {
@@ -897,12 +905,17 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = kInitialYOffset;
     loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);
 
+    // CUE SETS
+    addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
+    deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
     const auto kWidthOfWaveformEditor { 960 };
     xOffset = xInitialOffSet;
     yOffset = levelTextEditor.getBottom () + 10 + kHeightOfCueSetButton;
+    // WAVEFORM
     waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, getHeight () - yOffset - (kHeightOfCueSetButton * 2));
+    // CUE SET TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
     {
         const auto buttonX { xOffset + cueSetIndex * kWidthOfCueSetButton };
