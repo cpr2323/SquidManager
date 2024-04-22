@@ -81,7 +81,7 @@ void SquidMetaDataProperties::setCuePoints (int cueSetIndex, uint32_t start, uin
         newCueSetVT.setProperty (CueSetIdPropertyId, numCueSets + 1, nullptr);
         setCueSetProperties (newCueSetVT, start, loop, end);
         cueSetListVT.addChild (newCueSetVT, -1, nullptr);
-        setNumCueSets (numCueSets + 1, false);
+        setNumCueSets (numCueSets + 1, true);
     }
     else
     {

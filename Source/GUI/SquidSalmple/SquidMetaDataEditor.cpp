@@ -432,10 +432,10 @@ void SquidMetaDataEditorComponent::setupComponents ()
     addAndMakeVisible (loadButton);
 
     addCueSetButton.setButtonText("ADD CUE");
-    addCueSetButton.onClick = [] () {};
+    addCueSetButton.onClick = [this] () { appendCueSet (); };
     addAndMakeVisible (addCueSetButton);
     deleteCueSetButton.setButtonText ("DELETE CUE");
-    deleteCueSetButton.onClick = [] () {};
+    deleteCueSetButton.onClick = [this] () { deleteCueSet (squidMetaDataProperties.getCurCueSet ()); };
     addAndMakeVisible (deleteCueSetButton);
 
     // WAVEFORM DISPLAY
@@ -494,6 +494,8 @@ void SquidMetaDataEditorComponent::setFilterEnableState ()
 void SquidMetaDataEditorComponent::setCurCue (int cueSetIndex)
 {
     jassert (cueSetIndex < squidMetaDataProperties.getNumCueSets());
+    if (cueSetIndex >= squidMetaDataProperties.getNumCueSets ())
+        return;
     cueSetButtons [curCueSetIndex].setToggleState (false, juce::NotificationType::dontSendNotification);
     curCueSetIndex = cueSetIndex;
     squidMetaDataProperties.setCurCueSet (cueSetIndex, false);
@@ -596,6 +598,10 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
             waveformDisplay.setCuePoints (squidMetaDataProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidMetaDataProperties.getEndCueSet (curCueSetIndex) / 2);
     };
     squidMetaDataProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
+    squidMetaDataProperties.onNumCueSetsChange = [this] (int numCueSets)
+        {
+            initCueSetTabs ();
+        };
     squidMetaDataProperties.onQuantChange = [this] (int quant) { quantDataChanged (quant); };
     squidMetaDataProperties.onRateChange = [this] (int rate) { rateDataChanged (rate); };
     squidMetaDataProperties.onReverseChange = [this] (int reverse) { reverseDataChanged (reverse); };
@@ -608,6 +614,22 @@ void SquidMetaDataEditorComponent::initializeCallbacks ()
     };
     squidMetaDataProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidMetaDataProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
+}
+
+void SquidMetaDataEditorComponent::appendCueSet ()
+{
+    const auto numCueSets { squidMetaDataProperties.getNumCueSets () };
+    jassert (numCueSets < 64);
+    if (numCueSets == 64)
+        return;
+    const auto newCueSetIndex { numCueSets };
+    squidMetaDataProperties.setCuePoints (newCueSetIndex, squidMetaDataProperties.getStartCueSet (numCueSets - 1), squidMetaDataProperties.getLoopCueSet (numCueSets - 1), squidMetaDataProperties.getEndCueSet (numCueSets - 1));
+    squidMetaDataProperties.setCurCueSet (newCueSetIndex, true);
+}
+
+void SquidMetaDataEditorComponent::deleteCueSet (int cueSetIndex)
+{
+
 }
 
 // Data Changed functions
@@ -928,3 +950,4 @@ void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 }
+

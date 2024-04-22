@@ -76,7 +76,16 @@ private:
 
     int curCueSetIndex { 0 };
 
+    void appendCueSet ();
+    void deleteCueSet (int cueSetIndex);
+    int getUiValue (int internalValue);
+    int getInternalValue (int uiValue);
+    void initCueSetTabs ();
     void initializeCallbacks ();
+    void setCurCue (int cueSetIndex);
+    void setFilterEnableState ();
+    void setupComponents ();
+
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
@@ -117,13 +126,6 @@ private:
     void startCueUiChanged (juce::int64 startCue);
     void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
-
-    int getUiValue (int internalValue);
-    int getInternalValue (int uiValue);
-    void initCueSetTabs ();
-    void setupComponents ();
-    void setFilterEnableState ();
-    void setCurCue (int cueSetIndex);
 
     void timerCallback () override;
     void resized () override;
