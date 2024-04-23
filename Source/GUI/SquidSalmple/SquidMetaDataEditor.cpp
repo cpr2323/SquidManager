@@ -440,6 +440,37 @@ void SquidMetaDataEditorComponent::setupComponents ()
     deleteCueSetButton.setEnabled (false);
     addAndMakeVisible (deleteCueSetButton);
 
+    // LOWER PANEL SELECT BUTTONS
+    cueSetViewButton.setButtonText("CUE SETS");
+    cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
+    cueSetViewButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
+    cueSetViewButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
+    cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+    cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+    cueSetViewButton.onClick = [this] ()
+    {
+        if (cueSetViewButton.getToggleState ())
+            return;
+        cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
+        cvAssignViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        setLowerPaneView (LowerPaneView::cueSets);
+    };
+    addAndMakeVisible (cueSetViewButton);
+    cvAssignViewButton.setButtonText ("CV ASSIGN");
+    cvAssignViewButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
+    cvAssignViewButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
+    cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+    cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+    cvAssignViewButton.onClick = [this] ()
+    {
+        if (cvAssignViewButton.getToggleState ())
+            return;
+        cvAssignViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
+        cueSetViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        setLowerPaneView (LowerPaneView::cvAssigns);
+    };
+    addAndMakeVisible (cvAssignViewButton);
+
     // WAVEFORM DISPLAY
     waveformDisplay.onStartPointChange = [this] (int startPoint)
     {
@@ -940,7 +971,11 @@ void SquidMetaDataEditorComponent::resized ()
     yOffset = kInitialYOffset;
     loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);
 
-    // CUE SETS
+    // LOWER PANE VIEW BUTTONS
+    cueSetViewButton.setBounds (getWidth () - 40 - 60 - 20 - 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
+    cvAssignViewButton.setBounds (cueSetViewButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
+
+    // CUE SET BUTTONS
     addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
     deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
@@ -964,3 +999,20 @@ void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
     g.fillAll (juce::Colours::black);
 }
 
+void SquidMetaDataEditorComponent::setLowerPaneView (LowerPaneView whichView)
+{
+    auto setCuetSetVisibility = [this] (bool isVisible)
+    {
+        waveformDisplay.setVisible (isVisible);
+        for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
+            cueSetButtons [cueSetIndex].setVisible (isVisible);
+    };
+    if (whichView == LowerPaneView::cueSets)
+    {
+        setCuetSetVisibility (true);
+    }
+    else
+    {
+        setCuetSetVisibility (false);
+    }
+}

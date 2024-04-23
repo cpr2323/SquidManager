@@ -74,6 +74,14 @@ private:
     juce::TextButton addCueSetButton;
     juce::TextButton deleteCueSetButton;
 
+    juce::TextButton cueSetViewButton;
+    juce::TextButton cvAssignViewButton;
+    enum class LowerPaneView
+    {
+        cueSets,
+        cvAssigns
+    };
+    LowerPaneView lowerPaneView { LowerPaneView::cueSets };
     int curCueSetIndex { 0 };
 
     void appendCueSet ();
@@ -85,8 +93,8 @@ private:
     void setCueEditButtonsEnableState ();
     void setCurCue (int cueSetIndex);
     void setFilterEnableState ();
+    void setLowerPaneView (LowerPaneView whichView);
     void setupComponents ();
-
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
