@@ -471,7 +471,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
         cueSetButtons [cueSetIndex].setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
-        cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { /*if (! cueSetButtons [cueSetIndex] .getToggleState())*/ setCurCue (cueSetIndex); };
+        cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
         addAndMakeVisible (cueSetButtons [cueSetIndex]);
     }
 }
