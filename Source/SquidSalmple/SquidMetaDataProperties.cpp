@@ -93,9 +93,43 @@ void SquidMetaDataProperties::setCuePoints (int cueSetIndex, uint32_t start, uin
     }
 }
 
+void SquidMetaDataProperties::removeCueSet (int cueSetIndex)
+{
+    const auto numCueSets { getNumCueSets () };
+    const auto curCueSet { getCurCueSet () };
+    // done allow delete if only 1 Cue Set
+    jassert (numCueSets > 1);
+    if (numCueSets < 2)
+        return;
+
+    // remove cue set
+    auto cueSetToRemoveVT { getCueSetVT (cueSetIndex) };
+    auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
+    cueSetListVT.removeChild (cueSetToRemoveVT, nullptr);
+
+    // update the IDs of remaining Cue Sets
+    auto curCueSetId { 1 };
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueSetIndex, &curCueSetId] (juce::ValueTree cueSetVT)
+    {
+        cueSetVT.setProperty (CueSetIdPropertyId, curCueSetId, nullptr);
+        ++curCueSetId;
+        return true;
+    });
+
+    // update num cue set
+    setNumCueSets (numCueSets - 1, true);
+    if (curCueSet >= numCueSets - 1)
+        setCurCueSet (numCueSets - 2, true);
+    else
+        setCurCueSet (cueSetIndex, true);
+}
+
 void SquidMetaDataProperties::setCurCueSet (int cueSetIndex, bool includeSelfCallback)
 {
     setValue (cueSetIndex, CurCueSetPropertyId, includeSelfCallback);
+    setStartCue (getStartCueSet (cueSetIndex), true);
+    setEndCue (getEndCueSet (cueSetIndex), true);
+    setLoopCue (getLoopCueSet (cueSetIndex), true);
 }
 
 void SquidMetaDataProperties::setRate (int rate, bool includeSelfCallback)
@@ -205,23 +239,6 @@ void SquidMetaDataProperties::setLevel (int level, bool includeSelfCallback)
 {
     setValue (level, LevelPropertyId, includeSelfCallback);
 }
-
-// void SquidMetaDataProperties::addCueSet (uint32_t startCue, uint32_t loopCue, uint32_t endCue)
-// {
-//     const auto numCues { getNumCueSets () };
-//     jassert (getNumCueSets() < 64);
-//     if (getNumCueSets () >= 64)
-//         return;
-// 
-//     auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
-//     juce::ValueTree cueSetVT { CueSetTypeId };
-//     cueSetVT.setProperty (CueSetIdPropertyId, numCues + 1, nullptr);
-//     cueSetVT.setProperty (CueSetStartPropertyId, startCue, nullptr);
-//     cueSetVT.setProperty (CueSetLoopPropertyId, loopCue, nullptr);
-//     cueSetVT.setProperty (CueSetEndPropertyId, endCue, nullptr);
-//     cueSetListVT.addChild (cueSetVT, -1, nullptr);
-//     setNumCueSets (numCues + 1, false);
-// }
 
 void SquidMetaDataProperties::setAttack (int attack, bool includeSelfCallback)
 {

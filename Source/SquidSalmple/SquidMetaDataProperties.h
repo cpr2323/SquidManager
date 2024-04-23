@@ -93,6 +93,8 @@ public:
     juce::String getReserved12Data ();
     juce::String getReserved13Data ();
 
+    void removeCueSet (int cueSetIndex);
+
     std::function<void (int attack)> onAttackChange;
     std::function<void (int bits)> onBitsChange;
     std::function<void (int chokeChannel)> onChokeChange;

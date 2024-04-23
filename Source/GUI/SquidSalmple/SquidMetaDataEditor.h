@@ -82,6 +82,7 @@ private:
     int getInternalValue (int uiValue);
     void initCueSetTabs ();
     void initializeCallbacks ();
+    void setCueEditButtonsEnableState ();
     void setCurCue (int cueSetIndex);
     void setFilterEnableState ();
     void setupComponents ();
