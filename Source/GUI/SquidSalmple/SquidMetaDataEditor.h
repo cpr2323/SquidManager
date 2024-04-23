@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "CueSets/WaveformDisplay.h"
+#include "CvAssigns/CvAssignEditor.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/SquidMetaDataProperties.h"
 #include "../../Utility/CustomComboBox.h"
@@ -67,6 +68,7 @@ private:
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
     WaveformDisplay waveformDisplay;
     std::array<juce::TextButton, 64> cueSetButtons;
+    CvAssignEditor cvAssignEditor;
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
     juce::TextButton loadButton;

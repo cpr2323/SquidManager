@@ -505,6 +505,8 @@ void SquidMetaDataEditorComponent::setupComponents ()
         cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
         addAndMakeVisible (cueSetButtons [cueSetIndex]);
     }
+    // CV ASSIGN EDITOR
+    addChildComponent (cvAssignEditor);
 }
 
 int SquidMetaDataEditorComponent::getUiValue (int internalValue)
@@ -992,6 +994,8 @@ void SquidMetaDataEditorComponent::resized ()
         cueSetButtons [cueSetIndex].setBounds (buttonX, waveformDisplay.getY () - kHeightOfCueSetButton, kWidthOfCueSetButton, kHeightOfCueSetButton);
         cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
     }
+
+    cvAssignEditor.setBounds (cueSetButtons[0].getX (), cueSetButtons [0].getY (), cueSetButtons[63].getRight (), cueSetButtons[63].getBottom ());
 }
 
 void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
@@ -1010,9 +1014,11 @@ void SquidMetaDataEditorComponent::setLowerPaneView (LowerPaneView whichView)
     if (whichView == LowerPaneView::cueSets)
     {
         setCuetSetVisibility (true);
+        cvAssignEditor.setVisible (false);
     }
     else
     {
         setCuetSetVisibility (false);
+        cvAssignEditor.setVisible (true);
     }
 }

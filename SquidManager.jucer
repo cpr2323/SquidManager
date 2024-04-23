@@ -7,6 +7,12 @@
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
         <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple">
+          <GROUP id="{CF8427FF-33A4-34E4-FE9F-913BB06EA68B}" name="CvAssigns">
+            <FILE id="xHehJH" name="CvAssignEditor.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.cpp"/>
+            <FILE id="uM4wKH" name="CvAssignEditor.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.h"/>
+          </GROUP>
           <GROUP id="{B38C8863-B2A0-5AB2-D11C-92D8CBC1ED31}" name="CueSets">
             <FILE id="cW58eY" name="WaveformDisplay.cpp" compile="1" resource="0"
                   file="Source/GUI/SquidSalmple/CueSets/WaveformDisplay.cpp"/>
