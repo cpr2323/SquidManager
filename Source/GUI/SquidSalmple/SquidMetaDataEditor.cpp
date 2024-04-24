@@ -585,6 +585,8 @@ void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
 
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
 
+    cvAssignEditor.init (rootPropertiesVT);
+
     initCueSetTabs ();
     setCurCue (squidMetaDataProperties.getCurCueSet ());
 
@@ -982,7 +984,7 @@ void SquidMetaDataEditorComponent::resized ()
     deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
-    const auto kWidthOfWaveformEditor { 960 };
+    const auto kWidthOfWaveformEditor { 962 };
     xOffset = xInitialOffSet;
     yOffset = levelTextEditor.getBottom () + 10 + kHeightOfCueSetButton;
     // WAVEFORM
@@ -995,7 +997,7 @@ void SquidMetaDataEditorComponent::resized ()
         cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
     }
 
-    cvAssignEditor.setBounds (cueSetButtons[0].getX (), cueSetButtons [0].getY (), cueSetButtons[63].getRight (), cueSetButtons[63].getBottom ());
+    cvAssignEditor.setBounds (cueSetButtons[0].getX (), cueSetButtons [0].getY (), cueSetButtons[63].getRight () - cueSetButtons [0].getX (), cueSetButtons[63].getBottom () - cueSetButtons [0].getY ());
 }
 
 void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
