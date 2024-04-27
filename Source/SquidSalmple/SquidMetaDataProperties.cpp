@@ -1,4 +1,5 @@
 #include "SquidMetaDataProperties.h"
+#include "SquidSalmpleDefs.h"
 #include "../Utility/ValueTreeHelpers.h"
 
 void SquidMetaDataProperties::initValueTree ()
@@ -33,6 +34,54 @@ void SquidMetaDataProperties::initValueTree ()
     setReserved12Data ("");
     setReserved13Data ("");
 
+    ////////////////////////////////////
+//  CV Stuff
+// uint16_t array of 8 cv flags - 16 bits of bit flags for a parameter to be enabled
+// cv params are stored in array of two u16int_t offset and attenuation
+//      values are
+//          0 - 99
+//          101 - 199 = -1 - -199
+
+    jassert (CvAssignedFlag::bits == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Bits));
+    jassert (CvAssignedFlag::rate == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Rate));
+    jassert (CvAssignedFlag::level == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Level));
+    jassert (CvAssignedFlag::decay == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Decay));
+    jassert (CvAssignedFlag::speed == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Speed));
+    jassert (CvAssignedFlag::loopMode == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::LoopMode));
+    jassert (CvAssignedFlag::reverse == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Reverse));
+    jassert (CvAssignedFlag::startCue == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::StartCue));
+    jassert (CvAssignedFlag::endCue == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::EndCue));
+    jassert (CvAssignedFlag::loopCue == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::LoopCue));
+    jassert (CvAssignedFlag::attack == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Attack));
+    jassert (CvAssignedFlag::cueSet == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::CueSet));
+    jassert (CvAssignedFlag::eTrig == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::ETrig));
+    jassert (CvAssignedFlag::filtFreq == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltFreq));
+    jassert (CvAssignedFlag::filtRes == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltRes));
+
+    juce::ValueTree cvAssignsVT { SquidMetaDataProperties::CvAssignsTypeId };
+    const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+    for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
+    {
+        juce::ValueTree cvInputVT { CvAssignInputTypeId };
+        cvInputVT.setProperty (CvAssignInputIdPropertyId, curCvInput + 1, nullptr);
+        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+        {
+            juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
+            parameterVT.setProperty (CvAssignInputParameterNamePropertyId, CvParameterIndex::getParameterName (CvParameterIndex::getCvEnabledFlag (curParameterIndex)), nullptr);
+            parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, "false", nullptr);
+            // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
+            //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
+            // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
+            // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
+            parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, 99, nullptr);
+            parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, 0, nullptr);
+            cvInputVT.addChild (parameterVT, -1, nullptr);
+        }
+        cvAssignsVT.addChild (cvInputVT, -1, nullptr);
+    }
+    data.addChild (cvAssignsVT, -1, nullptr);
+
+    // CUE SETS
     juce::ValueTree cueSetListVT { CueSetListTypeId };
     juce::ValueTree cueSetVT { CueSetTypeId };
     cueSetVT.setProperty (CueSetIdPropertyId, 1, nullptr);
@@ -70,7 +119,6 @@ void SquidMetaDataProperties::setCuePoints (int cueSetIndex, uint32_t start, uin
         cueSetVT.setProperty (CueSetStartPropertyId, static_cast<int> (start), nullptr);
         cueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int> (loop), nullptr);
         cueSetVT.setProperty (CueSetEndPropertyId, static_cast<int> (end), nullptr);
-
     };
 
     if (cueSetIndex == numCueSets)
@@ -130,6 +178,45 @@ void SquidMetaDataProperties::setCurCueSet (int cueSetIndex, bool includeSelfCal
     setStartCue (getStartCueSet (cueSetIndex), true);
     setEndCue (getEndCueSet (cueSetIndex), true);
     setLoopCue (getLoopCueSet (cueSetIndex), true);
+}
+
+void SquidMetaDataProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+}
+
+void SquidMetaDataProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, isEnabled, nullptr);
+}
+
+void SquidMetaDataProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, offset, nullptr);
 }
 
 void SquidMetaDataProperties::setRate (int rate, bool includeSelfCallback)
@@ -328,6 +415,45 @@ int SquidMetaDataProperties::getChoke ()
 int SquidMetaDataProperties::getCurCueSet ()
 {
     return getValue<int> (CurCueSetPropertyId);
+}
+
+int SquidMetaDataProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    return parameterVT.getProperty (CvAssignInputParameterAttenuatePropertyId);
+}
+
+bool SquidMetaDataProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    return parameterVT.getProperty (CvAssignInputParameterEnabledPropertyId);
+}
+
+int SquidMetaDataProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
+{
+    jassert (cvIndex < 8);
+    jassert (parameterIndex < 15);
+    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    return parameterVT.getProperty (CvAssignInputParameterOffsetPropertyId);
 }
 
 int SquidMetaDataProperties::getRate ()
@@ -583,112 +709,138 @@ juce::ValueTree SquidMetaDataProperties::create ()
 
 void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
 {
-    if (vt != data)
-        return;
+    if (vt.getType () == CvAssignInputParameterTypeId)
+    {
+        // figure out cvInputIndex and cvParameterIndex
+        auto parentCvInputVT { vt.getParent () };
+        jassert (parentCvInputVT.isValid ());
+        jassert (parentCvInputVT.getType () == CvAssignInputTypeId);
+        const auto cvInputIndex { static_cast<int> (parentCvInputVT.getProperty (CvAssignInputIdPropertyId)) - 1 };
+        const auto parameterIndex { parentCvInputVT.indexOf (vt) };
+        // make appropriate callback
+        if (property == CvAssignInputParameterEnabledPropertyId)
+        {
+            if (onCvAssignEnabledChange != nullptr)
+                onCvAssignEnabledChange (cvInputIndex, parameterIndex, getCvAssignEnabled (cvInputIndex, parameterIndex));
+        }
+        else if (property == CvAssignInputParameterAttenuatePropertyId)
+        {
+            if (onCvAssignAttenuateChange != nullptr)
+                onCvAssignAttenuateChange (cvInputIndex, parameterIndex, getCvAssignAttenuate (cvInputIndex, parameterIndex));
+        }
+        else if (property == CvAssignInputParameterOffsetPropertyId)
+        {
+            if (onCvAssignOffsetChange != nullptr)
+                onCvAssignOffsetChange (cvInputIndex, parameterIndex, getCvAssignOffset (cvInputIndex, parameterIndex));
+        }
+    }
 
-    if (property == AttackPropertyId)
+    if (vt != data)
     {
-        if (onAttackChange != nullptr)
-            onAttackChange (getAttack ());
-    }
-    else if (property == BitsPropertyId)
-    {
-        if (onBitsChange != nullptr)
-            onBitsChange (getBits ());
-    }
-    else if (property == ChokePropertyId)
-    {
-        if (onChokeChange != nullptr)
-            onChokeChange (getChoke ());
-    }
-    else if (property == CurCueSetPropertyId)
-    {
-        if (onCurCueSetChange != nullptr)
-            onCurCueSetChange (getCurCueSet ());
-    }
-    else if (property == DecayPropertyId)
-    {
-        if (onDecayChange != nullptr)
-            onDecayChange (getDecay ());
-    }
-    else if (property == EndCuePropertyId)
-    {
-        if (onEndCueChange != nullptr)
-            onEndCueChange (getEndCue ());
-    }
-    else if (property == ETrigPropertyId)
-    {
-        if (onETrigChange!= nullptr)
-            onETrigChange (getETrig ());
-    }
-    else if (property == FilterTypePropertyId)
-    {
-        if (onFilterTypeChange != nullptr)
-            onFilterTypeChange (getFilterType ());
-    }
-    else if (property == FilterFrequencyPropertyId)
-    {
-        if (onFilterFrequencyChange != nullptr)
-            onFilterFrequencyChange (getFilterFrequency ());
-    }
-    else if (property == FilterResonancePropertyId)
-    {
-        if (onFilterResonanceChange != nullptr)
-            onFilterResonanceChange (getFilterResonance ());
-    }
-    else if (property == LevelPropertyId)
-    {
-        if (onLevelChange != nullptr)
-            onLevelChange (getLevel ());
-    }
-    else if (property == LoopCuePropertyId)
-    {
-        if (onLoopCueChange != nullptr)
-            onLoopCueChange (getLoopCue ());
-    }
-    else if (property == LoopModePropertyId)
-    {
-        if (onLoopModeChange != nullptr)
-            onLoopModeChange (getLoopMode ());
-    }
-    else if (property == NumCueSetsPropertyId)
-    {
-        if (onNumCueSetsChange != nullptr)
-            onNumCueSetsChange (getNumCueSets ());
-    }
-    else if (property == QuantPropertyId)
-    {
-        if (onQuantChange != nullptr)
-            onQuantChange (getQuant ());
-    }
-    else if (property == RatePropertyId)
-    {
-        if (onRateChange != nullptr)
-            onRateChange (getRate ());
-    }
-    else if (property == ReversePropertyId)
-    {
-        if (onReverseChange != nullptr)
-            onReverseChange (getReverse ());
-    }
-    else if (property == SpeedPropertyId)
-    {
-        if (onSpeedChange != nullptr)
-            onSpeedChange (getSpeed ());
-    }
-    else if (property == StartCuePropertyId)
-    {
-        if (onStartCueChange != nullptr)
-            onStartCueChange (getStartCue ());
-    }
-    else if (property == StepsPropertyId)
-    {
-        if (onStepsChange != nullptr)
-            onStepsChange (getSteps ());
-    }
-    else if (property == XfadePropertyId)
-    {
-        if (onXfadeChange != nullptr)
-            onXfadeChange (getXfade ());
+        if (property == AttackPropertyId)
+        {
+            if (onAttackChange != nullptr)
+                onAttackChange (getAttack ());
+        }
+        else if (property == BitsPropertyId)
+        {
+            if (onBitsChange != nullptr)
+                onBitsChange (getBits ());
+        }
+        else if (property == ChokePropertyId)
+        {
+            if (onChokeChange != nullptr)
+                onChokeChange (getChoke ());
+        }
+        else if (property == CurCueSetPropertyId)
+        {
+            if (onCurCueSetChange != nullptr)
+                onCurCueSetChange (getCurCueSet ());
+        }
+        else if (property == DecayPropertyId)
+        {
+            if (onDecayChange != nullptr)
+                onDecayChange (getDecay ());
+        }
+        else if (property == EndCuePropertyId)
+        {
+            if (onEndCueChange != nullptr)
+                onEndCueChange (getEndCue ());
+        }
+        else if (property == ETrigPropertyId)
+        {
+            if (onETrigChange != nullptr)
+                onETrigChange (getETrig ());
+        }
+        else if (property == FilterTypePropertyId)
+        {
+            if (onFilterTypeChange != nullptr)
+                onFilterTypeChange (getFilterType ());
+        }
+        else if (property == FilterFrequencyPropertyId)
+        {
+            if (onFilterFrequencyChange != nullptr)
+                onFilterFrequencyChange (getFilterFrequency ());
+        }
+        else if (property == FilterResonancePropertyId)
+        {
+            if (onFilterResonanceChange != nullptr)
+                onFilterResonanceChange (getFilterResonance ());
+        }
+        else if (property == LevelPropertyId)
+        {
+            if (onLevelChange != nullptr)
+                onLevelChange (getLevel ());
+        }
+        else if (property == LoopCuePropertyId)
+        {
+            if (onLoopCueChange != nullptr)
+                onLoopCueChange (getLoopCue ());
+        }
+        else if (property == LoopModePropertyId)
+        {
+            if (onLoopModeChange != nullptr)
+                onLoopModeChange (getLoopMode ());
+        }
+        else if (property == NumCueSetsPropertyId)
+        {
+            if (onNumCueSetsChange != nullptr)
+                onNumCueSetsChange (getNumCueSets ());
+        }
+        else if (property == QuantPropertyId)
+        {
+            if (onQuantChange != nullptr)
+                onQuantChange (getQuant ());
+        }
+        else if (property == RatePropertyId)
+        {
+            if (onRateChange != nullptr)
+                onRateChange (getRate ());
+        }
+        else if (property == ReversePropertyId)
+        {
+            if (onReverseChange != nullptr)
+                onReverseChange (getReverse ());
+        }
+        else if (property == SpeedPropertyId)
+        {
+            if (onSpeedChange != nullptr)
+                onSpeedChange (getSpeed ());
+        }
+        else if (property == StartCuePropertyId)
+        {
+            if (onStartCueChange != nullptr)
+                onStartCueChange (getStartCue ());
+        }
+        else if (property == StepsPropertyId)
+        {
+            if (onStepsChange != nullptr)
+                onStepsChange (getSteps ());
+        }
+        else if (property == XfadePropertyId)
+        {
+            if (onXfadeChange != nullptr)
+                onXfadeChange (getXfade ());
+        }
     }
 }

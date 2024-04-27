@@ -30,20 +30,20 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getXfade ()), SquidSalmple::DataLayout::kXfadeOffset);
 
     // CV Assigns
-    auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName ("CvAssigns") };
+    auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
-    ValueTreeHelpers::forEachChildOfType (cvAssignsVT, "CvInput", [this] (juce::ValueTree cvInputVT)
+    ValueTreeHelpers::forEachChildOfType (cvAssignsVT, SquidMetaDataProperties::CvAssignInputTypeId, [this] (juce::ValueTree cvInputVT)
     {
-        const auto cvId { static_cast<int> (cvInputVT.getProperty ("id")) };
+        const auto cvId { static_cast<int> (cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) };
         //juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
         uint16_t cvAssignedFlags { CvAssignedFlag::none };
-        const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 2 };
-        ValueTreeHelpers::forEachChildOfType (cvInputVT, "Parameter", [this, cvId, parameterRowSize, &cvAssignedFlags] (juce::ValueTree parameterVT)
+        const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+        ValueTreeHelpers::forEachChildOfType (cvInputVT, SquidMetaDataProperties::CvAssignInputParameterTypeId, [this, cvId, parameterRowSize, &cvAssignedFlags] (juce::ValueTree parameterVT)
         {
-            const auto parameterName { parameterVT.getProperty ("name").toString () };
-            const auto enabled { static_cast<bool> (parameterVT.getProperty ("enabled")) };
-            const auto offset { static_cast<int> (parameterVT.getProperty ("offset")) };
-            auto attenuation { static_cast<int> (parameterVT.getProperty ("attenuate")) };
+            const auto parameterName { parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () };
+            const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
+            const auto offset { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
+            auto attenuation { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
             // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
             //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
             // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100

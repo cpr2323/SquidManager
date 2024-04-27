@@ -67,24 +67,50 @@ enum class ExternalTrigger {
 
 namespace CvAssignedFlag
 {
-    constexpr uint16_t none      { 0x0000 };
-    constexpr uint16_t unused    { 0x0001 }; // unused
-    constexpr uint16_t bits      { 0x0002 };
-    constexpr uint16_t rate      { 0x0004 };
-    constexpr uint16_t level     { 0x0008 };
-    constexpr uint16_t decay     { 0x0010 };
-    constexpr uint16_t speed     { 0x0020 };
-    constexpr uint16_t loopMode  { 0x0040 };
-    constexpr uint16_t reverse   { 0x0080 };
-    constexpr uint16_t startCue  { 0x0100 };
-    constexpr uint16_t endCue    { 0x0200 };
-    constexpr uint16_t loopCue   { 0x0400 };
-    constexpr uint16_t attack    { 0x0800 };
-    constexpr uint16_t cueSet    { 0x1000 };
-    constexpr uint16_t eTrig     { 0x2000 };
-    constexpr uint16_t filtFreq  { 0x4000 };
-    constexpr uint16_t filtRes   { 0x8000 };
+    constexpr uint16_t none     { 0x0000 };
+    constexpr uint16_t unused   { 0x0001 }; // unused
+    constexpr uint16_t bits     { 0x0002 };
+    constexpr uint16_t rate     { 0x0004 };
+    constexpr uint16_t level    { 0x0008 };
+    constexpr uint16_t decay    { 0x0010 };
+    constexpr uint16_t speed    { 0x0020 };
+    constexpr uint16_t loopMode { 0x0040 };
+    constexpr uint16_t reverse  { 0x0080 };
+    constexpr uint16_t startCue { 0x0100 };
+    constexpr uint16_t endCue   { 0x0200 };
+    constexpr uint16_t loopCue  { 0x0400 };
+    constexpr uint16_t attack   { 0x0800 };
+    constexpr uint16_t cueSet   { 0x1000 };
+    constexpr uint16_t eTrig    { 0x2000 };
+    constexpr uint16_t filtFreq { 0x4000 };
+    constexpr uint16_t filtRes  { 0x8000 };
 }
+
+namespace CvParameterIndex
+{
+    constexpr int Bits     { 0 }; // 1,2,3,4,5,6
+    constexpr int Rate     { 1 }; // 7
+    constexpr int Level    { 2 }; // 13
+    constexpr int Decay    { 3 };
+    constexpr int Speed    { 4 };
+    constexpr int LoopMode { 5 };
+    constexpr int Reverse  { 6 };
+    constexpr int StartCue { 7 };
+    constexpr int EndCue   { 8 };
+    constexpr int LoopCue  { 9 };
+    constexpr int Attack   { 10 };
+    constexpr int CueSet   { 11 };
+    constexpr int ETrig    { 12 };
+    constexpr int FiltFreq { 13 };
+    constexpr int FiltRes  { 14 };
+
+    constexpr uint16_t getCvEnabledFlag (int parameterIndex)
+    {
+        return 1 << (parameterIndex + 1);
+    }
+
+    juce::String getParameterName (uint16_t cvAssignFlag);
+};
 
 constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
 constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };

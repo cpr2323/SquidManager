@@ -15,12 +15,14 @@ public:
     {
     }
 
-//    void addCueSet (uint32_t startCue, uint32_t loopCue, uint32_t endCue);
     void setAttack (int attack, bool includeSelfCallback);
     void setBits (int bits, bool includeSelfCallback);
     void setChoke (int chokeChannel, bool includeSelfCallback);
     void setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
+    void setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback);
+    void setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback);
+    void setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback);
     void setDecay (int decay, bool includeSelfCallback);
     void setETrig (int eTrig, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
@@ -59,6 +61,9 @@ public:
     int getBits ();
     int getChoke ();
     int getCurCueSet ();
+    int getCvAssignAttenuate (int cvIndex, int parameterIndex);
+    bool getCvAssignEnabled (int cvIndex, int parameterIndex);
+    int getCvAssignOffset (int cvIndex, int parameterIndex);
     int getDecay ();
     int getETrig ();
     uint32_t getEndCue ();
@@ -99,6 +104,9 @@ public:
     std::function<void (int bits)> onBitsChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int cueSetIndex)> onCurCueSetChange;
+    std::function<void (int cvIndex, int parameterIndex, int attenuation)> onCvAssignAttenuateChange;
+    std::function<void (int cvIndex, int parameterIndex, bool isEnabled)> onCvAssignEnabledChange;
+    std::function<void (int cvIndex, int parameterIndex, int offset)> onCvAssignOffsetChange;
     std::function<void (int decay)> onDecayChange;
     std::function<void (int eTrig)> onETrigChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
@@ -146,6 +154,26 @@ public:
     static inline const juce::Identifier StepsPropertyId            { "steps" };
     static inline const juce::Identifier XfadePropertyId            { "xfade" };
 
+    // CV ASSIGNS
+    static inline const juce::Identifier CvAssignsTypeId { "CvAssigns" };
+    static inline const juce::Identifier CvAssignInputTypeId { "CvInput" };
+    static inline const juce::Identifier CvAssignInputIdPropertyId { "id" };
+    static inline const juce::Identifier CvAssignInputParameterTypeId { "Parameter" };
+    // TODO - remove name property and use and id property instead
+    static inline const juce::Identifier CvAssignInputParameterNamePropertyId      { "name" };
+    static inline const juce::Identifier CvAssignInputParameterEnabledPropertyId   { "enabled" };
+    static inline const juce::Identifier CvAssignInputParameterAttenuatePropertyId { "attenuation" };
+    static inline const juce::Identifier CvAssignInputParameterOffsetPropertyId    { "offset" };
+
+    // CUE SETS
+    static inline const juce::Identifier CueSetListTypeId { "CueSetList" };
+    static inline const juce::Identifier CueSetTypeId { "CueSet" };
+    static inline const juce::Identifier CueSetIdPropertyId    { "id" };
+    static inline const juce::Identifier CueSetStartPropertyId { "start" };
+    static inline const juce::Identifier CueSetLoopPropertyId  { "loop" };
+    static inline const juce::Identifier CueSetEndPropertyId   { "end" };
+
+    // RESERVED DATA
     static inline const juce::Identifier Reserved1DataPropertyId    { "reserved1Data" };
     static inline const juce::Identifier Reserved2DataPropertyId    { "reserved2Data" };
     static inline const juce::Identifier Reserved3DataPropertyId    { "reserved3Data" };
@@ -159,14 +187,6 @@ public:
     static inline const juce::Identifier Reserved11DataPropertyId   { "reserved11Data" };
     static inline const juce::Identifier Reserved12DataPropertyId   { "reserved12Data" };
     static inline const juce::Identifier Reserved13DataPropertyId   { "reserved13Data" };
-
-
-    static inline const juce::Identifier CueSetListTypeId { "CueSetList" };
-    static inline const juce::Identifier CueSetTypeId { "CueSet" };
-    static inline const juce::Identifier CueSetIdPropertyId    { "id" };
-    static inline const juce::Identifier CueSetStartPropertyId { "start" };
-    static inline const juce::Identifier CueSetLoopPropertyId  { "loop" };
-    static inline const juce::Identifier CueSetEndPropertyId   { "end" };
 
     void initValueTree ();
     void processValueTree () {}

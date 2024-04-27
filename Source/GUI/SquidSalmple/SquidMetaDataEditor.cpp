@@ -1,5 +1,6 @@
 #include "SquidMetaDataEditor.h"
 #include "../../SquidSalmple/SquidMetaDataReader.h"
+#include "../../SquidSalmple/SquidSalmpleDefs.h"
 #include "../../Utility/PersistentRootProperties.h"
 
 const auto kLargeLabelSize { 20.0f };
@@ -400,6 +401,49 @@ void SquidMetaDataEditorComponent::setupComponents ()
                 SquidMetaDataProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
                                                                         SquidMetaDataProperties::WrapperType::owner,
                                                                         SquidMetaDataProperties::EnableCallbacks::no };
+
+                // TODO - copy CV Assign properties
+                auto srcCvAssignsVT { loadedSquidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
+                jassert (srcCvAssignsVT.isValid ());
+                auto dstCvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
+                jassert (dstCvAssignsVT.isValid ());
+                const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+                for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
+                {
+                    auto srcCvInputVT { srcCvAssignsVT.getChild (curCvInputIndex) };
+                    jassert (srcCvInputVT.isValid ());
+                    jassert (srcCvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
+                    jassert (static_cast<int>(srcCvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
+                    auto dstCvInputVT { dstCvAssignsVT.getChild (curCvInputIndex) };
+                    jassert (dstCvInputVT.isValid ());
+                    jassert (dstCvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
+                    jassert (static_cast<int>(dstCvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
+                    for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+                    {
+                        const auto cvEnabledFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
+                        juce::ValueTree srcParameterVT { srcCvInputVT.getChild (curParameterIndex) };
+                        jassert (srcParameterVT.isValid ());
+                        jassert (srcParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
+                        jassert (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () == CvParameterIndex::getParameterName (cvEnabledFlag));
+                        juce::ValueTree dstParameterVT { dstCvInputVT.getChild (curParameterIndex) };
+                        jassert (dstParameterVT.isValid ());
+                        jassert (dstParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
+                        jassert (dstParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () == CvParameterIndex::getParameterName (cvEnabledFlag));
+                        const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
+                        const auto offset { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
+                        auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
+                        // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
+                        //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
+                        // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
+                        // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
+                        if (attenuation > 99)
+                            attenuation = 100 - attenuation;
+                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId,
+                                                    srcParameterVT.getProperty(SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId), nullptr);
+                    }
+                }
 
                 auto oldCueSetsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
                 jassert (oldCueSetsVT.isValid ());

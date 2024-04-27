@@ -56,6 +56,14 @@ private:
     CustomTextEditorInt cvOffsetEditor;
 
     TextOnLeftToggleButtonLnF textOnLeftToggleButtonLnF;
+
+    void cvAssignEnableDataChanged (bool enabled);
+    void cvAssignEnableUiChanged (bool enabled);
+    void cvAssignAttenuateDataChanged (int attenuation);
+    void cvAssignAttenuateUiChanged (int attenuation);
+    void cvAssignOffsetDataChanged (int offset);
+    void cvAssignOffsetUiChanged (int offset);
+
     void paint (juce::Graphics& g);
     void resized () override;
 };

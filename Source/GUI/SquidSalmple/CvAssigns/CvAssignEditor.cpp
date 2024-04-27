@@ -7,23 +7,56 @@ CvAssignParameter::CvAssignParameter ()
     parameterLabel.setText ("---", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (parameterLabel);
 
+    // ENABLE BUTTON
     assignEnableButton.setLookAndFeel (&textOnLeftToggleButtonLnF);
     assignEnableButton.setButtonText ("ON");
-    assignEnableButton.setConnectedEdges (juce::Button::ConnectedEdgeFlags::ConnectedOnLeft);
+    assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
     addAndMakeVisible (assignEnableButton);
 
+    // ATTENUATE TEXT EDITOR
     cvAttenuateLabel.setText ("ATN", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (cvAttenuateLabel);
     cvAttenuateEditor.getMinValueCallback = [this] () { return 0; };
     cvAttenuateEditor.getMaxValueCallback = [this] () { return 99; };
-    cvAttenuateEditor.setText ("50");
+    cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    cvAttenuateEditor.updateDataCallback = [this] (int value) { cvAssignAttenuateUiChanged (value); };
+    cvAttenuateEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { squidMetaDataProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
+        cvAttenuateEditor.setValue (newValue);
+    };
     addAndMakeVisible (cvAttenuateEditor);
 
+    // OFFSET TEXT EDITOR
     cvOffsetLabel.setText ("OFS", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (cvOffsetLabel);
     cvOffsetEditor.getMinValueCallback = [this] () { return 0; };
     cvOffsetEditor.getMaxValueCallback = [this] () { return 99; };
-    cvOffsetEditor.setText ("0");
+    cvOffsetEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    cvOffsetEditor.updateDataCallback = [this] (int value) { cvAssignOffsetUiChanged (value); };
+    cvOffsetEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { squidMetaDataProperties.getCvAssignOffset (cvIndex, parameterIndex) + (multiplier * direction) };
+        cvOffsetEditor.setValue (newValue);
+    };
     addAndMakeVisible (cvOffsetEditor);
 }
 
@@ -37,13 +70,63 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, int theCvIndex, 
     cvIndex = theCvIndex;
     parameterIndex = theParameterIndex;
 
-    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes };
+    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+
+    squidMetaDataProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
+    {
+        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+            cvAssignEnableDataChanged (isEnabled);
+    };
+    squidMetaDataProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterIndex, int attenuation)
+    {
+        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+            cvAssignAttenuateDataChanged (attenuation);
+    };
+    squidMetaDataProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterIndex, int offset)
+    {
+        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+            cvAssignOffsetDataChanged (offset);
+    };
+
+    cvAssignEnableDataChanged (squidMetaDataProperties.getCvAssignEnabled (cvIndex,parameterIndex));
+    cvAssignAttenuateDataChanged (squidMetaDataProperties.getCvAssignAttenuate (cvIndex, parameterIndex));
+    cvAssignOffsetDataChanged (squidMetaDataProperties.getCvAssignOffset (cvIndex, parameterIndex));
 }
 
 void CvAssignParameter::setParameterLabel (juce::String parameterText)
 {
     parameterLabel.setText (parameterText, juce::NotificationType::dontSendNotification);
+}
+
+void CvAssignParameter::cvAssignEnableDataChanged (bool enabled)
+{
+    assignEnableButton.setToggleState (enabled, juce::NotificationType::dontSendNotification);
+}
+
+void CvAssignParameter::cvAssignEnableUiChanged (bool enabled)
+{
+    squidMetaDataProperties.setCvAssignEnabled (cvIndex, parameterIndex, enabled, false);
+}
+
+void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
+{
+    cvAttenuateEditor.setText (juce::String (attenuation), juce::NotificationType::dontSendNotification);
+}
+
+void CvAssignParameter::cvAssignAttenuateUiChanged (int attenuation)
+{
+    squidMetaDataProperties.setCvAssignAttenuate (cvIndex, parameterIndex, attenuation, false);
+}
+
+void CvAssignParameter::cvAssignOffsetDataChanged (int offset)
+{
+    cvOffsetEditor.setText (juce::String (offset), juce::NotificationType::dontSendNotification);
+}
+
+void CvAssignParameter::cvAssignOffsetUiChanged (int offset)
+{
+    squidMetaDataProperties.setCvAssignOffset (cvIndex, parameterIndex, offset, false);
 }
 
 void CvAssignParameter::paint (juce::Graphics& g)
