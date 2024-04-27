@@ -59,6 +59,8 @@
               file="Source/SquidSalmple/SquidMetaDataWriter.cpp"/>
         <FILE id="LgqEzM" name="SquidMetaDataWriter.h" compile="0" resource="0"
               file="Source/SquidSalmple/SquidMetaDataWriter.h"/>
+        <FILE id="AxNaRU" name="SquidSalmpleDefs.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/SquidSalmpleDefs.cpp"/>
         <FILE id="uLTfkh" name="SquidSalmpleDefs.h" compile="0" resource="0"
               file="Source/SquidSalmple/SquidSalmpleDefs.h"/>
       </GROUP>
