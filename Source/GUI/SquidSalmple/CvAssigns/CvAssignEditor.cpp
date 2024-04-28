@@ -111,12 +111,26 @@ void CvAssignParameter::cvAssignEnableUiChanged (bool enabled)
 
 void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
 {
-    cvAttenuateEditor.setText (juce::String (attenuation), juce::NotificationType::dontSendNotification);
+    const auto uiAttenuationValue = [attenuation] ()
+    {
+        if (attenuation > 99)
+            return 100 - attenuation;
+        else
+            return attenuation;
+    } ();
+    cvAttenuateEditor.setText (juce::String (uiAttenuationValue), juce::NotificationType::dontSendNotification);
 }
 
 void CvAssignParameter::cvAssignAttenuateUiChanged (int attenuation)
 {
-    squidMetaDataProperties.setCvAssignAttenuate (cvIndex, parameterIndex, attenuation, false);
+    const auto rawAttenuationValue = [attenuation] ()
+    {
+        if (attenuation < 0)
+            return 100 + std::abs (attenuation);
+        else
+            return attenuation;
+    } ();
+    squidMetaDataProperties.setCvAssignAttenuate (cvIndex, parameterIndex, rawAttenuationValue, false);
 }
 
 void CvAssignParameter::cvAssignOffsetDataChanged (int offset)

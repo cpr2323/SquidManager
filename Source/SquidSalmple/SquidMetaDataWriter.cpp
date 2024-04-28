@@ -44,12 +44,6 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
             const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
             const auto offset { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
             auto attenuation { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-            // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
-            //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
-            // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
-            // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
-            if (attenuation < 0)
-                attenuation = 100 + std::abs (attenuation);
             //juce::Logger::outputDebugString (" processing parameter: " + parameterName);
             auto getFlagBitParamIndexFromParameterName = [] (juce::String parameterName) -> std::tuple<uint16_t, uint8_t>
             {

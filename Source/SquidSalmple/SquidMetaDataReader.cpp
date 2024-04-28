@@ -83,12 +83,6 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
             const auto offset { getValue <2> (cvParamOffset + 0) };
             auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
-            // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
-            //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
-            // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
-            // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
-            if (attenuation > 99)
-                attenuation = 100 - attenuation;
             parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
             parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
         }
