@@ -424,20 +424,14 @@ void SquidMetaDataEditorComponent::setupComponents ()
                         juce::ValueTree srcParameterVT { srcCvInputVT.getChild (curParameterIndex) };
                         jassert (srcParameterVT.isValid ());
                         jassert (srcParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-                        jassert (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () == CvParameterIndex::getParameterName (cvEnabledFlag));
+                        jassert (static_cast<int> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
                         juce::ValueTree dstParameterVT { dstCvInputVT.getChild (curParameterIndex) };
                         jassert (dstParameterVT.isValid ());
                         jassert (dstParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-                        jassert (dstParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () == CvParameterIndex::getParameterName (cvEnabledFlag));
+                        jassert (static_cast<int> (dstParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
                         const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
                         const auto offset { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
                         auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-                        // NOTE - the value stored internally is 0 to 199, externally we have -99 to 99
-                        //        so, 0 to 99 external maps 0-99 internal, but -0 to -99 externally maps to 100 - 199 internally, ie. external value = value < 100 ? value : 100 - value
-                        // currently I am storing the -99 to 99 range in the data model, which means we loose the 0 that is 100
-                        // I think I should change this so the data model also stores 0 to 199, to keep the operation of the software the same as the firmware
-                        if (attenuation > 99)
-                            attenuation = 100 - attenuation;
                         dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
                         dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
                         dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId,

@@ -109,8 +109,29 @@ namespace CvParameterIndex
         return 1 << (parameterIndex + 1);
     }
 
+    // TODO - this should be the parameter index
     juce::String getParameterName (uint16_t cvAssignFlag);
 };
+
+
+// std::vector<juce::String> CvParameterNameList
+// {
+//     "bits",
+//     "rate",
+//     "level",
+//     "decay",
+//     "speed",
+//     "loopMode",
+//     "reverse",
+//     "startCue",
+//     "endCue",
+//     "loopCue",
+//     "attack",
+//     "cue Set",
+//     "eTrig",
+//     "filterFrequency",
+//     "filterResonance"
+// };
 
 constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
 constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };

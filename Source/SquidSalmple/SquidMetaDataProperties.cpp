@@ -67,7 +67,7 @@ void SquidMetaDataProperties::initValueTree ()
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
             juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
-            parameterVT.setProperty (CvAssignInputParameterNamePropertyId, CvParameterIndex::getParameterName (CvParameterIndex::getCvEnabledFlag (curParameterIndex)), nullptr);
+            parameterVT.setProperty (CvAssignInputParameterIdPropertyId, curParameterIndex + 1, nullptr);
             parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, "false", nullptr);
             parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, 99, nullptr);
             parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, 0, nullptr);

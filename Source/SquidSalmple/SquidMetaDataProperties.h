@@ -159,8 +159,7 @@ public:
     static inline const juce::Identifier CvAssignInputTypeId { "CvInput" };
     static inline const juce::Identifier CvAssignInputIdPropertyId { "id" };
     static inline const juce::Identifier CvAssignInputParameterTypeId { "Parameter" };
-    // TODO - remove name property and use and id property instead
-    static inline const juce::Identifier CvAssignInputParameterNamePropertyId      { "name" };
+    static inline const juce::Identifier CvAssignInputParameterIdPropertyId        { "id" };
     static inline const juce::Identifier CvAssignInputParameterEnabledPropertyId   { "enabled" };
     static inline const juce::Identifier CvAssignInputParameterAttenuatePropertyId { "attenuation" };
     static inline const juce::Identifier CvAssignInputParameterOffsetPropertyId    { "offset" };

@@ -74,15 +74,15 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
             juce::ValueTree parameterVT { cvInputVT.getChild (curParameterIndex) };
-            const auto cvEnabledFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
             jassert (parameterVT.isValid ());
             jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-            jassert (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString() == CvParameterIndex::getParameterName (cvEnabledFlag));
-            auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInputIndex)) };
-            parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvEnabledFlag ? "true" : "false", nullptr);
+            jassert (static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
+            const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
+            const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInputIndex)) };
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
             const auto offset { getValue <2> (cvParamOffset + 0) };
-            auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            const auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+            parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);
             parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
             parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
         }

@@ -32,69 +32,38 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     // CV Assigns
     auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
-    ValueTreeHelpers::forEachChildOfType (cvAssignsVT, SquidMetaDataProperties::CvAssignInputTypeId, [this] (juce::ValueTree cvInputVT)
+    for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
+        auto cvInputVT { cvAssignsVT.getChild (curCvInputIndex) };
+        jassert (cvInputVT.isValid ());
+        jassert (cvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
+        jassert (static_cast<int>(cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
         const auto cvId { static_cast<int> (cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) };
-        //juce::Logger::outputDebugString ("processing cvInput #" + juce::String (cvId));
         uint16_t cvAssignedFlags { CvAssignedFlag::none };
         const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
-        ValueTreeHelpers::forEachChildOfType (cvInputVT, SquidMetaDataProperties::CvAssignInputParameterTypeId, [this, cvId, parameterRowSize, &cvAssignedFlags] (juce::ValueTree parameterVT)
+        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
-            const auto parameterName { parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterNamePropertyId).toString () };
+            juce::ValueTree parameterVT { cvInputVT.getChild (curParameterIndex) };
+            jassert (parameterVT.isValid ());
+            jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
+            const auto parameterId { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) };
             const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
             const auto offset { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
-            auto attenuation { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-            //juce::Logger::outputDebugString (" processing parameter: " + parameterName);
-            auto getFlagBitParamIndexFromParameterName = [] (juce::String parameterName) -> std::tuple<uint16_t, uint8_t>
-            {
-                if (parameterName == "bits")
-                    return { CvAssignedFlag::bits, 0 };
-                if (parameterName == "rate")
-                    return { CvAssignedFlag::rate, 1 };
-                if (parameterName == "level")
-                    return { CvAssignedFlag::level, 2 };
-                if (parameterName == "decay")
-                    return { CvAssignedFlag::decay, 3 };
-                if (parameterName == "speed")
-                    return { CvAssignedFlag::speed, 4 };
-                if (parameterName == "loopMode")
-                    return { CvAssignedFlag::loopMode, 5 };
-                if (parameterName == "reverse")
-                    return { CvAssignedFlag::reverse, 6 };
-                if (parameterName == "startCue")
-                    return { CvAssignedFlag::startCue, 7 };
-                if (parameterName == "endCue")
-                    return { CvAssignedFlag::endCue, 8 };
-                if (parameterName == "loopCue")
-                    return { CvAssignedFlag::loopCue, 9 };
-                if (parameterName == "attack")
-                    return { CvAssignedFlag::attack, 10 };
-                if (parameterName == "cue Set")
-                    return { CvAssignedFlag::cueSet, 11 };
-                if (parameterName == "eTrig")
-                    return { CvAssignedFlag::eTrig, 12 };
-                if (parameterName == "filterFrequency")
-                    return { CvAssignedFlag::filtFreq, 13 };
-                if (parameterName == "filterResonance")
-                    return { CvAssignedFlag::filtRes, 14 };
-                // unknown parameter name
-                jassertfalse;
-                return { CvAssignedFlag::none, 255 };
-            };
-            const auto [cvAssignedFlag, cvParamIndex] { getFlagBitParamIndexFromParameterName (parameterName) };
-    
+            const auto attenuation { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
+            const auto parameterEnabledFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
+
             if (enabled)
-                cvAssignedFlags |= cvAssignedFlag;
+                cvAssignedFlags |= parameterEnabledFlag;
             
-            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (cvParamIndex* 4) };
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (curParameterIndex * 4) };
             setUInt16 (offset, cvParamOffset + 0);
             setUInt16 (attenuation, cvParamOffset + 2);
             return true;
-        });
+        };
         // write CvFlags to MemoryBlock
         setUInt16 (cvAssignedFlags, SquidSalmple::DataLayout::kCvFlagsOffset + (cvId - 1) * 2);
         return true;
-    });
+    };
 
     // Cue Sets
     const auto numCues { squidMetaDataProperties.getNumCueSets () };
