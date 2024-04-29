@@ -393,6 +393,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
             if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
             {
                 auto wavFileToLoad { fc.getURLResults () [0].getLocalFile () };
+                // TODO - should this entire 'load from file' code be moved outside of here?
                 appProperties.addRecentlyUsedFile (wavFileToLoad.getFullPathName ());
 
                 // TODO - check for import errors and handle accordingly
@@ -403,6 +404,7 @@ void SquidMetaDataEditorComponent::setupComponents ()
 
                 squidMetaDataProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
                 initCueSetTabs ();
+                // TODO - is this redundant, since there should be a callback from squidMetaDataProperties.copyFrom when the curCueSet property is updated
                 setCurCue (squidMetaDataProperties.getCurCueSet());
             }
         }, nullptr);

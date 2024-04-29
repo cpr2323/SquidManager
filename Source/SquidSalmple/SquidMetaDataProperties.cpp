@@ -627,7 +627,7 @@ uint32_t SquidMetaDataProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
-juce::ValueTree SquidMetaDataProperties::getCvParametrVT (int cvIndex, int parameterIndex)
+juce::ValueTree SquidMetaDataProperties::getCvParameterVT (int cvIndex, int parameterIndex)
 {
     auto cvAssignsVT { data.getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
@@ -674,8 +674,8 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     {
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
-            auto srcParameterVT { sourceMetaDataProperties.getCvParametrVT (curCvInputIndex, curParameterIndex) };
-            auto dstParameterVT { getCvParametrVT (curCvInputIndex, curParameterIndex) };
+            auto srcParameterVT { sourceMetaDataProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+            auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
             const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
             const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
             const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };

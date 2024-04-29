@@ -30,38 +30,27 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getXfade ()), SquidSalmple::DataLayout::kXfadeOffset);
 
     // CV Assigns
-    auto cvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
+    const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
     for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
-        auto cvInputVT { cvAssignsVT.getChild (curCvInputIndex) };
-        jassert (cvInputVT.isValid ());
-        jassert (cvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
-        jassert (static_cast<int>(cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
-        const auto cvId { static_cast<int> (cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) };
+        // we set bits in cvAssignedFlags for each parameter that has cv enabled
         uint16_t cvAssignedFlags { CvAssignedFlag::none };
-        const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
-            juce::ValueTree parameterVT { cvInputVT.getChild (curParameterIndex) };
-            jassert (parameterVT.isValid ());
-            jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-            const auto parameterId { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) };
+            juce::ValueTree parameterVT { squidMetaDataProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * parameterRowSize) + (curParameterIndex * 4) };
+            const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
             const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
             const auto offset { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
             const auto attenuation { static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-            const auto parameterEnabledFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
-
             if (enabled)
-                cvAssignedFlags |= parameterEnabledFlag;
-            
-            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + ((cvId - 1) * parameterRowSize) + (curParameterIndex * 4) };
+                cvAssignedFlags |= cvAssignedFlag;
             setUInt16 (offset, cvParamOffset + 0);
             setUInt16 (attenuation, cvParamOffset + 2);
             return true;
         };
-        // write CvFlags to MemoryBlock
-        setUInt16 (cvAssignedFlags, SquidSalmple::DataLayout::kCvFlagsOffset + (cvId - 1) * 2);
+        // write cvAssignedFlags (bit flags for each enabled parameter) to metadata
+        setUInt16 (cvAssignedFlags, SquidSalmple::DataLayout::kCvFlagsOffset + (curCvInputIndex * 2));
         return true;
     };
 

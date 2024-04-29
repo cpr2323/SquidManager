@@ -130,6 +130,7 @@ public:
 
     void copyFrom (juce::ValueTree sourceVT);
     static juce::ValueTree create ();
+    juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
 
     static inline const juce::Identifier SquidMetaDataTypeId { "SquidMetaData" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };
@@ -192,7 +193,6 @@ public:
 
 private:
     juce::ValueTree getCueSetVT (int cueSetIndex);
-    juce::ValueTree getCvParametrVT (int cvIndex, int paramterIndex);
 
     void valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property) override;
 };

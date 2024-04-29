@@ -62,24 +62,15 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     squidMetaDataProperties.setSteps (getValue<SquidSalmple::DataLayout::kStepTrigNumSize> (SquidSalmple::DataLayout::kStepTrigNumOffset), false);
     squidMetaDataProperties.setXfade (getValue <SquidSalmple::DataLayout::kXfadeSize> (SquidSalmple::DataLayout::kXfadeOffset), false);
 
-    auto cvAssignsVT { squidMetaDataProperties.getValueTree().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
     const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
     for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
-        auto cvInputVT { cvAssignsVT.getChild (curCvInputIndex) };
-        jassert (cvInputVT.isValid ());
-        jassert (cvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
-        jassert (static_cast<int>(cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
-            juce::ValueTree parameterVT { cvInputVT.getChild (curParameterIndex) };
-            jassert (parameterVT.isValid ());
-            jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-            jassert (static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
+            juce::ValueTree parameterVT { squidMetaDataProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
             const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
             const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInputIndex)) };
-            const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
             const auto offset { getValue <2> (cvParamOffset + 0) };
             const auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
             parameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);

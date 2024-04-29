@@ -24,6 +24,12 @@
           <FILE id="gLCtHn" name="SquidMetaDataEditor.h" compile="0" resource="0"
                 file="Source/GUI/SquidSalmple/SquidMetaDataEditor.h"/>
         </GROUP>
+        <FILE id="VIfIQr" name="11097_squid_v1.jpg" compile="0" resource="1"
+              file="Source/GUI/11097_squid_v1.jpg"/>
+        <FILE id="kXpbgH" name="11097_squid_v2.jpg" compile="0" resource="1"
+              file="Source/GUI/11097_squid_v2.jpg"/>
+        <FILE id="MylGo5" name="11097_squid_v3.jpg" compile="0" resource="1"
+              file="Source/GUI/11097_squid_v3.jpg"/>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>
         <FILE id="J2fZpV" name="GuiProperties.h" compile="0" resource="0" file="Source/GUI/GuiProperties.h"/>
