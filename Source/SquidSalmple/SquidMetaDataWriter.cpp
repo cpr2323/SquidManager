@@ -57,6 +57,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     // Cue Sets
     const auto numCues { squidMetaDataProperties.getNumCueSets () };
     setUInt8 (static_cast<uint8_t> (numCues), SquidSalmple::DataLayout::kCuesCountOffset);
+    setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getCurCueSet()), SquidSalmple::DataLayout::kCuesSelectedOffset);
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         setUInt32 (static_cast<uint32_t> (squidMetaDataProperties.getStartCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 0);
