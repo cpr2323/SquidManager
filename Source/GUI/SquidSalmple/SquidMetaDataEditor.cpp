@@ -387,7 +387,6 @@ void SquidMetaDataEditorComponent::setupComponents ()
     loadButton.setButtonText ("LOAD");
     loadButton.onClick = [this] ()
     {
-#if 1
         fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
         fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
         {
@@ -402,70 +401,11 @@ void SquidMetaDataEditorComponent::setupComponents ()
                                                                         SquidMetaDataProperties::WrapperType::owner,
                                                                         SquidMetaDataProperties::EnableCallbacks::no };
 
-                // TODO - copy CV Assign properties
-                auto srcCvAssignsVT { loadedSquidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
-                jassert (srcCvAssignsVT.isValid ());
-                auto dstCvAssignsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
-                jassert (dstCvAssignsVT.isValid ());
-                const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
-                for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
-                {
-                    auto srcCvInputVT { srcCvAssignsVT.getChild (curCvInputIndex) };
-                    jassert (srcCvInputVT.isValid ());
-                    jassert (srcCvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
-                    jassert (static_cast<int>(srcCvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
-                    auto dstCvInputVT { dstCvAssignsVT.getChild (curCvInputIndex) };
-                    jassert (dstCvInputVT.isValid ());
-                    jassert (dstCvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
-                    jassert (static_cast<int>(dstCvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == curCvInputIndex + 1);
-                    for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
-                    {
-                        const auto cvEnabledFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
-                        juce::ValueTree srcParameterVT { srcCvInputVT.getChild (curParameterIndex) };
-                        jassert (srcParameterVT.isValid ());
-                        jassert (srcParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-                        jassert (static_cast<int> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
-                        juce::ValueTree dstParameterVT { dstCvInputVT.getChild (curParameterIndex) };
-                        jassert (dstParameterVT.isValid ());
-                        jassert (dstParameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-                        jassert (static_cast<int> (dstParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == curParameterIndex + 1);
-                        const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
-                        const auto offset { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
-                        auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
-                        dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId,
-                                                    srcParameterVT.getProperty(SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId), nullptr);
-                    }
-                }
-
-                auto oldCueSetsVT { squidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
-                jassert (oldCueSetsVT.isValid ());
-                oldCueSetsVT.removeAllChildren (nullptr);
-                auto newCueSetsVT { loadedSquidMetaDataProperties.getValueTree ().getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
-                jassert (newCueSetsVT.isValid ());
-                ValueTreeHelpers::forEachChildOfType (newCueSetsVT, SquidMetaDataProperties::CueSetTypeId, [this, &oldCueSetsVT] (juce::ValueTree cueSetVT)
-                {
-                    oldCueSetsVT.addChild (cueSetVT.createCopy (), -1, nullptr);
-                    return true;
-                });
-                squidMetaDataProperties.getValueTree ().copyPropertiesFrom (loadedSquidMetaDataProperties.getValueTree (), nullptr);
-
+                squidMetaDataProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
                 initCueSetTabs ();
                 setCurCue (squidMetaDataProperties.getCurCueSet());
             }
         }, nullptr);
-#else
-        // I am hijacking the Load function to do a debug feature
-        fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
-        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
-        {
-            if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
-            {
-                // scan file system and open each wav file to process for Squid Salmple metadata
-            }
-        }, nullptr);
-#endif`
     };
     addAndMakeVisible (loadButton);
 

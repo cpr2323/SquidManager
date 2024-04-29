@@ -34,14 +34,7 @@ void SquidMetaDataProperties::initValueTree ()
     setReserved12Data ("");
     setReserved13Data ("");
 
-    ////////////////////////////////////
-//  CV Stuff
-// uint16_t array of 8 cv flags - 16 bits of bit flags for a parameter to be enabled
-// cv params are stored in array of two u16int_t offset and attenuation
-//      values are
-//          0 - 99
-//          101 - 199 = -1 - -199
-
+    // TODO - I can probably remove this, as it is just test code validating that getCvEnabledFlag works
     jassert (CvAssignedFlag::bits == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Bits));
     jassert (CvAssignedFlag::rate == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Rate));
     jassert (CvAssignedFlag::level == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Level));
@@ -58,8 +51,8 @@ void SquidMetaDataProperties::initValueTree ()
     jassert (CvAssignedFlag::filtFreq == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltFreq));
     jassert (CvAssignedFlag::filtRes == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltRes));
 
+    // CV ASSIGNS
     juce::ValueTree cvAssignsVT { SquidMetaDataProperties::CvAssignsTypeId };
-    const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
     for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
     {
         juce::ValueTree cvInputVT { CvAssignInputTypeId };
@@ -634,6 +627,21 @@ uint32_t SquidMetaDataProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
+juce::ValueTree SquidMetaDataProperties::getCvParametrVT (int cvIndex, int parameterIndex)
+{
+    auto cvAssignsVT { data.getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
+    jassert (cvAssignsVT.isValid ());
+    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
+    jassert (cvInputVT.isValid ());
+    jassert (cvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
+    jassert (static_cast<int>(cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
+    auto parameterVT { cvInputVT.getChild (parameterIndex) };
+    jassert (parameterVT.isValid ());
+    jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
+    jassert (static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == parameterIndex + 1);
+    return parameterVT;
+}
+
 juce::ValueTree SquidMetaDataProperties::getCueSetVT (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
@@ -661,9 +669,41 @@ juce::ValueTree SquidMetaDataProperties::getCueSetVT (int cueSetIndex)
 void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
 {
     SquidMetaDataProperties sourceMetaDataProperties (sourceVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no);
+    // Copy CV Assigns
+    for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
+    {
+        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+        {
+            auto srcParameterVT { sourceMetaDataProperties.getCvParametrVT (curCvInputIndex, curParameterIndex) };
+            auto dstParameterVT { getCvParametrVT (curCvInputIndex, curParameterIndex) };
+            const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
+            const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
+            const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
+            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
+            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+        }
+    }
+
+    // Clear old Cue Sets
+    auto dstCueSetListVT { data.getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
+    jassert (dstCueSetListVT.isValid ());
+    dstCueSetListVT.removeAllChildren (nullptr);
+
+    // Copy new Cue Sets
+    auto srcCueSetListVT { sourceVT.getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
+    jassert (srcCueSetListVT.isValid ());
+    ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidMetaDataProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
+    {
+        dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
+        return true;
+    });
+
+    // Copy properties
     setAttack (sourceMetaDataProperties.getAttack (), false);
     setBits (sourceMetaDataProperties.getBits (), false);
     setChoke (sourceMetaDataProperties.getChoke (), false);
+    setNumCueSets (sourceMetaDataProperties.getNumCueSets (), false);
     setCurCueSet (sourceMetaDataProperties.getCurCueSet (), false);
     setDecay (sourceMetaDataProperties.getDecay (), false);
     setEndCue (sourceMetaDataProperties.getEndCue (), false);
@@ -673,7 +713,6 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setLoopCue (sourceMetaDataProperties.getLoopCue (), false);
     setLoopMode (sourceMetaDataProperties.getLoopMode (), false);
     setLevel (sourceMetaDataProperties.getLevel (), false);
-    setNumCueSets (sourceMetaDataProperties.getNumCueSets (), false);
     setQuant (sourceMetaDataProperties.getQuant (), false);
     setRate (sourceMetaDataProperties.getRate (), false);
     setReverse (sourceMetaDataProperties.getReverse (), false);
@@ -682,6 +721,7 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setSteps (sourceMetaDataProperties.getSteps (), false);
     setXfade (sourceMetaDataProperties.getXfade (), false);
 
+    // Copy reserved data
     setReserved1Data (sourceMetaDataProperties.getReserved1Data ());
     setReserved2Data (sourceMetaDataProperties.getReserved2Data ());
     setReserved3Data (sourceMetaDataProperties.getReserved3Data ());

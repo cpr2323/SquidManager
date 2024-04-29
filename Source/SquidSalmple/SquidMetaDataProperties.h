@@ -192,6 +192,7 @@ public:
 
 private:
     juce::ValueTree getCueSetVT (int cueSetIndex);
+    juce::ValueTree getCvParametrVT (int cvIndex, int paramterIndex);
 
     void valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property) override;
 };
