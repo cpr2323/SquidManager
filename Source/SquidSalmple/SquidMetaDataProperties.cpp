@@ -771,7 +771,7 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
         }
     }
 
-    if (vt != data)
+    if (vt == data)
     {
         if (property == AttackPropertyId)
         {
