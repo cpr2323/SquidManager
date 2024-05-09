@@ -91,6 +91,11 @@ void SquidMetaDataProperties::setBits (int bits, bool includeSelfCallback)
     setValue (bits, BitsPropertyId, includeSelfCallback);
 }
 
+void SquidMetaDataProperties::setChannelFlags (uint16_t channelFlags, bool includeSelfCallback)
+{
+    setValue (static_cast<int> (channelFlags), ChannelFlagsPropertyId, includeSelfCallback);
+}
+
 void SquidMetaDataProperties::setChoke (int chokeChannel, bool includeSelfCallback)
 {
     setValue (chokeChannel, ChokePropertyId, includeSelfCallback);
@@ -394,6 +399,11 @@ void SquidMetaDataProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, 
 int SquidMetaDataProperties::getBits ()
 {
     return getValue<int> (BitsPropertyId);
+}
+
+uint16_t SquidMetaDataProperties::getChannelFlags ()
+{
+    return static_cast<uint16_t>(getValue<int> (ChannelFlagsPropertyId));
 }
 
 int SquidMetaDataProperties::getChoke ()
@@ -782,6 +792,11 @@ void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, con
         {
             if (onBitsChange != nullptr)
                 onBitsChange (getBits ());
+        }
+        else if (property == ChannelFlagsPropertyId)
+        {
+            if (onChannelFlagsChange != nullptr)
+                onChannelFlagsChange(getChannelFlags ());
         }
         else if (property == ChokePropertyId)
         {

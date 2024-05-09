@@ -10,6 +10,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     SquidMetaDataProperties squidMetaDataProperties { squidMetaDataPropertiesVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no };
     setUInt32 (static_cast<uint32_t> (kSignatureAndVersionCurrent), SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getAttack ()), SquidSalmple::DataLayout::kAttackOffset);
+    setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getChannelFlags ()), SquidSalmple::DataLayout::kChannelFlagsOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getChoke ()), SquidSalmple::DataLayout::kChokeOffset);
     setUInt8 (static_cast<uint8_t> (squidMetaDataProperties.getBits ()), SquidSalmple::DataLayout::kQualityOffset);
     setUInt16 (static_cast<uint16_t> (squidMetaDataProperties.getDecay ()), SquidSalmple::DataLayout::kDecayOffset);

@@ -65,6 +65,7 @@ enum class ExternalTrigger {
     on
 };
 
+// THIS IS JUST FOR TEST PURPOSES
 namespace CvAssignedFlag
 {
     constexpr uint16_t none     { 0x0000 };
@@ -133,6 +134,16 @@ namespace CvParameterIndex
 //     "filterResonance"
 // };
 
+namespace ChannelFlags
+{
+    constexpr uint16_t kMute           { 0x0001 };
+    constexpr uint16_t kSolo           { 0x0002 };
+    constexpr uint16_t kNoGate         { 0x0004 };
+    constexpr uint16_t kCueRandom      { 0x0008 };
+    constexpr uint16_t kCueStepped     { 0x0010 };
+    constexpr uint16_t kNeighborOutput { 0x0100 };
+};
+
 constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
 constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
 constexpr auto k32BitSize { static_cast<int> (sizeof (uint32_t)) };
@@ -195,9 +206,11 @@ namespace SquidSalmple
         const auto kCvFlagsSize { 8 * k16BitSize };
         const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
         const auto kCvParamsSize { 8 * 40 * k16BitSize };
-        const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize };
-        const auto k_Reserved9Size { 82 * k8BitSize};
-        const auto kStepTrigCurOffset { k_Reserved9Offset + k_Reserved9Size }; 
+        const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times 
+        const auto k_Reserved9Size { 80 * k8BitSize};
+        const auto kChannelFlagsOffset { k_Reserved9Offset + k_Reserved9Size };
+        const auto kChannelFlagsSize { k16BitSize };
+        const auto kStepTrigCurOffset { kChannelFlagsOffset + kChannelFlagsSize };
         const auto kStepTrigCurSize { k8BitSize };
         const auto kStepTrigNumOffset { kStepTrigCurOffset + kStepTrigCurSize }; // Off, 2, 3, 4, 5, 6, 7 ,8
         const auto kStepTrigNumSize { k8BitSize };
