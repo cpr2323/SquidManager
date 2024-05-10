@@ -11,12 +11,11 @@
 #include "../../Utility/RuntimeRootProperties.h"
 #include "../../Utility/NoArrowComboBoxLnF.h"
 
-class SquidMetaDataEditorComponent : public juce::Component,
-                                     public juce::Timer
+class ChannelEditorComponent : public juce::Component
 {
 public:
-    SquidMetaDataEditorComponent ();
-    ~SquidMetaDataEditorComponent ();
+    ChannelEditorComponent ();
+    ~ChannelEditorComponent ();
 
     void init (juce::ValueTree rootPropertiesVT);
 
@@ -24,9 +23,6 @@ private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
     SquidMetaDataProperties squidMetaDataProperties;
-    std::unique_ptr<juce::FileChooser> fileChooser;
-
-    juce::TextButton saveButton;
 
     // Edit fields
     juce::Label attackLabel;
@@ -138,7 +134,6 @@ private:
     void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
 
-    void timerCallback () override;
     void resized () override;
     void paint (juce::Graphics& g) override;
 };

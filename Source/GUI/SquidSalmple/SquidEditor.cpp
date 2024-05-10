@@ -1,0 +1,72 @@
+#include "SquidEditor.h"
+#include "../../SquidSalmple/SquidMetaDataReader.h"
+#include "../../SquidSalmple/SquidSalmpleDefs.h"
+#include "../../Utility/PersistentRootProperties.h"
+
+
+const auto kParameterLineHeight { 20 };
+const auto kInterControlYOffset { 2 };
+const auto kInitialYOffset { 5 };
+
+const auto kScaleMax { 65535. };
+const auto kScaleStep { kScaleMax / 100 };
+
+SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
+{
+    setOpaque (true);
+    loadButton.setButtonText ("LOAD");
+    loadButton.onClick = [this] ()
+    {
+        fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
+        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
+        {
+            if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
+            {
+                auto wavFileToLoad { fc.getURLResults () [0].getLocalFile () };
+                // TODO - should this entire 'load from file' code be moved outside of here?
+                appProperties.addRecentlyUsedFile (wavFileToLoad.getFullPathName ());
+
+                // TODO - check for import errors and handle accordingly
+                SquidMetaDataReader squidMetaDataReader;
+                SquidMetaDataProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
+                                                                        SquidMetaDataProperties::WrapperType::owner,
+                                                                        SquidMetaDataProperties::EnableCallbacks::no };
+
+                squidMetaDataProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+                //initCueSetTabs ();
+                // TODO - is this redundant, since there should be a callback from squidMetaDataProperties.copyFrom when the curCueSet property is updated
+                //setCurCue (squidMetaDataProperties.getCurCueSet ());
+            }
+        }, nullptr);
+    };
+    addAndMakeVisible (loadButton);
+    addAndMakeVisible (channelEditorComponent);
+    startTimer (250);
+}
+
+void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
+{
+    PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
+    runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
+    appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
+    squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+    channelEditorComponent.init (rootPropertiesVT);
+}
+
+void SquidMetaDataEditorComponent::timerCallback ()
+{
+    // check if data has changed
+}
+
+void SquidMetaDataEditorComponent::resized ()
+{
+    auto localBounds { getLocalBounds() };
+
+    loadButton.setBounds (5, 5, 80, kParameterLineHeight);
+    channelEditorComponent.setBounds (localBounds.removeFromBottom (getHeight() - kParameterLineHeight - 10));
+}
+
+void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
+{
+    g.fillAll (juce::Colours::black);
+}

@@ -19,10 +19,12 @@
             <FILE id="yRLgjs" name="WaveformDisplay.h" compile="0" resource="0"
                   file="Source/GUI/SquidSalmple/CueSets/WaveformDisplay.h"/>
           </GROUP>
-          <FILE id="nW16RK" name="SquidMetaDataEditor.cpp" compile="1" resource="0"
-                file="Source/GUI/SquidSalmple/SquidMetaDataEditor.cpp"/>
-          <FILE id="gLCtHn" name="SquidMetaDataEditor.h" compile="0" resource="0"
-                file="Source/GUI/SquidSalmple/SquidMetaDataEditor.h"/>
+          <FILE id="Ritfi9" name="ChannelEditorComponent.cpp" compile="1" resource="0"
+                file="Source/GUI/SquidSalmple/ChannelEditorComponent.cpp"/>
+          <FILE id="XS0q7L" name="ChannelEditorComponent.h" compile="0" resource="0"
+                file="Source/GUI/SquidSalmple/ChannelEditorComponent.h"/>
+          <FILE id="nW16RK" name="SquidEditor.cpp" compile="1" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.cpp"/>
+          <FILE id="gLCtHn" name="SquidEditor.h" compile="0" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.h"/>
         </GROUP>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>

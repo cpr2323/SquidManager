@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "GuiProperties.h"
-#include "SquidSalmple/SquidMetaDataEditor.h"
+#include "SquidSalmple/SquidEditor.h"
 #include "../Utility/SplitWindowComponent.h"
 
 class MainComponent : public juce::Component
