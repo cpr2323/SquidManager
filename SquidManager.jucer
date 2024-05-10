@@ -24,19 +24,13 @@
           <FILE id="gLCtHn" name="SquidMetaDataEditor.h" compile="0" resource="0"
                 file="Source/GUI/SquidSalmple/SquidMetaDataEditor.h"/>
         </GROUP>
-        <FILE id="VIfIQr" name="11097_squid_v1.jpg" compile="0" resource="1"
-              file="Source/GUI/11097_squid_v1.jpg"/>
-        <FILE id="kXpbgH" name="11097_squid_v2.jpg" compile="0" resource="1"
-              file="Source/GUI/11097_squid_v2.jpg"/>
-        <FILE id="MylGo5" name="11097_squid_v3.jpg" compile="0" resource="1"
-              file="Source/GUI/11097_squid_v3.jpg"/>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>
         <FILE id="J2fZpV" name="GuiProperties.h" compile="0" resource="0" file="Source/GUI/GuiProperties.h"/>
-        <FILE id="UfEDNX" name="image.png" compile="0" resource="1" file="Source/GUI/image.png"/>
         <FILE id="jcdqSb" name="MainComponent.cpp" compile="1" resource="0"
               file="Source/GUI/MainComponent.cpp"/>
         <FILE id="ZPS2SJ" name="MainComponent.h" compile="0" resource="0" file="Source/GUI/MainComponent.h"/>
+        <FILE id="GfPl6s" name="SQtip.png" compile="0" resource="1" file="Source/GUI/SQtip.png"/>
       </GROUP>
       <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
         <GROUP id="{458A692C-DEA2-B7CD-4A7E-1884F885B2B2}" name="Data">
@@ -179,7 +173,7 @@
         <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="UfEDNX" bigIcon="UfEDNX">
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="GfPl6s" bigIcon="GfPl6s">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager"/>
