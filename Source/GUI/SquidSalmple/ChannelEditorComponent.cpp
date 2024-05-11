@@ -14,8 +14,8 @@ const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };
 const auto kInitialYOffset { 5 };
 
-const auto kScaleMax { 65535. };
-const auto kScaleStep { kScaleMax / 100 };
+static const auto kScaleMax { 65535. };
+static const auto kScaleStep { kScaleMax / 100 };
 
 ChannelEditorComponent::ChannelEditorComponent ()
 {
@@ -106,14 +106,14 @@ void ChannelEditorComponent::setupComponents ()
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
     // RATE
     setupLabel (rateLabel, "RATE", kMediumLabelSize, juce::Justification::centred);
-    rateComboBox.addItem ("4", 4);
-    rateComboBox.addItem ("6", 6);
-    rateComboBox.addItem ("7", 7);
-    rateComboBox.addItem ("9", 9);
-    rateComboBox.addItem ("11", 11);
-    rateComboBox.addItem ("14", 14);
-    rateComboBox.addItem ("22", 22);
-    rateComboBox.addItem ("44", 44);
+    rateComboBox.addItem ("4", 8);
+    rateComboBox.addItem ("6", 7);
+    rateComboBox.addItem ("7", 6);
+    rateComboBox.addItem ("9", 5);
+    rateComboBox.addItem ("11", 4);
+    rateComboBox.addItem ("14", 3);
+    rateComboBox.addItem ("22", 2);
+    rateComboBox.addItem ("44", 1);
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
         {
@@ -266,7 +266,7 @@ void ChannelEditorComponent::setupComponents ()
         loopModeComboBox.addItem ("ZigZag Gate", loopId++);
     }
     loopModeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (loopModeComboBox, "LoopMode", [] () {}); // none, normal, zigZag, gate, zigZagGate (0-4)
+    setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
     xfadeTextEditor.getMinValueCallback = [this] () { return 0; };
@@ -289,7 +289,7 @@ void ChannelEditorComponent::setupComponents ()
         };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
-    setupButton (reverseButton, "REVERSE", "Reverse", [] () {}); // 0-1
+    setupButton (reverseButton, "REVERSE", "Reverse", [this] () { reverseUiChanged (reverseButton.getToggleState ()); }); // 0-1
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
@@ -365,7 +365,7 @@ void ChannelEditorComponent::setupComponents ()
         }
     }
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (chokeComboBox, "Choke", [] () {}); // C1, C2, C3, C4, C5, C6, C7, C8
+    setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedItemIndex ()); }); // C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
     eTrigComboBox.addItem ("Off", 1);
@@ -373,14 +373,14 @@ void ChannelEditorComponent::setupComponents ()
         eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
     eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (eTrigComboBox, "EOS Trig", [] () {}); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
+    setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps 
     setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
     stepsComboBox.addItem ("Off", 1);
     for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
     stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    setupComboBox (stepsComboBox, "Steps", [] () {}); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
+    setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
 
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
@@ -699,7 +699,7 @@ void ChannelEditorComponent::quantDataChanged (int quant)
 
 void ChannelEditorComponent::rateDataChanged (int rate)
 {
-    rateComboBox.setSelectedItemIndex (rate, juce::NotificationType::dontSendNotification);
+    rateComboBox.setSelectedId (rate + 1, juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::reverseDataChanged (int reverse)
@@ -768,6 +768,7 @@ void ChannelEditorComponent::eTrigUiChanged (int eTrig)
 void ChannelEditorComponent::filterTypeUiChanged (int filter)
 {
     squidMetaDataProperties.setFilterType (filter, false);
+    setFilterEnableState ();
 }
 
 void ChannelEditorComponent::filterFrequencyUiChanged (int filterFrequency)

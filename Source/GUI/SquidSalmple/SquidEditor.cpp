@@ -11,7 +11,7 @@ const auto kInitialYOffset { 5 };
 const auto kScaleMax { 65535. };
 const auto kScaleStep { kScaleMax / 100 };
 
-SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
+SquidEditorComponent::SquidEditorComponent ()
 {
     setOpaque (true);
     loadButton.setButtonText ("LOAD");
@@ -40,33 +40,42 @@ SquidMetaDataEditorComponent::SquidMetaDataEditorComponent ()
         }, nullptr);
     };
     addAndMakeVisible (loadButton);
-    addAndMakeVisible (channelEditorComponent);
+
+    for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
+    {
+        channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);
+    }
+    addAndMakeVisible (channelTabs);
+
     startTimer (250);
 }
 
-void SquidMetaDataEditorComponent::init (juce::ValueTree rootPropertiesVT)
+void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
-    channelEditorComponent.init (rootPropertiesVT);
+    for (auto channelIndex {0}; channelIndex < 8; ++channelIndex)
+        channelEditorComponents [channelIndex].init (rootPropertiesVT);
 }
 
-void SquidMetaDataEditorComponent::timerCallback ()
+void SquidEditorComponent::timerCallback ()
 {
     // check if data has changed
 }
 
-void SquidMetaDataEditorComponent::resized ()
+void SquidEditorComponent::resized ()
 {
     auto localBounds { getLocalBounds() };
 
     loadButton.setBounds (5, 5, 80, kParameterLineHeight);
-    channelEditorComponent.setBounds (localBounds.removeFromBottom (getHeight() - kParameterLineHeight - 10));
+    const auto channelSectionY { loadButton.getBottom () + 3 };
+    const auto kWidthOfWaveformEditor { 962 };
+    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight() - channelSectionY - 5);
 }
 
-void SquidMetaDataEditorComponent::paint (juce::Graphics& g)
+void SquidEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
 }

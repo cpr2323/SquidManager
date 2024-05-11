@@ -2,6 +2,9 @@
 #include "SquidSalmpleDefs.h"
 #include "../Utility/ValueTreeHelpers.h"
 
+static const auto kScaleMax { 65535. };
+static const auto kScaleStep { kScaleMax / 100 };
+
 void SquidMetaDataProperties::initValueTree ()
 {
     setAttack (0, false);
@@ -12,11 +15,11 @@ void SquidMetaDataProperties::initValueTree ()
     setFilterResonance (0, false);
     setFilterType (0, false);
     setLoopMode (0, false);
-    setLevel (30, false);
+    setLevel (30 * kScaleStep, false);
     setQuant (0, false);
-    setRate (7, false); // 7 == 44.1k
+    setRate (0, false);
     setReverse (0, false);
-    setSpeed (50, false);
+    setSpeed ((50 * kScaleStep), false);
     setSteps (0, false);
     setXfade (0, false);
 
