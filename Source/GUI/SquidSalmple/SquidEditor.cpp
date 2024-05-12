@@ -1,8 +1,6 @@
 #include "SquidEditor.h"
-#include "../../SquidSalmple/SquidMetaDataReader.h"
-#include "../../SquidSalmple/SquidSalmpleDefs.h"
+#include "../../SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "../../Utility/PersistentRootProperties.h"
-
 
 const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };
@@ -28,14 +26,14 @@ SquidEditorComponent::SquidEditorComponent ()
 
                 // TODO - check for import errors and handle accordingly
                 SquidMetaDataReader squidMetaDataReader;
-                SquidMetaDataProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
-                                                                        SquidMetaDataProperties::WrapperType::owner,
-                                                                        SquidMetaDataProperties::EnableCallbacks::no };
+                SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
+                                                                        SquidChannelProperties::WrapperType::owner,
+                                                                        SquidChannelProperties::EnableCallbacks::no };
 
-                squidMetaDataProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+                squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
                 //initCueSetTabs ();
-                // TODO - is this redundant, since there should be a callback from squidMetaDataProperties.copyFrom when the curCueSet property is updated
-                //setCurCue (squidMetaDataProperties.getCurCueSet ());
+                // TODO - is this redundant, since there should be a callback from squidChannelProperties.copyFrom when the curCueSet property is updated
+                //setCurCue (squidChannelProperties.getCurCueSet ());
             }
         }, nullptr);
     };
@@ -55,7 +53,7 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-    squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+    squidChannelProperties.wrap (runtimeRootProperties.getValueTree (), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     for (auto channelIndex {0}; channelIndex < 8; ++channelIndex)
         channelEditorComponents [channelIndex].init (rootPropertiesVT);
 }

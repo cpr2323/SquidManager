@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "../../../AppProperties.h"
-#include "../../../SquidSalmple/SquidMetaDataProperties.h"
+#include "../../../SquidSalmple/SquidChannelProperties.h"
 #include "../../../Utility/CustomComboBox.h"
 #include "../../../Utility/CustomTextEditor.h"
 #include "../../../Utility/DebugLog.h"
@@ -47,7 +47,7 @@ public:
 private:
     int cvIndex { -1 };
     int parameterIndex { -1 };
-    SquidMetaDataProperties squidMetaDataProperties;
+    SquidChannelProperties squidChannelProperties;
     juce::Label parameterLabel;
     juce::ToggleButton assignEnableButton;
     juce::Label cvAttenuateLabel;

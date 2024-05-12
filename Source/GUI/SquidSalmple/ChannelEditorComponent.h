@@ -4,7 +4,7 @@
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
 #include "../../AppProperties.h"
-#include "../../SquidSalmple/SquidMetaDataProperties.h"
+#include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
 #include "../../Utility/CustomTextEditor.h"
 #include "../../Utility/DebugLog.h"
@@ -22,7 +22,7 @@ public:
 private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
-    SquidMetaDataProperties squidMetaDataProperties;
+    SquidChannelProperties squidChannelProperties;
 
     // Edit fields
     juce::Label attackLabel;

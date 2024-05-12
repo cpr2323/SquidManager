@@ -1,14 +1,15 @@
-#include "SquidMetaDataProperties.h"
-#include "SquidSalmpleDefs.h"
+#include "SquidChannelProperties.h"
+#include "Metadata/SquidSalmpleDefs.h"
 #include "../Utility/ValueTreeHelpers.h"
 
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
-void SquidMetaDataProperties::initValueTree ()
+void SquidChannelProperties::initValueTree ()
 {
     setAttack (0, false);
     setBits (16, false);
+    setChannelFlags (0, false);
     setChoke (0, false);
     setDecay (0, false);
     setFilterFrequency (0, false);
@@ -55,7 +56,7 @@ void SquidMetaDataProperties::initValueTree ()
     jassert (CvAssignedFlag::filtRes == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltRes));
 
     // CV ASSIGNS
-    juce::ValueTree cvAssignsVT { SquidMetaDataProperties::CvAssignsTypeId };
+    juce::ValueTree cvAssignsVT { SquidChannelProperties::CvAssignsTypeId };
     for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
     {
         juce::ValueTree cvInputVT { CvAssignInputTypeId };
@@ -89,22 +90,22 @@ void SquidMetaDataProperties::initValueTree ()
     setCurCueSet (0, false);
 }
 
-void SquidMetaDataProperties::setBits (int bits, bool includeSelfCallback)
+void SquidChannelProperties::setBits (int bits, bool includeSelfCallback)
 {
     setValue (bits, BitsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setChannelFlags (uint16_t channelFlags, bool includeSelfCallback)
+void SquidChannelProperties::setChannelFlags (uint16_t channelFlags, bool includeSelfCallback)
 {
     setValue (static_cast<int> (channelFlags), ChannelFlagsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setChoke (int chokeChannel, bool includeSelfCallback)
+void SquidChannelProperties::setChoke (int chokeChannel, bool includeSelfCallback)
 {
     setValue (chokeChannel, ChokePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end)
+void SquidChannelProperties::setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end)
 {
     const auto numCueSets { getNumCueSets () };
     jassert (cueSetIndex <= numCueSets && cueSetIndex < 64);
@@ -138,7 +139,7 @@ void SquidMetaDataProperties::setCuePoints (int cueSetIndex, uint32_t start, uin
     }
 }
 
-void SquidMetaDataProperties::removeCueSet (int cueSetIndex)
+void SquidChannelProperties::removeCueSet (int cueSetIndex)
 {
     const auto numCueSets { getNumCueSets () };
     const auto curCueSet { getCurCueSet () };
@@ -169,7 +170,7 @@ void SquidMetaDataProperties::removeCueSet (int cueSetIndex)
         setCurCueSet (cueSetIndex, true);
 }
 
-void SquidMetaDataProperties::setCurCueSet (int cueSetIndex, bool includeSelfCallback)
+void SquidChannelProperties::setCurCueSet (int cueSetIndex, bool includeSelfCallback)
 {
     setValue (cueSetIndex, CurCueSetPropertyId, includeSelfCallback);
     setStartCue (getStartCueSet (cueSetIndex), true);
@@ -177,7 +178,7 @@ void SquidMetaDataProperties::setCurCueSet (int cueSetIndex, bool includeSelfCal
     setLoopCue (getLoopCueSet (cueSetIndex), true);
 }
 
-void SquidMetaDataProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -190,7 +191,7 @@ void SquidMetaDataProperties::setCvAssignAttenuate (int cvIndex, int parameterIn
     parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
 }
 
-void SquidMetaDataProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -203,7 +204,7 @@ void SquidMetaDataProperties::setCvAssignEnabled (int cvIndex, int parameterInde
     parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, isEnabled, nullptr);
 }
 
-void SquidMetaDataProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -216,150 +217,150 @@ void SquidMetaDataProperties::setCvAssignOffset (int cvIndex, int parameterIndex
     parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, offset, nullptr);
 }
 
-void SquidMetaDataProperties::setRate (int rate, bool includeSelfCallback)
+void SquidChannelProperties::setRate (int rate, bool includeSelfCallback)
 {
     setValue (rate, RatePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setSpeed (int speed, bool includeSelfCallback)
+void SquidChannelProperties::setSpeed (int speed, bool includeSelfCallback)
 {
     setValue (speed, SpeedPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setFilterFrequency (int filterFrequency, bool includeSelfCallback)
+void SquidChannelProperties::setFilterFrequency (int filterFrequency, bool includeSelfCallback)
 {
     setValue (filterFrequency, FilterFrequencyPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setFilterResonance (int filterResonance, bool includeSelfCallback)
+void SquidChannelProperties::setFilterResonance (int filterResonance, bool includeSelfCallback)
 {
     setValue (filterResonance, FilterResonancePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setFilterType (int filter, bool includeSelfCallback)
+void SquidChannelProperties::setFilterType (int filter, bool includeSelfCallback)
 {
     setValue (filter, FilterTypePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setQuant (int quant, bool includeSelfCallback)
+void SquidChannelProperties::setQuant (int quant, bool includeSelfCallback)
 {
     setValue (quant, QuantPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setLoopMode (int loopMode, bool includeSelfCallback)
+void SquidChannelProperties::setLoopMode (int loopMode, bool includeSelfCallback)
 {
     setValue (loopMode, LoopModePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setNumCueSets (int numCues, bool includeSelfCallback)
+void SquidChannelProperties::setNumCueSets (int numCues, bool includeSelfCallback)
 {
     setValue (numCues, NumCueSetsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setXfade (int xfade, bool includeSelfCallback)
+void SquidChannelProperties::setXfade (int xfade, bool includeSelfCallback)
 {
     setValue (xfade, XfadePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setReserved1Data (juce::String reservedData)
+void SquidChannelProperties::setReserved1Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved1DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved2Data (juce::String reservedData)
+void SquidChannelProperties::setReserved2Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved2DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved3Data (juce::String reservedData)
+void SquidChannelProperties::setReserved3Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved3DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved4Data (juce::String reservedData)
+void SquidChannelProperties::setReserved4Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved4DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved5Data (juce::String reservedData)
+void SquidChannelProperties::setReserved5Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved5DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved6Data (juce::String reservedData)
+void SquidChannelProperties::setReserved6Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved6DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved7Data (juce::String reservedData)
+void SquidChannelProperties::setReserved7Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved7DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved8Data (juce::String reservedData)
+void SquidChannelProperties::setReserved8Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved8DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved9Data (juce::String reservedData)
+void SquidChannelProperties::setReserved9Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved9DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved10Data (juce::String reservedData)
+void SquidChannelProperties::setReserved10Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved10DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved11Data (juce::String reservedData)
+void SquidChannelProperties::setReserved11Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved11DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved12Data (juce::String reservedData)
+void SquidChannelProperties::setReserved12Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved12DataPropertyId, false);
 }
-void SquidMetaDataProperties::setReserved13Data (juce::String reservedData)
+void SquidChannelProperties::setReserved13Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved13DataPropertyId, false);
 }
 
-void SquidMetaDataProperties::setReverse (int reverse, bool includeSelfCallback)
+void SquidChannelProperties::setReverse (int reverse, bool includeSelfCallback)
 {
     setValue (reverse, ReversePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setLevel (int level, bool includeSelfCallback)
+void SquidChannelProperties::setLevel (int level, bool includeSelfCallback)
 {
     setValue (level, LevelPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setAttack (int attack, bool includeSelfCallback)
+void SquidChannelProperties::setAttack (int attack, bool includeSelfCallback)
 {
     setValue (attack, AttackPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setDecay (int decay, bool includeSelfCallback)
+void SquidChannelProperties::setDecay (int decay, bool includeSelfCallback)
 {
     setValue (decay, DecayPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setETrig (int eTrig, bool includeSelfCallback)
+void SquidChannelProperties::setETrig (int eTrig, bool includeSelfCallback)
 {
     setValue (eTrig, ETrigPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setSteps (int steps, bool includeSelfCallback)
+void SquidChannelProperties::setSteps (int steps, bool includeSelfCallback)
 {
     setValue (steps, StepsPropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setStartCue (uint32_t startCue, bool includeSelfCallback)
+void SquidChannelProperties::setStartCue (uint32_t startCue, bool includeSelfCallback)
 {
     setValue (static_cast<int> (startCue), StartCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setEndCue (uint32_t endCue, bool includeSelfCallback)
+void SquidChannelProperties::setEndCue (uint32_t endCue, bool includeSelfCallback)
 {
     setValue (static_cast<int> (endCue), EndCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setLoopCue (uint32_t loopCue, bool includeSelfCallback)
+void SquidChannelProperties::setLoopCue (uint32_t loopCue, bool includeSelfCallback)
 {
     setValue (static_cast<int> (loopCue), LoopCuePropertyId, includeSelfCallback);
 }
 
-void SquidMetaDataProperties::setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback)
+void SquidChannelProperties::setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -372,7 +373,7 @@ void SquidMetaDataProperties::setStartCueSet (int cueSetIndex, uint32_t startCue
     requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int>(startCue), nullptr);
 }
 
-void SquidMetaDataProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback)
+void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -385,7 +386,7 @@ void SquidMetaDataProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bo
     requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int>(endCue), nullptr);
 }
 
-void SquidMetaDataProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback)
+void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -399,27 +400,27 @@ void SquidMetaDataProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, 
     requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int>(loopCue), nullptr);
 }
 
-int SquidMetaDataProperties::getBits ()
+int SquidChannelProperties::getBits ()
 {
     return getValue<int> (BitsPropertyId);
 }
 
-uint16_t SquidMetaDataProperties::getChannelFlags ()
+uint16_t SquidChannelProperties::getChannelFlags ()
 {
     return static_cast<uint16_t>(getValue<int> (ChannelFlagsPropertyId));
 }
 
-int SquidMetaDataProperties::getChoke ()
+int SquidChannelProperties::getChoke ()
 {
     return getValue<int> (ChokePropertyId);
 }
 
-int SquidMetaDataProperties::getCurCueSet ()
+int SquidChannelProperties::getCurCueSet ()
 {
     return getValue<int> (CurCueSetPropertyId);
 }
 
-int SquidMetaDataProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -432,7 +433,7 @@ int SquidMetaDataProperties::getCvAssignAttenuate (int cvIndex, int parameterInd
     return parameterVT.getProperty (CvAssignInputParameterAttenuatePropertyId);
 }
 
-bool SquidMetaDataProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
+bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -445,7 +446,7 @@ bool SquidMetaDataProperties::getCvAssignEnabled (int cvIndex, int parameterInde
     return parameterVT.getProperty (CvAssignInputParameterEnabledPropertyId);
 }
 
-int SquidMetaDataProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -458,150 +459,150 @@ int SquidMetaDataProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
     return parameterVT.getProperty (CvAssignInputParameterOffsetPropertyId);
 }
 
-int SquidMetaDataProperties::getRate ()
+int SquidChannelProperties::getRate ()
 {
     return getValue<int> (RatePropertyId);
 }
 
-int SquidMetaDataProperties::getSpeed ()
+int SquidChannelProperties::getSpeed ()
 {
     return getValue<int> (SpeedPropertyId);
 }
 
-int SquidMetaDataProperties::getFilterFrequency ()
+int SquidChannelProperties::getFilterFrequency ()
 {
     return getValue<int> (FilterFrequencyPropertyId);
 }
 
-int SquidMetaDataProperties::getFilterResonance ()
+int SquidChannelProperties::getFilterResonance ()
 {
     return getValue<int> (FilterResonancePropertyId);
 }
 
-int SquidMetaDataProperties::getFilterType ()
+int SquidChannelProperties::getFilterType ()
 {
     return getValue<int> (FilterTypePropertyId);
 }
 
-int SquidMetaDataProperties::getQuant ()
+int SquidChannelProperties::getQuant ()
 {
     return getValue<int> (QuantPropertyId);
 }
 
-int SquidMetaDataProperties::getLoopMode ()
+int SquidChannelProperties::getLoopMode ()
 {
     return getValue<int> (LoopModePropertyId);
 }
 
-int SquidMetaDataProperties::getNumCueSets ()
+int SquidChannelProperties::getNumCueSets ()
 {
     return getValue<int> (NumCueSetsPropertyId);
 }
 
-int SquidMetaDataProperties::getXfade ()
+int SquidChannelProperties::getXfade ()
 {
     return getValue<int> (XfadePropertyId);
 }
 
-juce::String SquidMetaDataProperties::getReserved1Data ()
+juce::String SquidChannelProperties::getReserved1Data ()
 {
     return getValue<juce::String> (Reserved1DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved2Data ()
+juce::String SquidChannelProperties::getReserved2Data ()
 {
     return getValue<juce::String> (Reserved2DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved3Data ()
+juce::String SquidChannelProperties::getReserved3Data ()
 {
     return getValue<juce::String> (Reserved3DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved4Data ()
+juce::String SquidChannelProperties::getReserved4Data ()
 {
     return getValue<juce::String> (Reserved4DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved5Data ()
+juce::String SquidChannelProperties::getReserved5Data ()
 {
     return getValue<juce::String> (Reserved5DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved6Data ()
+juce::String SquidChannelProperties::getReserved6Data ()
 {
     return getValue<juce::String> (Reserved6DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved7Data ()
+juce::String SquidChannelProperties::getReserved7Data ()
 {
     return getValue<juce::String> (Reserved7DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved8Data ()
+juce::String SquidChannelProperties::getReserved8Data ()
 {
     return getValue<juce::String> (Reserved8DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved9Data ()
+juce::String SquidChannelProperties::getReserved9Data ()
 {
     return getValue<juce::String> (Reserved9DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved10Data ()
+juce::String SquidChannelProperties::getReserved10Data ()
 {
     return getValue<juce::String> (Reserved10DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved11Data ()
+juce::String SquidChannelProperties::getReserved11Data ()
 {
     return getValue<juce::String> (Reserved11DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved12Data ()
+juce::String SquidChannelProperties::getReserved12Data ()
 {
     return getValue<juce::String> (Reserved12DataPropertyId);
 }
-juce::String SquidMetaDataProperties::getReserved13Data ()
+juce::String SquidChannelProperties::getReserved13Data ()
 {
     return getValue<juce::String> (Reserved13DataPropertyId);
 }
 
-int SquidMetaDataProperties::getReverse ()
+int SquidChannelProperties::getReverse ()
 {
     return getValue<int> (ReversePropertyId);
 }
 
-int SquidMetaDataProperties::getLevel ()
+int SquidChannelProperties::getLevel ()
 {
     return getValue<int> (LevelPropertyId);
 }
 
-int SquidMetaDataProperties::getAttack ()
+int SquidChannelProperties::getAttack ()
 {
     return getValue<int> (AttackPropertyId);
 }
 
-int SquidMetaDataProperties::getDecay ()
+int SquidChannelProperties::getDecay ()
 {
     return getValue<int> (DecayPropertyId);
 }
 
-int SquidMetaDataProperties::getETrig ()
+int SquidChannelProperties::getETrig ()
 {
     return getValue<int> (ETrigPropertyId);
 }
 
-int SquidMetaDataProperties::getSteps ()
+int SquidChannelProperties::getSteps ()
 {
     return getValue<int> (StepsPropertyId);
 }
 
-uint32_t SquidMetaDataProperties::getStartCue ()
+uint32_t SquidChannelProperties::getStartCue ()
 {
     return static_cast<uint32_t> (getValue<int> (StartCuePropertyId));
 }
 
-uint32_t SquidMetaDataProperties::getEndCue ()
+uint32_t SquidChannelProperties::getEndCue ()
 {
     return static_cast<uint32_t> (getValue<int> (EndCuePropertyId));
 }
 
-uint32_t SquidMetaDataProperties::getLoopCue ()
+uint32_t SquidChannelProperties::getLoopCue ()
 {
     return static_cast<uint32_t> (getValue<int> (LoopCuePropertyId));
 }
 
-uint32_t SquidMetaDataProperties::getStartCueSet (int cueSetIndex)
+uint32_t SquidChannelProperties::getStartCueSet (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -614,7 +615,7 @@ uint32_t SquidMetaDataProperties::getStartCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetStartPropertyId));
 }
 
-uint32_t SquidMetaDataProperties::getEndCueSet (int cueSetIndex)
+uint32_t SquidChannelProperties::getEndCueSet (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -627,7 +628,7 @@ uint32_t SquidMetaDataProperties::getEndCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetEndPropertyId));
 }
 
-uint32_t SquidMetaDataProperties::getLoopCueSet (int cueSetIndex)
+uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -640,22 +641,22 @@ uint32_t SquidMetaDataProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
-juce::ValueTree SquidMetaDataProperties::getCvParameterVT (int cvIndex, int parameterIndex)
+juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
 {
-    auto cvAssignsVT { data.getChildWithName (SquidMetaDataProperties::CvAssignsTypeId) };
+    auto cvAssignsVT { data.getChildWithName (SquidChannelProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
     jassert (cvInputVT.isValid ());
-    jassert (cvInputVT.getType () == SquidMetaDataProperties::CvAssignInputTypeId);
-    jassert (static_cast<int>(cvInputVT.getProperty (SquidMetaDataProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
+    jassert (cvInputVT.getType () == SquidChannelProperties::CvAssignInputTypeId);
+    jassert (static_cast<int>(cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
     auto parameterVT { cvInputVT.getChild (parameterIndex) };
     jassert (parameterVT.isValid ());
-    jassert (parameterVT.getType () == SquidMetaDataProperties::CvAssignInputParameterTypeId);
-    jassert (static_cast<int> (parameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterIdPropertyId)) == parameterIndex + 1);
+    jassert (parameterVT.getType () == SquidChannelProperties::CvAssignInputParameterTypeId);
+    jassert (static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterIdPropertyId)) == parameterIndex + 1);
     return parameterVT;
 }
 
-juce::ValueTree SquidMetaDataProperties::getCueSetVT (int cueSetIndex)
+juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -679,9 +680,9 @@ juce::ValueTree SquidMetaDataProperties::getCueSetVT (int cueSetIndex)
     return reqeustedCueSetVT;
 }
 
-void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
+void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
 {
-    SquidMetaDataProperties sourceMetaDataProperties (sourceVT, SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::no);
+    SquidChannelProperties sourceMetaDataProperties (sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
     // Copy CV Assigns
     for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
@@ -689,24 +690,24 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
         {
             auto srcParameterVT { sourceMetaDataProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
             auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
-            const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId)) };
-            const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId)) };
-            const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId)) };
-            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
-            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-            dstParameterVT.setProperty (SquidMetaDataProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+            const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
+            const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
+            const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
+            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
         }
     }
 
     // Clear old Cue Sets
-    auto dstCueSetListVT { data.getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
+    auto dstCueSetListVT { data.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
     jassert (dstCueSetListVT.isValid ());
     dstCueSetListVT.removeAllChildren (nullptr);
 
     // Copy new Cue Sets
-    auto srcCueSetListVT { sourceVT.getChildWithName (SquidMetaDataProperties::CueSetListTypeId) };
+    auto srcCueSetListVT { sourceVT.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
     jassert (srcCueSetListVT.isValid ());
-    ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidMetaDataProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
+    ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
     {
         dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
         return true;
@@ -750,13 +751,13 @@ void SquidMetaDataProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved13Data (sourceMetaDataProperties.getReserved13Data ());
 }
 
-juce::ValueTree SquidMetaDataProperties::create ()
+juce::ValueTree SquidChannelProperties::create ()
 {
-    SquidMetaDataProperties metaDataProperties;
+    SquidChannelProperties metaDataProperties;
     return metaDataProperties.getValueTree ();
 }
 
-void SquidMetaDataProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
+void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
 {
     if (vt.getType () == CvAssignInputParameterTypeId)
     {

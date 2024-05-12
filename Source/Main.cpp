@@ -11,9 +11,9 @@
 #include "Utility/ValueTreeMonitor.h"
 
 // for testing
-#include "SquidSalmple/SquidMetaDataProperties.h"
-#include "SquidSalmple/SquidMetaDataReader.h"
-#include "SquidSalmple/SquidMetaDataWriter.h"
+#include "SquidSalmple/SquidChannelProperties.h"
+#include "SquidSalmple/Metadata/SquidMetaDataReader.h"
+#include "SquidSalmple/Metadata/SquidMetaDataWriter.h"
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -32,18 +32,18 @@ void runSquidMetaDataReadTest (juce::File testFolder)
 {
     auto inputFile { testFolder.getChildFile ("MetaDataReadTest.wav") };
     SquidMetaDataReader squidMetaDataReader;
-    SquidMetaDataProperties squidMetaDataProperties { squidMetaDataReader.read (inputFile),
-                                                      SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+    SquidChannelProperties squidChannelProperties { squidMetaDataReader.read (inputFile),
+                                                      SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
     auto outputFile { testFolder.getChildFile ("MetaDataWriteTest.wav") };
     SquidMetaDataWriter squidMetaDataWriter;
-    squidMetaDataWriter.write (squidMetaDataProperties.getValueTree (), inputFile, outputFile);
+    squidMetaDataWriter.write (squidChannelProperties.getValueTree (), inputFile, outputFile);
 
-    SquidMetaDataProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
-                                                       SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+    SquidChannelProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
+                                                       SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
-    jassert (ValueTreeHelpers::compareChidrenAndThierPropertiesUnordered (squidMetaDataProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
-    jassert (squidMetaDataProperties2.getValueTree ().isEquivalentTo (squidMetaDataProperties.getValueTree ()));
+    jassert (ValueTreeHelpers::compareChidrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
+    jassert (squidMetaDataProperties2.getValueTree ().isEquivalentTo (squidChannelProperties.getValueTree ()));
 }
 
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer
@@ -114,13 +114,13 @@ public:
     void initSquidSalmple ()
     {
         // TEST CODE
-        // put a SquidMetaDataProperties on the runtime root
-        SquidMetaDataProperties squidMetaDataProperties ({}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no);
-        runtimeRootProperties.getValueTree ().addChild (squidMetaDataProperties.getValueTree (), -1, nullptr);
+        // put a SquidChannelProperties on the runtime root
+        SquidChannelProperties squidChannelProperties ({}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+        runtimeRootProperties.getValueTree ().addChild (squidChannelProperties.getValueTree (), -1, nullptr);
 
-// TEST CODE TO WRITE OUT empty SquidMetaDataProperties
-//         SquidMetaDataProperties squidMetaDataProperties { {}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-//         auto xmlToWrite { squidMetaDataProperties.getValueTree ().createXml () };
+// TEST CODE TO WRITE OUT empty SquidChannelProperties
+//         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+//         auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
 //         auto squidMetaDataXmlFile { appDirectory.getChildFile("SquidMetaDataXmlFile").withFileExtension(".xml") };
 //         xmlToWrite->writeTo (squidMetaDataXmlFile, {});
 
@@ -141,11 +141,11 @@ public:
 //         };
 // 
 //         auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
-//         SquidMetaDataProperties defaultProperties { defaultMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         SquidChannelProperties defaultProperties { defaultMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 //         auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
-//         SquidMetaDataProperties minProperties { minMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         SquidChannelProperties minProperties { minMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 //         auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
-//         SquidMetaDataProperties maxProperties { maxMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         SquidChannelProperties maxProperties { maxMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     }
 
     void initUi ()

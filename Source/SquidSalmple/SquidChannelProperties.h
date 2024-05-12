@@ -3,14 +3,14 @@
 #include <JuceHeader.h>
 #include "../Utility/ValueTreeWrapper.h"
 
-class SquidMetaDataProperties : public ValueTreeWrapper<SquidMetaDataProperties>
+class SquidChannelProperties : public ValueTreeWrapper<SquidChannelProperties>
 {
 public:
-    SquidMetaDataProperties () noexcept : ValueTreeWrapper (SquidMetaDataTypeId)
+    SquidChannelProperties () noexcept : ValueTreeWrapper (SquidMetaDataTypeId)
     {
     }
 
-    SquidMetaDataProperties (juce::ValueTree vt, WrapperType wrapperType, EnableCallbacks shouldEnableCallbacks) noexcept
+    SquidChannelProperties (juce::ValueTree vt, WrapperType wrapperType, EnableCallbacks shouldEnableCallbacks) noexcept
         : ValueTreeWrapper (SquidMetaDataTypeId, vt, wrapperType, shouldEnableCallbacks)
     {
     }

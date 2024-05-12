@@ -31,7 +31,7 @@ CvAssignParameter::CvAssignParameter ()
             else
                 return 25;
         } ();
-        const auto newValue { squidMetaDataProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
         cvAttenuateEditor.setValue (newValue);
     };
     addAndMakeVisible (cvAttenuateEditor);
@@ -54,7 +54,7 @@ CvAssignParameter::CvAssignParameter ()
             else
                 return 25;
         } ();
-        const auto newValue { squidMetaDataProperties.getCvAssignOffset (cvIndex, parameterIndex) + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex) + (multiplier * direction) };
         cvOffsetEditor.setValue (newValue);
     };
     addAndMakeVisible (cvOffsetEditor);
@@ -71,27 +71,27 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, int theCvIndex, 
     parameterIndex = theParameterIndex;
 
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
-    squidMetaDataProperties.wrap (runtimeRootProperties.getValueTree (), SquidMetaDataProperties::WrapperType::client, SquidMetaDataProperties::EnableCallbacks::yes);
+    squidChannelProperties.wrap (runtimeRootProperties.getValueTree (), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
-    squidMetaDataProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
+    squidChannelProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
     {
         if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
             cvAssignEnableDataChanged (isEnabled);
     };
-    squidMetaDataProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterIndex, int attenuation)
+    squidChannelProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterIndex, int attenuation)
     {
         if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
             cvAssignAttenuateDataChanged (attenuation);
     };
-    squidMetaDataProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterIndex, int offset)
+    squidChannelProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterIndex, int offset)
     {
         if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
             cvAssignOffsetDataChanged (offset);
     };
 
-    cvAssignEnableDataChanged (squidMetaDataProperties.getCvAssignEnabled (cvIndex,parameterIndex));
-    cvAssignAttenuateDataChanged (squidMetaDataProperties.getCvAssignAttenuate (cvIndex, parameterIndex));
-    cvAssignOffsetDataChanged (squidMetaDataProperties.getCvAssignOffset (cvIndex, parameterIndex));
+    cvAssignEnableDataChanged (squidChannelProperties.getCvAssignEnabled (cvIndex,parameterIndex));
+    cvAssignAttenuateDataChanged (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex));
+    cvAssignOffsetDataChanged (squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex));
 }
 
 void CvAssignParameter::setParameterLabel (juce::String parameterText)
@@ -106,7 +106,7 @@ void CvAssignParameter::cvAssignEnableDataChanged (bool enabled)
 
 void CvAssignParameter::cvAssignEnableUiChanged (bool enabled)
 {
-    squidMetaDataProperties.setCvAssignEnabled (cvIndex, parameterIndex, enabled, false);
+    squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, enabled, false);
 }
 
 void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
@@ -130,7 +130,7 @@ void CvAssignParameter::cvAssignAttenuateUiChanged (int attenuation)
         else
             return attenuation;
     } ();
-    squidMetaDataProperties.setCvAssignAttenuate (cvIndex, parameterIndex, rawAttenuationValue, false);
+    squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, rawAttenuationValue, false);
 }
 
 void CvAssignParameter::cvAssignOffsetDataChanged (int offset)
@@ -140,7 +140,7 @@ void CvAssignParameter::cvAssignOffsetDataChanged (int offset)
 
 void CvAssignParameter::cvAssignOffsetUiChanged (int offset)
 {
-    squidMetaDataProperties.setCvAssignOffset (cvIndex, parameterIndex, offset, false);
+    squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, offset, false);
 }
 
 void CvAssignParameter::paint (juce::Graphics& g)

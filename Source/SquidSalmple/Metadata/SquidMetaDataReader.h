@@ -1,8 +1,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "BusyChunkReader.h"
-#include "SquidMetaDataProperties.h"
 
 class SquidMetaDataReader
 {
