@@ -6,18 +6,19 @@
 class SquidChannelProperties : public ValueTreeWrapper<SquidChannelProperties>
 {
 public:
-    SquidChannelProperties () noexcept : ValueTreeWrapper (SquidMetaDataTypeId)
+    SquidChannelProperties () noexcept : ValueTreeWrapper (SquidChannelTypeId)
     {
     }
 
     SquidChannelProperties (juce::ValueTree vt, WrapperType wrapperType, EnableCallbacks shouldEnableCallbacks) noexcept
-        : ValueTreeWrapper (SquidMetaDataTypeId, vt, wrapperType, shouldEnableCallbacks)
+        : ValueTreeWrapper (SquidChannelTypeId, vt, wrapperType, shouldEnableCallbacks)
     {
     }
 
     void setAttack (int attack, bool includeSelfCallback);
     void setBits (int bits, bool includeSelfCallback);
     void setChannelFlags (uint16_t channelFlags, bool includeSelfCallback);
+    void setChannelIndex (uint8_t channelIndex, bool includeSelfCallback);
     void setChoke (int chokeChannel, bool includeSelfCallback);
     void setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
@@ -61,6 +62,7 @@ public:
     int getAttack ();
     int getBits ();
     uint16_t getChannelFlags ();
+    uint8_t getChannelIndex ();
     int getChoke ();
     int getCurCueSet ();
     int getCvAssignAttenuate (int cvIndex, int parameterIndex);
@@ -105,6 +107,7 @@ public:
     std::function<void (int attack)> onAttackChange;
     std::function<void (int bits)> onBitsChange;
     std::function<void (uint16_t channelFlags)> onChannelFlagsChange;
+    std::function<void (uint8_t channelIndex)> onChannelIndexChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int cueSetIndex)> onCurCueSetChange;
     std::function<void (int cvIndex, int parameterIndex, int attenuation)> onCvAssignAttenuateChange;
@@ -132,13 +135,14 @@ public:
     std::function<void (int xfade)> onXfadeChange;
 
     void copyFrom (juce::ValueTree sourceVT);
-    static juce::ValueTree create ();
+    static juce::ValueTree create (uint8_t channelIndex);
     juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
 
-    static inline const juce::Identifier SquidMetaDataTypeId { "SquidMetaData" };
+    static inline const juce::Identifier SquidChannelTypeId { "SquidMetaData" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };
     static inline const juce::Identifier BitsPropertyId             { "bits" };
     static inline const juce::Identifier ChannelFlagsPropertyId     { "channelFlags" };
+    static inline const juce::Identifier ChannelIndexPropertyId     { "_index" };
     static inline const juce::Identifier ChokePropertyId            { "choke" };
     static inline const juce::Identifier CurCueSetPropertyId        { "curCueSet" };
     static inline const juce::Identifier DecayPropertyId            { "decay" };

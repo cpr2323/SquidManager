@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 #include "ChannelEditorComponent.h"
 #include "../../AppProperties.h"
-#include "../../SquidSalmple/SquidChannelProperties.h"
+#include "../../SquidSalmple/SquidBankProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
 class SquidEditorComponent : public juce::Component,
@@ -17,7 +17,7 @@ public:
 private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
-    SquidChannelProperties squidChannelProperties;
+    SquidBankProperties squidBankProperties;
     juce::TabbedComponent channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
 
     std::unique_ptr<juce::FileChooser> fileChooser;

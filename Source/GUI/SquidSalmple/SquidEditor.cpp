@@ -30,7 +30,7 @@ SquidEditorComponent::SquidEditorComponent ()
                                                                         SquidChannelProperties::WrapperType::owner,
                                                                         SquidChannelProperties::EnableCallbacks::no };
 
-                squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+                //squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
                 //initCueSetTabs ();
                 // TODO - is this redundant, since there should be a callback from squidChannelProperties.copyFrom when the curCueSet property is updated
                 //setCurCue (squidChannelProperties.getCurCueSet ());
@@ -53,9 +53,12 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-    squidChannelProperties.wrap (runtimeRootProperties.getValueTree (), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
-    for (auto channelIndex {0}; channelIndex < 8; ++channelIndex)
-        channelEditorComponents [channelIndex].init (rootPropertiesVT);
+    squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    squidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
+    {
+        channelEditorComponents [channelIndex].init (channelPropertiesVT);
+        return true;
+    });
 }
 
 void SquidEditorComponent::timerCallback ()

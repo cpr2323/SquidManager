@@ -503,12 +503,12 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
-void ChannelEditorComponent::init (juce::ValueTree rootPropertiesVT)
+void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)
 {
-    PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
-    runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
-    runtimeRootProperties.onSystemRequestedQuit = [this] ()
-        {
+//     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
+//     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
+//     runtimeRootProperties.onSystemRequestedQuit = [this] ()
+//         {
             // TODO - add code to check if data needs to be saved before exiting
 //         runtimeRootProperties.setPreferredQuitState (RuntimeRootProperties::QuitState::idle, false);
 //         overwritePresetOrCancel ([this] ()
@@ -518,23 +518,23 @@ void ChannelEditorComponent::init (juce::ValueTree rootPropertiesVT)
 //         {
 //             // do nothing
 //         });
-        };
+//        };
 
-    appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-    appProperties.onMostRecentFileChange = [this] (juce::String fileName)
-        {
-            //         //DebugLog ("Assimil8orEditorComponent", "Assimil8orEditorComponent::init/appProperties.onMostRecentFileChange: " + fileName);
-            //         //dumpStacktrace (-1, [this] (juce::String logLine) { DebugLog ("Assimil8orEditorComponent", logLine); });
-            waveformDisplay.init (fileName);
-        };
+//     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
+//     appProperties.onMostRecentFileChange = [this] (juce::String fileName)
+//         {
+//             //         //DebugLog ("Assimil8orEditorComponent", "Assimil8orEditorComponent::init/appProperties.onMostRecentFileChange: " + fileName);
+//             //         //dumpStacktrace (-1, [this] (juce::String logLine) { DebugLog ("Assimil8orEditorComponent", logLine); });
+//             waveformDisplay.init (fileName);
+//         };
 
     //     PresetManagerProperties presetManagerProperties (runtimeRootProperties.getValueTree (), PresetManagerProperties::WrapperType::owner, PresetManagerProperties::EnableCallbacks::no);
     //     unEditedPresetProperties.wrap (presetManagerProperties.getPreset ("unedited"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
     //     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
 
-    squidChannelProperties.wrap (runtimeRootProperties.getValueTree (), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+    squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
-    cvAssignEditor.init (rootPropertiesVT);
+    cvAssignEditor.init (squidChannelPropertiesVT);
 
     initCueSetTabs ();
     setCurCue (squidChannelProperties.getCurCueSet ());

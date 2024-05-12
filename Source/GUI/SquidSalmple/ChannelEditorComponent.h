@@ -17,7 +17,7 @@ public:
     ChannelEditorComponent ();
     ~ChannelEditorComponent ();
 
-    void init (juce::ValueTree rootPropertiesVT);
+    void init (juce::ValueTree squidChannelPropertiesVT);
 
 private:
     RuntimeRootProperties runtimeRootProperties;

@@ -1,11 +1,42 @@
-/*
-  ==============================================================================
-
-    SquidBankProperties.cpp
-    Created: 12 May 2024 11:43:30am
-    Author:  cpran
-
-  ==============================================================================
-*/
-
 #include "SquidBankProperties.h"
+#include "SquidChannelProperties.h"
+
+const auto kNumChannels { 8 };
+
+void SquidBankProperties::forEachChannel (std::function<bool (juce::ValueTree channelVT, int channelIndex)> channelVTCallback)
+{
+    jassert (channelVTCallback != nullptr);
+    auto curChannelIndex { 0 };
+    ValueTreeHelpers::forEachChildOfType (data, SquidChannelProperties::SquidChannelTypeId, [this, &curChannelIndex, channelVTCallback] (juce::ValueTree channelVT)
+    {
+        auto keepIterating { channelVTCallback (channelVT, curChannelIndex) };
+        ++curChannelIndex;
+        return keepIterating;
+    });
+}
+
+juce::ValueTree SquidBankProperties::getChannelVT (int channelIndex)
+{
+    jassert (channelIndex < kNumChannels);
+    juce::ValueTree requestedChannelVT;
+    forEachChannel ([this, &requestedChannelVT, channelIndex] (juce::ValueTree channelVT, int curChannelIndex)
+    {
+        if (curChannelIndex == channelIndex)
+        {
+            requestedChannelVT = channelVT;
+            return false;
+        }
+        return true;
+    });
+    jassert (requestedChannelVT.isValid ());
+    return requestedChannelVT;
+}
+
+void SquidBankProperties::initValueTree ()
+{
+    for (auto channelIndex { 0 }; channelIndex < kNumChannels; ++channelIndex)
+    {
+        auto channel { SquidChannelProperties::create (channelIndex) };
+        data.addChild (channel, -1, nullptr);
+    }
+}

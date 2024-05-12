@@ -10,6 +10,7 @@ void SquidChannelProperties::initValueTree ()
     setAttack (0, false);
     setBits (16, false);
     setChannelFlags (0, false);
+    setChannelIndex (0, false);
     setChoke (0, false);
     setDecay (0, false);
     setFilterFrequency (0, false);
@@ -98,6 +99,11 @@ void SquidChannelProperties::setBits (int bits, bool includeSelfCallback)
 void SquidChannelProperties::setChannelFlags (uint16_t channelFlags, bool includeSelfCallback)
 {
     setValue (static_cast<int> (channelFlags), ChannelFlagsPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setChannelIndex (uint8_t channelIndex, bool includeSelfCallback)
+{
+    setValue (static_cast<int>(channelIndex), ChannelFlagsPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setChoke (int chokeChannel, bool includeSelfCallback)
@@ -408,6 +414,11 @@ int SquidChannelProperties::getBits ()
 uint16_t SquidChannelProperties::getChannelFlags ()
 {
     return static_cast<uint16_t>(getValue<int> (ChannelFlagsPropertyId));
+}
+
+uint8_t SquidChannelProperties::getChannelIndex ()
+{
+    return static_cast<uint8_t> (getValue<int> (ChannelFlagsPropertyId));
 }
 
 int SquidChannelProperties::getChoke ()
@@ -751,10 +762,11 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved13Data (sourceMetaDataProperties.getReserved13Data ());
 }
 
-juce::ValueTree SquidChannelProperties::create ()
+juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
 {
-    SquidChannelProperties metaDataProperties;
-    return metaDataProperties.getValueTree ();
+    SquidChannelProperties squidChannelProperties;
+    squidChannelProperties.setChannelIndex (channelIndex, false);
+    return squidChannelProperties.getValueTree ();
 }
 
 void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
@@ -801,6 +813,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onChannelFlagsChange != nullptr)
                 onChannelFlagsChange(getChannelFlags ());
+        }
+        else if (property == ChannelIndexPropertyId)
+        {
+            if (onChannelIndexChange != nullptr)
+                onChannelIndexChange (getChannelIndex ());
         }
         else if (property == ChokePropertyId)
         {

@@ -1,11 +1,36 @@
-/*
-  ==============================================================================
-
-    SquidBankProperties.h
-    Created: 12 May 2024 11:43:30am
-    Author:  cpran
-
-  ==============================================================================
-*/
-
 #pragma once
+
+#include <JuceHeader.h>
+#include "../Utility/ValueTreeWrapper.h"
+
+class SquidBankProperties : public ValueTreeWrapper<SquidBankProperties>
+{
+public:
+    SquidBankProperties () noexcept : ValueTreeWrapper (SquidBankTypeId)
+    {
+    }
+
+    SquidBankProperties (juce::ValueTree vt, WrapperType wrapperType, EnableCallbacks shouldEnableCallbacks) noexcept
+        : ValueTreeWrapper (SquidBankTypeId, vt, wrapperType, shouldEnableCallbacks)
+    {
+    }
+
+    void setName (juce::String name, bool includeSelfCallback);
+
+    juce::String getName ();
+
+    std::function<void (juce::String name)> onNameChange;
+
+    void copyFrom (juce::ValueTree sourceVT);
+    static juce::ValueTree create ();
+    void forEachChannel (std::function<bool (juce::ValueTree channelVT, int channelIndex)> channelVTCallback);
+    juce::ValueTree getChannelVT (int channelIndex);
+
+    static inline const juce::Identifier SquidBankTypeId { "SquidBank" };
+    static inline const juce::Identifier NamePropertyId { "name" };
+
+    void initValueTree ();
+    void processValueTree () {}
+
+private:
+};

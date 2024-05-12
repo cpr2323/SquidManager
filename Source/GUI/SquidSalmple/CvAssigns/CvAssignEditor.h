@@ -41,7 +41,7 @@ class CvAssignParameter : public juce::Component
 public:
     CvAssignParameter ();
     ~CvAssignParameter ();
-    void init (juce::ValueTree rootPropertiesVT, int theCvIndex, int theParameterIndex);
+    void init (juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex);
     void setParameterLabel (juce::String parameterText);
 
 private:

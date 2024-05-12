@@ -65,13 +65,12 @@ CvAssignParameter::~CvAssignParameter ()
     assignEnableButton.setLookAndFeel (nullptr);
 }
 
-void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, int theCvIndex, int theParameterIndex)
+void CvAssignParameter::init (juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex)
 {
     cvIndex = theCvIndex;
     parameterIndex = theParameterIndex;
 
-    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
-    squidChannelProperties.wrap (runtimeRootProperties.getValueTree (), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+    squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
     squidChannelProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
     {

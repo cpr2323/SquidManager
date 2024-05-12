@@ -2,6 +2,7 @@
 #include "AppProperties.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
+#include "SquidSalmple/SquidBankProperties.h"
 #include "Utility/DebugLog.h"
 #include "Utility/DirectoryValueTree.h"
 #include "Utility/PersistentRootProperties.h"
@@ -113,10 +114,8 @@ public:
 
     void initSquidSalmple ()
     {
-        // TEST CODE
-        // put a SquidChannelProperties on the runtime root
-        SquidChannelProperties squidChannelProperties ({}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
-        runtimeRootProperties.getValueTree ().addChild (squidChannelProperties.getValueTree (), -1, nullptr);
+        SquidBankProperties squidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+        runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
 
 // TEST CODE TO WRITE OUT empty SquidChannelProperties
 //         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
