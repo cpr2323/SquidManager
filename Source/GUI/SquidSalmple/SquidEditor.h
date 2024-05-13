@@ -22,10 +22,14 @@ private:
 
     std::unique_ptr<juce::FileChooser> fileChooser;
 
+    juce::Label bankNameLabel;
+    juce::TextEditor bankNameEditor;
     juce::TextButton loadButton;
 
-    //ChannelEditorComponent channelEditorComponent;
     std::array<ChannelEditorComponent, 8> channelEditorComponents;
+
+    void nameUiChanged (juce::String name);
+    void nameDataChanged (juce::String name);
 
     void timerCallback () override;
     void resized () override;

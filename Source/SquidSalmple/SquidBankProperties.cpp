@@ -3,6 +3,26 @@
 
 const auto kNumChannels { 8 };
 
+void SquidBankProperties::initValueTree ()
+{
+    setName ("test", false);
+    for (auto channelIndex { 0 }; channelIndex < kNumChannels; ++channelIndex)
+    {
+        auto channel { SquidChannelProperties::create (channelIndex) };
+        data.addChild (channel, -1, nullptr);
+    }
+}
+
+void SquidBankProperties::setName (juce::String name, bool includeSelfCallback)
+{
+    setValue (name, NamePropertyId, includeSelfCallback);
+}
+
+juce::String SquidBankProperties::getName ()
+{
+    return getValue<juce::String> (NamePropertyId);
+}
+
 void SquidBankProperties::forEachChannel (std::function<bool (juce::ValueTree channelVT, int channelIndex)> channelVTCallback)
 {
     jassert (channelVTCallback != nullptr);
@@ -32,11 +52,14 @@ juce::ValueTree SquidBankProperties::getChannelVT (int channelIndex)
     return requestedChannelVT;
 }
 
-void SquidBankProperties::initValueTree ()
+void SquidBankProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
 {
-    for (auto channelIndex { 0 }; channelIndex < kNumChannels; ++channelIndex)
+    if (vt == data)
     {
-        auto channel { SquidChannelProperties::create (channelIndex) };
-        data.addChild (channel, -1, nullptr);
+        if (property == NamePropertyId)
+        {
+            if (onNameChange != nullptr)
+                onNameChange (getName ());
+        }
     }
 }

@@ -88,19 +88,19 @@ void ChannelEditorComponent::setupComponents ()
     bitsTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     bitsTextEditor.updateDataCallback = [this] (int value) { bitsUiChanged (value); };
     bitsTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 1;
-                    else
-                        return 3;
-                } ();
-                const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
-                bitsTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 1;
+                else
+                    return 3;
+            } ();
+            const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
+            bitsTextEditor.setValue (newValue);
+    };
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
     // RATE
     setupLabel (rateLabel, "RATE", kMediumLabelSize, juce::Justification::centred);
@@ -114,10 +114,10 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.addItem ("44", 1);
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-            squidChannelProperties.setRate (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1), true);
-        };
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setRate (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1), true);
+    };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
     setupLabel (speedLabel, "SPEED", kMediumLabelSize, juce::Justification::centred);
@@ -126,19 +126,19 @@ void ChannelEditorComponent::setupComponents ()
     speedTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     speedTextEditor.updateDataCallback = [this] (int value) { speedUiChanged (value); };
     speedTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
-                speedTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
+            speedTextEditor.setValue (newValue);
+    };
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
     // QUANTIZE
     setupLabel (quantLabel, "QUANT", kMediumLabelSize, juce::Justification::centred);
@@ -162,10 +162,10 @@ void ChannelEditorComponent::setupComponents ()
     }
     quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     quantComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-            squidChannelProperties.setQuant (std::clamp (quantComboBox.getSelectedItemIndex () + scrollAmount, 0, quantComboBox.getNumItems () - 1), true);
-        };
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setQuant (std::clamp (quantComboBox.getSelectedItemIndex () + scrollAmount, 0, quantComboBox.getNumItems () - 1), true);
+    };
     setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
@@ -179,10 +179,10 @@ void ChannelEditorComponent::setupComponents ()
     }
     filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     filterTypeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-            squidChannelProperties.setFilterType (std::clamp (filterTypeComboBox.getSelectedItemIndex () + scrollAmount, 0, filterTypeComboBox.getNumItems () - 1), true);
-        };
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setFilterType (std::clamp (filterTypeComboBox.getSelectedItemIndex () + scrollAmount, 0, filterTypeComboBox.getNumItems () - 1), true);
+    };
     setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
     setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
@@ -197,19 +197,19 @@ void ChannelEditorComponent::setupComponents ()
     levelTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     levelTextEditor.updateDataCallback = [this] (int value) { levelUiChanged (value); };
     levelTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
-                levelTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
+            levelTextEditor.setValue (newValue);
+    };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
     // ATTACK
     setupLabel (attackLabel, "ATTACK", kMediumLabelSize, juce::Justification::centred);
@@ -218,19 +218,19 @@ void ChannelEditorComponent::setupComponents ()
     attackTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     attackTextEditor.updateDataCallback = [this] (int value) { attackUiChanged (value); };
     attackTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
-                attackTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
+            attackTextEditor.setValue (newValue);
+    };
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
     // DECAY
     setupLabel (decayLabel, "DECAY", kMediumLabelSize, juce::Justification::centred);
@@ -239,19 +239,19 @@ void ChannelEditorComponent::setupComponents ()
     decayTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     decayTextEditor.updateDataCallback = [this] (int value) { decayUiChanged (value); };
     decayTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
-                decayTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
+            decayTextEditor.setValue (newValue);
+    };
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
     // LOOP MODE
     setupLabel (loopModeLabel, "LOOP MODE", kMediumLabelSize, juce::Justification::centred);
@@ -272,19 +272,19 @@ void ChannelEditorComponent::setupComponents ()
     xfadeTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     xfadeTextEditor.updateDataCallback = [this] (int value) { xfadeUiChanged (value); };
     xfadeTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
-                xfadeTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
+            xfadeTextEditor.setValue (newValue);
+    };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
     setupButton (reverseButton, "REVERSE", "Reverse", [this] () { reverseUiChanged (reverseButton.getToggleState ()); }); // 0-1
@@ -295,19 +295,19 @@ void ChannelEditorComponent::setupComponents ()
     startCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
     startCueTextEditor.updateDataCallback = [this] (juce::int64 value) { startCueUiChanged (value); };
     startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { (squidChannelProperties.getStartCue () / 2) + (multiplier * direction) };
-                startCueTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { (squidChannelProperties.getStartCue () / 2) + (multiplier * direction) };
+            startCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
@@ -316,19 +316,19 @@ void ChannelEditorComponent::setupComponents ()
     loopCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
     loopCueTextEditor.updateDataCallback = [this] (juce::int64 value) { loopCueUiChanged (value); };
     loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { (squidChannelProperties.getLoopCue () / 2) + (multiplier * direction) };
-                loopCueTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { (squidChannelProperties.getLoopCue () / 2) + (multiplier * direction) };
+            loopCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
@@ -337,19 +337,19 @@ void ChannelEditorComponent::setupComponents ()
     endCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int64 value) { endCueUiChanged (value); };
     endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-                const auto newValue { (squidChannelProperties.getEndCue () / 2) + (multiplier * direction) };
-                endCueTextEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+            const auto newValue { (squidChannelProperties.getEndCue () / 2) + (multiplier * direction) };
+            endCueTextEditor.setValue (newValue);
+    };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
@@ -397,13 +397,13 @@ void ChannelEditorComponent::setupComponents ()
     cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
     cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
     cueSetViewButton.onClick = [this] ()
-        {
-            if (cueSetViewButton.getToggleState ())
-                return;
-            cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
-            cvAssignViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-            setLowerPaneView (LowerPaneView::cueSets);
-        };
+    {
+        if (cueSetViewButton.getToggleState ())
+            return;
+        cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
+        cvAssignViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        setLowerPaneView (LowerPaneView::cueSets);
+    };
     addAndMakeVisible (cueSetViewButton);
     cvAssignViewButton.setButtonText ("CV ASSIGN");
     cvAssignViewButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
@@ -411,37 +411,37 @@ void ChannelEditorComponent::setupComponents ()
     cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
     cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
     cvAssignViewButton.onClick = [this] ()
-        {
-            if (cvAssignViewButton.getToggleState ())
-                return;
-            cvAssignViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
-            cueSetViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-            setLowerPaneView (LowerPaneView::cvAssigns);
-        };
+    {
+        if (cvAssignViewButton.getToggleState ())
+            return;
+        cvAssignViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
+        cueSetViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        setLowerPaneView (LowerPaneView::cvAssigns);
+    };
     addAndMakeVisible (cvAssignViewButton);
 
     // WAVEFORM DISPLAY
     waveformDisplay.onStartPointChange = [this] (int startPoint)
-        {
-            const auto startCueByteOffset { startPoint * 2 };
-            //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
-            squidChannelProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidChannelProperties.getLoopCueSet (curCueSetIndex), squidChannelProperties.getEndCueSet (curCueSetIndex));
-            squidChannelProperties.setStartCue (startCueByteOffset, true);
-        };
+    {
+        const auto startCueByteOffset { startPoint * 2 };
+        //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
+        squidChannelProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidChannelProperties.getLoopCueSet (curCueSetIndex), squidChannelProperties.getEndCueSet (curCueSetIndex));
+        squidChannelProperties.setStartCue (startCueByteOffset, true);
+    };
     waveformDisplay.onLoopPointChange = [this] (int loopPoint)
-        {
-            const auto loopCueByteOffset { loopPoint * 2 };
-            //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
-            squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidChannelProperties.getEndCueSet (curCueSetIndex));
-            squidChannelProperties.setLoopCue (loopCueByteOffset, true);
-        };
+    {
+        const auto loopCueByteOffset { loopPoint * 2 };
+        //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
+        squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidChannelProperties.getEndCueSet (curCueSetIndex));
+        squidChannelProperties.setLoopCue (loopCueByteOffset, true);
+    };
     waveformDisplay.onEndPointChange = [this] (int endPoint)
-        {
-            const auto endCueByteOffset { endPoint * 2 };
-            //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
-            squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), squidChannelProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
-            squidChannelProperties.setEndCue (endCueByteOffset, true);
-        };
+    {
+        const auto endCueByteOffset { endPoint * 2 };
+        //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
+        squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), squidChannelProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
+        squidChannelProperties.setEndCue (endCueByteOffset, true);
+    };
     addAndMakeVisible (waveformDisplay);
     // WAVEFORM DISPLAY TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
@@ -575,10 +575,10 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
     squidChannelProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
     squidChannelProperties.onEndCueSetChange = [this] (int cueIndex, int endCue)
-        {
-            if (cueIndex == curCueSetIndex)
-                waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCue / 2);
-        };
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCue / 2);
+    };
     squidChannelProperties.onETrigChange = [this] (int eTrig) { eTrigDataChanged (eTrig); };
     squidChannelProperties.onFilterTypeChange = [this] (int filter) { filterTypeDataChanged (filter); };
     squidChannelProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
@@ -586,26 +586,26 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onLevelChange = [this] (int level) { levelDataChanged (level); };
     squidChannelProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
     squidChannelProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue)
-        {
-            if (cueIndex == curCueSetIndex)
-                waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
-        };
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    };
     squidChannelProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
     squidChannelProperties.onNumCueSetsChange = [this] (int numCueSets)
-        {
-            initCueSetTabs ();
-            setCueEditButtonsEnableState ();
-        };
+    {
+        initCueSetTabs ();
+        setCueEditButtonsEnableState ();
+    };
     squidChannelProperties.onQuantChange = [this] (int quant) { quantDataChanged (quant); };
     squidChannelProperties.onRateChange = [this] (int rate) { rateDataChanged (rate); };
     squidChannelProperties.onReverseChange = [this] (int reverse) { reverseDataChanged (reverse); };
     squidChannelProperties.onSpeedChange = [this] (int speed) { speedDataChanged (speed); };
     squidChannelProperties.onStartCueChange = [this] (int startCue) { startCueDataChanged (startCue); };
     squidChannelProperties.onStartCueSetChange = [this] (int cueIndex, int startCue)
-        {
-            if (cueIndex == curCueSetIndex)
-                waveformDisplay.setCuePoints (startCue / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
-        };
+    {
+        if (cueIndex == curCueSetIndex)
+            waveformDisplay.setCuePoints (startCue / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    };
     squidChannelProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 }
