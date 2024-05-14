@@ -603,6 +603,18 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)
     xfadeDataChanged (squidChannelProperties.getXfade ());
 
     initializeCallbacks ();
+
+    const auto channelIndex { squidChannelProperties.getChannelIndex () };
+    if (channelIndex > 4)
+    {
+        speedLabel.setVisible (false);
+        speedTextEditor.setVisible (false);
+    }
+    else
+    {
+        quantLabel.setVisible (false);
+        quantComboBox.setVisible (false);
+    }
     setFilterEnableState ();
     setCueEditButtonsEnableState ();
 }
@@ -941,10 +953,12 @@ void ChannelEditorComponent::resized ()
     yOffset = bitsTextEditor.getBottom () + 3;
     rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    // only one of these is visible for a given channel
+    // Speed for Channels 1-5
     yOffset = rateComboBox.getBottom () + 3;
     speedLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     speedTextEditor.setBounds (speedLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = speedTextEditor.getBottom () + 3;
+    // Quantize for Channels 6-8
     quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = quantComboBox.getBottom () + 3;
@@ -959,6 +973,8 @@ void ChannelEditorComponent::resized ()
     yOffset = filterResonanceTextEditor.getBottom () + 3;
     levelLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     levelTextEditor.setBounds (levelLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = levelTextEditor.getBottom () + 3;
+    reverseButton.setBounds (xOffset + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
 
     xOffset += columnWidth + 10;
     yOffset = kInitialYOffset;
@@ -975,8 +991,6 @@ void ChannelEditorComponent::resized ()
     xfadeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     xfadeTextEditor.setBounds (xfadeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = xfadeTextEditor.getBottom () + 3;
-    reverseButton.setBounds (xOffset + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
-    yOffset = reverseButton.getBottom () + 3;
     startCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     startCueTextEditor.setBounds (startCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = startCueTextEditor.getBottom () + 3;
@@ -1006,17 +1020,17 @@ void ChannelEditorComponent::resized ()
 //     yOffset = kInitialYOffset;
 
     // LOWER PANE VIEW BUTTONS
-    cueSetViewButton.setBounds (getWidth () - 40 - 60 - 20 - 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
-    cvAssignViewButton.setBounds (cueSetViewButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
+    cueSetViewButton.setBounds (getWidth () - 40 - 60 - 20 - 60, reverseButton.getY (), fieldWidth, kParameterLineHeight);
+    cvAssignViewButton.setBounds (cueSetViewButton.getRight () + 10, reverseButton.getY (), fieldWidth, kParameterLineHeight);
 
     // CUE SET BUTTONS
-    addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
+    addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, reverseButton.getY (), fieldWidth, kParameterLineHeight);
     deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
     const auto kWidthOfWaveformEditor { 962 };
     xOffset = xInitialOffSet;
-    yOffset = levelTextEditor.getBottom () + 10 + kHeightOfCueSetButton;
+    yOffset = reverseButton.getBottom () + 10 + kHeightOfCueSetButton;
     // WAVEFORM
     waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, getHeight () - yOffset - (kHeightOfCueSetButton * 2));
     // CUE SET TABS
