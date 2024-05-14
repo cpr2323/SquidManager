@@ -410,39 +410,33 @@ void ChannelEditorComponent::setupComponents ()
             const auto newFlags { squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput };
             squidChannelProperties.setChannelFlags (newFlags, false);
         };
-        if (channelIndex < 4) // 1-4
+        if (channelIndex < 2) // 1-2
         {
-            if (channelIndex < 2) // 1-2
-            {
-                if (selectedIndex == 0)
-                    disableAltOut ();
-                else
-                    enableAltOut ();
-            }
-            else // 3-4
-            {
-                if (selectedIndex == 1)
-                    disableAltOut ();
-                else
-                    enableAltOut ();
-            }
+            if (selectedIndex == 0)
+                disableAltOut ();
+            else
+                enableAltOut ();
         }
-        else // 5-8
+        else if (channelIndex < 4) // 3-4
         {
-            if (channelIndex < 6) // 5-6
-            {
-                if (selectedIndex == 0)
-                    disableAltOut ();
-                else
-                    enableAltOut ();
-            }
-            else // 7-8
-            {
-                if (selectedIndex == 1)
-                    disableAltOut ();
-                else
-                    enableAltOut ();
-            }
+            if (selectedIndex == 1)
+                disableAltOut ();
+            else
+                enableAltOut ();
+        }
+        else if (channelIndex < 6) // 5-6
+        {
+            if (selectedIndex == 0)
+                disableAltOut ();
+            else
+                enableAltOut ();
+        }
+        else // 7-8
+        {
+            if (selectedIndex == 1)
+                disableAltOut ();
+            else
+                enableAltOut ();
         }
     });
 
@@ -696,39 +690,33 @@ void ChannelEditorComponent::channelFlagsDataChanged (uint16_t flags)
 {
     const auto useAltOut { flags & ChannelFlags::kNeighborOutput };
     const auto channelIndex { squidChannelProperties.getChannelIndex () };
-    if (channelIndex < 4) // 1-4
+    if (channelIndex < 2) // 1-2
     {
-        if (channelIndex < 2) // 1-2
-        {
-            if (useAltOut)
-                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
-            else
-                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
-        }
-        else // 3-4
-        {
-            if (useAltOut)
-                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
-            else
-                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
-        }
+        if (useAltOut)
+            outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+        else
+            outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
     }
-    else // 5-8
+    else if (channelIndex < 4) // 3-4
     {
-        if (channelIndex < 6) // 5-6
-        {
-            if (useAltOut)
-                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
-            else
-                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
-        }
-        else // 7-8
-        {
-            if (useAltOut)
-                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
-            else
-                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
-        }
+        if (useAltOut)
+            outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+        else
+            outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+    }
+    else if (channelIndex < 6) // 5-6
+    {
+        if (useAltOut)
+            outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+        else
+            outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+    }
+    else // 7-8
+    {
+        if (useAltOut)
+            outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+        else
+            outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
     }
 }
 
