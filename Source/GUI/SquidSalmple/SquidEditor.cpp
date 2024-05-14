@@ -93,7 +93,7 @@ SquidEditorComponent::SquidEditorComponent ()
                                                                          SquidChannelProperties::EnableCallbacks::no };
                         squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
                         channelEditorComponents [channelIndex].initCueSetTabs ();
-                        channelEditorComponents [channelIndex].initWaveformDisplay (sampleFile);
+                        channelEditorComponents [channelIndex].initWaveformDisplay (sampleFile, squidChannelProperties.getCurCueSet ());
 
                     }
                 }

@@ -563,9 +563,10 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
-void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile)
+void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile, int curCueSet)
 {
     waveformDisplay.init (sampleFile);
+    setCurCue (curCueSet);
 }
 
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)

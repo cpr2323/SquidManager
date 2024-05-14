@@ -19,7 +19,7 @@ public:
 
     void init (juce::ValueTree squidChannelPropertiesVT);
     void initCueSetTabs ();
-    void initWaveformDisplay (juce::File sampleFile);
+    void initWaveformDisplay (juce::File sampleFile, int curCueSet);
 
 private:
     RuntimeRootProperties runtimeRootProperties;
