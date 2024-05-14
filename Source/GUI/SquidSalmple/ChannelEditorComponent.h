@@ -18,6 +18,8 @@ public:
     ~ChannelEditorComponent ();
 
     void init (juce::ValueTree squidChannelPropertiesVT);
+    void initCueSetTabs ();
+    void initWaveformDisplay (juce::File sampleFile);
 
 private:
     RuntimeRootProperties runtimeRootProperties;
@@ -87,7 +89,6 @@ private:
     void deleteCueSet (int cueSetIndex);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
-    void initCueSetTabs ();
     void initOutputComboBox ();
     void initializeCallbacks ();
     void setCueEditButtonsEnableState ();

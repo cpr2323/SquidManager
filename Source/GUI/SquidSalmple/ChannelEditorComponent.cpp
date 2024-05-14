@@ -563,6 +563,11 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
+void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile)
+{
+    waveformDisplay.init (sampleFile);
+}
+
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)
 {
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
@@ -1055,11 +1060,11 @@ void ChannelEditorComponent::initOutputComboBox ()
 void ChannelEditorComponent::setLowerPaneView (LowerPaneView whichView)
 {
     auto setCuetSetVisibility = [this] (bool isVisible)
-        {
-            waveformDisplay.setVisible (isVisible);
-            for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
-                cueSetButtons [cueSetIndex].setVisible (isVisible);
-        };
+    {
+        waveformDisplay.setVisible (isVisible);
+        for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
+            cueSetButtons [cueSetIndex].setVisible (isVisible);
+    };
     if (whichView == LowerPaneView::cueSets)
     {
         setCuetSetVisibility (true);

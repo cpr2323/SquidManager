@@ -44,25 +44,59 @@ SquidEditorComponent::SquidEditorComponent ()
     loadButton.setButtonText ("LOAD");
     loadButton.onClick = [this] ()
     {
-        fileChooser.reset (new juce::FileChooser ("Please select the file to load...", {}, ""));
-        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles, [this] (const juce::FileChooser& fc) mutable
+        fileChooser.reset (new juce::FileChooser ("Please select the bank directory to load...", {}, ""));
+        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories, [this] (const juce::FileChooser& fc) mutable
         {
             if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
             {
-                auto wavFileToLoad { fc.getURLResults () [0].getLocalFile () };
-                // TODO - should this entire 'load from file' code be moved outside of here?
-                appProperties.addRecentlyUsedFile (wavFileToLoad.getFullPathName ());
+                auto bankDirectoryToLoad { fc.getURLResults () [0].getLocalFile () };
+                appProperties.addRecentlyUsedFile (bankDirectoryToLoad.getFullPathName ());
 
-                // TODO - check for import errors and handle accordingly
-                SquidMetaDataReader squidMetaDataReader;
-                SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (wavFileToLoad),
-                                                                        SquidChannelProperties::WrapperType::owner,
-                                                                        SquidChannelProperties::EnableCallbacks::no };
+                // check for info.txt
+                auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
+                // read bank name if file exists
+                if (infoTxtFile.exists ())
+                {
+                    auto infoTxtInputStream { infoTxtFile.createInputStream () };
+                    auto firstLine { infoTxtInputStream->readNextLine () };
+                    squidBankProperties.setName (firstLine.substring (0, 11), true);
+                }
+                // iterate over the channel folders and load sample 
+                for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+                {
+                    auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
+                    juce::File sampleFile;
+                    if (channelDirectory.exists () && channelDirectory.isDirectory ())
+                    {
+                        for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory.getFullPathName (), false, "*.wav", juce::File::findFiles))
+                        {
+                            sampleFile = entry.getFile ();
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // TODO - add support to convert old style bank files "chan-00X.wav"
+                        // if file exits
+                        //      create folder
+                        //      copy file
+                    }
+                    if (sampleFile.exists ())
+                    {
+                        // TODO - check for import errors and handle accordingly
+                        SquidMetaDataReader squidMetaDataReader;
+                        SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (sampleFile),
+                                                                                SquidChannelProperties::WrapperType::owner,
+                                                                                SquidChannelProperties::EnableCallbacks::no };
+                        SquidChannelProperties squidChannelProperties { squidBankProperties.getChannelVT (channelIndex),
+                                                                         SquidChannelProperties::WrapperType::client,
+                                                                         SquidChannelProperties::EnableCallbacks::no };
+                        squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+                        channelEditorComponents [channelIndex].initCueSetTabs ();
+                        channelEditorComponents [channelIndex].initWaveformDisplay (sampleFile);
 
-                //squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
-                //initCueSetTabs ();
-                // TODO - is this redundant, since there should be a callback from squidChannelProperties.copyFrom when the curCueSet property is updated
-                //setCurCue (squidChannelProperties.getCurCueSet ());
+                    }
+                }
             }
         }, nullptr);
     };
@@ -88,7 +122,7 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
         channelEditorComponents [channelIndex].init (channelPropertiesVT);
         return true;
     });
-    squidBankProperties.onNameChange = [this] (juce::String name) { nameUiChanged (name); };
+    squidBankProperties.onNameChange = [this] (juce::String name) { nameDataChanged (name); };
     nameDataChanged (squidBankProperties.getName ());
 }
 
