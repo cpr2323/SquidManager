@@ -1,5 +1,5 @@
 #include "ChannelEditorComponent.h"
-#include "../../Utility/PersistentRootProperties.h"
+#include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 
 const auto kLargeLabelSize { 20.0f };
 const auto kMediumLabelSize { 14.0f };
@@ -34,6 +34,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
 ChannelEditorComponent ::~ChannelEditorComponent ()
 {
+    outputComboBox.setLookAndFeel (nullptr);
     stepsComboBox.setLookAndFeel (nullptr);
     eTrigComboBox.setLookAndFeel (nullptr);
     chokeComboBox.setLookAndFeel (nullptr);
@@ -379,6 +380,71 @@ void ChannelEditorComponent::setupComponents ()
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
     stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
+    // Output
+    setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
+    outputComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    setupComboBox (outputComboBox, "Output", [this] ()
+    {
+        //           alt out 
+        // chan | false | true
+        // -----+-------+------
+        //  1   |  1-2  | 3-4
+        //  2   |  1-2  | 3-4
+        //  3   |  3-4  | 1-2
+        //  4   |  3-4  | 1-2
+        // -----+-------+------
+        //  5   |  5-6  | 7-8
+        //  6   |  5-6  | 7-8
+        //  7   |  7-8  | 5-6
+        //  8   |  7-8  | 5-6
+        const auto channelIndex = squidChannelProperties.getChannelIndex (); // 0-7
+        const auto selectedIndex { outputComboBox.getSelectedItemIndex () }; // 0-1
+        auto disableAltOut = [this] ()
+        {
+            const auto offFlag { ~ChannelFlags::kNeighborOutput };
+            const auto newFlags { squidChannelProperties.getChannelFlags () & offFlag };
+            squidChannelProperties.setChannelFlags (newFlags, false);
+        };
+        auto enableAltOut = [this] ()
+        {
+            const auto newFlags { squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput };
+            squidChannelProperties.setChannelFlags (newFlags, false);
+        };
+        if (channelIndex < 4) // 1-4
+        {
+            if (channelIndex < 2) // 1-2
+            {
+                if (selectedIndex == 0)
+                    disableAltOut ();
+                else
+                    enableAltOut ();
+            }
+            else // 3-4
+            {
+                if (selectedIndex == 1)
+                    disableAltOut ();
+                else
+                    enableAltOut ();
+            }
+        }
+        else // 5-8
+        {
+            if (channelIndex < 6) // 5-6
+            {
+                if (selectedIndex == 0)
+                    disableAltOut ();
+                else
+                    enableAltOut ();
+            }
+            else // 7-8
+            {
+                if (selectedIndex == 1)
+                    disableAltOut ();
+                else
+                    enableAltOut ();
+            }
+        }
+    });
 
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
@@ -505,42 +571,18 @@ void ChannelEditorComponent::initCueSetTabs ()
 
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)
 {
-//     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
-//     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
-//     runtimeRootProperties.onSystemRequestedQuit = [this] ()
-//         {
-            // TODO - add code to check if data needs to be saved before exiting
-//         runtimeRootProperties.setPreferredQuitState (RuntimeRootProperties::QuitState::idle, false);
-//         overwritePresetOrCancel ([this] ()
-//         {
-//             juce::MessageManager::callAsync ([this] () { runtimeRootProperties.setQuitState (RuntimeRootProperties::QuitState::now, false); });
-//         }, [this] ()
-//         {
-//             // do nothing
-//         });
-//        };
-
-//     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-//     appProperties.onMostRecentFileChange = [this] (juce::String fileName)
-//         {
-//             //         //DebugLog ("Assimil8orEditorComponent", "Assimil8orEditorComponent::init/appProperties.onMostRecentFileChange: " + fileName);
-//             //         //dumpStacktrace (-1, [this] (juce::String logLine) { DebugLog ("Assimil8orEditorComponent", logLine); });
-//             waveformDisplay.init (fileName);
-//         };
-
-    //     PresetManagerProperties presetManagerProperties (runtimeRootProperties.getValueTree (), PresetManagerProperties::WrapperType::owner, PresetManagerProperties::EnableCallbacks::no);
-    //     unEditedPresetProperties.wrap (presetManagerProperties.getPreset ("unedited"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
-    //     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
-
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
     cvAssignEditor.init (squidChannelPropertiesVT);
+
+    initOutputComboBox ();
 
     initCueSetTabs ();
     setCurCue (squidChannelProperties.getCurCueSet ());
 
     // put initial data into the UI
     attackDataChanged (squidChannelProperties.getAttack ());
+    channelFlagsDataChanged (squidChannelProperties.getChannelFlags ());
     chokeDataChanged (squidChannelProperties.getChoke ());
     bitsDataChanged (squidChannelProperties.getBits ());
     decayDataChanged (squidChannelProperties.getDecay ());
@@ -570,6 +612,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     jassert (squidChannelProperties.isValid ());
     squidChannelProperties.onAttackChange = [this] (int attack) { attackDataChanged (attack); };
     squidChannelProperties.onBitsChange = [this] (int bits) { bitsDataChanged (bits); };
+    squidChannelProperties.onChannelFlagsChange = [this] (uint16_t channelFlags) { channelFlagsDataChanged (channelFlags); };
     squidChannelProperties.onChokeChange = [this] (int choke) { chokeDataChanged (choke); };
     squidChannelProperties.onCurCueSetChange = [this] (int cueSetIndex) { setCurCue (cueSetIndex); };
     squidChannelProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
@@ -635,6 +678,46 @@ void ChannelEditorComponent::attackDataChanged (int attack)
 void ChannelEditorComponent::bitsDataChanged (int bits)
 {
     bitsTextEditor.setText (juce::String (bits), juce::NotificationType::dontSendNotification);
+}
+
+void ChannelEditorComponent::channelFlagsDataChanged (uint16_t flags)
+{
+    const auto useAltOut { flags & ChannelFlags::kNeighborOutput };
+    const auto channelIndex { squidChannelProperties.getChannelIndex () };
+    if (channelIndex < 4) // 1-4
+    {
+        if (channelIndex < 2) // 1-2
+        {
+            if (useAltOut)
+                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+            else
+                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+        }
+        else // 3-4
+        {
+            if (useAltOut)
+                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+            else
+                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+        }
+    }
+    else // 5-8
+    {
+        if (channelIndex < 6) // 5-6
+        {
+            if (useAltOut)
+                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+            else
+                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+        }
+        else // 7-8
+        {
+            if (useAltOut)
+                outputComboBox.setSelectedItemIndex (0, juce::NotificationType::dontSendNotification);
+            else
+                outputComboBox.setSelectedItemIndex (1, juce::NotificationType::dontSendNotification);
+        }
+    }
 }
 
 void ChannelEditorComponent::chokeDataChanged (int choke)
@@ -914,11 +997,13 @@ void ChannelEditorComponent::resized ()
     yOffset = eTrigComboBox.getBottom () + 3;
     stepsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     stepsComboBox.setBounds (stepsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = stepsComboBox.getBottom () + 3;
+    outputLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    outputComboBox.setBounds (outputLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
     // column four
-    xOffset += columnWidth + 10;
-    yOffset = kInitialYOffset;
-    loadButton.setBounds (xOffset, yOffset, fieldWidth, kParameterLineHeight);
+//     xOffset += columnWidth + 10;
+//     yOffset = kInitialYOffset;
 
     // LOWER PANE VIEW BUTTONS
     cueSetViewButton.setBounds (getWidth () - 40 - 60 - 20 - 60, endCueTextEditor.getY (), fieldWidth, kParameterLineHeight);
@@ -948,6 +1033,21 @@ void ChannelEditorComponent::resized ()
 void ChannelEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
+}
+
+void ChannelEditorComponent::initOutputComboBox ()
+{
+    outputComboBox.clear (juce::NotificationType::dontSendNotification);
+    if (squidChannelProperties.getChannelIndex () < 4)
+    {
+        outputComboBox.addItem ("1-2", 1);
+        outputComboBox.addItem ("3-4", 2);
+    }
+    else
+    {
+        outputComboBox.addItem ("5-6", 1);
+        outputComboBox.addItem ("7-8", 2);
+    }
 }
 
 void ChannelEditorComponent::setLowerPaneView (LowerPaneView whichView)

@@ -49,6 +49,8 @@ private:
     CustomTextEditorInt64 loopCueTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
     juce::Label loopModeLabel;
     CustomComboBox loopModeComboBox; // none, normal, zigZag, gate, zigZagGate (0-4)
+    juce::Label outputLabel;
+    CustomComboBox outputComboBox; // chan 1-4 = 1-2,3-4 / chan 5-8 = 5-6,7-8
     juce::Label quantLabel;
     CustomComboBox quantComboBox; // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     juce::Label rateLabel;
@@ -67,7 +69,6 @@ private:
     CvAssignEditor cvAssignEditor;
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
-    juce::TextButton loadButton;
 
     juce::TextButton addCueSetButton;
     juce::TextButton deleteCueSetButton;
@@ -87,6 +88,7 @@ private:
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
     void initCueSetTabs ();
+    void initOutputComboBox ();
     void initializeCallbacks ();
     void setCueEditButtonsEnableState ();
     void setCurCue (int cueSetIndex);
@@ -96,6 +98,7 @@ private:
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
+    void channelFlagsDataChanged (uint16_t flags);
     void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
     void endCueDataChanged (juce::int64 endCue);
@@ -116,6 +119,7 @@ private:
 
     void attackUiChanged (int attack);
     void bitsUiChanged (int bits);
+    void channelFlagsUiChanged (uint16_t flags);
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (juce::int64 endCue);
