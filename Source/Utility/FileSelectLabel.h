@@ -8,6 +8,7 @@ public:
     FileSelectLabel ();
     ~FileSelectLabel ();
     void setOutline (juce::Colour colour);
+    void canMultiSelect (bool canDoMultiSelect);
 
     std::function<void (const juce::StringArray& files)> onFilesSelected;
     std::function<void ()> onPopupMenuCallback;
@@ -15,6 +16,7 @@ public:
 private:
     juce::Colour outlineColor { juce::Colours::transparentWhite };
     std::unique_ptr<juce::FileChooser> fileChooser;
+    int fileChooserOptions { juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles };
 
     class MouseEavesDropper : public juce::MouseListener
     {

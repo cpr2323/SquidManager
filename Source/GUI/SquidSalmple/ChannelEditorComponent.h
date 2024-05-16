@@ -12,7 +12,8 @@
 #include "../../Utility/RuntimeRootProperties.h"
 #include "../../Utility/NoArrowComboBoxLnF.h"
 
-class ChannelEditorComponent : public juce::Component
+class ChannelEditorComponent : public juce::Component,
+                               public juce::FileDragAndDropTarget
 {
 public:
     ChannelEditorComponent ();
@@ -92,6 +93,7 @@ private:
     void deleteCueSet (int cueSetIndex);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
+    bool handleSampleAssignment (juce::String fileName);
     void initOutputComboBox ();
     void initializeCallbacks ();
     void setCueEditButtonsEnableState ();
@@ -143,6 +145,12 @@ private:
     void startCueUiChanged (juce::int64 startCue);
     void stepsUiChanged (int steps);
     void xfadeUiChanged (int xfade);
+
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void filesDropped (const juce::StringArray& files, int, int) override;
+//     void fileDragEnter (const juce::StringArray& files, int, int) override;
+//     void fileDragMove (const juce::StringArray& files, int, int) override;
+//     void fileDragExit (const juce::StringArray& files) override;
 
     void resized () override;
     void paint (juce::Graphics& g) override;

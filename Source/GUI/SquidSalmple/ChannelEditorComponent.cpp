@@ -89,12 +89,12 @@ void ChannelEditorComponent::setupComponents ()
     fileNameSelectLabel.setOutline (juce::Colours::white);
     fileNameSelectLabel.setBorderSize ({ 0, 2, 0, 0 });
     fileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
+    {
+        if (! handleSampleAssignment (files[0]))
         {
-//             if (!handleSamplesInternal (zoneProperties.getId () - 1, files))
-//             {
-//                 // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
-//             }
-        };
+            // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
+        }
+    };
     fileNameSelectLabel.onPopupMenuCallback = [this] () {};
     setupLabel (fileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
 
@@ -951,6 +951,50 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
 {
     squidChannelProperties.setXfade (xfade, false);
 }
+
+bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
+{
+    juce::Logger::outputDebugString ("sample to load: " + fileName);
+    return true;
+}
+
+bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
+{
+    // TODO - implement audio format verification
+//        if (!editManager->isSupportedAudioFile (files[0]))
+//            return false;
+//
+    return true;
+}
+
+void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x, int y)
+{
+//    draggingFiles = false;
+//    repaint ();
+    if (! handleSampleAssignment (files[0]))
+    {
+//        // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
+    }
+}
+
+//void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int x, int y)
+//{
+//    setDropIndex (files, x, y);
+//    draggingFiles = true;
+//    repaint ();
+//}
+
+//void ChannelEditorComponent::fileDragMove (const juce::StringArray& files, int x, int y)
+//{
+//    setDropIndex (files, x, y);
+//    repaint ();
+//}
+
+//void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
+//{
+//    draggingFiles = false;
+//    repaint ();
+//}
 
 void ChannelEditorComponent::resized ()
 {
