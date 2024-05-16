@@ -43,8 +43,8 @@ void runSquidMetaDataReadTest (juce::File testFolder)
     SquidChannelProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
                                                        SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
-    jassert (ValueTreeHelpers::compareChidrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
-    jassert (squidMetaDataProperties2.getValueTree ().isEquivalentTo (squidChannelProperties.getValueTree ()));
+    jassert (ValueTreeHelpers::comparePropertiesUnOrdered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
+    jassert (ValueTreeHelpers::compareChildrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
 }
 
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer

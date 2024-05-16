@@ -87,20 +87,20 @@ void ChannelEditorComponent::setupComponents ()
     bitsTextEditor.getMinValueCallback = [this] () { return 1; };
     bitsTextEditor.getMaxValueCallback = [this] () { return 16; };
     bitsTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
-    bitsTextEditor.updateDataCallback = [this] (int value) { bitsUiChanged (value); };
+    bitsTextEditor.updateDataCallback = [this] (int value) { bitsUiChanged (value == 16 ? 0 : value); };
     bitsTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 1;
-                else
-                    return 3;
-            } ();
-            const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
-            bitsTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 1;
+            else
+                return 3;
+        } ();
+        const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
+        bitsTextEditor.setValue (newValue);
     };
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
     // RATE
@@ -129,16 +129,16 @@ void ChannelEditorComponent::setupComponents ()
     speedTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
-            speedTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
+        speedTextEditor.setValue (newValue);
     };
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
     // QUANTIZE
@@ -200,16 +200,16 @@ void ChannelEditorComponent::setupComponents ()
     levelTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
-            levelTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
+        levelTextEditor.setValue (newValue);
     };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
     // ATTACK
@@ -221,16 +221,16 @@ void ChannelEditorComponent::setupComponents ()
     attackTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
-            attackTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
+        attackTextEditor.setValue (newValue);
     };
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
     // DECAY
@@ -242,16 +242,16 @@ void ChannelEditorComponent::setupComponents ()
     decayTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
-            decayTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
+        decayTextEditor.setValue (newValue);
     };
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
     // LOOP MODE
@@ -275,16 +275,16 @@ void ChannelEditorComponent::setupComponents ()
     xfadeTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
-            xfadeTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
+        xfadeTextEditor.setValue (newValue);
     };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
@@ -298,16 +298,16 @@ void ChannelEditorComponent::setupComponents ()
     startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { (squidChannelProperties.getStartCue () / 2) + (multiplier * direction) };
-            startCueTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidChannelProperties.getStartCue () / 2) + (multiplier * direction) };
+        startCueTextEditor.setValue (newValue);
     };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
@@ -319,16 +319,16 @@ void ChannelEditorComponent::setupComponents ()
     loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { (squidChannelProperties.getLoopCue () / 2) + (multiplier * direction) };
-            loopCueTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidChannelProperties.getLoopCue () / 2) + (multiplier * direction) };
+        loopCueTextEditor.setValue (newValue);
     };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
@@ -340,16 +340,16 @@ void ChannelEditorComponent::setupComponents ()
     endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
-            {
-                if (dragSpeed == DragSpeed::slow)
-                    return 1;
-                else if (dragSpeed == DragSpeed::medium)
-                    return 10;
-                else
-                    return 25;
-            } ();
-            const auto newValue { (squidChannelProperties.getEndCue () / 2) + (multiplier * direction) };
-            endCueTextEditor.setValue (newValue);
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { (squidChannelProperties.getEndCue () / 2) + (multiplier * direction) };
+        endCueTextEditor.setValue (newValue);
     };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
@@ -689,7 +689,7 @@ void ChannelEditorComponent::attackDataChanged (int attack)
 
 void ChannelEditorComponent::bitsDataChanged (int bits)
 {
-    bitsTextEditor.setText (juce::String (bits), juce::NotificationType::dontSendNotification);
+    bitsTextEditor.setText (juce::String (bits == 0 ? 16 : bits), juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::channelFlagsDataChanged (uint16_t flags)

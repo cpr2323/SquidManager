@@ -43,6 +43,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
 
     SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
+    squidChannelProperties.setFileName (sampleFile.getFileName (), false);
     squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
     squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
     squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);

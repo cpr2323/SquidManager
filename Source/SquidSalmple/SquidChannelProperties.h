@@ -29,6 +29,7 @@ public:
     void setETrig (int eTrig, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
     void setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback);
+    void setFileName (juce::String fileName, bool includeSelfCallback);
     void setFilterFrequency (int filterFrequency, bool includeSelfCallback);
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
@@ -72,6 +73,7 @@ public:
     int getETrig ();
     uint32_t getEndCue ();
     uint32_t getEndCueSet (int cueSetIndex);
+    juce::String getFileName ();
     int getFilterFrequency ();
     int getFilterResonance ();
     int getFilterType ();
@@ -117,6 +119,7 @@ public:
     std::function<void (int eTrig)> onETrigChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int cueSetIndex, uint32_t endCue)> onEndCueSetChange;
+    std::function<void (juce::String fiuleName)> onFileNameChange;
     std::function<void (int filterFrequency)> onFilterFrequencyChange;
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
@@ -148,6 +151,7 @@ public:
     static inline const juce::Identifier DecayPropertyId            { "decay" };
     static inline const juce::Identifier ETrigPropertyId            { "eTrig" };
     static inline const juce::Identifier EndCuePropertyId           { "endCue" };
+    static inline const juce::Identifier FileNamePropertyId         { "_fileName" };
     static inline const juce::Identifier FilterFrequencyPropertyId  { "filterFrequency" };
     static inline const juce::Identifier FilterResonancePropertyId  { "filterResonance" };
     static inline const juce::Identifier FilterTypePropertyId       { "filterType" };
