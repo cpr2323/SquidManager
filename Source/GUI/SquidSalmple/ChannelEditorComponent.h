@@ -8,6 +8,7 @@
 #include "../../Utility/CustomComboBox.h"
 #include "../../Utility/CustomTextEditor.h"
 #include "../../Utility/DebugLog.h"
+#include "../../Utility/FileSelectLabel.h"
 #include "../../Utility/RuntimeRootProperties.h"
 #include "../../Utility/NoArrowComboBoxLnF.h"
 
@@ -39,6 +40,8 @@ private:
     CustomTextEditorInt64 endCueTextEditor; // sampleStart - sample length
     juce::Label eTrigLabel;
     CustomComboBox eTrigComboBox; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
+    juce::Label fileNameLabel;
+    FileSelectLabel fileNameSelectLabel;
     juce::Label filterTypeLabel;
     CustomComboBox filterTypeComboBox; // Off, LP, BP, NT, HP (0-4)
     juce::Label filterFrequencyLabel;
@@ -104,6 +107,7 @@ private:
     void decayDataChanged (int decay);
     void endCueDataChanged (juce::int64 endCue);
     void eTrigDataChanged (int eTrig);
+    void fileNameDataChanged (juce::String fileName);
     void filterTypeDataChanged (int filterType);
     void filterFrequencyDataChanged (int filterFrequency);
     void filterResonanceDataChanged (int filterResonance);
@@ -125,6 +129,7 @@ private:
     void decayUiChanged (int decay);
     void endCueUiChanged (juce::int64 endCue);
     void eTrigUiChanged (int eTrig);
+    void fileNameUiChanged (juce::String fileName);
     void filterTypeUiChanged (int filterType);
     void filterFrequencyUiChanged (int filterFrequency);
     void filterResonanceUiChanged (int filterResonance);

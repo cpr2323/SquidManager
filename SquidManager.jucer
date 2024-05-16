@@ -102,6 +102,10 @@
         <FILE id="b4e8so" name="ErrorHelpers.cpp" compile="1" resource="0"
               file="Source/Utility/ErrorHelpers.cpp"/>
         <FILE id="ors7BG" name="ErrorHelpers.h" compile="0" resource="0" file="Source/Utility/ErrorHelpers.h"/>
+        <FILE id="lxMztp" name="FileSelectLabel.cpp" compile="1" resource="0"
+              file="Source/Utility/FileSelectLabel.cpp"/>
+        <FILE id="mu0dWG" name="FileSelectLabel.h" compile="0" resource="0"
+              file="Source/Utility/FileSelectLabel.h"/>
         <FILE id="tCzDZJ" name="LambdaThread.h" compile="0" resource="0" file="Source/Utility/LambdaThread.h"/>
         <FILE id="XnRC3h" name="NoArrowComboBoxLnF.h" compile="0" resource="0"
               file="Source/Utility/NoArrowComboBoxLnF.h"/>

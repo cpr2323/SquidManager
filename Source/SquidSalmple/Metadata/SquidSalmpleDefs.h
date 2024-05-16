@@ -200,8 +200,10 @@ namespace SquidSalmple
         const auto kSpeedSize { k16BitSize };
         const auto kLevelOffset { kSpeedOffset + kSpeedSize };
         const auto kLevelSize { k16BitSize };
-        const auto k_Reserved8Offset { kLevelOffset + kLevelSize };
-        const auto k_Reserved8Size { 14 * k8BitSize };
+        const auto kChannelSourceOffset { kLevelOffset + kLevelSize };
+        const auto kChannelSourceSize { k8BitSize };
+        const auto k_Reserved8Offset { kChannelSourceOffset + kChannelSourceSize };
+        const auto k_Reserved8Size { 13 * k8BitSize };
         const auto kCvFlagsOffset  { k_Reserved8Offset + k_Reserved8Size }; // cvflags
         const auto kCvFlagsSize { 8 * k16BitSize };
         const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams

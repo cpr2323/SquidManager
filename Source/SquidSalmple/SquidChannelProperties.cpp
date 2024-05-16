@@ -106,7 +106,12 @@ void SquidChannelProperties::setChannelFlags (uint16_t channelFlags, bool includ
 
 void SquidChannelProperties::setChannelIndex (uint8_t channelIndex, bool includeSelfCallback)
 {
-    setValue (static_cast<int>(channelIndex), ChannelFlagsPropertyId, includeSelfCallback);
+    setValue (static_cast<int>(channelIndex), ChannelIndexPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setChannelSource (uint8_t channelIndex, bool includeSelfCallback)
+{
+    setValue (static_cast<int>(channelIndex), ChannelSourcePropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setChoke (int chokeChannel, bool includeSelfCallback)
@@ -429,6 +434,11 @@ uint8_t SquidChannelProperties::getChannelIndex ()
     return static_cast<uint8_t> (getValue<int> (ChannelFlagsPropertyId));
 }
 
+uint8_t SquidChannelProperties::getChannelSource ()
+{
+    return static_cast<uint8_t> (getValue<int> (ChannelSourcePropertyId));
+}
+
 int SquidChannelProperties::getChoke ()
 {
     return getValue<int> (ChokePropertyId);
@@ -744,6 +754,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setNumCueSets (sourceMetaDataProperties.getNumCueSets (), false);
     setCurCueSet (sourceMetaDataProperties.getCurCueSet (), false);
     setDecay (sourceMetaDataProperties.getDecay (), false);
+    setFileName (sourceMetaDataProperties.getFileName (), false);
     setEndCue (sourceMetaDataProperties.getEndCue (), false);
     setFilterFrequency (sourceMetaDataProperties.getFilterFrequency (), false);
     setFilterResonance (sourceMetaDataProperties.getFilterResonance (), false);
@@ -831,6 +842,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onChannelIndexChange != nullptr)
                 onChannelIndexChange (getChannelIndex ());
+        }
+        else if (property == ChannelSourcePropertyId)
+        {
+            if (onChannelSourceChange != nullptr)
+                onChannelSourceChange (getChannelSource ());
         }
         else if (property == ChokePropertyId)
         {

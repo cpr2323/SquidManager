@@ -19,6 +19,7 @@ public:
     void setBits (int bits, bool includeSelfCallback);
     void setChannelFlags (uint16_t channelFlags, bool includeSelfCallback);
     void setChannelIndex (uint8_t channelIndex, bool includeSelfCallback);
+    void setChannelSource (uint8_t channelIndex, bool includeSelfCallback);
     void setChoke (int chokeChannel, bool includeSelfCallback);
     void setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
@@ -64,6 +65,7 @@ public:
     int getBits ();
     uint16_t getChannelFlags ();
     uint8_t getChannelIndex ();
+    uint8_t getChannelSource ();
     int getChoke ();
     int getCurCueSet ();
     int getCvAssignAttenuate (int cvIndex, int parameterIndex);
@@ -110,6 +112,7 @@ public:
     std::function<void (int bits)> onBitsChange;
     std::function<void (uint16_t channelFlags)> onChannelFlagsChange;
     std::function<void (uint8_t channelIndex)> onChannelIndexChange;
+    std::function<void (uint8_t channelIndex)> onChannelSourceChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int cueSetIndex)> onCurCueSetChange;
     std::function<void (int cvIndex, int parameterIndex, int attenuation)> onCvAssignAttenuateChange;
@@ -146,6 +149,7 @@ public:
     static inline const juce::Identifier BitsPropertyId             { "bits" };
     static inline const juce::Identifier ChannelFlagsPropertyId     { "channelFlags" };
     static inline const juce::Identifier ChannelIndexPropertyId     { "_index" };
+    static inline const juce::Identifier ChannelSourcePropertyId    { "channelSource" };
     static inline const juce::Identifier ChokePropertyId            { "choke" };
     static inline const juce::Identifier CurCueSetPropertyId        { "curCueSet" };
     static inline const juce::Identifier DecayPropertyId            { "decay" };
