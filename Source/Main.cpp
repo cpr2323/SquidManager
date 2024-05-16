@@ -29,6 +29,7 @@ void crashHandler (void* /*data*/)
     FlushDebugLog ();
 }
 
+#if JUCE_DEBUG
 void runSquidMetaDataReadTest (juce::File testFolder)
 {
     auto inputFile { testFolder.getChildFile ("MetaDataReadTest.wav") };
@@ -46,6 +47,7 @@ void runSquidMetaDataReadTest (juce::File testFolder)
     jassert (ValueTreeHelpers::comparePropertiesUnOrdered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
     jassert (ValueTreeHelpers::compareChildrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
 }
+#endif
 
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer
 {
@@ -64,7 +66,9 @@ public:
         initAudio ();
         initSquidSalmple ();
 
+#if JUCE_DEBUG
         runSquidMetaDataReadTest (appDirectory);
+#endif
 
         initUi ();
 
