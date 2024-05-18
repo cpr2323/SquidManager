@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
-#include "../../SystemServices.h"
+#include "../../SquidSalmple/SampleManager/SampleManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
 #include "../../Utility/CustomTextEditor.h"
@@ -23,7 +23,7 @@ public:
 
 private:
     SquidChannelProperties squidChannelProperties;
-    SystemServices systemServices;
+    SampleManager* sampleManager;
 
     // Edit fields
     juce::Label attackLabel;

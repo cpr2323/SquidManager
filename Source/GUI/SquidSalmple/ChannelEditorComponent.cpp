@@ -1,4 +1,5 @@
 #include "ChannelEditorComponent.h"
+#include "../../SystemServices.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
@@ -589,7 +590,9 @@ void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile, int cur
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes };
-    systemServices.wrap (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    sampleManager = systemServices.getSampleManager ();
+
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     cvAssignEditor.init (squidChannelPropertiesVT);
 
@@ -962,8 +965,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 
 bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
-    auto& sampleManager { systemServices.getSampleManager () };
-    if (! sampleManager.isSupportedAudioFile (files[0]))
+    if (! sampleManager->isSupportedAudioFile (files[0]))
         return false;
 
     return true;

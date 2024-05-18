@@ -20,7 +20,7 @@ public:
     static inline const juce::Identifier SampleManagerPropertyId { "sampleManager" };
 
     void setSampleManager (SampleManager* sampleManger);
-    SampleManager& getSampleManager ();
+    SampleManager* getSampleManager ();
 
     void initValueTree () {}
     void processValueTree () {}
