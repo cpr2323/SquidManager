@@ -1,4 +1,5 @@
 #include "MainComponent.h"
+#include "../SystemServices.h"
 #include "../Utility/PersistentRootProperties.h"
 #include "../Utility/RuntimeRootProperties.h"
 
@@ -14,6 +15,11 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
 
     addAndMakeVisible (squidMetaDataEditorComponent);
     squidMetaDataEditorComponent.init (rootPropertiesVT);
+
+    // TODO - this is just some test code. remove when done
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    auto& sampleManager { systemServices.getSampleManager () };
+    sampleManager.isSupportedAudioFile ({});
 
     restoreLayout ();
 }

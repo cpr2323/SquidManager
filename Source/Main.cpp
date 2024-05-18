@@ -1,8 +1,10 @@
 #include <JuceHeader.h>
 #include "AppProperties.h"
+#include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
 #include "SquidSalmple/SquidBankProperties.h"
+#include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/DebugLog.h"
 #include "Utility/DirectoryValueTree.h"
 #include "Utility/PersistentRootProperties.h"
@@ -39,14 +41,14 @@ void runSquidMetaDataReadTest (juce::File testFolder)
     auto inputFile { testFolder.getChildFile ("MetaDataReadTest.wav") };
     SquidMetaDataReader squidMetaDataReader;
     SquidChannelProperties squidChannelProperties { squidMetaDataReader.read (inputFile),
-                                                      SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+                                                    SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
     auto outputFile { testFolder.getChildFile ("MetaDataWriteTest.wav") };
     SquidMetaDataWriter squidMetaDataWriter;
     squidMetaDataWriter.write (squidChannelProperties.getValueTree (), inputFile, outputFile);
 
     SquidChannelProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
-                                                       SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+                                                      SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
     jassert (ValueTreeHelpers::comparePropertiesUnOrdered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
     jassert (ValueTreeHelpers::compareChildrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
@@ -70,6 +72,7 @@ public:
         initPropertyRoots ();
         initAudio ();
         initSquidSalmple ();
+        initSystemServices ();
 
 #if RUN_READ_WRITE_TEST 
 #if JUCE_DEBUG
@@ -240,6 +243,16 @@ public:
         juce::SystemStats::setApplicationCrashHandler (crashHandler);
     }
 
+    void initSystemServices ()
+    {
+        // initialize services
+        sampleManager.init (rootProperties.getValueTree ());
+
+        // connect services to the SystemServices VTW
+        SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
+        systemServices.setSampleManager (&sampleManager);
+    }
+
     //==============================================================================
     /*
         This class implements the desktop window that contains an instance of
@@ -319,9 +332,13 @@ private:
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
 
+    SampleManager sampleManager;
+
+#if JUCE_DEBUG
     ValueTreeMonitor audioConfigPropertiesMonitor;
     ValueTreeMonitor directoryDataMonitor;
     ValueTreeMonitor presetPropertiesMonitor;
+#endif
 };
 
 // This macro generates the main () routine that launches the app.
