@@ -1,5 +1,6 @@
 #include "ChannelEditorComponent.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
+#include "../../Utility/RuntimeRootProperties.h"
 
 const auto kLargeLabelSize { 20.0f };
 const auto kMediumLabelSize { 14.0f };
@@ -585,10 +586,11 @@ void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile, int cur
     setCurCue (curCueSet);
 }
 
-void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT)
+void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
+    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes };
+    systemServices.wrap (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
-
     cvAssignEditor.init (squidChannelPropertiesVT);
 
     initOutputComboBox ();
@@ -960,10 +962,10 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 
 bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
-    // TODO - implement audio format verification
-//        if (!editManager->isSupportedAudioFile (files[0]))
-//            return false;
-//
+    auto& sampleManager { systemServices.getSampleManager () };
+    if (! sampleManager.isSupportedAudioFile (files[0]))
+        return false;
+
     return true;
 }
 

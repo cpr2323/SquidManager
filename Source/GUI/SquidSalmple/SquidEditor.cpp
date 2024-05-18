@@ -117,9 +117,9 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
-    squidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
+    squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
-        channelEditorComponents [channelIndex].init (channelPropertiesVT);
+        channelEditorComponents [channelIndex].init (channelPropertiesVT, rootPropertiesVT);
         return true;
     });
     squidBankProperties.onNameChange = [this] (juce::String name) { nameDataChanged (name); };

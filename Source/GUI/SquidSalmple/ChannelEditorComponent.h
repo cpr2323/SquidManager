@@ -3,13 +3,11 @@
 #include <JuceHeader.h>
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
-#include "../../AppProperties.h"
+#include "../../SystemServices.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
 #include "../../Utility/CustomTextEditor.h"
-#include "../../Utility/DebugLog.h"
 #include "../../Utility/FileSelectLabel.h"
-#include "../../Utility/RuntimeRootProperties.h"
 #include "../../Utility/NoArrowComboBoxLnF.h"
 
 class ChannelEditorComponent : public juce::Component,
@@ -19,14 +17,13 @@ public:
     ChannelEditorComponent ();
     ~ChannelEditorComponent ();
 
-    void init (juce::ValueTree squidChannelPropertiesVT);
+    void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void initCueSetTabs ();
     void initWaveformDisplay (juce::File sampleFile, int curCueSet);
 
 private:
-    RuntimeRootProperties runtimeRootProperties;
-    AppProperties appProperties;
     SquidChannelProperties squidChannelProperties;
+    SystemServices systemServices;
 
     // Edit fields
     juce::Label attackLabel;
