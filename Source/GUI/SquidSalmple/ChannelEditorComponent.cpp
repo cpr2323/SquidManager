@@ -965,7 +965,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 
 bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
-    if (! sampleManager->isSupportedAudioFile (files[0]))
+    if (files.size () != 1 || ! sampleManager->isSupportedAudioFile (files[0]))
         return false;
 
     return true;
