@@ -431,7 +431,7 @@ uint16_t SquidChannelProperties::getChannelFlags ()
 
 uint8_t SquidChannelProperties::getChannelIndex ()
 {
-    return static_cast<uint8_t> (getValue<int> (ChannelFlagsPropertyId));
+    return static_cast<uint8_t> (getValue<int> (ChannelIndexPropertyId));
 }
 
 uint8_t SquidChannelProperties::getChannelSource ()
