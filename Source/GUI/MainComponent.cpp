@@ -14,6 +14,8 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
 
     addAndMakeVisible (squidMetaDataEditorComponent);
     squidMetaDataEditorComponent.init (rootPropertiesVT);
+    addAndMakeVisible (currentFolderComponent);
+    currentFolderComponent.init (rootPropertiesVT);
 
     restoreLayout ();
 }
@@ -33,5 +35,7 @@ void MainComponent::paint ([[maybe_unused]] juce::Graphics& g)
 
 void MainComponent::resized ()
 {
-    squidMetaDataEditorComponent.setBounds (getLocalBounds ());
+    auto localBounds { getLocalBounds () };
+    currentFolderComponent.setBounds (localBounds.removeFromTop (30));
+    squidMetaDataEditorComponent.setBounds (localBounds);
 }

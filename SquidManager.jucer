@@ -26,6 +26,10 @@
           <FILE id="nW16RK" name="SquidEditor.cpp" compile="1" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.cpp"/>
           <FILE id="gLCtHn" name="SquidEditor.h" compile="0" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.h"/>
         </GROUP>
+        <FILE id="n6iOJp" name="CurrentFolderComponent.cpp" compile="1" resource="0"
+              file="Source/GUI/CurrentFolderComponent.cpp"/>
+        <FILE id="VkVWDc" name="CurrentFolderComponent.h" compile="0" resource="0"
+              file="Source/GUI/CurrentFolderComponent.h"/>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>
         <FILE id="J2fZpV" name="GuiProperties.h" compile="0" resource="0" file="Source/GUI/GuiProperties.h"/>

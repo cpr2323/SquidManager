@@ -1,6 +1,7 @@
 #include "ChannelEditorComponent.h"
 #include "../../SystemServices.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
+#include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
 const auto kLargeLabelSize { 20.0f };
@@ -589,7 +590,9 @@ void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile, int cur
 
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
-    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes };
+    PersistentRootProperties persistentRootProperties { rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no };
+    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
+    appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     sampleManager = systemServices.getSampleManager ();
 
@@ -960,6 +963,18 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
 bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 {
     juce::Logger::outputDebugString ("sample to load: " + fileName);
+    auto srcFile { juce::File (fileName) };
+    const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
+    auto destFile { channelDirectory.getChildFile (srcFile.getFileName ()) };
+    if (srcFile.getParentDirectory () != channelDirectory)
+    {
+        // TODO handle case where file of same name already exists
+        // TODO should copy be moved to a thread?
+        srcFile.copyFileTo (destFile);
+        // TODO handle failure
+    }
+    jassert (destFile.exists ());
+
     return true;
 }
 

@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
+#include "../../AppProperties.h"
 #include "../../SquidSalmple/SampleManager/SampleManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
@@ -23,6 +24,7 @@ public:
 
 private:
     SquidChannelProperties squidChannelProperties;
+    AppProperties appProperties;
     SampleManager* sampleManager;
 
     // Edit fields

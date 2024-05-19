@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "CurrentFolderComponent.h"
 #include "GuiProperties.h"
 #include "SquidSalmple/SquidEditor.h"
 
@@ -13,6 +14,7 @@ public:
 private:
     GuiProperties guiProperties;
     SquidEditorComponent squidMetaDataEditorComponent;
+    CurrentFolderComponent currentFolderComponent;
 
     juce::TooltipWindow tooltipWindow;
 
