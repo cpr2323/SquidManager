@@ -38,7 +38,7 @@ SquidEditorComponent::SquidEditorComponent ()
     bankNameEditor.onFocusLost = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onReturnKey = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     // TODO - make sure I have the correct valid character set
-    setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 0, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
+    setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
 
     // LOAD BUTTON
     loadButton.setButtonText ("LOAD");
@@ -66,8 +66,10 @@ SquidEditorComponent::SquidEditorComponent ()
                 {
                     auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
                     juce::File sampleFile;
+                    // check for bankFolder/X (where X is the channel number)
                     if (channelDirectory.exists () && channelDirectory.isDirectory ())
                     {
+                        // TODO - what to do if there is already a wav file in the folder
                         for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory.getFullPathName (), false, "*.wav", juce::File::findFiles))
                         {
                             sampleFile = entry.getFile ();
@@ -76,10 +78,24 @@ SquidEditorComponent::SquidEditorComponent ()
                     }
                     else
                     {
-                        // TODO - add support to convert old style bank files "chan-00X.wav"
-                        // if file exits
-                        //      create folder
-                        //      copy file
+                        // Channel folder does not exist, check for old style bank files "chan-00X.wav"
+                        auto oldStyleNamingSampleFile { bankDirectoryToLoad.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension("wav")};
+                        if (oldStyleNamingSampleFile.exists () && ! oldStyleNamingSampleFile.isDirectory ())
+                        {
+                            // create folder
+                            if (! channelDirectory.createDirectory() )
+                            {
+                                // TODO - report error in creating directory
+                            }
+                            else
+                            {
+                                // TODO - handle copy failure
+                                // copy file
+                                auto destFile { channelDirectory.getChildFile (oldStyleNamingSampleFile.getFileName ()) };
+                                oldStyleNamingSampleFile.copyFileTo (destFile);
+                                sampleFile = destFile;
+                            }
+                        }
                     }
                     if (sampleFile.exists ())
                     {
