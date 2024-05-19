@@ -7,7 +7,7 @@ class BusyChunkReader
 public:
     BusyChunkReader () = default;
 
-    void read (juce::File sampleFile, juce::MemoryBlock& busyChunkData);
+    bool read (juce::File sampleFile, juce::MemoryBlock& busyChunkData);
 
 private:
     static inline char kBusyChunkType [4] { 'b', 'u', 's', 'y' };

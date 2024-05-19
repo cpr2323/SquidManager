@@ -1,13 +1,15 @@
 #include "BusyChunkReader.h"
 
-void BusyChunkReader::read (juce::File sampleFile, juce::MemoryBlock& busyChunkData)
+bool BusyChunkReader::read (juce::File sampleFile, juce::MemoryBlock& busyChunkData)
 {
     // TODO - handle error conditions
     auto sampleInputStream { sampleFile.createInputStream () };
     jassert (sampleInputStream != nullptr && sampleInputStream->openedOk ());
     auto busyChunkLocated { findChunk (sampleInputStream.get (), kBusyChunkType) };
-    jassert (busyChunkLocated.has_value ());
+    if (! busyChunkLocated.has_value ())
+        return false;
     sampleInputStream->readIntoMemoryBlock (busyChunkData, busyChunkLocated.value ());
+    return true;
 }
 
 std::optional<uint32_t> BusyChunkReader::findChunk (juce::InputStream* is, char* chunkType)
