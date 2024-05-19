@@ -41,7 +41,6 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
             juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
 
-        squidChannelProperties.setFileName (sampleFile.getFileName (), false);
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
@@ -139,5 +138,6 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         readReserved (SquidSalmple::DataLayout::k_Reserved13Offset, SquidSalmple::DataLayout::k_Reserved13Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved13Data (reservedData); });
     }
 
+    squidChannelProperties.setFileName (sampleFile.getFileName (), false);
     return squidChannelProperties.getValueTree ();
 }
