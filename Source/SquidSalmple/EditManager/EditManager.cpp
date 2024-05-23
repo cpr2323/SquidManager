@@ -7,11 +7,31 @@ void EditManager::init (juce::ValueTree rootPropertiesVT)
     squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
-        squidChannelProperties [channelIndex].wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+        squidChannelPropertiesList [channelIndex].wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
         return true;
     });
 }
 
+void EditManager::loadChannel (int channelIndex, juce::File sampleFile)
+{
+    auto& squidChannelProperties { squidChannelPropertiesList [channelIndex] };
+    squidChannelProperties.triggerLoadBegin (false);
+    if (sampleFile.exists ())
+    {
+        // TODO - check for import errors and handle accordingly
+        SquidMetaDataReader squidMetaDataReader;
+        SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (sampleFile),
+                                                                SquidChannelProperties::WrapperType::owner,
+                                                                SquidChannelProperties::EnableCallbacks::no };
+        squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+    }
+    else
+    {
+        // TODO - load default. report and error?
+    }
+    squidChannelProperties.triggerLoadComplete (false);
+
+}
 
 void EditManager::loadBank (juce::File bankDirectory)
 {
@@ -61,24 +81,7 @@ void EditManager::loadBank (juce::File bankDirectory)
                 }
             }
         }
-        SquidChannelProperties squidChannelProperties { squidBankProperties.getChannelVT (channelIndex),
-                                                        SquidChannelProperties::WrapperType::client,
-                                                        SquidChannelProperties::EnableCallbacks::no };
-        squidChannelProperties.triggerLoadBegin (false);
-        if (sampleFile.exists ())
-        {
-            // TODO - check for import errors and handle accordingly
-            SquidMetaDataReader squidMetaDataReader;
-            SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (sampleFile),
-                                                                    SquidChannelProperties::WrapperType::owner,
-                                                                    SquidChannelProperties::EnableCallbacks::no };
-            squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
-        }
-        else
-        {
-            // TODO - load default. report and error?
-        }
-        squidChannelProperties.triggerLoadComplete (false);
+        loadChannel (channelIndex, sampleFile);
     }
     squidBankProperties.triggerLoadComplete (false);
 }

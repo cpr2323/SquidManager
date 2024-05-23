@@ -982,6 +982,8 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
     }
     jassert (destFile.exists ());
     squidChannelProperties.setFileName (destFile.getFileName (), true);
+    // TODO - initialize any properties that are effected by the sample file
+    //          
     return true;
 }
 
