@@ -103,7 +103,7 @@ private:
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
-    void channelFlagsDataChanged (uint16_t flags);
+    void channelFlagsDataChanged (uint16_t channelFlags);
     void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
     void endCueDataChanged (juce::int64 endCue);
@@ -125,7 +125,7 @@ private:
 
     void attackUiChanged (int attack);
     void bitsUiChanged (int bits);
-    void channelFlagsUiChanged (uint16_t flags);
+    void channelFlagsUiChanged (uint16_t channelFlags);
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (juce::int64 endCue);

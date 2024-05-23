@@ -718,9 +718,9 @@ void ChannelEditorComponent::bitsDataChanged (int bits)
     bitsTextEditor.setText (juce::String (bits == 0 ? 16 : bits), juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::channelFlagsDataChanged (uint16_t flags)
+void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
 {
-    const auto useAltOut { flags & ChannelFlags::kNeighborOutput };
+    const auto useAltOut { channelFlags & ChannelFlags::kNeighborOutput };
     const auto channelIndex { squidChannelProperties.getChannelIndex () };
     if (channelIndex < 2) // 1-2
     {
@@ -974,7 +974,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
         // TODO handle failure
     }
     jassert (destFile.exists ());
-
+    squidChannelProperties.setFileName (destFile.getFileName (), true);
     return true;
 }
 
