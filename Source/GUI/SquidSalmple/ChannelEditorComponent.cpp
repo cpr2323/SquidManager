@@ -665,6 +665,13 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
     squidChannelProperties.onFilterResonanceChange = [this] (int filterResonance) { filterResonanceDataChanged (filterResonance); };
     squidChannelProperties.onLevelChange = [this] (int level) { levelDataChanged (level); };
+    squidChannelProperties.onLoadBegin = [this] () {};
+    squidChannelProperties.onLoadComplete = [this] ()
+    {
+        initCueSetTabs ();
+        auto sampleFileName { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (squidChannelProperties.getChannelIndex () + 1)).getChildFile (squidChannelProperties.getFileName ()) };
+        initWaveformDisplay (sampleFileName, squidChannelProperties.getCurCueSet ());
+    };
     squidChannelProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
     squidChannelProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue)
     {

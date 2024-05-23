@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "SquidSalmple/EditManager/EditManager.h"
 #include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/ValueTreeWrapper.h"
 
@@ -18,9 +19,13 @@ public:
 
     static inline const juce::Identifier SystemServicesTypeId { "SystemServices" };
     static inline const juce::Identifier SampleManagerPropertyId { "sampleManager" };
+    static inline const juce::Identifier EditManagerPropertyId   { "editManager" };
 
     void setSampleManager (SampleManager* sampleManger);
     SampleManager* getSampleManager ();
+
+    void setEditManager (EditManager* editManger);
+    EditManager* getEditManager ();
 
     void initValueTree () {}
     void processValueTree () {}

@@ -9,3 +9,13 @@ SampleManager* SystemServices::getSampleManager () // retrieve pointer from VT a
 {
     return getValue<SampleManager*> (SampleManagerPropertyId, data);
 }
+
+void SystemServices::setEditManager (EditManager* editManger)
+{
+    setValue (editManger, EditManagerPropertyId, false);
+}
+
+EditManager* SystemServices::getEditManager ()
+{
+    return getValue<EditManager*> (EditManagerPropertyId, data);
+}

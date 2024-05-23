@@ -46,6 +46,14 @@
           <FILE id="Vl02jy" name="MaxMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MaxMetaData.xml"/>
           <FILE id="bSksYa" name="MinMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MinMetaData.xml"/>
         </GROUP>
+        <GROUP id="{49F0F925-AAFF-2B49-0DA4-88063945231E}" name="EditManager">
+          <FILE id="HBL2bU" name="EditManager.cpp" compile="1" resource="0" file="Source/SquidSalmple/EditManager/EditManager.cpp"/>
+          <FILE id="McIvBB" name="EditManager.h" compile="0" resource="0" file="Source/SquidSalmple/EditManager/EditManager.h"/>
+          <FILE id="h7aRV0" name="EditManagerProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/EditManager/EditManagerProperties.cpp"/>
+          <FILE id="W61nUp" name="EditManagerProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/EditManager/EditManagerProperties.h"/>
+        </GROUP>
         <GROUP id="{94729ED6-43F4-8580-9B52-10F44F5F9534}" name="Metadata">
           <FILE id="GXDxMB" name="BusyChunkReader.cpp" compile="1" resource="0"
                 file="Source/SquidSalmple/Metadata/BusyChunkReader.cpp"/>

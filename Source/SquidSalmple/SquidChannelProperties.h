@@ -60,6 +60,8 @@ public:
     void setReserved11Data (juce::String reservedData);
     void setReserved12Data (juce::String reservedData);
     void setReserved13Data (juce::String reservedData);
+    void triggerLoadBegin (bool includeSelfCallback);
+    void triggerLoadComplete (bool includeSelfCallback);
 
     int getAttack ();
     int getBits ();
@@ -127,6 +129,8 @@ public:
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
     std::function<void (int level)> onLevelChange;
+    std::function<void ()> onLoadBegin;
+    std::function<void ()> onLoadComplete;
     std::function<void (uint32_t loopCue)> onLoopCueChange;
     std::function<void (int cueSetIndex, uint32_t loopCue)> onLoopCueSetChange;
     std::function<void (int loopMode)> onLoopModeChange;
@@ -149,6 +153,8 @@ public:
     static inline const juce::Identifier BitsPropertyId             { "bits" };
     static inline const juce::Identifier ChannelFlagsPropertyId     { "channelFlags" };
     static inline const juce::Identifier ChannelIndexPropertyId     { "_index" };
+    static inline const juce::Identifier LoadBeginPropertyId        { "_loadBegin" };
+    static inline const juce::Identifier LoadCompletePropertyId     { "_loadComplete" };
     static inline const juce::Identifier ChannelSourcePropertyId    { "channelSource" };
     static inline const juce::Identifier ChokePropertyId            { "choke" };
     static inline const juce::Identifier CurCueSetPropertyId        { "curCueSet" };

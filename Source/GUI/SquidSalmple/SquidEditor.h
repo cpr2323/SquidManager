@@ -4,6 +4,7 @@
 #include "ChannelEditorComponent.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/SquidBankProperties.h"
+#include "../../SquidSalmple/EditManager/EditManager.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
 class SquidEditorComponent : public juce::Component,
@@ -18,6 +19,8 @@ private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
     SquidBankProperties squidBankProperties;
+    EditManager* editManager { nullptr };
+
     juce::TabbedComponent channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
 
     std::unique_ptr<juce::FileChooser> fileChooser;

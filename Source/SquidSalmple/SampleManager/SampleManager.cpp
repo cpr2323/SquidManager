@@ -44,8 +44,8 @@ void SampleManager::init (juce::ValueTree rootPropertiesVT)
     SquidBankProperties squidBankProperties (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
     squidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
-        SquidChannelProperties squidChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
-        squidChannelProperties.onFileNameChange = [this, channelIndex] (juce::String fileName) { handleSampleChange (channelIndex, fileName); };
+        channelAndSamplePropertiesList [channelIndex].squidChannelProperties.wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+        channelAndSamplePropertiesList [channelIndex].squidChannelProperties.onFileNameChange = [this, channelIndex] (juce::String fileName) { handleSampleChange (channelIndex, fileName); };
         channelAndSamplePropertiesList [channelIndex].sampleProperties.wrap (sampleManagerProperties.getSamplePropertiesVT (channelIndex), SampleProperties::WrapperType::client, SampleProperties::EnableCallbacks::yes);
         return true;
     });

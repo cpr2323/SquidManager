@@ -18,6 +18,16 @@ void SquidBankProperties::setName (juce::String name, bool includeSelfCallback)
     setValue (name, NamePropertyId, includeSelfCallback);
 }
 
+void SquidBankProperties::triggerLoadBegin (bool includeSelfCallback)
+{
+    toggleValue (LoadBeginPropertyId, includeSelfCallback);
+}
+
+void SquidBankProperties::triggerLoadComplete (bool includeSelfCallback)
+{
+    toggleValue (LoadCompletePropertyId, includeSelfCallback);
+}
+
 juce::String SquidBankProperties::getName ()
 {
     return getValue<juce::String> (NamePropertyId);
@@ -60,6 +70,16 @@ void SquidBankProperties::valueTreePropertyChanged (juce::ValueTree& vt, const j
         {
             if (onNameChange != nullptr)
                 onNameChange (getName ());
+        }
+        else if (property == LoadBeginPropertyId)
+        {
+            if (onLoadBegin != nullptr)
+                onLoadBegin ();
+        }
+        else if (property == LoadCompletePropertyId)
+        {
+            if (onLoadComplete != nullptr)
+                onLoadComplete ();
         }
     }
 }

@@ -1,4 +1,5 @@
 #include "SquidEditor.h"
+#include "../../SystemServices.h"
 #include "../../SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "../../Utility/PersistentRootProperties.h"
 
@@ -51,68 +52,8 @@ SquidEditorComponent::SquidEditorComponent ()
             {
                 auto bankDirectoryToLoad { fc.getURLResults () [0].getLocalFile () };
                 appProperties.addRecentlyUsedFile (bankDirectoryToLoad.getFullPathName ());
-
-                // check for info.txt
-                auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
-                // read bank name if file exists
-                if (infoTxtFile.exists ())
-                {
-                    auto infoTxtInputStream { infoTxtFile.createInputStream () };
-                    auto firstLine { infoTxtInputStream->readNextLine () };
-                    squidBankProperties.setName (firstLine.substring (0, 11), true);
-                }
-                // iterate over the channel folders and load sample 
-                for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
-                {
-                    auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
-                    juce::File sampleFile;
-                    // check for bankFolder/X (where X is the channel number)
-                    if (channelDirectory.exists () && channelDirectory.isDirectory ())
-                    {
-                        // TODO - what to do if there is already a wav file in the folder
-                        for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory.getFullPathName (), false, "*.wav", juce::File::findFiles))
-                        {
-                            sampleFile = entry.getFile ();
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        // Channel folder does not exist, check for old style bank files "chan-00X.wav"
-                        auto oldStyleNamingSampleFile { bankDirectoryToLoad.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension("wav")};
-                        if (oldStyleNamingSampleFile.exists () && ! oldStyleNamingSampleFile.isDirectory ())
-                        {
-                            // create folder
-                            if (! channelDirectory.createDirectory() )
-                            {
-                                // TODO - report error in creating directory
-                            }
-                            else
-                            {
-                                // TODO - handle copy failure
-                                // copy file
-                                auto destFile { channelDirectory.getChildFile (oldStyleNamingSampleFile.getFileName ()) };
-                                oldStyleNamingSampleFile.copyFileTo (destFile);
-                                sampleFile = destFile;
-                            }
-                        }
-                    }
-                    if (sampleFile.exists ())
-                    {
-                        // TODO - check for import errors and handle accordingly
-                        SquidMetaDataReader squidMetaDataReader;
-                        SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (sampleFile),
-                                                                                SquidChannelProperties::WrapperType::owner,
-                                                                                SquidChannelProperties::EnableCallbacks::no };
-                        SquidChannelProperties squidChannelProperties { squidBankProperties.getChannelVT (channelIndex),
-                                                                         SquidChannelProperties::WrapperType::client,
-                                                                         SquidChannelProperties::EnableCallbacks::no };
-                        squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
-                        channelEditorComponents [channelIndex].initCueSetTabs ();
-                        channelEditorComponents [channelIndex].initWaveformDisplay (sampleFile, squidChannelProperties.getCurCueSet ());
-
-                    }
-                }
+                jassert (editManager != nullptr);
+                editManager->loadBank (bankDirectoryToLoad);
             }
         }, nullptr);
     };
@@ -132,6 +73,9 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    editManager = systemServices.getEditManager ();
+
     squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {

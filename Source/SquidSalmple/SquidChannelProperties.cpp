@@ -419,6 +419,16 @@ void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, b
     requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int>(loopCue), nullptr);
 }
 
+void SquidChannelProperties::triggerLoadBegin (bool includeSelfCallback)
+{
+    toggleValue (LoadBeginPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::triggerLoadComplete (bool includeSelfCallback)
+{
+    toggleValue (LoadCompletePropertyId, includeSelfCallback);
+}
+
 int SquidChannelProperties::getBits ()
 {
     return getValue<int> (BitsPropertyId);
@@ -897,6 +907,16 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onLevelChange != nullptr)
                 onLevelChange (getLevel ());
+        }
+        else if (property == LoadBeginPropertyId)
+        {
+            if (onLoadBegin != nullptr)
+                onLoadBegin ();
+        }
+        else if (property == LoadCompletePropertyId)
+        {
+            if (onLoadComplete != nullptr)
+                onLoadComplete ();
         }
         else if (property == LoopCuePropertyId)
         {

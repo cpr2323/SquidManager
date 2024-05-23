@@ -16,10 +16,14 @@ public:
     }
 
     void setName (juce::String name, bool includeSelfCallback);
+    void triggerLoadBegin (bool includeSelfCallback);
+    void triggerLoadComplete (bool includeSelfCallback);
 
     juce::String getName ();
 
     std::function<void (juce::String name)> onNameChange;
+    std::function<void ()> onLoadBegin;
+    std::function<void ()> onLoadComplete;
 
     void copyFrom (juce::ValueTree sourceVT);
     static juce::ValueTree create ();
@@ -27,7 +31,9 @@ public:
     juce::ValueTree getChannelVT (int channelIndex);
 
     static inline const juce::Identifier SquidBankTypeId { "SquidBank" };
-    static inline const juce::Identifier NamePropertyId { "name" };
+    static inline const juce::Identifier NamePropertyId         { "name" };
+    static inline const juce::Identifier LoadBeginPropertyId    { "_loadBegin" };
+    static inline const juce::Identifier LoadCompletePropertyId { "_loadComplete" };
 
     void initValueTree ();
     void processValueTree () {}

@@ -247,10 +247,12 @@ public:
     {
         // initialize services
         sampleManager.init (rootProperties.getValueTree ());
+        editManager.init (rootProperties.getValueTree ());
 
         // connect services to the SystemServices VTW
         SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
         systemServices.setSampleManager (&sampleManager);
+        systemServices.setEditManager (&editManager);
     }
 
     //==============================================================================
@@ -332,7 +334,9 @@ private:
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
 
+    // System Services
     SampleManager sampleManager;
+    EditManager editManager;
 
 #if JUCE_DEBUG
     ValueTreeMonitor audioConfigPropertiesMonitor;
