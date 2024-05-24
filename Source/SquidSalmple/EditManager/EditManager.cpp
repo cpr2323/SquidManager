@@ -24,10 +24,16 @@ void EditManager::loadChannel (int channelIndex, juce::File sampleFile)
                                                                 SquidChannelProperties::WrapperType::owner,
                                                                 SquidChannelProperties::EnableCallbacks::no };
         squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
+        // if there was no meta data
     }
     else
     {
         // TODO - load default. report and error?
+        SquidChannelProperties defaultSquidMetaDataProperties { {}, SquidChannelProperties::WrapperType::owner,
+                                                                    SquidChannelProperties::EnableCallbacks::no };
+        defaultSquidMetaDataProperties.setChannelIndex (channelIndex, false);
+        defaultSquidMetaDataProperties.setFileName (sampleFile.getFileName (), false);
+        squidChannelProperties.copyFrom (defaultSquidMetaDataProperties.getValueTree ());
     }
     squidChannelProperties.triggerLoadComplete (false);
 

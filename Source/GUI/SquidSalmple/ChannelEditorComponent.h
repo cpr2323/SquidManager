@@ -4,6 +4,7 @@
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
 #include "../../AppProperties.h"
+#include "../../SquidSalmple/EditManager/EditManager.h"
 #include "../../SquidSalmple/SampleManager/SampleManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
@@ -26,6 +27,7 @@ private:
     SquidChannelProperties squidChannelProperties;
     AppProperties appProperties;
     SampleManager* sampleManager;
+    EditManager* editManager;
 
     // Edit fields
     juce::Label attackLabel;

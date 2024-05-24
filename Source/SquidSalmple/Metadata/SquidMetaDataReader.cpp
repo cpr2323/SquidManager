@@ -137,6 +137,13 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         readReserved (SquidSalmple::DataLayout::k_Reserved12Offset, SquidSalmple::DataLayout::k_Reserved12Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved12Data (reservedData); });
         readReserved (SquidSalmple::DataLayout::k_Reserved13Offset, SquidSalmple::DataLayout::k_Reserved13Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved13Data (reservedData); });
     }
+    else
+    {
+        squidChannelProperties.setEndCue (numSamples * 2, false);
+        squidChannelProperties.setCuePoints (0, 0, 0, numSamples * 2);
+
+        // now I need to write out the default 'reserved' data
+    }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);
     return squidChannelProperties.getValueTree ();

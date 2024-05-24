@@ -595,6 +595,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     sampleManager = systemServices.getSampleManager ();
+    editManager = systemServices.getEditManager ();
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     cvAssignEditor.init (squidChannelPropertiesVT);
@@ -980,10 +981,10 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
         srcFile.copyFileTo (destFile);
         // TODO handle failure
     }
+    // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
+    //        but it's possible that the file gets deleted somehow after selection
     jassert (destFile.exists ());
-    squidChannelProperties.setFileName (destFile.getFileName (), true);
-    // TODO - initialize any properties that are effected by the sample file
-    //          
+    editManager->loadChannel (squidChannelProperties.getChannelIndex (), destFile);
     return true;
 }
 
