@@ -89,9 +89,9 @@ namespace CvAssignedFlag
 
 namespace CvParameterIndex
 {
-    constexpr int Bits     { 0 }; // 1,2,3,4,5,6
-    constexpr int Rate     { 1 }; // 7
-    constexpr int Level    { 2 }; // 13
+    constexpr int Bits     { 0 };
+    constexpr int Rate     { 1 };
+    constexpr int Level    { 2 };
     constexpr int Decay    { 3 };
     constexpr int Speed    { 4 };
     constexpr int LoopMode { 5 };
@@ -144,7 +144,7 @@ namespace ChannelFlags
     constexpr uint16_t kNeighborOutput { 0x0100 };
 };
 
-constexpr auto k8BitSize { static_cast<int> (sizeof (uint8_t)) };
+constexpr auto k8BitSize  { static_cast<int> (sizeof (uint8_t)) };
 constexpr auto k16BitSize { static_cast<int> (sizeof (uint16_t)) };
 constexpr auto k32BitSize { static_cast<int> (sizeof (uint32_t)) };
 constexpr auto k64BitSize { static_cast<int> (sizeof (uint64_t)) };

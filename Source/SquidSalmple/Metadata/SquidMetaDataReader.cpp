@@ -30,6 +30,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     busyChunkData.reset ();
     if (busyChunkReader.read (sampleFile, busyChunkData))
     {
+        LogReader (sampleFile.getFileName () + " contains meta-data");
         jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
         const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
         if ((busyChunkVersion & 0xFFFFFF00) != (kSignatureAndVersionCurrent & 0xFFFFFF00))
@@ -44,6 +45,35 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
+#if JUCE_DEBUG
+        const auto channelFlags { squidChannelProperties.getChannelFlags () };
+        juce::String channelFlagsString;
+        if (channelFlags == 0)
+        {
+            channelFlagsString += "NONE";
+        }
+        else
+        {
+            auto addFlagString = [&channelFlagsString] (juce::String flagString)
+            {
+                channelFlagsString += (channelFlagsString.length () == 0 ? "" : ", ") + flagString;
+            };
+            if (channelFlags & ChannelFlags::kMute)
+                addFlagString ("mute");
+            if (channelFlags & ChannelFlags::kSolo)
+                addFlagString ("solo");
+            if (channelFlags & ChannelFlags::kNoGate)
+                addFlagString ("noGate");
+            if (channelFlags & ChannelFlags::kCueRandom)
+                addFlagString ("cueRandom");
+            if (channelFlags & ChannelFlags::kCueStepped)
+                addFlagString ("cueStepped");
+            if (channelFlags & ChannelFlags::kNeighborOutput)
+                addFlagString ("neighborOutput");
+        }
+
+        LogReader ("Channel Flags: " + channelFlagsString);
+#endif
         squidChannelProperties.setChannelSource (getValue <SquidSalmple::DataLayout::kChannelSourceSize> (SquidSalmple::DataLayout::kChannelSourceOffset), false);
         squidChannelProperties.setChoke (getValue <SquidSalmple::DataLayout::kChokeSize> (SquidSalmple::DataLayout::kChokeOffset), false);
         squidChannelProperties.setDecay (getValue <SquidSalmple::DataLayout::kDecaySize> (SquidSalmple::DataLayout::kDecayOffset), false);
@@ -86,14 +116,11 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         ////////////////////////////////////
         // cue sets
         const auto playPosition { getValue <SquidSalmple::DataLayout::k_Reserved2Size> (SquidSalmple::DataLayout::k_Reserved2Offset) };
-        LogReader ("read - play position meta data = " + juce::String (playPosition).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (playPosition).paddedLeft ('0', 6) + "]");
         const auto endOfSample { getValue <SquidSalmple::DataLayout::kEndOfSampleSize> (SquidSalmple::DataLayout::kEndOfSampleOffset) };
-        LogReader ("read - end of sample meta data = " + juce::String (endOfSample).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endOfSample).paddedLeft ('0', 6) + "], ratio from numSamples = " + juce::String (endOfSample / numSamples));
         auto logCueSet = [this, numSamples] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
         {
             LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
-                juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]" +
-                ", ratio from numSamples = " + juce::String (endCue / numSamples));
+                juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
             jassert (startCue <= loopCue && loopCue < endCue);
         };
 
@@ -139,6 +166,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     }
     else
     {
+        LogReader (sampleFile.getFileName() + " does not contain meta-data");
         squidChannelProperties.setEndCue (numSamples * 2, false);
         squidChannelProperties.setCuePoints (0, 0, 0, numSamples * 2);
 
