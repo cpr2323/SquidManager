@@ -45,6 +45,7 @@ ChannelEditorComponent ::~ChannelEditorComponent ()
     filterTypeComboBox.setLookAndFeel (nullptr);
     quantComboBox.setLookAndFeel (nullptr);
     rateComboBox.setLookAndFeel (nullptr);
+    channelSourceComboBox.setLookAndFeel (nullptr);
 }
 
 void ChannelEditorComponent::setupComponents ()
@@ -90,7 +91,6 @@ void ChannelEditorComponent::setupComponents ()
     fileNameSelectLabel.setColour (juce::Label::ColourIds::textColourId, juce::Colours::white);
     fileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, juce::Colours::black);
     fileNameSelectLabel.setOutline (juce::Colours::white);
-    fileNameSelectLabel.setBorderSize ({ 0, 2, 0, 0 });
     fileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
     {
         if (! handleSampleAssignment (files[0]))
@@ -100,6 +100,24 @@ void ChannelEditorComponent::setupComponents ()
     };
     fileNameSelectLabel.onPopupMenuCallback = [this] () {};
     setupLabel (fileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
+
+    setupLabel (channelSourceLabel, "SAMPLE CHANNEL", kMediumLabelSize, juce::Justification::centred);
+    {
+        for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
+        {
+            // TODO - the channel index is not known until ::init is called
+            //const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) + (squidChannelProperties.getChannelIndex () == curChannelIndex ? "(self)" : "") };
+            const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
+            channelSourceComboBox.addItem (channelString, curChannelIndex + 1);
+        }
+    }
+    channelSourceComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    channelSourceComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setChannelSource (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1), true);
+    };
+    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (channelSourceComboBox.getSelectedItemIndex ()); });
 
     // BITS
     setupLabel (bitsLabel, "BITS", kMediumLabelSize, juce::Justification::centred);
@@ -136,7 +154,7 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setRate (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1), true);
+        squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)), true);
     };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
@@ -378,10 +396,10 @@ void ChannelEditorComponent::setupComponents ()
     {
         for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
         {
-            // TODO - only the 'other channels' should show in this list
-            //        I think we want to display 'Off' for the current channel
-            //if (channelIndex != curChannelIndex)
-            chokeComboBox.addItem ("C" + juce::String (curChannelIndex + 1), curChannelIndex + 1);
+            // TODO - the channel index is not known until ::init is called
+            //const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) + (squidChannelProperties.getChannelIndex () == curChannelIndex ? "(self)" : "") };
+            const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
+            chokeComboBox.addItem (channelString, curChannelIndex + 1);
         }
     }
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
@@ -648,6 +666,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
 
     // put initial data into the UI
     attackDataChanged (squidChannelProperties.getAttack ());
+    channelSourceDataChanged (squidChannelProperties.getChannelSource ());
     channelFlagsDataChanged (squidChannelProperties.getChannelFlags ());
     chokeDataChanged (squidChannelProperties.getChoke ());
     bitsDataChanged (squidChannelProperties.getBits ());
@@ -692,6 +711,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onAttackChange = [this] (int attack) { attackDataChanged (attack); };
     squidChannelProperties.onBitsChange = [this] (int bits) { bitsDataChanged (bits); };
     squidChannelProperties.onChannelFlagsChange = [this] (uint16_t channelFlags) { channelFlagsDataChanged (channelFlags); };
+    squidChannelProperties.onChannelSourceChange = [this] (uint8_t channelSourceIndex) { channelSourceDataChanged (channelSourceIndex); };
     squidChannelProperties.onChokeChange = [this] (int choke) { chokeDataChanged (choke); };
     squidChannelProperties.onCurCueSetChange = [this] (int cueSetIndex) { setCurCue (cueSetIndex); };
     squidChannelProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
@@ -765,6 +785,12 @@ void ChannelEditorComponent::attackDataChanged (int attack)
 void ChannelEditorComponent::bitsDataChanged (int bits)
 {
     bitsTextEditor.setText (juce::String (bits == 0 ? 16 : bits), juce::NotificationType::dontSendNotification);
+}
+
+void ChannelEditorComponent::channelSourceDataChanged (uint8_t channelSourceIndex)
+{
+    configFileSelectorFromChannelSource ();
+    channelSourceComboBox.setSelectedItemIndex (channelSourceIndex, juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
@@ -912,6 +938,17 @@ void ChannelEditorComponent::attackUiChanged (int attack)
 void ChannelEditorComponent::bitsUiChanged (int bits)
 {
     squidChannelProperties.setBits (bits, false);
+}
+
+void ChannelEditorComponent::configFileSelectorFromChannelSource ()
+{
+    fileNameSelectLabel.setEnabled (squidChannelProperties.getChannelSource () == squidChannelProperties.getChannelIndex ());
+}
+
+void ChannelEditorComponent::channelSourceUiChanged (uint8_t channelSourceIndex)
+{
+    squidChannelProperties.setChannelSource (channelSourceIndex, false);
+    configFileSelectorFromChannelSource ();
 }
 
 void ChannelEditorComponent::chokeUiChanged (int choke)
@@ -1088,6 +1125,9 @@ void ChannelEditorComponent::resized ()
     // FILENAME
     fileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     fileNameSelectLabel.setBounds (fileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
+
+    channelSourceLabel.setBounds (fileNameSelectLabel.getRight () + 10, yOffset, fieldWidth + 20, kMediumLabelIntSize);
+    channelSourceComboBox.setBounds (channelSourceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = fileNameSelectLabel.getBottom () + 3;
 
     // column one

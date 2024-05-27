@@ -114,7 +114,7 @@ public:
     std::function<void (int bits)> onBitsChange;
     std::function<void (uint16_t channelFlags)> onChannelFlagsChange;
     std::function<void (uint8_t channelIndex)> onChannelIndexChange;
-    std::function<void (uint8_t channelIndex)> onChannelSourceChange;
+    std::function<void (uint8_t channelSourceIndex)> onChannelSourceChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int cueSetIndex)> onCurCueSetChange;
     std::function<void (int cvIndex, int parameterIndex, int attenuation)> onCvAssignAttenuateChange;

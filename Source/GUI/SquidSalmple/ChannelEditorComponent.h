@@ -35,6 +35,8 @@ private:
     CustomTextEditorInt attackTextEditor; // 0-99
     juce::Label bitsLabel;
     CustomTextEditorInt bitsTextEditor; // 1-16
+    juce::Label channelSourceLabel;
+    CustomComboBox channelSourceComboBox;
     juce::Label chokeLabel;
     CustomComboBox chokeComboBox; // C1, C2, C3, C4, C5, C6, C7, C8
     juce::Label decayLabel;
@@ -99,6 +101,7 @@ private:
     int curCueSetIndex { 0 };
 
     void appendCueSet ();
+    void configFileSelectorFromChannelSource ();
     void deleteCueSet (int cueSetIndex);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
@@ -113,6 +116,7 @@ private:
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
+    void channelSourceDataChanged (uint8_t channelSourceIndex);
     void channelFlagsDataChanged (uint16_t channelFlags);
     void chokeDataChanged (int choke);
     void decayDataChanged (int decay);
@@ -136,6 +140,7 @@ private:
     void attackUiChanged (int attack);
     void bitsUiChanged (int bits);
     void channelFlagsUiChanged (uint16_t channelFlags);
+    void channelSourceUiChanged (uint8_t channelSourceIndex);
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (juce::int64 endCue);
