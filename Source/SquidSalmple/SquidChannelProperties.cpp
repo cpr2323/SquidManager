@@ -760,6 +760,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     // Copy properties
     setAttack (sourceMetaDataProperties.getAttack (), false);
     setBits (sourceMetaDataProperties.getBits (), false);
+    setChannelFlags (sourceMetaDataProperties.getChannelFlags (), false);
     setChoke (sourceMetaDataProperties.getChoke (), false);
     setNumCueSets (sourceMetaDataProperties.getNumCueSets (), false);
     setCurCueSet (sourceMetaDataProperties.getCurCueSet (), false);

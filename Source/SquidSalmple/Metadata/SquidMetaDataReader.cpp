@@ -45,6 +45,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
+        jassert (!( (squidChannelProperties.getChannelFlags() & ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped)));
 #if JUCE_DEBUG
         const auto channelFlags { squidChannelProperties.getChannelFlags () };
         juce::String channelFlagsString;

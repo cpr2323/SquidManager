@@ -13,7 +13,6 @@
 #include "../../Utility/NoArrowComboBoxLnF.h"
 #include "../../Utility/RoundedSlideSwitch.h"
 
-
 class ChannelEditorComponent : public juce::Component,
                                public juce::FileDragAndDropTarget
 {
@@ -74,6 +73,12 @@ private:
     CustomComboBox stepsComboBox; // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     juce::Label xfadeLabel;
     CustomTextEditorInt xfadeTextEditor; // 0 - 99
+    juce::Label cueRandomLabel;
+    RoundedSlideSwitch cueRandomButton;
+    juce::Label cueStepLabel;
+    RoundedSlideSwitch cueStepButton;
+
+    // LOWER PANE
     WaveformDisplay waveformDisplay;
     std::array<juce::TextButton, 64> cueSetButtons;
     CvAssignEditor cvAssignEditor;

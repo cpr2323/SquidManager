@@ -461,6 +461,45 @@ void ChannelEditorComponent::setupComponents ()
         }
     });
 
+    setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
+    cueRandomButton.onClick = [this] ()
+    {
+        if (cueRandomButton.getToggleState ())
+        {
+            // turn cue random on
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueRandom, false);
+            // turn cue stepped off (in case it is on)
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueStepped, false);
+            cueStepButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            // turn cue random off
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueRandom, false);
+        }
+    };
+    addAndMakeVisible (cueRandomButton);
+    setupLabel (cueStepLabel, "CUE STEP", kMediumLabelSize, juce::Justification::centred);
+    cueStepButton.onClick = [this] ()
+    {
+        if (cueStepButton.getToggleState ())
+        {
+            // turn cue step on
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped, false);
+            // turn cue random off (in case it is on)
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueRandom, false);
+            cueRandomButton.setToggleState (false, juce::NotificationType::dontSendNotification);
+        }
+        else
+        {
+            // turn cue step off
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueStepped, false);
+        }
+    };
+    addAndMakeVisible (cueStepButton);
+
+
+
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
     addCueSetButton.setEnabled (false);
@@ -730,6 +769,13 @@ void ChannelEditorComponent::bitsDataChanged (int bits)
 
 void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
 {
+    // handle cue random flag
+    cueRandomButton.setToggleState (channelFlags & ChannelFlags::kCueRandom, juce::NotificationType::dontSendNotification);
+
+    // handle cue step flag
+    cueStepButton.setToggleState (channelFlags & ChannelFlags::kCueStepped, juce::NotificationType::dontSendNotification);
+
+    // handle neighbor out flag
     const auto useAltOut { channelFlags & ChannelFlags::kNeighborOutput };
     const auto channelIndex { squidChannelProperties.getChannelIndex () };
     if (channelIndex < 2) // 1-2
@@ -1101,7 +1147,6 @@ void ChannelEditorComponent::resized ()
     // column three
     xOffset += columnWidth + 10;
     yOffset = fileNameSelectLabel.getBottom () + 3;
-    //yOffset = kInitialYOffset;
     chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = chokeComboBox.getBottom () + 3;
@@ -1113,6 +1158,12 @@ void ChannelEditorComponent::resized ()
     yOffset = stepsComboBox.getBottom () + 3;
     outputLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     outputComboBox.setBounds (outputLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = outputComboBox.getBottom () + 3;
+    cueRandomLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    cueRandomButton.setBounds (cueRandomLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
+    yOffset = cueRandomButton.getBottom () + 3;
+    cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
 
     // column four
 //     xOffset += columnWidth + 10;
