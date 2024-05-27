@@ -307,7 +307,9 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
-    setupButton (reverseButton, "REVERSE", "Reverse", [this] () { reverseUiChanged (reverseButton.getToggleState ()); }); // 0-1
+    setupLabel (reverseLabel, "REVERSE", kMediumLabelSize, juce::Justification::centred);
+    reverseButton.onClick = [this] () { reverseUiChanged (reverseButton.getToggleState ()); };
+    addAndMakeVisible (reverseButton);
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
@@ -1069,8 +1071,8 @@ void ChannelEditorComponent::resized ()
     levelLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     levelTextEditor.setBounds (levelLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = levelTextEditor.getBottom () + 3;
-    reverseButton.setBounds (xOffset + 15, yOffset, fieldWidth * 2 - 25, kParameterLineHeight);
-
+    reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
     xOffset += columnWidth + 10;
     yOffset = fileNameSelectLabel.getBottom () + 3;
     //yOffset = kInitialYOffset;

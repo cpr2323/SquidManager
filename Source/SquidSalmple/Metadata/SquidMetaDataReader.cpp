@@ -170,7 +170,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
         squidChannelProperties.setEndCue (numSamples * 2, false);
         squidChannelProperties.setCuePoints (0, 0, 0, numSamples * 2);
 
-        // now I need to write out the default 'reserved' data
+        // TODO - now I need to write out the default 'reserved' data
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);

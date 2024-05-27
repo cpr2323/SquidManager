@@ -37,6 +37,8 @@
               file="Source/GUI/MainComponent.cpp"/>
         <FILE id="ZPS2SJ" name="MainComponent.h" compile="0" resource="0" file="Source/GUI/MainComponent.h"/>
         <FILE id="tD9g67" name="sqedit.png" compile="0" resource="1" file="Source/GUI/sqedit.png"/>
+        <FILE id="oXG8zp" name="sqedit2_2.png" compile="0" resource="1" file="Source/GUI/sqedit2_2.png"/>
+        <FILE id="oKHGWM" name="sqedit3.png" compile="0" resource="1" file="Source/GUI/sqedit3.png"/>
         <FILE id="GfPl6s" name="SQtip.png" compile="0" resource="1" file="Source/GUI/SQtip.png"/>
       </GROUP>
       <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
@@ -143,6 +145,10 @@
               file="Source/Utility/RootProperties.cpp"/>
         <FILE id="WcCZQK" name="RootProperties.h" compile="0" resource="0"
               file="Source/Utility/RootProperties.h"/>
+        <FILE id="CI5vrl" name="RoundedSlideSwitch.cpp" compile="1" resource="0"
+              file="Source/Utility/RoundedSlideSwitch.cpp"/>
+        <FILE id="PmOleE" name="RoundedSlideSwitch.h" compile="0" resource="0"
+              file="Source/Utility/RoundedSlideSwitch.h"/>
         <FILE id="LryJVV" name="RuntimeRootProperties.cpp" compile="1" resource="0"
               file="Source/Utility/RuntimeRootProperties.cpp"/>
         <FILE id="WDI9X7" name="RuntimeRootProperties.h" compile="0" resource="0"
@@ -216,7 +222,7 @@
         <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="GfPl6s" bigIcon="GfPl6s">
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="oXG8zp" bigIcon="oXG8zp">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager"/>

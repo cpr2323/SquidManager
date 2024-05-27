@@ -11,6 +11,8 @@
 #include "../../Utility/CustomTextEditor.h"
 #include "../../Utility/FileSelectLabel.h"
 #include "../../Utility/NoArrowComboBoxLnF.h"
+#include "../../Utility/RoundedSlideSwitch.h"
+
 
 class ChannelEditorComponent : public juce::Component,
                                public juce::FileDragAndDropTarget
@@ -62,7 +64,8 @@ private:
     CustomComboBox quantComboBox; // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     juce::Label rateLabel;
     CustomComboBox rateComboBox; // 4, 6, 7, 9, 11, 14, 22, 44
-    juce::TextButton reverseButton; // 0-1
+    juce::Label reverseLabel;
+    RoundedSlideSwitch reverseButton; // 0-1
     juce::Label speedLabel;
     CustomTextEditorInt speedTextEditor; // 1 - 99 (50 is normal?, below that is negative speed? above is positive?)
     juce::Label startCueLabel;
