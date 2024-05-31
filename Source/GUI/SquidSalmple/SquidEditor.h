@@ -19,6 +19,7 @@ private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
     SquidBankProperties squidBankProperties;
+    SquidBankProperties unEditedSquidBankProperties;
     EditManager* editManager { nullptr };
 
     juce::TabbedComponent channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };

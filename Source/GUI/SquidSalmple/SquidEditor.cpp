@@ -1,5 +1,6 @@
 #include "SquidEditor.h"
 #include "../../SquidSalmple/BankHelpers.h"
+#include "../../SquidSalmple/BankManagerProperties.h"
 #include "../../SystemServices.h"
 #include "../../Utility/PersistentRootProperties.h"
 
@@ -94,7 +95,9 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
 
-    squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    unEditedSquidBankProperties.wrap (bankManagerProperties.getBank("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
         channelEditorComponents [channelIndex].init (channelPropertiesVT, rootPropertiesVT);
@@ -117,7 +120,7 @@ void SquidEditorComponent::nameDataChanged (juce::String name)
 void SquidEditorComponent::timerCallback ()
 {
     // check if data has changed
-    //saveButton.setEnabled (! BankHelpers::areEntireBanksEqual (unEditedBankProperties.getValueTree (), bankProperties.getValueTree ()));
+    saveButton.setEnabled (! BankHelpers::areEntireBanksEqual (unEditedSquidBankProperties.getValueTree (), squidBankProperties.getValueTree ()));
 }
 
 void SquidEditorComponent::resized ()

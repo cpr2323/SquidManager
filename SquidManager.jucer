@@ -94,6 +94,10 @@
         </GROUP>
         <FILE id="MWE8w7" name="BankHelpers.cpp" compile="1" resource="0" file="Source/SquidSalmple/BankHelpers.cpp"/>
         <FILE id="RTfbuB" name="BankHelpers.h" compile="0" resource="0" file="Source/SquidSalmple/BankHelpers.h"/>
+        <FILE id="et2no4" name="BankManagerProperties.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/BankManagerProperties.cpp"/>
+        <FILE id="LfoEgJ" name="BankManagerProperties.h" compile="0" resource="0"
+              file="Source/SquidSalmple/BankManagerProperties.h"/>
         <FILE id="ytGEog" name="SquidBankProperties.cpp" compile="1" resource="0"
               file="Source/SquidSalmple/SquidBankProperties.cpp"/>
         <FILE id="OKM5qB" name="SquidBankProperties.h" compile="0" resource="0"

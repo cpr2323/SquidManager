@@ -3,7 +3,7 @@
 #include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
-#include "SquidSalmple/BankHelpers.h"
+#include "SquidSalmple/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
 #include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/DebugLog.h"
@@ -17,6 +17,7 @@
 constexpr char* kVersionDecorator { " [PRERELEASE]" };
 
 // for testing
+#include "SquidSalmple/BankHelpers.h"
 #include "SquidSalmple/SquidChannelProperties.h"
 #include "SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "SquidSalmple/Metadata/SquidMetaDataWriter.h"
@@ -34,7 +35,7 @@ void crashHandler (void* /*data*/)
     FlushDebugLog ();
 }
 
-#define RUN_READ_WRITE_TEST 1
+#define RUN_READ_WRITE_TEST 0
 #if JUCE_DEBUG
 #if RUN_READ_WRITE_TEST 
 void runSquidMetaDataReadTest (juce::File testFolder)
@@ -132,6 +133,13 @@ public:
     {
         SquidBankProperties squidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
         runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
+
+        BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+        bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());
+        bankManagerProperties.addBank ("unedited", squidBankProperties.getValueTree ().createCopy ());
+
+        // add the Preset Manager to the Runtime Root
+        runtimeRootProperties.getValueTree ().addChild (bankManagerProperties.getValueTree (), -1, nullptr);
 
 // TEST CODE TO WRITE OUT empty SquidChannelProperties
 //         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
