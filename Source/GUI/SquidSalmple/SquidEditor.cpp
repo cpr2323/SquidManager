@@ -1,6 +1,6 @@
 #include "SquidEditor.h"
+#include "../../SquidSalmple/BankHelpers.h"
 #include "../../SystemServices.h"
-#include "../../SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "../../Utility/PersistentRootProperties.h"
 
 const auto kParameterLineHeight { 20 };
@@ -41,6 +41,7 @@ SquidEditorComponent::SquidEditorComponent ()
     // TODO - make sure I have the correct valid character set
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
 
+    // TODO - the load button will eventually be removed, as loading will be done via a file system/bank browser
     // LOAD BUTTON
     loadButton.setButtonText ("LOAD");
     loadButton.onClick = [this] ()
@@ -59,12 +60,29 @@ SquidEditorComponent::SquidEditorComponent ()
     };
     addAndMakeVisible (loadButton);
 
+    // SAVE BUTTON
+    saveButton.setButtonText ("SAVE");
+    saveButton.setEnabled (false);
+    saveButton.onClick = [this] ()
+    {
+        // save bank, aka save all channel sample files
+        // if there is no sample loaded, we need to emulate what the module does, which is to create and empty wav file before saving the metadata
+    };
+    addAndMakeVisible (saveButton);
+
+    // CHANNEL TABS
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
     {
         channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);
     }
     addAndMakeVisible (channelTabs);
 
+    // TODO - remove eventually
+    // the Channel tabs are overlaying the Load button (which will be removed eventually, as loading will be done via a file system/bank browser
+    // but for now we will just move the load button to front
+    loadButton.toFront (false);
+
+    // timer to set enabled state of the save button based on if the bank data has changed
     startTimer (250);
 }
 
@@ -99,6 +117,7 @@ void SquidEditorComponent::nameDataChanged (juce::String name)
 void SquidEditorComponent::timerCallback ()
 {
     // check if data has changed
+    //saveButton.setEnabled (! BankHelpers::areEntireBanksEqual (unEditedBankProperties.getValueTree (), bankProperties.getValueTree ()));
 }
 
 void SquidEditorComponent::resized ()
@@ -106,14 +125,17 @@ void SquidEditorComponent::resized ()
     auto localBounds { getLocalBounds() };
 
     localBounds.removeFromTop (5);
+    // put bank name and save button on the top line
     auto topRowBounds {localBounds.removeFromTop (kParameterLineHeight) };
     topRowBounds.removeFromLeft (5);
     bankNameLabel.setBounds (topRowBounds.removeFromLeft (45));
     topRowBounds.removeFromLeft (3);
     bankNameEditor.setBounds (topRowBounds.removeFromLeft (80));
     topRowBounds.removeFromRight (5);
-    loadButton.setBounds (topRowBounds.removeFromRight (80));
-    const auto channelSectionY { loadButton.getBottom () + 3 };
+    saveButton.setBounds (topRowBounds.removeFromRight (80));
+    loadButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
+
+    const auto channelSectionY { saveButton.getBottom () + 3 };
     const auto kWidthOfWaveformEditor { 962 };
     channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight() - channelSectionY - 5);
 }

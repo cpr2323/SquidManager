@@ -10,8 +10,11 @@ void SquidChannelProperties::initValueTree ()
     setAttack (0, false);
     setBits (16, false);
     setChannelFlags (0, false);
-    setChannelIndex (0, false);
-    setChoke (0, false);
+    setChannelIndex (0, false); // needs to be initialized to the correct value for the specific channel this represents
+    setChannelSource (0, false);  // needs to be initialized to the correct value for the specific channel this represents
+    setChoke (0, false); // needs to be initialized to the correct value for the specific channel this represents
+    //we need to initialize CurCueSet once the cue sets have been configured, so we will do this at the end of initValueTree 
+    //setCurCueSet (0, false);
     setDecay (0, false);
     setETrig (0, false);
     setFileName ("", false);
@@ -23,11 +26,13 @@ void SquidChannelProperties::initValueTree ()
     setNumCueSets (0, false);
     setQuant (0, false);
     setRate (0, false);
+    setRecDest (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setReverse (0, false);
     setSpeed ((50 * kScaleStep), false);
     setSteps (0, false);
     setXfade (0, false);
 
+    // TODO - populate the reserved data with defaults
     setReserved1Data ("");
     setReserved2Data ("");
     setReserved3Data ("");
@@ -234,6 +239,11 @@ void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex,
 void SquidChannelProperties::setRate (int rate, bool includeSelfCallback)
 {
     setValue (rate, RatePropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setRecDest (int channelIndex, bool includeSelfCallback)
+{
+    setValue (channelIndex, RecDestPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setSpeed (int speed, bool includeSelfCallback)
@@ -501,6 +511,11 @@ int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
 int SquidChannelProperties::getRate ()
 {
     return getValue<int> (RatePropertyId);
+}
+
+int SquidChannelProperties::getRecDest ()
+{
+    return getValue<int> (RecDestPropertyId);
 }
 
 int SquidChannelProperties::getSpeed ()
@@ -776,6 +791,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setLevel (sourceMetaDataProperties.getLevel (), false);
     setQuant (sourceMetaDataProperties.getQuant (), false);
     setRate (sourceMetaDataProperties.getRate (), false);
+    setRecDest (sourceMetaDataProperties.getRecDest () , false);
     setReverse (sourceMetaDataProperties.getReverse (), false);
     setSpeed (sourceMetaDataProperties.getSpeed (), false);
     setStartCue (sourceMetaDataProperties.getStartCue (), false);
@@ -944,6 +960,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onRateChange != nullptr)
                 onRateChange (getRate ());
+        }
+        else if (property == RecDestPropertyId)
+        {
+            if (onRecDestChange != nullptr)
+                onRecDestChange (getRecDest ());
         }
         else if (property == ReversePropertyId)
         {

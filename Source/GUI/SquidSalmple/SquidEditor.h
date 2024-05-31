@@ -28,6 +28,7 @@ private:
     juce::Label bankNameLabel;
     juce::TextEditor bankNameEditor;
     juce::TextButton loadButton;
+    juce::TextButton saveButton;
 
     std::array<ChannelEditorComponent, 8> channelEditorComponents;
 

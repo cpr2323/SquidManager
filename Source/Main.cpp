@@ -3,6 +3,7 @@
 #include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
+#include "SquidSalmple/BankHelpers.h"
 #include "SquidSalmple/SquidBankProperties.h"
 #include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/DebugLog.h"
@@ -33,7 +34,7 @@ void crashHandler (void* /*data*/)
     FlushDebugLog ();
 }
 
-#define RUN_READ_WRITE_TEST 0
+#define RUN_READ_WRITE_TEST 1
 #if JUCE_DEBUG
 #if RUN_READ_WRITE_TEST 
 void runSquidMetaDataReadTest (juce::File testFolder)
@@ -50,8 +51,9 @@ void runSquidMetaDataReadTest (juce::File testFolder)
     SquidChannelProperties squidMetaDataProperties2 { squidMetaDataReader.read (outputFile),
                                                       SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 
-    jassert (ValueTreeHelpers::comparePropertiesUnOrdered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
-    jassert (ValueTreeHelpers::compareChildrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
+    jassert (BankHelpers::areChannelsEqual (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree ()));
+//     jassert (ValueTreeHelpers::comparePropertiesUnOrdered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
+//     jassert (ValueTreeHelpers::compareChildrenAndThierPropertiesUnordered (squidChannelProperties.getValueTree (), squidMetaDataProperties2.getValueTree (), ValueTreeHelpers::LogCompareFailures::yes, ValueTreeHelpers::StopAtFirstFailure::no));
 }
 #endif
 #endif
