@@ -1,6 +1,6 @@
 #include "SquidEditor.h"
-#include "../../SquidSalmple/BankHelpers.h"
-#include "../../SquidSalmple/BankManagerProperties.h"
+#include "../../SquidSalmple/Bank/BankHelpers.h"
+#include "../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../SystemServices.h"
 #include "../../Utility/PersistentRootProperties.h"
 

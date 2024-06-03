@@ -11,10 +11,11 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
 
     void loadBank (juce::File bankDirectory);
-    void loadChannel (int channelIndex, juce::File sampleFile);
+    void loadChannel (juce::ValueTree squidChannelPropertiesVT, int channelIndex, juce::File sampleFile);
 
 private:
     RuntimeRootProperties runtimeRootProperties;
+    SquidBankProperties uneditedSquidBankProperties;
     SquidBankProperties squidBankProperties;
     std::array<SquidChannelProperties, 8> squidChannelPropertiesList;
 };

@@ -1069,7 +1069,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
     // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
     //        but it's possible that the file gets deleted somehow after selection
     jassert (destFile.exists ());
-    editManager->loadChannel (squidChannelProperties.getChannelIndex (), destFile);
+    editManager->loadChannel (squidChannelProperties.getValueTree (), squidChannelProperties.getChannelIndex (), destFile);
     return true;
 }
 

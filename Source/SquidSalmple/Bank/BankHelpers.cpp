@@ -1,6 +1,6 @@
 #include "BankHelpers.h"
-#include "SquidBankProperties.h"
-#include "SquidChannelProperties.h"
+#include "../SquidBankProperties.h"
+#include "../SquidChannelProperties.h"
 
 namespace BankHelpers
 {

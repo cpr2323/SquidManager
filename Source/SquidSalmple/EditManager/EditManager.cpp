@@ -1,10 +1,13 @@
 #include "EditManager.h"
+#include "../Bank/BankManagerProperties.h"
 #include "../Metadata/SquidMetaDataReader.h"
 
 void EditManager::init (juce::ValueTree rootPropertiesVT)
 {
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
-    squidBankProperties.wrap (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    uneditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
         squidChannelPropertiesList [channelIndex].wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
@@ -12,36 +15,35 @@ void EditManager::init (juce::ValueTree rootPropertiesVT)
     });
 }
 
-void EditManager::loadChannel (int channelIndex, juce::File sampleFile)
+void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, int channelIndex, juce::File sampleFile)
 {
-    auto& squidChannelProperties { squidChannelPropertiesList [channelIndex] };
-    squidChannelProperties.triggerLoadBegin (false);
+    SquidChannelProperties theSquidChannelProperties { squidChannelPropertiesVT,
+                                                       SquidChannelProperties::WrapperType::owner,
+                                                       SquidChannelProperties::EnableCallbacks::no };
     if (sampleFile.exists ())
     {
         // TODO - check for import errors and handle accordingly
         SquidMetaDataReader squidMetaDataReader;
-        SquidChannelProperties loadedSquidMetaDataProperties { squidMetaDataReader.read (sampleFile),
+        SquidChannelProperties loadedSquidChannelProperties { squidMetaDataReader.read (sampleFile),
                                                                 SquidChannelProperties::WrapperType::owner,
                                                                 SquidChannelProperties::EnableCallbacks::no };
-        squidChannelProperties.copyFrom (loadedSquidMetaDataProperties.getValueTree ());
-        // if there was no meta data
+        theSquidChannelProperties.copyFrom (loadedSquidChannelProperties.getValueTree ());
     }
     else
     {
         // TODO - load default. report and error?
-        SquidChannelProperties defaultSquidMetaDataProperties { {}, SquidChannelProperties::WrapperType::owner,
+        SquidChannelProperties defaultSquidChannelProperties { {}, SquidChannelProperties::WrapperType::owner,
                                                                     SquidChannelProperties::EnableCallbacks::no };
-        defaultSquidMetaDataProperties.setChannelIndex (channelIndex, false);
-        defaultSquidMetaDataProperties.setFileName (sampleFile.getFileName (), false);
-        squidChannelProperties.copyFrom (defaultSquidMetaDataProperties.getValueTree ());
+        defaultSquidChannelProperties.setChannelIndex (channelIndex, false);
+        defaultSquidChannelProperties.setFileName (sampleFile.getFileName (), false);
+        theSquidChannelProperties.copyFrom (defaultSquidChannelProperties.getValueTree ());
     }
-    squidChannelProperties.triggerLoadComplete (false);
-
 }
 
 void EditManager::loadBank (juce::File bankDirectory)
 {
-    squidBankProperties.triggerLoadBegin (false);
+    SquidBankProperties theSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+
     // check for info.txt
     auto infoTxtFile { bankDirectory.getChildFile ("info.txt") };
     // read bank name if file exists
@@ -49,8 +51,13 @@ void EditManager::loadBank (juce::File bankDirectory)
     {
         auto infoTxtInputStream { infoTxtFile.createInputStream () };
         auto firstLine { infoTxtInputStream->readNextLine () };
-        squidBankProperties.setName (firstLine.substring (0, 11), true);
+        theSquidBankProperties.setName (firstLine.substring (0, 11), true);
     }
+    else
+    {
+        theSquidBankProperties.setName (bankDirectory.getFileName().substring (0, 11), true);
+    }
+
     // iterate over the channel folders and load sample 
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
     {
@@ -87,7 +94,24 @@ void EditManager::loadBank (juce::File bankDirectory)
                 }
             }
         }
-        loadChannel (channelIndex, sampleFile);
+        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), channelIndex, sampleFile);
     }
-    squidBankProperties.triggerLoadComplete (false);
+
+    auto copyBank = [] (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties)
+    {
+        destBankProperties.triggerLoadBegin (false);
+        destBankProperties.setName (srcBankProperties.getName (), false);
+        for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+        {
+            SquidChannelProperties destChannelProperties { destBankProperties.getChannelVT (channelIndex),
+                                                           SquidChannelProperties::WrapperType::owner,
+                                                           SquidChannelProperties::EnableCallbacks::no };
+            destChannelProperties.triggerLoadBegin (false);
+            destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex));
+            destChannelProperties.triggerLoadComplete (false);
+        }
+        destBankProperties.triggerLoadComplete (false);
+    };
+    copyBank (theSquidBankProperties, squidBankProperties);
+    copyBank (theSquidBankProperties, uneditedSquidBankProperties);
 }

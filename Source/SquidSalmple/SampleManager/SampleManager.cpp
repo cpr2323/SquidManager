@@ -1,5 +1,6 @@
 #include "SampleManager.h"
 #include "../SquidBankProperties.h"
+#include "../Bank/BankManagerProperties.h"
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/PersistentRootProperties.h"
 
@@ -41,7 +42,8 @@ void SampleManager::init (juce::ValueTree rootPropertiesVT)
 //         juce::MessageManager::callAsync ([this] () { update (); });
 //     };
 
-    SquidBankProperties squidBankProperties (runtimeRootProperties.getValueTree (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+    BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    SquidBankProperties squidBankProperties (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
         channelAndSamplePropertiesList [channelIndex].squidChannelProperties.wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);

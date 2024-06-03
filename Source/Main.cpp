@@ -3,7 +3,7 @@
 #include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
-#include "SquidSalmple/BankManagerProperties.h"
+#include "SquidSalmple/Bank/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
 #include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/DebugLog.h"
@@ -17,7 +17,7 @@
 constexpr char* kVersionDecorator { " [PRERELEASE]" };
 
 // for testing
-#include "SquidSalmple/BankHelpers.h"
+#include "SquidSalmple/Bank/BankHelpers.h"
 #include "SquidSalmple/SquidChannelProperties.h"
 #include "SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "SquidSalmple/Metadata/SquidMetaDataWriter.h"
@@ -132,7 +132,7 @@ public:
     void initSquidSalmple ()
     {
         SquidBankProperties squidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
-        runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
+        //runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
 
         BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
         bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());

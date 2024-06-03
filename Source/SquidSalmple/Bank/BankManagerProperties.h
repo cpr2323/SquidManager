@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../Utility/ValueTreeWrapper.h"
+#include "../../Utility/ValueTreeWrapper.h"
 
 class BankManagerProperties : public ValueTreeWrapper<BankManagerProperties>
 {
@@ -15,7 +15,7 @@ public:
 
     static inline const juce::Identifier BankManagerPropertiesTypeId { "BankManager" };
 
-    static inline const juce::Identifier BankHolderPropertiesTypeId { "PresetHolder" };
+    static inline const juce::Identifier BankHolderPropertiesTypeId { "BankHolder" };
     static inline const juce::Identifier BankHolderNamePropertyId { "name" };
 
     void initValueTree () {};
