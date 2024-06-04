@@ -51,11 +51,11 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
                 cvAssignedFlags |= cvAssignedFlag;
             setUInt16 (offset, cvParamOffset + 0);
             setUInt16 (attenuation, cvParamOffset + 2);
-            return true;
+//            return true;
         };
         // write cvAssignedFlags (bit flags for each enabled parameter) to metadata
         setUInt16 (cvAssignedFlags, SquidSalmple::DataLayout::kCvFlagsOffset + (curCvInputIndex * 2));
-        return true;
+//        return true;
     };
 
     // Cue Sets

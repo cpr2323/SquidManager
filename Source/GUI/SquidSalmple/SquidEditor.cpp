@@ -42,6 +42,16 @@ SquidEditorComponent::SquidEditorComponent ()
     // TODO - make sure I have the correct valid character set
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
 
+    // SAVE BUTTON
+    saveButton.setButtonText ("SAVE");
+    saveButton.setEnabled (false);
+    saveButton.onClick = [this] ()
+    {
+        // TODO - if there is no sample loaded, we need to emulate what the module does, which is to create and empty wav file before saving the metadata
+        editManager->saveBank ();
+    };
+    addAndMakeVisible (saveButton);
+
     // TODO - the load button will eventually be removed, as loading will be done via a file system/bank browser
     // LOAD BUTTON
     loadButton.setButtonText ("LOAD");
@@ -60,16 +70,6 @@ SquidEditorComponent::SquidEditorComponent ()
         }, nullptr);
     };
     addAndMakeVisible (loadButton);
-
-    // SAVE BUTTON
-    saveButton.setButtonText ("SAVE");
-    saveButton.setEnabled (false);
-    saveButton.onClick = [this] ()
-    {
-        // save bank, aka save all channel sample files
-        // if there is no sample loaded, we need to emulate what the module does, which is to create and empty wav file before saving the metadata
-    };
-    addAndMakeVisible (saveButton);
 
     // CHANNEL TABS
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)

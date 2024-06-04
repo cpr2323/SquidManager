@@ -1,6 +1,7 @@
 #include "EditManager.h"
 #include "../Bank/BankManagerProperties.h"
 #include "../Metadata/SquidMetaDataReader.h"
+#include "../Metadata/SquidMetaDataWriter.h"
 
 void EditManager::init (juce::ValueTree rootPropertiesVT)
 {
@@ -40,12 +41,47 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, int cha
     }
 }
 
-void EditManager::loadBank (juce::File bankDirectory)
+void EditManager::saveBank ()
+{
+    jassert (bankDirectory.exists ());
+    // update info.txt file in bank directory
+    auto infoTxtFile { bankDirectory.getChildFile ("info.txt") };
+    infoTxtFile.replaceWithText (squidBankProperties.getName());
+
+    // update channel folders
+    for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+    {
+        auto channelDirectory { bankDirectory.getChildFile (juce::String (channelIndex + 1)) };
+        SquidMetaDataWriter squidMetaDataWriter;
+        SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+        auto originalFile { channelDirectory.getChildFile (squidChannelPropertiesToSave.getFileName ()) };
+        auto tempFile { originalFile.withFileExtension ("tmp") };
+        if (squidMetaDataWriter.write (squidChannelPropertiesToSave.getValueTree (), originalFile, tempFile))
+        {
+            if (originalFile.moveFileTo (originalFile.withFileExtension ("old")))
+            {
+                tempFile.moveFileTo (tempFile.withFileExtension ("wav"));
+                originalFile.withFileExtension ("old").moveToTrash ();
+                copyBank (squidBankProperties, uneditedSquidBankProperties);
+            }
+            else
+            {
+                // TODO - handle error
+            }
+        }
+        else
+        {
+            // TODO - handle error
+        }
+    }
+}
+
+void EditManager::loadBank (juce::File bankDirectoryToLoad)
 {
     SquidBankProperties theSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
 
     // check for info.txt
-    auto infoTxtFile { bankDirectory.getChildFile ("info.txt") };
+    auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
     // read bank name if file exists
     if (infoTxtFile.exists ())
     {
@@ -55,13 +91,13 @@ void EditManager::loadBank (juce::File bankDirectory)
     }
     else
     {
-        theSquidBankProperties.setName (bankDirectory.getFileName().substring (0, 11), true);
+        theSquidBankProperties.setName (bankDirectoryToLoad.getFileName().substring (0, 11), true);
     }
 
     // iterate over the channel folders and load sample 
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
     {
-        auto channelDirectory { bankDirectory.getChildFile (juce::String (channelIndex + 1)) };
+        auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
         juce::File sampleFile;
         // check for bankFolder/X (where X is the channel number)
         if (channelDirectory.exists () && channelDirectory.isDirectory ())
@@ -76,7 +112,7 @@ void EditManager::loadBank (juce::File bankDirectory)
         else
         {
             // Channel folder does not exist, check for old style bank files "chan-00X.wav"
-            auto oldStyleNamingSampleFile { bankDirectory.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension ("wav") };
+            auto oldStyleNamingSampleFile { bankDirectoryToLoad.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension ("wav") };
             if (oldStyleNamingSampleFile.exists () && !oldStyleNamingSampleFile.isDirectory ())
             {
                 // create folder
@@ -97,21 +133,23 @@ void EditManager::loadBank (juce::File bankDirectory)
         loadChannel (theSquidBankProperties.getChannelVT (channelIndex), channelIndex, sampleFile);
     }
 
-    auto copyBank = [] (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties)
-    {
-        destBankProperties.triggerLoadBegin (false);
-        destBankProperties.setName (srcBankProperties.getName (), false);
-        for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
-        {
-            SquidChannelProperties destChannelProperties { destBankProperties.getChannelVT (channelIndex),
-                                                           SquidChannelProperties::WrapperType::owner,
-                                                           SquidChannelProperties::EnableCallbacks::no };
-            destChannelProperties.triggerLoadBegin (false);
-            destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex));
-            destChannelProperties.triggerLoadComplete (false);
-        }
-        destBankProperties.triggerLoadComplete (false);
-    };
+    bankDirectory = bankDirectoryToLoad;
     copyBank (theSquidBankProperties, squidBankProperties);
-    copyBank (theSquidBankProperties, uneditedSquidBankProperties);
+    copyBank (squidBankProperties, uneditedSquidBankProperties);
+}
+
+void EditManager::copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties)
+{
+    destBankProperties.triggerLoadBegin (false);
+    destBankProperties.setName (srcBankProperties.getName (), false);
+    for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+    {
+        SquidChannelProperties destChannelProperties { destBankProperties.getChannelVT (channelIndex),
+                                                        SquidChannelProperties::WrapperType::owner,
+                                                        SquidChannelProperties::EnableCallbacks::no };
+        destChannelProperties.triggerLoadBegin (false);
+        destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex));
+        destChannelProperties.triggerLoadComplete (false);
+    }
+    destBankProperties.triggerLoadComplete (false);
 }

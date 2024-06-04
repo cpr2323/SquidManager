@@ -29,7 +29,7 @@ void SampleManager::init (juce::ValueTree rootPropertiesVT)
             handleSampleChange (channelIndex, "");
     };
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
-    currentFolder = { juce::File (appProperties.getMostRecentFolder ()) };
+    currentFolder = juce::File (appProperties.getMostRecentFolder ());
     appProperties.onMostRecentFolderChange = [this, closeAllOpenSamples] (juce::String folderName)
     {
         closeAllOpenSamples ();
