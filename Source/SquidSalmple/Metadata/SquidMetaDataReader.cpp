@@ -11,7 +11,7 @@
 #define LogReader(text) ;
 #endif
 
-juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
+juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
 
@@ -169,10 +169,12 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile)
     else
     {
         LogReader (sampleFile.getFileName() + " does not contain meta-data");
-        squidChannelProperties.setEndCue (numSamples * 2, false);
-        squidChannelProperties.setCuePoints (0, 0, 0, numSamples * 2);
+        squidChannelProperties.setChannelIndex (channelIndex, false);
+        squidChannelProperties.setChannelSource (channelIndex, false);
+        squidChannelProperties.setChoke (channelIndex, false);
+        squidChannelProperties.setRecDest (channelIndex, false);
 
-        // TODO - now I need to write out the default 'reserved' data
+        // TODO - now I need to init the default 'reserved' data
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);

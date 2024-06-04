@@ -25,7 +25,7 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, int cha
     {
         // TODO - check for import errors and handle accordingly
         SquidMetaDataReader squidMetaDataReader;
-        SquidChannelProperties loadedSquidChannelProperties { squidMetaDataReader.read (sampleFile),
+        SquidChannelProperties loadedSquidChannelProperties { squidMetaDataReader.read (sampleFile, channelIndex),
                                                                 SquidChannelProperties::WrapperType::owner,
                                                                 SquidChannelProperties::EnableCallbacks::no };
         theSquidChannelProperties.copyFrom (loadedSquidChannelProperties.getValueTree ());

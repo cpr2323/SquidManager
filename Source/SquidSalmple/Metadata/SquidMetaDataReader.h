@@ -7,7 +7,7 @@ class SquidMetaDataReader
 public:
     SquidMetaDataReader () = default;
 
-    juce::ValueTree read (juce::File sampleFile);
+    juce::ValueTree read (juce::File sampleFile, int channelIndex);
 
 private:
     juce::MemoryBlock busyChunkData;
