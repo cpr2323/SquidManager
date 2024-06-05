@@ -43,6 +43,7 @@ public:
     void setRate (int rate, bool includeSelfCallback);
     void setRecDest (int channelIndex, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
+    void setSampleLength (uint32_t sampleLength, bool includeSelfCallback);
     void setSpeed (int speed, bool includeSelfCallback); // internally 1 - 65500, externally 1-99
     void setStartCue (uint32_t startCue, bool includeSelfCallback);
     void setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback);
@@ -91,6 +92,7 @@ public:
     int getRate ();
     int getRecDest ();
     int getReverse ();
+    uint32_t getSampleLength ();
     int getSpeed ();
     uint32_t getStartCue ();
     uint32_t getStartCueSet (int cueSetIndex);
@@ -141,6 +143,7 @@ public:
     std::function<void (int rate)> onRateChange;
     std::function<void (int channelIndex)> onRecDestChange;
     std::function<void (int reverse)> onReverseChange;
+    std::function<void (uint32_t sampleLength)> onSampleLengthChange;
     std::function<void (int speed)> onSpeedChange;
     std::function<void (uint32_t startCue)> onStartCueChange;
     std::function<void (int cueSetIndex, uint32_t startCue)> onStartCueSetChange;
@@ -176,6 +179,7 @@ public:
     static inline const juce::Identifier RatePropertyId             { "rate" };
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
+    static inline const juce::Identifier SampleLengthPropertyId     { "sampleLength" };
     static inline const juce::Identifier SpeedPropertyId            { "speed" };
     static inline const juce::Identifier StartCuePropertyId         { "startCue" };
     static inline const juce::Identifier StepsPropertyId            { "steps" };

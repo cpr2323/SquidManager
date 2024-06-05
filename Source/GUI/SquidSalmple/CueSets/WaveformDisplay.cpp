@@ -30,8 +30,6 @@ void WaveformDisplay::init (juce::File theTestFile)
         audioBufferPtr = nullptr;
         jassertfalse;
     }
-
-    jassert (numSamples > 0);
 }
 
 void WaveformDisplay::setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd)

@@ -13,7 +13,7 @@ public:
 
 private:
     GuiProperties guiProperties;
-    SquidEditorComponent squidMetaDataEditorComponent;
+    SquidEditorComponent squidEditorComponent;
     CurrentFolderComponent currentFolderComponent;
 
     juce::TooltipWindow tooltipWindow;

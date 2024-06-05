@@ -868,7 +868,11 @@ void ChannelEditorComponent::filterTypeDataChanged (int filterType)
 
 void ChannelEditorComponent::filterFrequencyDataChanged (int filterFrequency)
 {
-    filterFrequencyTextEditor.setText (juce::String (filterFrequency), juce::NotificationType::dontSendNotification);
+    auto getFilterFrequencyUiValue = [] (int internalValue)
+    {
+        return (internalValue == 0 ? 99 : 98 - ((internalValue- 55) / 40));
+    };
+    filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue(filterFrequency)), juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::filterResonanceDataChanged (int filterResonance)
@@ -984,7 +988,12 @@ void ChannelEditorComponent::filterTypeUiChanged (int filter)
 
 void ChannelEditorComponent::filterFrequencyUiChanged (int filterFrequency)
 {
-    squidChannelProperties.setFilterFrequency (filterFrequency, false);
+    auto getFileterFrequencyInternalValue = [] (int uiValue)
+    {
+        const auto invertedValue = 99 - uiValue;
+        return (invertedValue == 0 ? 0 : 55 + ((invertedValue - 1) * 40));
+    };
+    squidChannelProperties.setFilterFrequency (getFileterFrequencyInternalValue (filterFrequency), false);
 }
 
 void ChannelEditorComponent::filterResonanceUiChanged (int filterResonance)

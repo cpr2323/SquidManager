@@ -3,13 +3,13 @@
 #include "SquidSalmpleDefs.h"
 #include "../SquidChannelProperties.h"
 
-bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce::File inputSampleFile, juce::File outputSampleFile)
+bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce::File inputSampleFile, juce::File outputSampleFile)
 {
     jassert (inputSampleFile != outputSampleFile);
 
     busyChunkData.setSize (SquidSalmple::DataLayout::kEndOfData, true);
 
-    SquidChannelProperties squidChannelProperties { squidMetaDataPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
+    SquidChannelProperties squidChannelProperties { squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
     setUInt32 (static_cast<uint32_t> (kSignatureAndVersionCurrent), SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset);
     setUInt16 (static_cast<uint16_t> (squidChannelProperties.getAttack ()), SquidSalmple::DataLayout::kAttackOffset);
     setUInt16 (static_cast<uint16_t> (squidChannelProperties.getChannelFlags ()), SquidSalmple::DataLayout::kChannelFlagsOffset);
@@ -28,6 +28,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidMetaDataPropertiesVT, juce
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getQuant ()), SquidSalmple::DataLayout::kQuantizeModeOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRate ()), SquidSalmple::DataLayout::kRateOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout::kReverseOffset);
+    setUInt32 (static_cast<uint32_t> (squidChannelProperties.getSampleLength ()), SquidSalmple::DataLayout::kSampleLengthOffset);
     setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout::kSpeedOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getStartCue ()), SquidSalmple::DataLayout::kSampleStartOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getSteps ()), SquidSalmple::DataLayout::kStepTrigNumOffset);

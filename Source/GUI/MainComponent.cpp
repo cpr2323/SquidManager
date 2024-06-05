@@ -12,8 +12,8 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
     guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
     RuntimeRootProperties runtimeRootProperties (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
 
-    addAndMakeVisible (squidMetaDataEditorComponent);
-    squidMetaDataEditorComponent.init (rootPropertiesVT);
+    addAndMakeVisible (squidEditorComponent);
+    squidEditorComponent.init (rootPropertiesVT);
     addAndMakeVisible (currentFolderComponent);
     currentFolderComponent.init (rootPropertiesVT);
 
@@ -37,5 +37,5 @@ void MainComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
     currentFolderComponent.setBounds (localBounds.removeFromTop (30));
-    squidMetaDataEditorComponent.setBounds (localBounds);
+    squidEditorComponent.setBounds (localBounds);
 }

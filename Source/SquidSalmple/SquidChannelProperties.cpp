@@ -5,6 +5,20 @@
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
+const constexpr char* kReserved1DataDefault { "4......." };
+const constexpr char* kReserved2DataDefault { "4......." };
+const constexpr char* kReserved3DataDefault { "2...." };
+const constexpr char* kReserved4DataDefault { "5........" };
+const constexpr char* kReserved5DataDefault { "5......P." };
+const constexpr char* kReserved6DataDefault { "2...." };
+const constexpr char* kReserved7DataDefault { "3....." };
+const constexpr char* kReserved8DataDefault { "12...........v+++++" };
+const constexpr char* kReserved9DataDefault { "80............................................................................................................" };
+const constexpr char* kReserved10DatDefault { "2.D.." };
+const constexpr char* kReserved11DatDefault { "1.B." };
+const constexpr char* kReserved12DatDefault { "2...." };
+const constexpr char* kReserved13DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
+
 void SquidChannelProperties::initValueTree ()
 {
     setAttack (0, false);
@@ -32,20 +46,19 @@ void SquidChannelProperties::initValueTree ()
     setSteps (0, false);
     setXfade (0, false);
 
-    // TODO - populate the reserved data with defaults
-    setReserved1Data ("");
-    setReserved2Data ("");
-    setReserved3Data ("");
-    setReserved4Data ("");
-    setReserved5Data ("");
-    setReserved6Data ("");
-    setReserved7Data ("");
-    setReserved8Data ("");
-    setReserved9Data ("");
-    setReserved10Data ("");
-    setReserved11Data ("");
-    setReserved12Data ("");
-    setReserved13Data ("");
+    setReserved1Data  (kReserved1DataDefault);
+    setReserved2Data  (kReserved2DataDefault);
+    setReserved3Data  (kReserved3DataDefault);
+    setReserved4Data  (kReserved4DataDefault);
+    setReserved5Data  (kReserved5DataDefault);
+    setReserved6Data  (kReserved6DataDefault);
+    setReserved7Data  (kReserved7DataDefault);
+    setReserved8Data  (kReserved8DataDefault);
+    setReserved9Data  (kReserved9DataDefault);
+    setReserved10Data (kReserved10DatDefault);
+    setReserved11Data (kReserved11DatDefault);
+    setReserved12Data (kReserved12DatDefault);
+    setReserved13Data (kReserved13DatDefault);
 
     // TODO - I can probably remove this, as it is just test code validating that getCvEnabledFlag works
     jassert (CvAssignedFlag::bits == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Bits));
@@ -344,6 +357,11 @@ void SquidChannelProperties::setReverse (int reverse, bool includeSelfCallback)
     setValue (reverse, ReversePropertyId, includeSelfCallback);
 }
 
+void SquidChannelProperties::setSampleLength (uint32_t sampleLength, bool includeSelfCallback)
+{
+    setValue (static_cast<int> (sampleLength), SampleLengthPropertyId, includeSelfCallback);
+}
+
 void SquidChannelProperties::setLevel (int level, bool includeSelfCallback)
 {
     setValue (level, LevelPropertyId, includeSelfCallback);
@@ -616,6 +634,11 @@ int SquidChannelProperties::getReverse ()
     return getValue<int> (ReversePropertyId);
 }
 
+uint32_t SquidChannelProperties::getSampleLength ()
+{
+    return static_cast<uint32_t> (getValue<int> (SampleLengthPropertyId));
+}
+
 int SquidChannelProperties::getLevel ()
 {
     return getValue<int> (LevelPropertyId);
@@ -741,13 +764,13 @@ juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
 
 void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
 {
-    SquidChannelProperties sourceMetaDataProperties (sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+    SquidChannelProperties sourceChannelProperties (sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
     // Copy CV Assigns
     for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
         for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
         {
-            auto srcParameterVT { sourceMetaDataProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+            auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
             auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
             const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
             const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
@@ -773,45 +796,45 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     });
 
     // Copy properties
-    setAttack (sourceMetaDataProperties.getAttack (), false);
-    setBits (sourceMetaDataProperties.getBits (), false);
-    setChannelFlags (sourceMetaDataProperties.getChannelFlags (), false);
-    setChannelSource (sourceMetaDataProperties.getChannelSource(), false);
-    setChoke (sourceMetaDataProperties.getChoke (), false);
-    setNumCueSets (sourceMetaDataProperties.getNumCueSets (), false);
-    setCurCueSet (sourceMetaDataProperties.getCurCueSet (), false);
-    setDecay (sourceMetaDataProperties.getDecay (), false);
-    setFileName (sourceMetaDataProperties.getFileName (), false);
-    setEndCue (sourceMetaDataProperties.getEndCue (), false);
-    setFilterFrequency (sourceMetaDataProperties.getFilterFrequency (), false);
-    setFilterResonance (sourceMetaDataProperties.getFilterResonance (), false);
-    setFilterType (sourceMetaDataProperties.getFilterType (), false);
-    setLoopCue (sourceMetaDataProperties.getLoopCue (), false);
-    setLoopMode (sourceMetaDataProperties.getLoopMode (), false);
-    setLevel (sourceMetaDataProperties.getLevel (), false);
-    setQuant (sourceMetaDataProperties.getQuant (), false);
-    setRate (sourceMetaDataProperties.getRate (), false);
-    setRecDest (sourceMetaDataProperties.getRecDest () , false);
-    setReverse (sourceMetaDataProperties.getReverse (), false);
-    setSpeed (sourceMetaDataProperties.getSpeed (), false);
-    setStartCue (sourceMetaDataProperties.getStartCue (), false);
-    setSteps (sourceMetaDataProperties.getSteps (), false);
-    setXfade (sourceMetaDataProperties.getXfade (), false);
+    setAttack (sourceChannelProperties.getAttack (), false);
+    setBits (sourceChannelProperties.getBits (), false);
+    setChannelFlags (sourceChannelProperties.getChannelFlags (), false);
+    setChannelSource (sourceChannelProperties.getChannelSource(), false);
+    setChoke (sourceChannelProperties.getChoke (), false);
+    setNumCueSets (sourceChannelProperties.getNumCueSets (), false);
+    setCurCueSet (sourceChannelProperties.getCurCueSet (), false);
+    setDecay (sourceChannelProperties.getDecay (), false);
+    setFileName (sourceChannelProperties.getFileName (), false);
+    setEndCue (sourceChannelProperties.getEndCue (), false);
+    setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
+    setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
+    setFilterType (sourceChannelProperties.getFilterType (), false);
+    setLoopCue (sourceChannelProperties.getLoopCue (), false);
+    setLoopMode (sourceChannelProperties.getLoopMode (), false);
+    setLevel (sourceChannelProperties.getLevel (), false);
+    setQuant (sourceChannelProperties.getQuant (), false);
+    setRate (sourceChannelProperties.getRate (), false);
+    setRecDest (sourceChannelProperties.getRecDest () , false);
+    setReverse (sourceChannelProperties.getReverse (), false);
+    setSpeed (sourceChannelProperties.getSpeed (), false);
+    setStartCue (sourceChannelProperties.getStartCue (), false);
+    setSteps (sourceChannelProperties.getSteps (), false);
+    setXfade (sourceChannelProperties.getXfade (), false);
 
     // Copy reserved data
-    setReserved1Data (sourceMetaDataProperties.getReserved1Data ());
-    setReserved2Data (sourceMetaDataProperties.getReserved2Data ());
-    setReserved3Data (sourceMetaDataProperties.getReserved3Data ());
-    setReserved4Data (sourceMetaDataProperties.getReserved4Data ());
-    setReserved5Data (sourceMetaDataProperties.getReserved5Data ());
-    setReserved6Data (sourceMetaDataProperties.getReserved6Data ());
-    setReserved7Data (sourceMetaDataProperties.getReserved7Data ());
-    setReserved8Data (sourceMetaDataProperties.getReserved8Data ());
-    setReserved9Data (sourceMetaDataProperties.getReserved9Data ());
-    setReserved10Data (sourceMetaDataProperties.getReserved10Data ());
-    setReserved11Data (sourceMetaDataProperties.getReserved11Data ());
-    setReserved12Data (sourceMetaDataProperties.getReserved12Data ());
-    setReserved13Data (sourceMetaDataProperties.getReserved13Data ());
+    setReserved1Data (sourceChannelProperties.getReserved1Data ());
+    setReserved2Data (sourceChannelProperties.getReserved2Data ());
+    setReserved3Data (sourceChannelProperties.getReserved3Data ());
+    setReserved4Data (sourceChannelProperties.getReserved4Data ());
+    setReserved5Data (sourceChannelProperties.getReserved5Data ());
+    setReserved6Data (sourceChannelProperties.getReserved6Data ());
+    setReserved7Data (sourceChannelProperties.getReserved7Data ());
+    setReserved8Data (sourceChannelProperties.getReserved8Data ());
+    setReserved9Data (sourceChannelProperties.getReserved9Data ());
+    setReserved10Data (sourceChannelProperties.getReserved10Data ());
+    setReserved11Data (sourceChannelProperties.getReserved11Data ());
+    setReserved12Data (sourceChannelProperties.getReserved12Data ());
+    setReserved13Data (sourceChannelProperties.getReserved13Data ());
 }
 
 juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
@@ -970,6 +993,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onReverseChange != nullptr)
                 onReverseChange (getReverse ());
+        }
+        else if (property == SampleLengthPropertyId)
+        {
+            if (onSampleLengthChange != nullptr)
+                onSampleLengthChange (getSampleLength());
         }
         else if (property == SpeedPropertyId)
         {

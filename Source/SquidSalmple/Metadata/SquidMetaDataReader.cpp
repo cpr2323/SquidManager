@@ -83,6 +83,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
         uint16_t frequencyAndType { getValue <SquidSalmple::DataLayout::kCutoffFrequencySize> (SquidSalmple::DataLayout::kCutoffFrequencyOffset) };
         squidChannelProperties.setFilterType (frequencyAndType & 0x000F, false);
         squidChannelProperties.setFilterFrequency (frequencyAndType >> 4, false);
+        LogReader ("filter frequency: " + juce::String(squidChannelProperties.getFilterFrequency()));
         squidChannelProperties.setFilterResonance (getValue <SquidSalmple::DataLayout::kResonanceSize> (SquidSalmple::DataLayout::kResonanceOffset), false);
         squidChannelProperties.setLevel (getValue <SquidSalmple::DataLayout::kLevelSize> (SquidSalmple::DataLayout::kLevelOffset), false);
         squidChannelProperties.setLoopCue (getValue <SquidSalmple::DataLayout::kLoopPositionSize> (SquidSalmple::DataLayout::kLoopPositionOffset), false);
@@ -91,6 +92,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
         squidChannelProperties.setRate (getValue <SquidSalmple::DataLayout::kRateSize> (SquidSalmple::DataLayout::kRateOffset), false);
         squidChannelProperties.setRecDest (getValue <SquidSalmple::DataLayout::kRecDestSize> (SquidSalmple::DataLayout::kRecDestOffset), false);
         squidChannelProperties.setReverse (getValue <SquidSalmple::DataLayout::kReverseSize> (SquidSalmple::DataLayout::kReverseOffset), false);
+        squidChannelProperties.setSampleLength (getValue <SquidSalmple::DataLayout::kSampleLengthSize> (SquidSalmple::DataLayout::kSampleLengthOffset), false);
         squidChannelProperties.setSpeed (getValue <SquidSalmple::DataLayout::kSpeedSize> (SquidSalmple::DataLayout::kSpeedOffset), false);
         squidChannelProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
         squidChannelProperties.setSteps (getValue<SquidSalmple::DataLayout::kStepTrigNumSize> (SquidSalmple::DataLayout::kStepTrigNumOffset), false);
@@ -117,13 +119,11 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
 
         ////////////////////////////////////
         // cue sets
-        const auto playPosition { getValue <SquidSalmple::DataLayout::k_Reserved2Size> (SquidSalmple::DataLayout::k_Reserved2Offset) };
-        const auto endOfSample { getValue <SquidSalmple::DataLayout::kEndOfSampleSize> (SquidSalmple::DataLayout::kEndOfSampleOffset) };
-        auto logCueSet = [this, numSamples] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
+        auto logCueSet = [this, numSamples = squidChannelProperties.getSampleLength ()] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
         {
             LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
                 juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
-            jassert (startCue <= loopCue && loopCue < endCue);
+            jassert ((startCue <= loopCue && loopCue < endCue) || (numSamples == 0 && startCue == 0 && loopCue == 0 && endCue == 0));
         };
 
         const auto numCues { getValue <SquidSalmple::DataLayout::kCuesCountSize> (SquidSalmple::DataLayout::kCuesCountOffset) };
@@ -174,9 +174,16 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
         squidChannelProperties.setChoke (channelIndex, false);
         squidChannelProperties.setRecDest (channelIndex, false);
 
-        // TODO - now I need to init the default 'reserved' data
+        // TODO - double check that none of the reserved data is now I need to init the default 'reserved' data
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);
+
+    // TODO - remove test code
+//     auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
+//     auto squidMetaDataXmlFile { sampleFile.withFileExtension(".xml") };
+//     xmlToWrite->writeTo (squidMetaDataXmlFile, {});
+    // TEST CODE
+
     return squidChannelProperties.getValueTree ();
 }
