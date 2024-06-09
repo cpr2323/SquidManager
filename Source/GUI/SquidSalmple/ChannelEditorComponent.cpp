@@ -870,7 +870,7 @@ void ChannelEditorComponent::filterFrequencyDataChanged (int filterFrequency)
 {
     auto getFilterFrequencyUiValue = [] (int internalValue)
     {
-        return (internalValue == 0 ? 99 : 98 - ((internalValue- 55) / 40));
+        return (internalValue == 0 ? 99 : 98 - ((internalValue - 55) / 40));
     };
     filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue(filterFrequency)), juce::NotificationType::dontSendNotification);
 }
