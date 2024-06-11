@@ -197,6 +197,7 @@ public:
 
     static inline const juce::Identifier FolderTypeId { "Folder" };
     static inline const juce::Identifier NamePropertyId             { "name" };
+    static inline const juce::Identifier TypePropertyId             { "type" };
     static inline const juce::Identifier StatusPropertyId           { "status" };
     static inline const juce::Identifier CreationTimePropertyId     { "createTime" };
     static inline const juce::Identifier ModificationTimePropertyId { "modificationTime" };
@@ -211,6 +212,7 @@ public:
         juce::ValueTree fileVT { FolderTypeId };
         fileVT.setProperty (NamePropertyId, filePath, nullptr);
         fileVT.setProperty (StatusPropertyId, "unscanned", nullptr);
+        fileVT.setProperty (TypePropertyId, static_cast<int> (DirectoryDataProperties::TypeIndex::folder), nullptr);
         fileVT.setProperty (CreationTimePropertyId, createTime, nullptr);
         fileVT.setProperty (ModificationTimePropertyId, modificationTime, nullptr);
         return fileVT;
