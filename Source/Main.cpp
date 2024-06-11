@@ -139,6 +139,26 @@ public:
         // add the Preset Manager to the Runtime Root
         runtimeRootProperties.getValueTree ().addChild (bankManagerProperties.getValueTree (), -1, nullptr);
 
+        // setup the directory scanner
+        directoryValueTree.init (runtimeRootProperties.getValueTree ());
+        directoryDataProperties.wrap (directoryValueTree.getDirectoryDataPropertiesVT (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::no);
+        // debug tool for watching changes on the Directory Data Properties Value Tree
+        //directoryDataMonitor.assign (directoryDataProperties.getValueTreeRef ());
+
+        // SampleManager requires that the PresetManagerProperties and DirectoryDataProperties are initialized
+        sampleManager.init (rootProperties.getValueTree ());
+
+        // when the folder being viewed changes, signal the directory scanner to rescan
+        appProperties.onMostRecentFolderChange = [this] (juce::String folderName)
+            {
+                directoryDataProperties.setRootFolder (folderName, false);
+                directoryDataProperties.triggerStartScan (false);
+            };
+
+        // start the initial directory scan, based on the last accessed folder stored in the app properties
+        directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);
+        directoryDataProperties.triggerStartScan (false);
+
 // TEST CODE TO WRITE OUT empty SquidChannelProperties
 //         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 //         auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
@@ -261,6 +281,21 @@ public:
         SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
         systemServices.setSampleManager (&sampleManager);
         systemServices.setEditManager (&editManager);
+
+        directoryValueTree.setFileTypeIdentifier ([this] (juce::File file)
+        {
+            if (sampleManager.isSupportedAudioFile (file))
+                return DirectoryDataProperties::TypeIndex::audioFile;
+            return DirectoryDataProperties::TypeIndex::unknownFile;
+        });
+        directoryDataProperties.onRootScanComplete = [this] ()
+        {
+            juce::MessageManager::callAsync ([this] () { sampleManager.update (); });
+        };
+
+        // start the initial directory scan, based on the last accessed folder stored in the app properties
+        directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);
+        directoryDataProperties.triggerStartScan (false);
     }
 
     //==============================================================================

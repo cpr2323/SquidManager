@@ -24,11 +24,10 @@ public:
 
     enum TypeIndex
     {
-        folder,
-        systemFile,
-        presetFile,
-        audioFile,
         unknownFile,
+        folder,
+        systemFile, // module specific files, that aren't a preset
+        audioFile, // audio file that is the correct (enough) format for the module
         size
     };
 
@@ -54,12 +53,12 @@ public:
     juce::ValueTree getRootFolderVT ();
 
     static inline const juce::Identifier DirectoryDataTypeId { "DirectoryData" };
-    static inline const juce::Identifier ProgressPropertyId   { "progress" };
-    static inline const juce::Identifier RootFolderPropertyId { "rootFolder" };
+    static inline const juce::Identifier ProgressPropertyId         { "progress" };
+    static inline const juce::Identifier RootFolderPropertyId       { "rootFolder" };
     static inline const juce::Identifier RootScanCompletePropertyId { "rootScanComplete" };
-    static inline const juce::Identifier ScanDepthPropertyId  { "scanDepth" };
-    static inline const juce::Identifier StartScanPropertyId  { "startScan" };
-    static inline const juce::Identifier StatusPropertyId     { "status" };
+    static inline const juce::Identifier ScanDepthPropertyId        { "scanDepth" };
+    static inline const juce::Identifier StartScanPropertyId        { "startScan" };
+    static inline const juce::Identifier StatusPropertyId           { "status" };
 
     static inline const juce::Identifier DirectoryValueTreeTypeId { "directoryValueTree" };
 

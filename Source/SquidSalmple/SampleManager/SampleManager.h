@@ -15,6 +15,7 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
     juce::ValueTree getSampleProperties (int channelIndex);
     bool isSupportedAudioFile (juce::File file);
+    void update ();
 
 private:
     RuntimeRootProperties runtimeRootProperties;
@@ -46,7 +47,6 @@ private:
     void clear ();
     void handleSampleChange (int channelIndex, juce::String sampleName);
     SampleData& open (juce::String fileName);
-    void update ();
     void updateSample (juce::String fileName, SampleData& sampleData);
     void updateSampleProperties (juce::String fileName, SampleData& sampleData);
 };

@@ -35,12 +35,6 @@ void SampleManager::init (juce::ValueTree rootPropertiesVT)
         closeAllOpenSamples ();
         currentFolder = { juce::File (folderName) };
     };
-    // TODO - implement this once the DirectoryDataProperties is in place
-//     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
-//     directoryDataProperties.onRootScanComplete = [this] ()
-//     {
-//         juce::MessageManager::callAsync ([this] () { update (); });
-//     };
 
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
     SquidBankProperties squidBankProperties (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
