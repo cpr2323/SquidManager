@@ -142,7 +142,7 @@ public:
         // setup the directory scanner
         directoryValueTree.init (runtimeRootProperties.getValueTree ());
         directoryDataProperties.wrap (directoryValueTree.getDirectoryDataPropertiesVT (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::no);
-        directoryDataProperties.setScanDepth (1, false);
+        directoryDataProperties.setScanDepth (0, false);
         // debug tool for watching changes on the Directory Data Properties Value Tree
         //directoryDataMonitor.assign (directoryDataProperties.getValueTreeRef ());
 

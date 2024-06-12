@@ -6,7 +6,7 @@
 #include "../../../Utility/DirectoryDataProperties.h"
 #include "../../../Utility/LambdaThread.h"
 
-const auto kMaxPresets { 199 };
+const auto kMaxBanks { 99 };
 class BankListComponent : public juce::Component,
                             private juce::ListBoxModel,
                             private juce::Timer
@@ -25,17 +25,17 @@ private:
 //     PresetProperties unEditedPresetProperties;
 //     PresetProperties copyBufferPresetProperties;
 
-    juce::ToggleButton showAllPresets { "Show All" };
+    juce::ToggleButton showAllBanks { "Show All" };
     juce::ListBox presetListBox { {}, this };
-    std::array<std::tuple <int, bool, juce::String>, kMaxPresets> presetInfoList;
-    int numPresets { kMaxPresets };
+    std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
+    int numBanks { kMaxBanks };
     juce::File currentFolder;
     juce::File previousFolder;
     int lastSelectedPresetIndex { -1 };
-    LambdaThread checkPresetsThread { "CheckPresetsThread", 100 };
+    LambdaThread checkBanksThread { "CheckBanksThread", 100 };
 
     void copyPreset (int presetNumber);
-    void checkPresets ();
+    void checkBanks ();
     void deletePreset (int presetNumber);
     void exportPreset (int presetNumber);
     juce::File getPresetFile (int presetNumber);

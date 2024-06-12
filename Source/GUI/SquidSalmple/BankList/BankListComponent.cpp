@@ -8,32 +8,32 @@
 #include "../../../Utility/RuntimeRootProperties.h"
 #include "../../../Utility/WatchDogTimer.h"
 
-#define LOG_PRESET_LIST 0
-#if LOG_PRESET_LIST
-#define LogPresetList(text) DebugLog ("PresetListComponent", text);
+#define LOG_BANK_LIST 1
+#if LOG_BANK_LIST
+#define LogBankList(text) DebugLog ("BankListComponent", text);
 #else
-#define LogPresetList(text) ;
+#define LogBankList(text) ;
 #endif
 
 BankListComponent::BankListComponent ()
 {
-    showAllPresets.setToggleState (true, juce::NotificationType::dontSendNotification);
-    showAllPresets.setButtonText ("Show All");
-    showAllPresets.setTooltip ("Show all Presets, Show only existing presets");
-    showAllPresets.onClick = [this] () { checkPresetsThread.start (); };
-    addAndMakeVisible (showAllPresets);
+    showAllBanks.setToggleState (true, juce::NotificationType::dontSendNotification);
+    showAllBanks.setButtonText ("Show All");
+    showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
+    showAllBanks.onClick = [this] () { checkBanksThread.start (); };
+    addAndMakeVisible (showAllBanks);
     addAndMakeVisible (presetListBox);
 
-    checkPresetsThread.onThreadLoop = [this] ()
+    checkBanksThread.onThreadLoop = [this] ()
     {
-        checkPresets ();
+        checkBanks ();
         return false;
     };
 }
 
 void BankListComponent::init (juce::ValueTree rootPropertiesVT)
 {
-    LogPresetList ("PresetListComponent::init");
+    LogBankList ("BankListComponent::init");
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::no);
 
@@ -41,15 +41,15 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
-        LogPresetList ("PresetListComponent::init - directoryDataProperties.onRootScanComplete");
-        if (! checkPresetsThread.isThreadRunning ())
+        LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete");
+        if (! checkBanksThread.isThreadRunning ())
         {
-            LogPresetList ("PresetListComponent::init - directoryDataProperties.onRootScanComplete - starting thread");
-            checkPresetsThread.startThread ();
+            LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete - starting thread");
+            checkBanksThread.startThread ();
         }
         else
         {
-            LogPresetList ("PresetListComponent::init - directoryDataProperties.onRootScanComplete - starting timer");
+            LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete - starting timer");
             startTimer (1);
         }
     };
@@ -80,7 +80,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
 //     unEditedPresetProperties.wrap (presetManagerProperties.getPreset ("unedited"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
 //     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
 
-    checkPresetsThread.startThread ();
+    checkBanksThread.startThread ();
 }
 
 void BankListComponent::forEachPresetFile (std::function<bool (juce::File presetFile, int index)> presetFileCallback)
@@ -116,59 +116,58 @@ void BankListComponent::forEachPresetFile (std::function<bool (juce::File preset
 #endif
 }
 
-void BankListComponent::checkPresets ()
+void BankListComponent::checkBanks ()
 {
-#if 0
     WatchdogTimer timer;
     timer.start (100000);
 
     FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
     currentFolder = juce::File (rootFolder.getName ());
 
-    const auto showAll { showAllPresets.getToggleState () };
+    const auto showAll { showAllBanks.getToggleState () };
 
-    // clear preset info list
-    for (auto curPresetInfoIndex { 0 }; curPresetInfoIndex < presetInfoList.size (); ++curPresetInfoIndex)
-        presetInfoList[curPresetInfoIndex] = { curPresetInfoIndex + 1, false, "" };
+    // clear bank info list
+    for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
+        bankInfoList[curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
 
     if (showAll)
-        numPresets = kMaxPresets;
+        numBanks = kMaxBanks;
     else
-        numPresets = 0;
-    auto inPresetList { false };
-    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, &inPresetList, showAll] (juce::ValueTree child)
+        numBanks = 0;
+    auto inBankList { false };
+    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, &inBankList, showAll] (juce::ValueTree child)
     {
-        if (FileProperties::isFileVT (child))
+        if (FolderProperties::isFolderVT (child))
         {
-            FileProperties fileProperties (child, FileProperties::WrapperType::client, FileProperties::EnableCallbacks::no);
-            if (fileProperties.getType () == DirectoryDataProperties::TypeIndex::presetFile)
+            FolderProperties folderProperties (child, FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+            const auto folderName { juce::File (folderProperties.getName ()).getFileName () };
+            const auto bankId { folderName.substring (5).getIntValue () };
+            if (folderName.substring(0, 4) == "Bank" && bankId > 0 && bankId < 100)
             {
-                inPresetList = true;
-                const auto fileToCheck { juce::File (fileProperties.getName ()) };
-                const auto presetIndex { FileTypeHelpers::getPresetNumberFromName (fileToCheck) - 1 };
+                inBankList = true;
+                const auto fileToCheck { juce::File (folderProperties.getName ()) };
 
-                if (presetIndex >= kMaxPresets)
-                    return true;
-                juce::String presetName;
-                juce::StringArray fileContents;
-                fileToCheck.readLines (fileContents);
-                Assimil8orPreset assimil8orPreset;
-                assimil8orPreset.parse (fileContents);
-                PresetProperties thisPresetProperties (assimil8orPreset.getPresetVT (), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::no);
-                presetName = thisPresetProperties.getName ();
+                auto infoTxtFile { fileToCheck.getChildFile ("info.txt") };
+                auto bankName { juce::String () };
+                // read bank name if file exists
+                if (infoTxtFile.exists ())
+                {
+                    auto infoTxtInputStream { infoTxtFile.createInputStream () };
+                    bankName = infoTxtInputStream->readNextLine ().substring(0, 11);
+                }
 
                 if (showAll)
-                    presetInfoList [presetIndex] = { presetIndex + 1 , true, presetName };
+                    bankInfoList [bankId - 1] = { bankId, true, bankName};
                 else
                 {
-                    presetInfoList [numPresets] = { presetIndex + 1, true, presetName };
-                    ++numPresets;
+                    bankInfoList [numBanks] = { bankId, true, bankName};
+                    ++numBanks;
                 }
             }
             else
             {
                 // if the entry is not a preset file, but we had started processing preset files, then we are done, because the files are sorted by type
-                if (inPresetList)
+                if (inBankList)
                     return false;
             }
         }
@@ -188,7 +187,6 @@ void BankListComponent::checkPresets ()
     previousFolder = currentFolder;
 
     //juce::Logger::outputDebugString ("PresetListComponent::checkPresets - elapsed time: " + juce::String (timer.getElapsedTime ()));
-#endif
 }
 
 void BankListComponent::loadFirstPreset ()
@@ -265,18 +263,18 @@ void BankListComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
     auto toolRow { localBounds.removeFromTop (25) };
-    showAllPresets.setBounds (toolRow.removeFromLeft (100));
+    showAllBanks.setBounds (toolRow.removeFromLeft (100));
     presetListBox.setBounds (localBounds);
 }
 
 int BankListComponent::getNumRows ()
 {
-    return numPresets;
+    return numBanks;
 }
 
 void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width, int height, bool rowIsSelected)
 {
-    if (row < numPresets)
+    if (row < numBanks)
     {
         juce::Colour textColor;
         juce::Colour rowColor;
@@ -291,14 +289,14 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
             rowColor = juce::Colours::black;
             textColor = juce::Colours::whitesmoke;
         }
-        auto [presetNumber, thisPresetExists, presetName] { presetInfoList [row] };
+        auto [presetNumber, thisPresetExists, presetName] { bankInfoList [row] };
         if (thisPresetExists)
         {
 
         }
         else
         {
-            presetName = "(preset)";
+            presetName = "(bank)";
             textColor = textColor.withAlpha (0.5f);
         }
         g.setColour (rowColor);
