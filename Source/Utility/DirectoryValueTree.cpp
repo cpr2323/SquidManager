@@ -490,10 +490,27 @@ void DirectoryValueTree::sortContentsOfFolder (juce::ValueTree rootFolderVT, std
                 sections [curSectionIndex].startIndex = sections [curSectionIndex - 1].startIndex + sections [curSectionIndex - 1].length;
         };
 
-        const auto fileName { getEntryName (rootFolderVT.getChild (itemIndex)).toLowerCase () };
+        auto fileName { juce::File (getEntryName (rootFolderVT.getChild (itemIndex))).getFileName().toLowerCase () };
+        auto bankId { 0 };
+        auto temp { fileName.substring (0, 5) };
+        if (sectionIndex == DirectoryDataProperties::TypeIndex::folder && fileName.substring (0, 5) == "bank ")
+        {
+            bankId = fileName.substring (5).getIntValue ();
+            if (bankId > 0)
+                fileName = "bank ";
+        }
         for (auto sectionEntryIndex { section.startIndex }; sectionEntryIndex < section.startIndex + section.length; ++sectionEntryIndex)
         {
-            if (fileName < getEntryName (rootFolderVT.getChild (sectionEntryIndex)).toLowerCase ())
+            auto fileToCompareVT { rootFolderVT.getChild (sectionEntryIndex) };
+            auto fileNameToCompare { juce::File (getEntryName (fileToCompareVT)).getFileName().toLowerCase () };
+            auto bankIdToCompare { 0 };
+            if (fileToCompareVT.getType ().toString () == "Folder" && fileNameToCompare.substring (0, 5) == "bank ")
+            {
+                bankIdToCompare = fileNameToCompare.substring (5).getIntValue ();
+                if (bankIdToCompare > 0)
+                    fileNameToCompare = "bank ";
+            }
+            if (fileName < fileNameToCompare || (fileName == fileNameToCompare && bankId < bankIdToCompare))
             {
                 insertItem (itemIndex, sectionEntryIndex);
                 break;
