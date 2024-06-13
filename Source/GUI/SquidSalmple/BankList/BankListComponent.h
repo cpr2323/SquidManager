@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 #include "../../../AppProperties.h"
-//#include "../../../Assimil8or/Preset/PresetProperties.h"
+#include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../Utility/DirectoryDataProperties.h"
 #include "../../../Utility/LambdaThread.h"
 
@@ -16,36 +16,35 @@ public:
     ~BankListComponent () = default;
     void init (juce::ValueTree rootPropertiesVT);
 
-    std::function<void (std::function<void ()>, std::function<void ()>)> overwritePresetOrCancel;
+    std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
 
 private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
+    EditManager* editManager;
 //     PresetProperties presetProperties;
 //     PresetProperties unEditedPresetProperties;
 //     PresetProperties copyBufferPresetProperties;
 
     juce::ToggleButton showAllBanks { "Show All" };
-    juce::ListBox presetListBox { {}, this };
+    juce::ListBox bankListBox { {}, this };
     std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
     int numBanks { kMaxBanks };
     juce::File currentFolder;
     juce::File previousFolder;
-    int lastSelectedPresetIndex { -1 };
+    int lastSelectedBankIndex { -1 };
     LambdaThread checkBanksThread { "CheckBanksThread", 100 };
 
-    void copyPreset (int presetNumber);
+    void copyBank (int bankNumber);
     void checkBanks ();
-    void deletePreset (int presetNumber);
-    void exportPreset (int presetNumber);
-    juce::File getPresetFile (int presetNumber);
-    void forEachPresetFile (std::function<bool (juce::File presetFile, int index)> presetFileCallback);
-    void importPreset (int presetNumber);
-    void loadPresetFile (juce::File presetFile, juce::ValueTree vt);
+    void deleteBank (int bankNumber);
+    juce::File getBankDirectory (int bankNumber);
+    void forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback);
+    void loadBankDirectory (juce::File bankDirectory, juce::ValueTree vt);
     void loadDefault (int row);
-    void loadFirstPreset ();
-    void loadPreset (juce::File presetFile);
-    void pastePreset (int presetNumber);
+    void loadFirstBank ();
+    void loadBank (juce::File bankDirectory);
+    void pasteBank (int bankNumber);
 
     void resized () override;
     int getNumRows () override;

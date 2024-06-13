@@ -3,6 +3,7 @@
 // #include "../../../Assimil8or/FileTypeHelpers.h"
 // #include "../../../Assimil8or/PresetManagerProperties.h"
 // #include "../../../Assimil8or/Preset/ParameterPresetsSingleton.h"
+#include "../../../SystemServices.h"
 #include "../../../Utility/DebugLog.h"
 #include "../../../Utility/PersistentRootProperties.h"
 #include "../../../Utility/RuntimeRootProperties.h"
@@ -22,7 +23,7 @@ BankListComponent::BankListComponent ()
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { checkBanksThread.start (); };
     addAndMakeVisible (showAllBanks);
-    addAndMakeVisible (presetListBox);
+    addAndMakeVisible (bankListBox);
 
     checkBanksThread.onThreadLoop = [this] ()
     {
@@ -38,6 +39,9 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::no);
 
     RuntimeRootProperties runtimeRootProperties (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    editManager = systemServices.getEditManager ();
+
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
@@ -83,7 +87,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     checkBanksThread.startThread ();
 }
 
-void BankListComponent::forEachPresetFile (std::function<bool (juce::File presetFile, int index)> presetFileCallback)
+void BankListComponent::forEachBankDirectory (std::function<bool (juce::File presetFile, int index)> presetFileCallback)
 {
 #if 0
     jassert (presetFileCallback != nullptr);
@@ -176,20 +180,20 @@ void BankListComponent::checkBanks ()
 
     juce::MessageManager::callAsync ([this, newFolder = (currentFolder != previousFolder)] ()
     {
-        presetListBox.updateContent ();
+        bankListBox.updateContent ();
         if (newFolder)
         {
-            presetListBox.scrollToEnsureRowIsOnscreen (0);
-            loadFirstPreset ();
+            bankListBox.scrollToEnsureRowIsOnscreen (0);
+            loadFirstBank ();
         }
-        presetListBox.repaint ();
+        bankListBox.repaint ();
     });
     previousFolder = currentFolder;
 
     //juce::Logger::outputDebugString ("PresetListComponent::checkPresets - elapsed time: " + juce::String (timer.getElapsedTime ()));
 }
 
-void BankListComponent::loadFirstPreset ()
+void BankListComponent::loadFirstBank ()
 {
 #if 0
     LogPresetList ("PresetListComponent::loadFirstPreset");
@@ -222,6 +226,7 @@ void BankListComponent::loadFirstPreset ()
 
 void BankListComponent::loadDefault (int row)
 {
+    jassertfalse;
 #if 0
     PresetProperties::copyTreeProperties (ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType),
                                           presetProperties.getValueTree ());
@@ -231,7 +236,7 @@ void BankListComponent::loadDefault (int row)
 #endif
 }
 
-void BankListComponent::loadPresetFile (juce::File presetFile, juce::ValueTree presetPropertiesVT)
+void BankListComponent::loadBankDirectory (juce::File presetFile, juce::ValueTree presetPropertiesVT)
 {
 #if 0
     juce::StringArray fileContents;
@@ -251,12 +256,9 @@ void BankListComponent::loadPresetFile (juce::File presetFile, juce::ValueTree p
 #endif
 }
 
-void BankListComponent::loadPreset (juce::File presetFile)
+void BankListComponent::loadBank (juce::File presetFile)
 {
-#if 0
-    loadPresetFile (presetFile, presetProperties.getValueTree ());
-    PresetProperties::copyTreeProperties (presetProperties.getValueTree (), unEditedPresetProperties.getValueTree ());
-#endif
+    editManager->loadBank (presetFile);
 }
 
 void BankListComponent::resized ()
@@ -264,7 +266,7 @@ void BankListComponent::resized ()
     auto localBounds { getLocalBounds () };
     auto toolRow { localBounds.removeFromTop (25) };
     showAllBanks.setBounds (toolRow.removeFromLeft (100));
-    presetListBox.setBounds (localBounds);
+    bankListBox.setBounds (localBounds);
 }
 
 int BankListComponent::getNumRows ()
@@ -280,7 +282,7 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         juce::Colour rowColor;
         if (rowIsSelected)
         {
-            lastSelectedPresetIndex = row;
+            lastSelectedBankIndex = row;
             rowColor = juce::Colours::darkslategrey;
             textColor = juce::Colours::yellow;
         }
@@ -325,12 +327,12 @@ juce::String BankListComponent::getTooltipForRow (int row)
     return "Preset " + juce::String (row + 1);
 }
 
-void BankListComponent::copyPreset (int presetNumber)
+void BankListComponent::copyBank (int presetNumber)
 {
 //    loadPresetFile (getPresetFile (presetNumber), copyBufferPresetProperties.getValueTree ());
 }
 
-void BankListComponent::pastePreset (int presetNumber)
+void BankListComponent::pasteBank (int presetNumber)
 {
 #if 0
     auto doPaste = [this, presetNumber] ()
@@ -366,7 +368,7 @@ void BankListComponent::pastePreset (int presetNumber)
 #endif
 }
 
-void BankListComponent::deletePreset (int presetNumber)
+void BankListComponent::deleteBank (int presetNumber)
 {
 #if 0
     juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE PRESET", "Are you sure you want to delete '" + FileTypeHelpers::getPresetFileName (presetNumber) + "'", "YES", "NO", nullptr,
@@ -389,17 +391,18 @@ void BankListComponent::deletePreset (int presetNumber)
 #endif
 }
 
-juce::File BankListComponent::getPresetFile (int presetNumber)
+juce::File BankListComponent::getBankDirectory (int bankNumber)
 {
-//    return currentFolder.getChildFile (FileTypeHelpers::getPresetFileName (presetNumber)).withFileExtension (".yml");
-    return {};
+    jassert (bankNumber > 0 && bankNumber <= kMaxBanks);
+    const auto bankDirectory { "Bank " + juce::String (bankNumber) };
+    return currentFolder.getChildFile (bankDirectory);
 }
 
 void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce::MouseEvent& me)
 {
-#if 0
     if (me.mods.isPopupMenu ())
     {
+#if 0
         presetListBox.selectRow (lastSelectedPresetIndex, false, true);
         auto [presetNumber, thisPresetExists, presetName] { presetInfoList [row] };
         if (! thisPresetExists)
@@ -415,35 +418,36 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         pm.addItem ("Paste", copyBufferPresetProperties.getName ().isNotEmpty (), false, [this, presetNumber = presetNumber] () { pastePreset (presetNumber); });
         pm.addItem ("Delete", thisPresetExists, false, [this, presetNumber = presetNumber] () { deletePreset (presetNumber); });
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+#endif
     }
     else
     {
         // don't reload the currently loaded preset
-        if (row == lastSelectedPresetIndex)
+        if (row == lastSelectedBankIndex)
             return;
 
         auto completeSelection = [this, row] ()
         {
-            auto [presetNumber, thisPresetExists, presetName] { presetInfoList [row] };
-            auto presetFile { getPresetFile (presetNumber) };
-            if (thisPresetExists)
-                loadPreset (presetFile);
+            auto [bankNumber, thisBankExists, presetName] { bankInfoList [row] };
+            auto bankDirectory { getBankDirectory (bankNumber) };
+            if (thisBankExists)
+                loadBank (bankDirectory);
             else
                 loadDefault (row);
-            presetListBox.selectRow (row, false, true);
-            presetListBox.scrollToEnsureRowIsOnscreen (row);
-            appProperties.addRecentlyUsedFile (presetFile.getFullPathName ());
+            bankListBox.selectRow (row, false, true);
+            bankListBox.scrollToEnsureRowIsOnscreen (row);
+            // TODO - should this be done in EditManager::loadBank
+            appProperties.addRecentlyUsedFile (bankDirectory.getFullPathName ());
         };
 
-        if (overwritePresetOrCancel != nullptr)
+        if (overwriteBankOrCancel != nullptr)
         {
-            presetListBox.selectRow (lastSelectedPresetIndex, false, true);
-            overwritePresetOrCancel (completeSelection, [this] () {});
+            bankListBox.selectRow (lastSelectedBankIndex, false, true);
+            overwriteBankOrCancel (completeSelection, [this] () {});
         }
         else
         {
             completeSelection ();
         }
     }
-#endif
 }

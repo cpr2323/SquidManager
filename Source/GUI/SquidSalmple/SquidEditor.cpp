@@ -52,24 +52,25 @@ SquidEditorComponent::SquidEditorComponent ()
     };
     addAndMakeVisible (saveButton);
 
-    // TODO - the load button will eventually be removed, as loading will be done via a file system/bank browser
-    // LOAD BUTTON
-    loadButton.setButtonText ("LOAD");
-    loadButton.onClick = [this] ()
+    // TOOLS BUTTON
+    toolsButton.setButtonText ("TOOLS");
+    toolsButton.onClick = [this] ()
     {
-        fileChooser.reset (new juce::FileChooser ("Please select the bank directory to load...", {}, ""));
-        fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories, [this] (const juce::FileChooser& fc) mutable
-        {
-            if (fc.getURLResults ().size () == 1 && fc.getURLResults () [0].isLocalFile ())
-            {
-                auto bankDirectoryToLoad { fc.getURLResults () [0].getLocalFile () };
-                appProperties.addRecentlyUsedFile (bankDirectoryToLoad.getFullPathName ());
-                jassert (editManager != nullptr);
-                editManager->loadBank (bankDirectoryToLoad);
-            }
-        }, nullptr);
+        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
+        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
+        juce::PopupMenu pm;
+        pm.setLookAndFeel (popupMenuLnF);
+        pm.addSectionHeader ("Bank");
+        pm.addSeparator ();
+
+        pm.addItem ("Import", false, false, [this] () { /*importBank ();*/ });
+        pm.addItem ("Export", false, false, [this] () { /*exportBank ();*/ });
+        pm.addItem ("Default", false, false, [this] () { /*setBankToDefaults ();*/ });
+        pm.addItem ("Revert", false, false, [this] () { /*revertBank ();*/ });
+
+        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
     };
-    addAndMakeVisible (loadButton);
+    addAndMakeVisible (toolsButton);
 
     // CHANNEL TABS
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
@@ -78,10 +79,8 @@ SquidEditorComponent::SquidEditorComponent ()
     }
     addAndMakeVisible (channelTabs);
 
-    // TODO - remove eventually
-    // the Channel tabs are overlaying the Load button (which will be removed eventually, as loading will be done via a file system/bank browser
-    // but for now we will just move the load button to front
-    loadButton.toFront (false);
+    // the Channel tabs are overlaying the Tools button, move the load button to front
+    toolsButton.toFront (false);
 
     // timer to set enabled state of the save button based on if the bank data has changed
     startTimer (250);
@@ -136,7 +135,7 @@ void SquidEditorComponent::resized ()
     bankNameEditor.setBounds (topRowBounds.removeFromLeft (80));
     topRowBounds.removeFromRight (5);
     saveButton.setBounds (topRowBounds.removeFromRight (80));
-    loadButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
+    toolsButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
 
     const auto channelSectionY { saveButton.getBottom () + 3 };
     const auto kWidthOfWaveformEditor { 962 };

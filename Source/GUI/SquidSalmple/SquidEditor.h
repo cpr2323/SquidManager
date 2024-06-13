@@ -22,14 +22,12 @@ private:
     SquidBankProperties unEditedSquidBankProperties;
     EditManager* editManager { nullptr };
 
-    juce::TabbedComponent channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
-
-    std::unique_ptr<juce::FileChooser> fileChooser;
-
     juce::Label bankNameLabel;
     juce::TextEditor bankNameEditor;
-    juce::TextButton loadButton;
     juce::TextButton saveButton;
+    juce::TextButton toolsButton;
+    juce::TabbedComponent channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     std::array<ChannelEditorComponent, 8> channelEditorComponents;
 
