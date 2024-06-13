@@ -149,6 +149,16 @@ public:
     }
 };
 
+class CustomTextEditorInt32 : public CustomTextEditor<juce::int32>
+{
+public:
+    CustomTextEditorInt32 ()
+    {
+        onFocusLost = [this] () { setValue (getText ().getIntValue ()); };
+        onReturnKey = [this] () { setValue (getText ().getIntValue ()); };
+    }
+};
+
 class CustomTextEditorInt64 : public CustomTextEditor<juce::int64>
 {
 public:

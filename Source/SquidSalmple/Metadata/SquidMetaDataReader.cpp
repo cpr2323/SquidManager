@@ -11,19 +11,9 @@
 #define LogReader(text) ;
 #endif
 
-juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelIndex)
+juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, uint8_t channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
-
-    auto numSamples { 0 };
-    {
-        juce::AudioFormatManager audioFormatManager;
-        audioFormatManager.registerBasicFormats ();
-        if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
-        {
-            numSamples = sampleFileReader->lengthInSamples;
-        }
-    }
 
     SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
@@ -133,7 +123,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
         logCueSet (0, squidChannelProperties.getStartCue (), squidChannelProperties.getLoopCue (), squidChannelProperties.getEndCue ());
 
         LogReader ("read - Cue List: " + juce::String (numCues));
-        for (auto curCueSetIndex { 0 }; curCueSetIndex < numCues; ++curCueSetIndex)
+        for (uint8_t curCueSetIndex { 0 }; curCueSetIndex < numCues; ++curCueSetIndex)
         {
             const auto cueSetOffset { SquidSalmple::DataLayout::kCuesOffset + (curCueSetIndex * 12) };
             const auto startCue { getValue <4> (cueSetOffset + 0) };
@@ -168,13 +158,23 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, int channelInd
     }
     else
     {
+        auto numSamples = [&sampleFile] ()
+        {
+            juce::AudioFormatManager audioFormatManager;
+            audioFormatManager.registerBasicFormats ();
+            if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
+                return sampleFileReader->lengthInSamples;
+            else
+                return 0LL;
+        } ();
+
         LogReader (sampleFile.getFileName() + " does not contain meta-data");
+        // initialize parameters that have defaults related to specific channel or sample
         squidChannelProperties.setChannelIndex (channelIndex, false);
         squidChannelProperties.setChannelSource (channelIndex, false);
         squidChannelProperties.setChoke (channelIndex, false);
+        squidChannelProperties.setSampleLength (static_cast<uint32_t> (numSamples * 2), false);
         squidChannelProperties.setRecDest (channelIndex, false);
-
-        // TODO - double check that none of the reserved data is now I need to init the default 'reserved' data
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);

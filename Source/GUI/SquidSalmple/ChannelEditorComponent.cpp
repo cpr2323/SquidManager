@@ -115,9 +115,9 @@ void ChannelEditorComponent::setupComponents ()
     channelSourceComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setChannelSource (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1), true);
+        squidChannelProperties.setChannelSource (static_cast<uint8_t>(std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
     };
-    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (channelSourceComboBox.getSelectedItemIndex ()); });
+    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t>(channelSourceComboBox.getSelectedItemIndex ())); });
 
     // BITS
     setupLabel (bitsLabel, "BITS", kMediumLabelSize, juce::Justification::centred);
@@ -332,8 +332,8 @@ void ChannelEditorComponent::setupComponents ()
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
     startCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
-    startCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
-    startCueTextEditor.updateDataCallback = [this] (juce::int64 value) { startCueUiChanged (value); };
+    startCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
+    startCueTextEditor.updateDataCallback = [this] (juce::int32 value) { startCueUiChanged (value); };
     startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
@@ -353,8 +353,8 @@ void ChannelEditorComponent::setupComponents ()
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
     loopCueTextEditor.getMinValueCallback = [this] () { return 0; };
     loopCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
-    loopCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
-    loopCueTextEditor.updateDataCallback = [this] (juce::int64 value) { loopCueUiChanged (value); };
+    loopCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
+    loopCueTextEditor.updateDataCallback = [this] (juce::int32 value) { loopCueUiChanged (value); };
     loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
@@ -374,8 +374,8 @@ void ChannelEditorComponent::setupComponents ()
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
     endCueTextEditor.getMinValueCallback = [this] () { return 0; };
     endCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
-    endCueTextEditor.toStringCallback = [this] (juce::int64 value) { return juce::String (value); };
-    endCueTextEditor.updateDataCallback = [this] (juce::int64 value) { endCueUiChanged (value); };
+    endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
+    endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };
     endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
@@ -441,12 +441,12 @@ void ChannelEditorComponent::setupComponents ()
         auto disableAltOut = [this] ()
         {
             const auto offFlag { ~ChannelFlags::kNeighborOutput };
-            const auto newFlags { squidChannelProperties.getChannelFlags () & offFlag };
+            const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () & offFlag) };
             squidChannelProperties.setChannelFlags (newFlags, false);
         };
         auto enableAltOut = [this] ()
         {
-            const auto newFlags { squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput };
+            const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput) };
             squidChannelProperties.setChannelFlags (newFlags, false);
         };
         if (channelIndex < 2) // 1-2
@@ -559,23 +559,23 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (cvAssignViewButton);
 
     // WAVEFORM DISPLAY
-    waveformDisplay.onStartPointChange = [this] (int startPoint)
+    waveformDisplay.onStartPointChange = [this] (juce::int64 startPoint)
     {
-        const auto startCueByteOffset { startPoint * 2 };
+        const auto startCueByteOffset { static_cast<int>(startPoint * 2) };
         //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
         squidChannelProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidChannelProperties.getLoopCueSet (curCueSetIndex), squidChannelProperties.getEndCueSet (curCueSetIndex));
         squidChannelProperties.setStartCue (startCueByteOffset, true);
     };
-    waveformDisplay.onLoopPointChange = [this] (int loopPoint)
+    waveformDisplay.onLoopPointChange = [this] (juce::int64 loopPoint)
     {
-        const auto loopCueByteOffset { loopPoint * 2 };
+        const auto loopCueByteOffset { static_cast<int>(loopPoint * 2) };
         //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
         squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidChannelProperties.getEndCueSet (curCueSetIndex));
         squidChannelProperties.setLoopCue (loopCueByteOffset, true);
     };
-    waveformDisplay.onEndPointChange = [this] (int endPoint)
+    waveformDisplay.onEndPointChange = [this] (juce::int64 endPoint)
     {
-        const auto endCueByteOffset { endPoint * 2 };
+        const auto endCueByteOffset { static_cast<int>(endPoint * 2) };
         //const auto curCueSetIndex { squidChannelProperties.getCurCueSet () };
         squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), squidChannelProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
         squidChannelProperties.setEndCue (endCueByteOffset, true);
@@ -741,7 +741,7 @@ void ChannelEditorComponent::initializeCallbacks ()
             waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
     };
     squidChannelProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
-    squidChannelProperties.onNumCueSetsChange = [this] (int numCueSets)
+    squidChannelProperties.onNumCueSetsChange = [this] (int /*numCueSets*/)
     {
         initCueSetTabs ();
         setCueEditButtonsEnableState ();
@@ -844,7 +844,7 @@ void ChannelEditorComponent::decayDataChanged (int decay)
     decayTextEditor.setText (juce::String (getUiValue (decay)), juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::endCueDataChanged (juce::int64 endCue)
+void ChannelEditorComponent::endCueDataChanged (juce::int32 endCue)
 {
     endCueTextEditor.setText (juce::String (endCue / 2), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCue / 2);
@@ -885,7 +885,7 @@ void ChannelEditorComponent::levelDataChanged (int level)
     levelTextEditor.setText (juce::String (getUiValue (level)), juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::loopCueDataChanged (juce::int64 loopCue)
+void ChannelEditorComponent::loopCueDataChanged (juce::int32 loopCue)
 {
     loopCueTextEditor.setText (juce::String (loopCue / 2), false);
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
@@ -916,7 +916,7 @@ void ChannelEditorComponent::speedDataChanged (int speed)
     speedTextEditor.setText (juce::String (getUiValue (speed)), juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::startCueDataChanged (juce::int64 startCue)
+void ChannelEditorComponent::startCueDataChanged (juce::int32 startCue)
 {
     startCueTextEditor.setText (juce::String (startCue / 2), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCuePoints (startCue / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
@@ -966,7 +966,7 @@ void ChannelEditorComponent::decayUiChanged (int decay)
     squidChannelProperties.setDecay (newDecayValue, false);
 }
 
-void ChannelEditorComponent::endCueUiChanged (juce::int64 endCue)
+void ChannelEditorComponent::endCueUiChanged (juce::int32 endCue)
 {
     const auto endCueByteOffset { endCue * 2 };
     squidChannelProperties.setEndCue (endCueByteOffset, false);
@@ -1008,7 +1008,7 @@ void ChannelEditorComponent::levelUiChanged (int level)
     squidChannelProperties.setLevel (newLevelValue, false);
 }
 
-void ChannelEditorComponent::loopCueUiChanged (juce::int64 loopCue)
+void ChannelEditorComponent::loopCueUiChanged (juce::int32 loopCue)
 {
     const auto loopCueByteOffset { loopCue * 2 };
     squidChannelProperties.setLoopCue (loopCueByteOffset, false);
@@ -1043,7 +1043,7 @@ void ChannelEditorComponent::speedUiChanged (int speed)
     squidChannelProperties.setSpeed (newSpeedValue, false);
 }
 
-void ChannelEditorComponent::startCueUiChanged (juce::int64 startCue)
+void ChannelEditorComponent::startCueUiChanged (juce::int32 startCue)
 {
     const auto startCueByteOffset { startCue * 2 };
     squidChannelProperties.setStartCue (startCueByteOffset, false);
@@ -1090,7 +1090,7 @@ bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& fi
     return true;
 }
 
-void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x, int y)
+void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
 //    draggingFiles = false;
 //    repaint ();
@@ -1122,11 +1122,10 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
 void ChannelEditorComponent::resized ()
 {
     const auto columnWidth { 160 };
-    const auto spaceBetweenColumns { 40 };
+    const auto spaceBetweenColumns { 10 };
 
     const auto fieldWidth { columnWidth / 2 - 2 };
     auto xInitialOffSet { 15 };
-    auto yInitialOffSet { 15 };
 
     auto xOffset { xInitialOffSet };
     auto yOffset { kInitialYOffset };
@@ -1168,7 +1167,7 @@ void ChannelEditorComponent::resized ()
     yOffset = levelTextEditor.getBottom () + 3;
     reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-    xOffset += columnWidth + 10;
+    xOffset += columnWidth + spaceBetweenColumns;
     yOffset = fileNameSelectLabel.getBottom () + 3;
     //yOffset = kInitialYOffset;
     // column two
@@ -1194,7 +1193,7 @@ void ChannelEditorComponent::resized ()
     endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
     // column three
-    xOffset += columnWidth + 10;
+    xOffset += columnWidth + spaceBetweenColumns;
     yOffset = fileNameSelectLabel.getBottom () + 3;
     chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
@@ -1215,7 +1214,7 @@ void ChannelEditorComponent::resized ()
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
 
     // column four
-//     xOffset += columnWidth + 10;
+//     xOffset += columnWidth + spaceBetweenColumns;
 //     yOffset = kInitialYOffset;
 
     // LOWER PANE VIEW BUTTONS

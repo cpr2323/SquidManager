@@ -36,13 +36,13 @@ void SquidChannelProperties::initValueTree ()
     setFilterResonance (0, false);
     setFilterType (0, false);
     setLoopMode (0, false);
-    setLevel (30 * kScaleStep, false);
+    setLevel (static_cast<int> (30 * kScaleStep), false);
     setNumCueSets (0, false);
     setQuant (0, false);
     setRate (0, false);
     setRecDest (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setReverse (0, false);
-    setSpeed ((50 * kScaleStep), false);
+    setSpeed (static_cast<int> (50 * kScaleStep), false);
     setSteps (0, false);
     setXfade (0, false);
 
@@ -210,7 +210,7 @@ void SquidChannelProperties::setCurCueSet (int cueSetIndex, bool includeSelfCall
     setLoopCue (getLoopCueSet (cueSetIndex), true);
 }
 
-void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -223,7 +223,7 @@ void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterInd
     parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
 }
 
-void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -236,7 +236,7 @@ void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex
     parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, isEnabled, nullptr);
 }
 
-void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback)
+void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
     jassert (parameterIndex < 15);
@@ -402,7 +402,7 @@ void SquidChannelProperties::setLoopCue (uint32_t loopCue, bool includeSelfCallb
     setValue (static_cast<int> (loopCue), LoopCuePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback)
+void SquidChannelProperties::setStartCueSet (int cueSetIndex, uint32_t startCue, bool /*includeSelfCallback*/)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -415,7 +415,7 @@ void SquidChannelProperties::setStartCueSet (int cueSetIndex, uint32_t startCue,
     requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int>(startCue), nullptr);
 }
 
-void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback)
+void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bool /*includeSelfCallback*/)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())
@@ -433,7 +433,7 @@ void SquidChannelProperties::setFileName (juce::String fileName, bool includeSel
     setValue (fileName, FileNamePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback)
+void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool /*includeSelfCallback*/)
 {
     jassert (cueSetIndex < getNumCueSets ());
     if (cueSetIndex >= getNumCueSets ())

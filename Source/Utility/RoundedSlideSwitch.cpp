@@ -25,7 +25,6 @@ void RoundedSlideSwitch::timerCallback ()
 
 void RoundedSlideSwitch::paintButton (juce::Graphics& g, bool, bool)
 {
-    auto h = float (getHeight ());
     auto area = getLocalBounds ().toFloat ();
 
     g.setColour (juce::Colours::darkgrey.interpolatedWith (juce::Colours::lightgrey, position));

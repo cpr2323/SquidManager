@@ -46,8 +46,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * parameterRowSize) + (curParameterIndex * 4) };
             const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
             const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
-            const auto offset { static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-            const auto attenuation { static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+            const auto offset { static_cast<uint16_t>(static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId))) };
+            const auto attenuation { static_cast<uint16_t>(static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId))) };
             if (enabled)
                 cvAssignedFlags |= cvAssignedFlag;
             setUInt16 (offset, cvParamOffset + 0);

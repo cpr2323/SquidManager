@@ -6,7 +6,7 @@ const auto kNumChannels { 8 };
 void SquidBankProperties::initValueTree ()
 {
     setName ("", false);
-    for (auto channelIndex { 0 }; channelIndex < kNumChannels; ++channelIndex)
+    for (uint8_t channelIndex { 0 }; channelIndex < kNumChannels; ++channelIndex)
     {
         auto channel { SquidChannelProperties::create (channelIndex) };
         data.addChild (channel, -1, nullptr);

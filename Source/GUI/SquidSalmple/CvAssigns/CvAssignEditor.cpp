@@ -196,8 +196,7 @@ void CvAssignSection::init (juce::ValueTree rootPropertiesVT, int theCvIndex)
 
 void CvAssignSection::resized ()
 {
-    const auto assignParameterWidth { getWidth () / cvAssignParameterList.size () };
-    const auto diff {getWidth() - (assignParameterWidth * cvAssignParameterList.size ())};
+    const auto assignParameterWidth { static_cast<int>(getWidth () / cvAssignParameterList.size ()) };
     for (auto curCvAssignParameter { 0 }; curCvAssignParameter < cvAssignParameterList.size (); ++curCvAssignParameter)
         cvAssignParameterList [curCvAssignParameter].setBounds (assignParameterWidth * curCvAssignParameter, 0, assignParameterWidth, getHeight());
 }

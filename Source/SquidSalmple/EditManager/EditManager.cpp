@@ -16,7 +16,7 @@ void EditManager::init (juce::ValueTree rootPropertiesVT)
     });
 }
 
-void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, int channelIndex, juce::File sampleFile)
+void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile)
 {
     SquidChannelProperties theSquidChannelProperties { squidChannelPropertiesVT,
                                                        SquidChannelProperties::WrapperType::owner,
@@ -103,11 +103,8 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
         if (channelDirectory.exists () && channelDirectory.isDirectory ())
         {
             // TODO - what to do if there is already a wav file in the folder
-            for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory.getFullPathName (), false, "*.wav", juce::File::findFiles))
-            {
-                sampleFile = entry.getFile ();
-                break;
-            }
+            if (const auto& entry { juce::RangedDirectoryIterator (channelDirectory.getFullPathName (), false, "*.wav", juce::File::findFiles) }; entry != juce::RangedDirectoryIterator {})
+                sampleFile = entry->getFile ();
         }
         else
         {
@@ -130,7 +127,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
                 }
             }
         }
-        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), channelIndex, sampleFile);
+        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), static_cast<uint8_t>(channelIndex), sampleFile);
     }
 
     bankDirectory = bankDirectoryToLoad;
