@@ -11,6 +11,7 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
 
     void loadBank (juce::File bankDirectory);
+    void loadBankDefaults (uint8_t bankIndex);
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
 

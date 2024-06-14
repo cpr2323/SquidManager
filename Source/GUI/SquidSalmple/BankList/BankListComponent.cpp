@@ -1,8 +1,4 @@
 #include "BankListComponent.h"
-// #include "../../../Assimil8or/Assimil8orPreset.h"
-// #include "../../../Assimil8or/FileTypeHelpers.h"
-// #include "../../../Assimil8or/PresetManagerProperties.h"
-// #include "../../../Assimil8or/Preset/ParameterPresetsSingleton.h"
 #include "../../../SystemServices.h"
 #include "../../../Utility/DebugLog.h"
 #include "../../../Utility/PersistentRootProperties.h"
@@ -34,7 +30,7 @@ BankListComponent::BankListComponent ()
 
 void BankListComponent::init (juce::ValueTree rootPropertiesVT)
 {
-    LogBankList ("BankListComponent::init");
+    LogBankList ("init");
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::no);
 
@@ -45,15 +41,15 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
-        LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete");
+        LogBankList ("init - directoryDataProperties.onRootScanComplete");
         if (! checkBanksThread.isThreadRunning ())
         {
-            LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete - starting thread");
+            LogBankList ("init - directoryDataProperties.onRootScanComplete - starting thread");
             checkBanksThread.startThread ();
         }
         else
         {
-            LogBankList ("BankListComponent::init - directoryDataProperties.onRootScanComplete - starting timer");
+            LogBankList ("init - directoryDataProperties.onRootScanComplete - starting timer");
             startTimer (1);
         }
     };
@@ -87,37 +83,28 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     checkBanksThread.startThread ();
 }
 
-void BankListComponent::forEachBankDirectory (std::function<bool (juce::File presetFile, int index)> presetFileCallback)
+void BankListComponent::forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback)
 {
-#if 0
-    jassert (presetFileCallback != nullptr);
+    jassert (bankDirectoryCallback != nullptr);
 
-    auto inPresetList { false };
-    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, presetFileCallback, &inPresetList] (juce::ValueTree child)
+    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, bankDirectoryCallback] (juce::ValueTree child)
     {
-        if (FileProperties::isFileVT (child))
+        if (FolderProperties::isFolderVT (child))
         {
-            FileProperties fileProperties (child, FileProperties::WrapperType::client, FileProperties::EnableCallbacks::no);
-            if (fileProperties.getType ()== DirectoryDataProperties::presetFile)
+            FolderProperties folderProperties (child, FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+            auto directoryName { juce::File (folderProperties.getName ()).getFileName () };
+            auto bankId { 0 };
+            if (directoryName.substring (0, 5) == "Bank ")
             {
-                inPresetList = true;
-                const auto fileToCheck { juce::File (fileProperties.getName ()) };
-                const auto presetIndex { FileTypeHelpers::getPresetNumberFromName (fileToCheck) - 1 };
-                if (presetIndex < 0 || presetIndex >= kMaxPresets)
+                bankId = directoryName.substring (5).getIntValue ();
+                if (bankId < 1 || bankId > 99)
                     return false;
-                if (! presetFileCallback (fileToCheck, presetIndex))
-                    return false;
-            }
-            else
-            {
-                // if the entry is not a preset file, but we were processing preset files, then we are done
-                if (inPresetList)
+                if (! bankDirectoryCallback (folderProperties.getName (), bankId - 1))
                     return false;
             }
         }
         return true;
     });
-#endif
 }
 
 void BankListComponent::checkBanks ()
@@ -146,7 +133,7 @@ void BankListComponent::checkBanks ()
             FolderProperties folderProperties (child, FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
             const auto folderName { juce::File (folderProperties.getName ()).getFileName () };
             const auto bankId { folderName.substring (5).getIntValue () };
-            if (folderName.substring(0, 4) == "Bank" && bankId > 0 && bankId < 100)
+            if (folderName.substring (0, 5) == "Bank " && bankId > 0 && bankId < 100)
             {
                 inBankList = true;
                 const auto fileToCheck { juce::File (folderProperties.getName ()) };
@@ -178,10 +165,12 @@ void BankListComponent::checkBanks ()
         return true; // keep looking
     });
 
-    juce::MessageManager::callAsync ([this, newFolder = (currentFolder != previousFolder)] ()
+    const auto isNewFolder { currentFolder != previousFolder };
+    LogBankList (isNewFolder ? "new folder " + currentFolder.getFileName () : "no folder change");
+    juce::MessageManager::callAsync ([this, isNewFolder] ()
     {
         bankListBox.updateContent ();
-        if (newFolder)
+        if (isNewFolder)
         {
             bankListBox.scrollToEnsureRowIsOnscreen (0);
             loadFirstBank ();
@@ -195,49 +184,44 @@ void BankListComponent::checkBanks ()
 
 void BankListComponent::loadFirstBank ()
 {
-#if 0
-    LogPresetList ("PresetListComponent::loadFirstPreset");
-    bool presetLoaded { false };
-    juce::File loadedPresetFile;
-    forEachPresetFile ([this, &presetLoaded, &loadedPresetFile] (juce::File presetFile, int presetIndex)
+    LogBankList ("loadFirstBank");
+    bool bankLoaded { false };
+    juce::File loadedBankDirectory;
+    forEachBankDirectory ([this, &bankLoaded, &loadedBankDirectory] (juce::File bankDirectory, int bankIndex)
     {
-        if (auto [presetNumber, thisPresetExists, presetName] { presetInfoList [presetIndex] }; ! thisPresetExists)
+        LogBankList ("checking " + bankDirectory.getFileName ());
+        if (auto [bankNumber, thisBankExists, bankName] { bankInfoList [bankIndex] }; ! thisBankExists)
             return true;
 
-        presetListBox.selectRow (presetIndex, false, true);
-        presetListBox.scrollToEnsureRowIsOnscreen (presetIndex);
-        loadedPresetFile = presetFile;
-        appProperties.addRecentlyUsedFile (loadedPresetFile.getFullPathName ());
-        loadPreset (presetFile);
-        presetLoaded = true;
+        LogBankList ("loading " + bankDirectory.getFileName ());
+        bankListBox.selectRow (bankIndex, false, true);
+        bankListBox.scrollToEnsureRowIsOnscreen (bankIndex);
+        loadedBankDirectory = bankDirectory;
+        appProperties.addRecentlyUsedFile (loadedBankDirectory.getFullPathName ());
+        loadBank (bankDirectory);
+        bankLoaded = true;
         return false;
     });
 
-    if (! presetLoaded)
+    if (! bankLoaded)
     {
-        presetListBox.selectRow (0, false, true);
-        presetListBox.scrollToEnsureRowIsOnscreen (0);
-        loadedPresetFile = getPresetFile (1);
-        appProperties.addRecentlyUsedFile (loadedPresetFile.getFullPathName ());
+        LogBankList ("no bank found. loading default");
+        bankListBox.selectRow (0, false, true);
+        bankListBox.scrollToEnsureRowIsOnscreen (0);
+        loadedBankDirectory= getBankDirectory (1);
+        appProperties.addRecentlyUsedFile (loadedBankDirectory.getFullPathName ());
         loadDefault (0);
     }
-#endif
 }
 
 void BankListComponent::loadDefault (int row)
 {
-    jassertfalse;
-#if 0
-    PresetProperties::copyTreeProperties (ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType),
-                                          presetProperties.getValueTree ());
-    // set the ID, since the default that was just loaded always has Id 1
-    presetProperties.setId (row + 1, false);
-    PresetProperties::copyTreeProperties (presetProperties.getValueTree (), unEditedPresetProperties.getValueTree ());
-#endif
+    editManager->loadBankDefaults (static_cast<uint8_t> (row));
 }
 
 void BankListComponent::loadBankDirectory (juce::File presetFile, juce::ValueTree presetPropertiesVT)
 {
+    jassertfalse;
 #if 0
     juce::StringArray fileContents;
     presetFile.readLines (fileContents);
@@ -256,9 +240,9 @@ void BankListComponent::loadBankDirectory (juce::File presetFile, juce::ValueTre
 #endif
 }
 
-void BankListComponent::loadBank (juce::File presetFile)
+void BankListComponent::loadBank (juce::File bankDirectory)
 {
-    editManager->loadBank (presetFile);
+    editManager->loadBank (bankDirectory);
 }
 
 void BankListComponent::resized ()
@@ -310,16 +294,14 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
 
 void BankListComponent::timerCallback ()
 {
-#if 0
-    LogPresetList ("PresetListComponent::timerCallback - enter");
-    if (! checkPresetsThread.isThreadRunning ())
+    LogBankList ("timerCallback - enter");
+    if (! checkBanksThread.isThreadRunning ())
     {
-        LogPresetList ("PresetListComponent::timerCallback - starting thread, stopping timer");
-        checkPresetsThread.start ();
+        LogBankList ("timerCallback - starting thread, stopping timer");
+        checkBanksThread.start ();
         stopTimer ();
     }
-    LogPresetList ("PresetListComponent::timerCallback - enter");
-#endif
+    LogBankList ("timerCallback - enter");
 }
 
 juce::String BankListComponent::getTooltipForRow (int row)

@@ -1,8 +1,7 @@
 #include "DirectoryValueTree.h"
 #include "../Utility/DebugLog.h"
-#include "../Utility/RuntimeRootProperties.h"
 
-#define LOG_DIRECTORY_VALUE_TREE 1
+#define LOG_DIRECTORY_VALUE_TREE 0
 #if LOG_DIRECTORY_VALUE_TREE
 #define LogDirectoryValueTree(cond, text) if (cond) {DebugLog ("DirectoryValueTree", text); }
 #else
@@ -492,7 +491,6 @@ void DirectoryValueTree::sortContentsOfFolder (juce::ValueTree rootFolderVT, std
 
         auto fileName { juce::File (getEntryName (rootFolderVT.getChild (itemIndex))).getFileName().toLowerCase () };
         auto bankId { 0 };
-        auto temp { fileName.substring (0, 5) };
         if (sectionIndex == DirectoryDataProperties::TypeIndex::folder && fileName.substring (0, 5) == "bank ")
         {
             bankId = fileName.substring (5).getIntValue ();

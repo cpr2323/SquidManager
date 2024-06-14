@@ -135,6 +135,13 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
     copyBank (squidBankProperties, uneditedSquidBankProperties);
 }
 
+void EditManager::loadBankDefaults (uint8_t bankIndex)
+{
+    SquidBankProperties defaultSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+    copyBank (defaultSquidBankProperties, squidBankProperties);
+    copyBank (squidBankProperties, uneditedSquidBankProperties);
+}
+
 void EditManager::copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties)
 {
     destBankProperties.triggerLoadBegin (false);

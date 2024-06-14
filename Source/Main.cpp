@@ -151,14 +151,10 @@ public:
 
         // when the folder being viewed changes, signal the directory scanner to rescan
         appProperties.onMostRecentFolderChange = [this] (juce::String folderName)
-            {
-                directoryDataProperties.setRootFolder (folderName, false);
-                directoryDataProperties.triggerStartScan (false);
-            };
-
-        // start the initial directory scan, based on the last accessed folder stored in the app properties
-        directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);
-        directoryDataProperties.triggerStartScan (false);
+        {
+            directoryDataProperties.setRootFolder (folderName, false);
+            directoryDataProperties.triggerStartScan (false);
+        };
 
 // TEST CODE TO WRITE OUT empty SquidChannelProperties
 //         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };

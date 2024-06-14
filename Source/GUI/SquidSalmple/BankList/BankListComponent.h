@@ -21,7 +21,7 @@ public:
 private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
-    EditManager* editManager;
+    EditManager* editManager { nullptr };
 //     PresetProperties presetProperties;
 //     PresetProperties unEditedPresetProperties;
 //     PresetProperties copyBufferPresetProperties;

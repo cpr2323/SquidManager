@@ -23,7 +23,7 @@ private:
         kLoop = 1,
         kEnd = 2,
     };
-    juce::File testFile;
+    juce::File audioFile;
 
     juce::int64 cueStart { 0 };
     juce::int64 cueLoop { 0 };
