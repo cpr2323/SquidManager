@@ -3,6 +3,7 @@
 #include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
+#include "SquidSalmple/Audio/AudioPlayer.h"
 #include "SquidSalmple/Bank/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
 #include "SquidSalmple/SampleManager/SampleManager.h"
@@ -71,8 +72,8 @@ public:
         initLogger ();
         initCrashHandler ();
         initPropertyRoots ();
-        initAudio ();
         initSquidSalmple ();
+        initAudio ();
         initSystemServices ();
 
 #if RUN_READ_WRITE_TEST 
@@ -82,6 +83,8 @@ public:
 #endif
 
         initUi ();
+
+        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
 
         // async quit timer
         startTimer (125);
@@ -210,6 +213,7 @@ public:
 
     void initAudio ()
     {
+        audioPlayer.init (rootProperties.getValueTree ());
     }
 
     void initAppDirectory ()
@@ -373,6 +377,7 @@ private:
     std::unique_ptr<juce::FileLogger> fileLogger;
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
+    AudioPlayer audioPlayer;
 
     // System Services
     SampleManager sampleManager;

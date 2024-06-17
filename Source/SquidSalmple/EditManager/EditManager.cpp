@@ -26,15 +26,15 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
         // TODO - check for import errors and handle accordingly
         SquidMetaDataReader squidMetaDataReader;
         SquidChannelProperties loadedSquidChannelProperties { squidMetaDataReader.read (sampleFile, channelIndex),
-                                                                SquidChannelProperties::WrapperType::owner,
-                                                                SquidChannelProperties::EnableCallbacks::no };
+                                                              SquidChannelProperties::WrapperType::owner,
+                                                              SquidChannelProperties::EnableCallbacks::no };
         theSquidChannelProperties.copyFrom (loadedSquidChannelProperties.getValueTree ());
     }
     else
     {
         // TODO - load default. report and error?
         SquidChannelProperties defaultSquidChannelProperties { {}, SquidChannelProperties::WrapperType::owner,
-                                                                    SquidChannelProperties::EnableCallbacks::no };
+                                                                   SquidChannelProperties::EnableCallbacks::no };
         defaultSquidChannelProperties.setChannelIndex (channelIndex, false);
         defaultSquidChannelProperties.setFileName (sampleFile.getFileName (), false);
         theSquidChannelProperties.copyFrom (defaultSquidChannelProperties.getValueTree ());
@@ -135,6 +135,8 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
     copyBank (squidBankProperties, uneditedSquidBankProperties);
 }
 
+// TODO - this is not complete. it takes a bankIndex, but I think that is incorrect, in that the EditManager only deals with the edit buffer
+//        refer to client code to decide how to change things
 void EditManager::loadBankDefaults (uint8_t bankIndex)
 {
     SquidBankProperties defaultSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);

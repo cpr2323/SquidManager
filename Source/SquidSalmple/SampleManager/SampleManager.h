@@ -13,7 +13,7 @@ class SampleManager
 public:
     SampleManager ();
     void init (juce::ValueTree rootPropertiesVT);
-    juce::ValueTree getSampleProperties (int channelIndex);
+    juce::ValueTree getSamplePropertiesVT (int channelIndex);
     bool isSupportedAudioFile (juce::File file);
     void update ();
 

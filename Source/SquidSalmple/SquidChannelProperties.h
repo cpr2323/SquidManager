@@ -154,7 +154,7 @@ public:
     static juce::ValueTree create (uint8_t channelIndex);
     juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
 
-    static inline const juce::Identifier SquidChannelTypeId { "SquidMetaData" };
+    static inline const juce::Identifier SquidChannelTypeId { "SquidChannel" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };
     static inline const juce::Identifier BitsPropertyId             { "bits" };
     static inline const juce::Identifier ChannelFlagsPropertyId     { "channelFlags" };

@@ -47,14 +47,14 @@ void SampleManager::init (juce::ValueTree rootPropertiesVT)
     });
 }
 
-juce::ValueTree SampleManager::getSampleProperties (int channelIndex)
+juce::ValueTree SampleManager::getSamplePropertiesVT (int channelIndex)
 {
     return channelAndSamplePropertiesList [channelIndex].sampleProperties.getValueTree ();
 }
 
 bool SampleManager::isSupportedAudioFile (juce::File file)
 {
-    // 16 or 24 bit
+    // 16
     // 44.1k
     // only mono (stereo will be converted to mono)
     if (file.isDirectory () || file.getFileExtension ().toLowerCase () != ".wav")

@@ -516,7 +516,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     addAndMakeVisible (cueStepButton);
 
-
+    addAndMakeVisible (loopPointsView);
 
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
@@ -1212,6 +1212,8 @@ void ChannelEditorComponent::resized ()
     yOffset = cueRandomButton.getBottom () + 3;
     cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
+
+    loopPointsView.setBounds (outputComboBox.getRight () + spaceBetweenColumns, outputComboBox.getY (), columnWidth * 2, reverseButton.getY () - outputComboBox.getY () - 5);
 
     // column four
 //     xOffset += columnWidth + spaceBetweenColumns;

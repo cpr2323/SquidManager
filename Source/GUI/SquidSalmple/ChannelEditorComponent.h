@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
+#include "LoopPoints/LoopPointsView.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
 #include "../../SquidSalmple/SampleManager/SampleManager.h"
@@ -79,6 +80,8 @@ private:
     RoundedSlideSwitch cueRandomButton;
     juce::Label cueStepLabel;
     RoundedSlideSwitch cueStepButton;
+
+    LoopPointsView loopPointsView;
 
     // LOWER PANE
     WaveformDisplay waveformDisplay;

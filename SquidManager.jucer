@@ -7,6 +7,12 @@
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
         <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple">
+          <GROUP id="{2E696543-C366-0ED1-28E3-8C22BAA5DD82}" name="LoopPoints">
+            <FILE id="WwXdd9" name="LoopPointsView.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/LoopPoints/LoopPointsView.cpp"/>
+            <FILE id="wgmQSf" name="LoopPointsView.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/LoopPoints/LoopPointsView.h"/>
+          </GROUP>
           <GROUP id="{43385A79-1DF4-DE7E-3AF5-8FB0CBD50581}" name="BankList">
             <FILE id="cdRU4B" name="BankListComponent.cpp" compile="1" resource="0"
                   file="Source/GUI/SquidSalmple/BankList/BankListComponent.cpp"/>
@@ -54,6 +60,18 @@
         <FILE id="GfPl6s" name="SQtip.png" compile="0" resource="1" file="Source/GUI/SQtip.png"/>
       </GROUP>
       <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
+        <GROUP id="{093728E3-D7D3-A91D-5A0D-8FA266A178D7}" name="Audio">
+          <FILE id="KJWT1Q" name="AudioPlayer.cpp" compile="1" resource="0" file="Source/SquidSalmple/Audio/AudioPlayer.cpp"/>
+          <FILE id="OoNm5a" name="AudioPlayer.h" compile="0" resource="0" file="Source/SquidSalmple/Audio/AudioPlayer.h"/>
+          <FILE id="r7ICXU" name="AudioPlayerProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Audio/AudioPlayerProperties.cpp"/>
+          <FILE id="EjGa9F" name="AudioPlayerProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Audio/AudioPlayerProperties.h"/>
+          <FILE id="fz1CXU" name="AudioSettingsProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Audio/AudioSettingsProperties.cpp"/>
+          <FILE id="RuP5x6" name="AudioSettingsProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Audio/AudioSettingsProperties.h"/>
+        </GROUP>
         <GROUP id="{4631F495-CCA5-6431-FC53-FD21116C6247}" name="Bank">
           <FILE id="pwi7jW" name="BankHelpers.cpp" compile="1" resource="0" file="Source/SquidSalmple/Bank/BankHelpers.cpp"/>
           <FILE id="HLHLE1" name="BankHelpers.h" compile="0" resource="0" file="Source/SquidSalmple/Bank/BankHelpers.h"/>
