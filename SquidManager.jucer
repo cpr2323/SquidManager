@@ -120,20 +120,7 @@
           <FILE id="Jk42CD" name="SquidSalmpleDefs.h" compile="0" resource="0"
                 file="Source/SquidSalmple/Metadata/SquidSalmpleDefs.h"/>
         </GROUP>
-        <GROUP id="{701C61AD-84A8-7987-9439-B0FAB3FDD36C}" name="SampleManager">
-          <FILE id="oVopJ9" name="SampleManager.cpp" compile="1" resource="0"
-                file="Source/SquidSalmple/SampleManager/SampleManager.cpp"/>
-          <FILE id="UiKA1V" name="SampleManager.h" compile="0" resource="0" file="Source/SquidSalmple/SampleManager/SampleManager.h"/>
-          <FILE id="DOsPC4" name="SampleManagerProperties.cpp" compile="1" resource="0"
-                file="Source/SquidSalmple/SampleManager/SampleManagerProperties.cpp"/>
-          <FILE id="tHLEGA" name="SampleManagerProperties.h" compile="0" resource="0"
-                file="Source/SquidSalmple/SampleManager/SampleManagerProperties.h"/>
-          <FILE id="kqzVUF" name="SampleProperties.cpp" compile="1" resource="0"
-                file="Source/SquidSalmple/SampleManager/SampleProperties.cpp"/>
-          <FILE id="fa5efM" name="SampleProperties.h" compile="0" resource="0"
-                file="Source/SquidSalmple/SampleManager/SampleProperties.h"/>
-          <FILE id="bxr8Ay" name="SampleStatus.h" compile="0" resource="0" file="Source/SquidSalmple/SampleManager/SampleStatus.h"/>
-        </GROUP>
+        <GROUP id="{701C61AD-84A8-7987-9439-B0FAB3FDD36C}" name="SampleManager"/>
         <FILE id="ytGEog" name="SquidBankProperties.cpp" compile="1" resource="0"
               file="Source/SquidSalmple/SquidBankProperties.cpp"/>
         <FILE id="OKM5qB" name="SquidBankProperties.h" compile="0" resource="0"
