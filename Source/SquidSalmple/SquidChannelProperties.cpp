@@ -35,6 +35,7 @@ void SquidChannelProperties::initValueTree ()
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
     setFilterType (0, false);
+    setFullPath ("", false);
     setLoopMode (0, false);
     setLevel (static_cast<int> (30 * kScaleStep), false);
     setNumCueSets (0, false);
@@ -110,6 +111,12 @@ void SquidChannelProperties::initValueTree ()
     setStartCue (0, false);
     setNumCueSets (1, false);
     setCurCueSet (0, false);
+
+    setBitsPerSample (0, false);
+    setSampleRate (0.0, false);
+    setLengthInSamples (0, false);
+    setNumChannels (0, false);
+    setAudioBuffer ({}, false);
 }
 
 void SquidChannelProperties::setBits (int bits, bool includeSelfCallback)
@@ -433,6 +440,11 @@ void SquidChannelProperties::setFileName (juce::String fileName, bool includeSel
     setValue (fileName, FileNamePropertyId, includeSelfCallback);
 }
 
+void SquidChannelProperties::setFullPath (juce::String fullPath, bool includeSelfCallback)
+{
+    setValue (fullPath, FullPathTypePropertyId, includeSelfCallback);
+}
+
 void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool /*includeSelfCallback*/)
 {
     jassert (cueSetIndex < getNumCueSets ());
@@ -460,6 +472,31 @@ void SquidChannelProperties::triggerLoadComplete (bool includeSelfCallback)
 int SquidChannelProperties::getBits ()
 {
     return getValue<int> (BitsPropertyId);
+}
+
+void SquidChannelProperties::setAudioBuffer (AudioBufferRefCounted::RefCountedPtr audioBuffer, bool includeSelfCallback)
+{
+    data.setProperty (AudioBufferPtrPropertyId, audioBuffer.get (), nullptr);
+}
+
+void SquidChannelProperties::setBitsPerSample (int bitsPerSample, bool includeSelfCallback)
+{
+    setValue (bitsPerSample, BitsPerSamplePropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setSampleRate (double sampleRate, bool includeSelfCallback)
+{
+    setValue (sampleRate, SampleRatePropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setNumChannels (int numChannels, bool includeSelfCallback)
+{
+    setValue (numChannels, NumChannelsPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setLengthInSamples (juce::int64 lengthInSamples, bool includeSelfCallback)
+{
+    setValue (lengthInSamples, LengthInSamplesPropertyId, includeSelfCallback);
 }
 
 uint16_t SquidChannelProperties::getChannelFlags ()
@@ -539,21 +576,6 @@ int SquidChannelProperties::getRecDest ()
 int SquidChannelProperties::getSpeed ()
 {
     return getValue<int> (SpeedPropertyId);
-}
-
-int SquidChannelProperties::getFilterFrequency ()
-{
-    return getValue<int> (FilterFrequencyPropertyId);
-}
-
-int SquidChannelProperties::getFilterResonance ()
-{
-    return getValue<int> (FilterResonancePropertyId);
-}
-
-int SquidChannelProperties::getFilterType ()
-{
-    return getValue<int> (FilterTypePropertyId);
 }
 
 int SquidChannelProperties::getQuant ()
@@ -710,6 +732,26 @@ juce::String SquidChannelProperties::getFileName ()
     return getValue<juce::String> (FileNamePropertyId);
 }
 
+int SquidChannelProperties::getFilterFrequency ()
+{
+    return getValue<int> (FilterFrequencyPropertyId);
+}
+
+int SquidChannelProperties::getFilterResonance ()
+{
+    return getValue<int> (FilterResonancePropertyId);
+}
+
+int SquidChannelProperties::getFilterType ()
+{
+    return getValue<int> (FilterTypePropertyId);
+}
+
+juce::String SquidChannelProperties::getFullPath ()
+{
+    return getValue<juce::String> (FullPathTypePropertyId);
+}
+
 uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
@@ -760,6 +802,31 @@ juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
     });
     jassert (reqeustedCueSetVT.isValid ());
     return reqeustedCueSetVT;
+}
+
+int SquidChannelProperties::getSampleDataBits ()
+{
+    return getValue<int> (BitsPerSamplePropertyId);
+}
+
+double SquidChannelProperties::getSampleDataSampleRate ()
+{
+    return getValue<double> (SampleRatePropertyId);
+}
+
+int SquidChannelProperties::getSampoleDataNumChannels ()
+{
+    return getValue<int> (NumChannelsPropertyId);
+}
+
+juce::int64 SquidChannelProperties::getSampleDataSampleLength ()
+{
+    return getValue<juce::int64> (LengthInSamplesPropertyId);
+}
+
+AudioBufferRefCounted::RefCountedPtr SquidChannelProperties::getSampleDataAudioBuffer ()
+{
+    return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*>(data.getProperty (AudioBufferPtrPropertyId).getObject ()));
 }
 
 void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
@@ -816,6 +883,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setRate (sourceChannelProperties.getRate (), false);
     setRecDest (sourceChannelProperties.getRecDest () , false);
     setReverse (sourceChannelProperties.getReverse (), false);
+    setSampleLength (sourceChannelProperties.getSampleLength (), false);
     setSpeed (sourceChannelProperties.getSpeed (), false);
     setStartCue (sourceChannelProperties.getStartCue (), false);
     setSteps (sourceChannelProperties.getSteps (), false);
@@ -835,6 +903,12 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved11Data (sourceChannelProperties.getReserved11Data ());
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
+
+    setBitsPerSample (sourceChannelProperties.getSampleDataBits (), false);
+    setSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
+    setLengthInSamples (sourceChannelProperties.getSampleDataSampleLength (), false);
+    setNumChannels (sourceChannelProperties.getSampoleDataNumChannels (), false);
+    setAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
 }
 
 juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
@@ -944,6 +1018,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onFilterResonanceChange != nullptr)
                 onFilterResonanceChange (getFilterResonance ());
         }
+        else if (property == FullPathTypePropertyId)
+        {
+            if (onFullPathChange != nullptr)
+                onFullPathChange (getFullPath ());
+        }
         else if (property == LevelPropertyId)
         {
             if (onLevelChange != nullptr)
@@ -1018,6 +1097,31 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onXfadeChange != nullptr)
                 onXfadeChange (getXfade ());
+        }
+        else if (property == BitsPerSamplePropertyId)
+        {
+            if (onBitsPerSampleChange != nullptr)
+                onBitsPerSampleChange (getSampleDataBits ());
+        }
+        else if (property == SampleRatePropertyId)
+        {
+            if (onSampleRateChange != nullptr)
+                onSampleRateChange (getSampleDataSampleRate ());
+        }
+        else if (property == NumChannelsPropertyId)
+        {
+            if (onNumChannelsChange != nullptr)
+                onNumChannelsChange (getSampoleDataNumChannels ());
+        }
+        else if (property == LengthInSamplesPropertyId)
+        {
+            if (onLengthInSamplesChange != nullptr)
+                onLengthInSamplesChange (getSampleDataSampleLength ());
+        }
+        else if (property == AudioBufferPtrPropertyId)
+        {
+            if (onAudioBufferPtrChange != nullptr)
+                onAudioBufferPtrChange (getSampleDataAudioBuffer ());
         }
     }
 }

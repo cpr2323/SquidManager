@@ -6,7 +6,6 @@
 #include "LoopPoints/LoopPointsView.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
-#include "../../SquidSalmple/SampleManager/SampleManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
 #include "../../Utility/CustomTextEditor.h"
@@ -28,7 +27,6 @@ public:
 private:
     SquidChannelProperties squidChannelProperties;
     AppProperties appProperties;
-    SampleManager* sampleManager;
     EditManager* editManager;
 
     // Edit fields
@@ -116,6 +114,7 @@ private:
     void setFilterEnableState ();
     void setLowerPaneView (LowerPaneView whichView);
     void setupComponents ();
+    void updateLoopPointsView ();
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);

@@ -3,6 +3,14 @@
 #include "../Metadata/SquidMetaDataReader.h"
 #include "../Metadata/SquidMetaDataWriter.h"
 
+constexpr auto kMaxSeconds { 11 };
+constexpr auto kSupportedSampleRate { 44100 };
+
+EditManager::EditManager ()
+{
+    audioFormatManager.registerBasicFormats ();
+}
+
 void EditManager::init (juce::ValueTree rootPropertiesVT)
 {
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
@@ -11,9 +19,28 @@ void EditManager::init (juce::ValueTree rootPropertiesVT)
     squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
-        squidChannelPropertiesList [channelIndex].wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+        channelPropertiesList [channelIndex].wrap (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
         return true;
     });
+}
+
+bool EditManager::isSupportedAudioFile (juce::File file)
+{
+    // 16
+    // 44.1k
+    // only mono (stereo will be converted to mono)
+    if (file.isDirectory () || file.getFileExtension ().toLowerCase () != ".wav")
+        return false;
+    std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
+    if (reader == nullptr)
+        return false;
+    // TODO - the module can only accept mono files, but if one loads a stereo is it converted to mono, this will need to be added as well
+    // check for any format settings that are unsupported
+    // NOTE - UNTIL I IMPLEMENT STEREO CONVERSION I AM ONLY ALLOW MONO TO BE LOADED
+    if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels != 1) || (reader->sampleRate != 44100))
+        return false;
+
+    return true;
 }
 
 void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile)
@@ -21,24 +48,49 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
     SquidChannelProperties theSquidChannelProperties { squidChannelPropertiesVT,
                                                        SquidChannelProperties::WrapperType::owner,
                                                        SquidChannelProperties::EnableCallbacks::no };
+    SquidChannelProperties newSquidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     if (sampleFile.exists ())
     {
         // TODO - check for import errors and handle accordingly
+        addSampleToChannelProperties (newSquidChannelProperties.getValueTree (), sampleFile);
         SquidMetaDataReader squidMetaDataReader;
-        SquidChannelProperties loadedSquidChannelProperties { squidMetaDataReader.read (sampleFile, channelIndex),
-                                                              SquidChannelProperties::WrapperType::owner,
-                                                              SquidChannelProperties::EnableCallbacks::no };
-        theSquidChannelProperties.copyFrom (loadedSquidChannelProperties.getValueTree ());
+        squidMetaDataReader.read (newSquidChannelProperties.getValueTree (), sampleFile, channelIndex);
     }
     else
     {
-        // TODO - load default. report and error?
-        SquidChannelProperties defaultSquidChannelProperties { {}, SquidChannelProperties::WrapperType::owner,
-                                                                   SquidChannelProperties::EnableCallbacks::no };
-        defaultSquidChannelProperties.setChannelIndex (channelIndex, false);
-        defaultSquidChannelProperties.setFileName (sampleFile.getFileName (), false);
-        theSquidChannelProperties.copyFrom (defaultSquidChannelProperties.getValueTree ());
+        newSquidChannelProperties.setChannelIndex (channelIndex, false);
+        newSquidChannelProperties.setFileName (sampleFile.getFileName (), false);
     }
+    theSquidChannelProperties.copyFrom (newSquidChannelProperties.getValueTree ());
+}
+
+void EditManager::saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile)
+{
+    // create temp file
+    // write the audio data
+    // add the meta-data
+#if 0
+    auto tempFile { sampleFile.withFileExtension ("tmp") };
+    SquidMetaDataWriter squidMetaDataWriter;
+    SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    if (squidMetaDataWriter.write (squidChannelPropertiesToSave.getValueTree (), originalFile, tempFile))
+    {
+        if (originalFile.moveFileTo (originalFile.withFileExtension ("old")))
+        {
+            tempFile.moveFileTo (tempFile.withFileExtension ("wav"));
+            originalFile.withFileExtension ("old").moveToTrash ();
+            copyBank (squidBankProperties, uneditedSquidBankProperties);
+        }
+        else
+        {
+            // TODO - handle error
+        }
+    }
+    else
+    {
+        // TODO - handle error
+    }
+#endif
 }
 
 void EditManager::saveBank ()
@@ -158,4 +210,32 @@ void EditManager::copyBank (SquidBankProperties& srcBankProperties, SquidBankPro
         destChannelProperties.triggerLoadComplete (false);
     }
     destBankProperties.triggerLoadComplete (false);
+}
+
+void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertiesVT, juce::File sampleFile)
+{
+    jassert (sampleFile.exists ());
+    SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+    if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
+    {
+        const auto lengthInSamples { std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSeconds * kSupportedSampleRate)) };
+        AudioBufferRefCounted::RefCountedPtr abrc { new AudioBufferRefCounted () };
+
+        abrc->getAudioBuffer()->setSize (sampleFileReader->numChannels, static_cast<int> (lengthInSamples), false, true, false);
+        sampleFileReader->read (abrc->getAudioBuffer (), 0, static_cast<int> (lengthInSamples), 0, true, false);
+
+        channelProperties.setBitsPerSample (sampleFileReader->bitsPerSample, false);
+        channelProperties.setSampleRate (sampleFileReader->sampleRate, false);
+        channelProperties.setLengthInSamples (lengthInSamples, false);
+        channelProperties.setNumChannels (sampleFileReader->numChannels, false);
+        channelProperties.setAudioBuffer (abrc, false);
+    }
+    else
+    {
+        channelProperties.setBitsPerSample (0, false);
+        channelProperties.setSampleRate (0.0, false);
+        channelProperties.setLengthInSamples (0, false);
+        channelProperties.setNumChannels (0, false);
+        channelProperties.setAudioBuffer ({}, false);
+    }
 }

@@ -11,11 +11,11 @@
 #define LogReader(text) ;
 #endif
 
-juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, uint8_t channelIndex)
+void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File sampleFile, uint8_t channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
 
-    SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+    SquidChannelProperties squidChannelProperties { channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
     if (busyChunkReader.read (sampleFile, busyChunkData))
@@ -27,7 +27,7 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, uint8_t channe
         {
             juce::Logger::outputDebugString ("'busy' metadata chunk has wrong signature");
             jassertfalse;
-            return {};
+            return;
         }
         if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
             juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
@@ -159,21 +159,13 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, uint8_t channe
     else
     {
         LogReader (sampleFile.getFileName() + " does not contain meta-data");
-        auto numSamples = [&sampleFile] ()
-        {
-            juce::AudioFormatManager audioFormatManager;
-            audioFormatManager.registerBasicFormats ();
-            if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
-                return sampleFileReader->lengthInSamples;
-            else
-                return 0LL;
-        } ();
+        auto numSamples = squidChannelProperties.getSampleDataSampleLength ();
         // initialize parameters that have defaults related to specific channel or sample
         squidChannelProperties.setChannelIndex (channelIndex, false);
         squidChannelProperties.setChannelSource (channelIndex, false);
         squidChannelProperties.setChoke (channelIndex, false);
         squidChannelProperties.setEndCue (static_cast<uint32_t> (numSamples * 2), false);
-        squidChannelProperties.setSampleLength (static_cast<uint32_t> (numSamples * 2), false);
+        squidChannelProperties.setSampleLength (static_cast<uint32_t> (numSamples), false);
         squidChannelProperties.setRecDest (channelIndex, false);
         squidChannelProperties.setCuePoints (0, 0, 0, static_cast<uint32_t> (numSamples * 2));
     }
@@ -185,6 +177,4 @@ juce::ValueTree SquidMetaDataReader::read (juce::File sampleFile, uint8_t channe
 //     auto squidMetaDataXmlFile { sampleFile.withFileExtension(".xml") };
 //     xmlToWrite->writeTo (squidMetaDataXmlFile, {});
     // TEST CODE
-
-    return squidChannelProperties.getValueTree ();
 }

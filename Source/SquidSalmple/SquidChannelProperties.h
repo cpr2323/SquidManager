@@ -3,6 +3,29 @@
 #include <JuceHeader.h>
 #include "../Utility/ValueTreeWrapper.h"
 
+using AudioBufferType = juce::AudioBuffer<float>;
+
+class AudioBufferRefCounted : public juce::ReferenceCountedObject
+{
+public:
+    AudioBufferRefCounted ()
+    {
+        juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
+        audioBuffer = std::make_unique<juce::AudioBuffer<float>>();
+    }
+
+    ~AudioBufferRefCounted ()
+    {
+        juce::Logger::outputDebugString ("AudioBufferReferenceCounted dtor");
+    }
+    using RefCountedPtr = juce::ReferenceCountedObjectPtr<AudioBufferRefCounted>;
+
+    AudioBufferType* getAudioBuffer () { return audioBuffer.get(); }
+
+private:
+    std::unique_ptr<AudioBufferType> audioBuffer;
+};
+
 class SquidChannelProperties : public ValueTreeWrapper<SquidChannelProperties>
 {
 public:
@@ -31,6 +54,7 @@ public:
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
     void setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback);
     void setFileName (juce::String fileName, bool includeSelfCallback);
+    void setFullPath (juce::String fullPath, bool includeSelfCallback);
     void setFilterFrequency (int filterFrequency, bool includeSelfCallback);
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
@@ -65,6 +89,12 @@ public:
     void triggerLoadBegin (bool includeSelfCallback);
     void triggerLoadComplete (bool includeSelfCallback);
 
+    void setBitsPerSample (int bitsPerSample, bool includeSelfCallback);
+    void setSampleRate (double sampleRate, bool includeSelfCallback);
+    void setNumChannels (int numChannels, bool includeSelfCallback);
+    void setLengthInSamples (juce::int64, bool includeSelfCallback);
+    void setAudioBuffer (AudioBufferRefCounted::RefCountedPtr, bool includeSelfCallback);
+
     int getAttack ();
     int getBits ();
     uint16_t getChannelFlags ();
@@ -83,6 +113,7 @@ public:
     int getFilterFrequency ();
     int getFilterResonance ();
     int getFilterType ();
+    juce::String getFullPath ();
     int getLevel ();
     uint32_t getLoopCue ();
     uint32_t getLoopCueSet (int cueSetIndex);
@@ -112,6 +143,12 @@ public:
     juce::String getReserved12Data ();
     juce::String getReserved13Data ();
 
+    int getSampleDataBits ();
+    double getSampleDataSampleRate ();
+    int getSampoleDataNumChannels ();
+    juce::int64 getSampleDataSampleLength ();
+    AudioBufferRefCounted::RefCountedPtr getSampleDataAudioBuffer ();
+
     void removeCueSet (int cueSetIndex);
 
     std::function<void (int attack)> onAttackChange;
@@ -128,10 +165,11 @@ public:
     std::function<void (int eTrig)> onETrigChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int cueSetIndex, uint32_t endCue)> onEndCueSetChange;
-    std::function<void (juce::String fiuleName)> onFileNameChange;
+    std::function<void (juce::String fileName)> onFileNameChange;
     std::function<void (int filterFrequency)> onFilterFrequencyChange;
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
+    std::function<void (juce::String fullPath)> onFullPathChange;
     std::function<void (int level)> onLevelChange;
     std::function<void ()> onLoadBegin;
     std::function<void ()> onLoadComplete;
@@ -149,6 +187,12 @@ public:
     std::function<void (int cueSetIndex, uint32_t startCue)> onStartCueSetChange;
     std::function<void (int steps)> onStepsChange;
     std::function<void (int xfade)> onXfadeChange;
+
+    std::function<void (int bitsPerSample)> onBitsPerSampleChange;
+    std::function<void (double sampleRate)> onSampleRateChange;
+    std::function<void (int numChannels)> onNumChannelsChange;
+    std::function<void (juce::int64 lengthInSamples)> onLengthInSamplesChange;
+    std::function<void (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)> onAudioBufferPtrChange;
 
     void copyFrom (juce::ValueTree sourceVT);
     static juce::ValueTree create (uint8_t channelIndex);
@@ -171,6 +215,7 @@ public:
     static inline const juce::Identifier FilterFrequencyPropertyId  { "filterFrequency" };
     static inline const juce::Identifier FilterResonancePropertyId  { "filterResonance" };
     static inline const juce::Identifier FilterTypePropertyId       { "filterType" };
+    static inline const juce::Identifier FullPathTypePropertyId     { "_fullPath" };
     static inline const juce::Identifier LevelPropertyId            { "level" };
     static inline const juce::Identifier LoopCuePropertyId          { "loopCue" };
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
@@ -217,6 +262,13 @@ public:
     static inline const juce::Identifier Reserved11DataPropertyId   { "reserved11Data" };
     static inline const juce::Identifier Reserved12DataPropertyId   { "reserved12Data" };
     static inline const juce::Identifier Reserved13DataPropertyId   { "reserved13Data" };
+
+    // SAMPLE DATA
+    static inline const juce::Identifier BitsPerSamplePropertyId   { "_bitsPerSample" };
+    static inline const juce::Identifier SampleRatePropertyId      { "_sampleRate" };
+    static inline const juce::Identifier NumChannelsPropertyId     { "_numChannels" };
+    static inline const juce::Identifier LengthInSamplesPropertyId { "_lengthInSamples" };
+    static inline const juce::Identifier AudioBufferPtrPropertyId  { "_audioBufferPtr" };
 
     void initValueTree ();
     void processValueTree () {}

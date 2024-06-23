@@ -6,7 +6,6 @@
 #include "SquidSalmple/Audio/AudioPlayer.h"
 #include "SquidSalmple/Bank/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
-#include "SquidSalmple/SampleManager/SampleManager.h"
 #include "Utility/DebugLog.h"
 #include "Utility/DirectoryValueTree.h"
 #include "Utility/PersistentRootProperties.h"
@@ -68,6 +67,51 @@ public:
 
     void initialise ([[maybe_unused]] const juce::String& commandLine) override
     {
+#if 0
+        class AudioBufferReferenceCounted : public juce::ReferenceCountedObject
+        {
+        public:
+            AudioBufferReferenceCounted ()
+            {
+                juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
+                audioBuffer = new juce::AudioBuffer<float> ();
+            }
+
+            ~AudioBufferReferenceCounted ()
+            {
+                juce::Logger::outputDebugString ("AudioBufferReferenceCounted dtor");
+                delete audioBuffer;
+            }
+            using Ptr = juce::ReferenceCountedObjectPtr<AudioBufferReferenceCounted>;
+
+            juce::AudioBuffer<float>* getAudioBuffer () { return audioBuffer; }
+
+        private:
+            juce::AudioBuffer<float>* audioBuffer;
+
+        };
+        {
+            juce::Logger::outputDebugString ("instantiating abrc");
+            AudioBufferReferenceCounted::Ptr abrc { new AudioBufferReferenceCounted () };
+            juce::Logger::outputDebugString ("instantiating abrc2");
+            auto abrc2 { abrc };
+            juce::ValueTree testVT ("test");
+            juce::Logger::outputDebugString ("adding to VT");
+            juce::Logger::outputDebugString ("reference count before adding to VT: " + juce::String(abrc->getReferenceCount()));
+            testVT.setProperty ("abrc", abrc.get (), nullptr);
+            juce::Logger::outputDebugString ("reference count after adding to VT: " + juce::String (abrc->getReferenceCount ()));
+            auto abrc3 { AudioBufferReferenceCounted::Ptr(static_cast<AudioBufferReferenceCounted*>(testVT.getProperty ("abrc").getObject ())) };
+            juce::Logger::outputDebugString ("reference count after retrieving it from VT: " + juce::String (abrc->getReferenceCount ()));
+            auto ab { abrc3->getAudioBuffer () };
+            juce::Logger::outputDebugString ("reference count after create object from ptr: " + juce::String (abrc->getReferenceCount ()));
+            juce::Logger::outputDebugString ("deleting abrc");
+            abrc = nullptr;
+            juce::Logger::outputDebugString ("deleting abrc2");
+            abrc2 = nullptr;
+            juce::Logger::outputDebugString ("abrc3  and VT going out of scope");
+        }
+#endif
+
         initAppDirectory ();
         initLogger ();
         initCrashHandler ();
@@ -149,9 +193,6 @@ public:
         // debug tool for watching changes on the Directory Data Properties Value Tree
         //directoryDataMonitor.assign (directoryDataProperties.getValueTreeRef ());
 
-        // SampleManager requires that the PresetManagerProperties and DirectoryDataProperties are initialized
-        sampleManager.init (rootProperties.getValueTree ());
-
         // when the folder being viewed changes, signal the directory scanner to rescan
         appProperties.onMostRecentFolderChange = [this] (juce::String folderName)
         {
@@ -213,7 +254,7 @@ public:
 
     void initAudio ()
     {
-        audioPlayer.init (rootProperties.getValueTree ());
+        //audioPlayer.init (rootProperties.getValueTree ());
     }
 
     void initAppDirectory ()
@@ -275,24 +316,18 @@ public:
     void initSystemServices ()
     {
         // initialize services
-        sampleManager.init (rootProperties.getValueTree ());
         editManager.init (rootProperties.getValueTree ());
 
         // connect services to the SystemServices VTW
         SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
-        systemServices.setSampleManager (&sampleManager);
         systemServices.setEditManager (&editManager);
 
         directoryValueTree.setFileTypeIdentifier ([this] (juce::File file)
         {
-            if (sampleManager.isSupportedAudioFile (file))
+            if (editManager.isSupportedAudioFile (file))
                 return DirectoryDataProperties::TypeIndex::audioFile;
             return DirectoryDataProperties::TypeIndex::unknownFile;
         });
-        directoryDataProperties.onRootScanComplete = [this] ()
-        {
-            juce::MessageManager::callAsync ([this] () { sampleManager.update (); });
-        };
 
         // start the initial directory scan, based on the last accessed folder stored in the app properties
         directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);
@@ -380,7 +415,6 @@ private:
     AudioPlayer audioPlayer;
 
     // System Services
-    SampleManager sampleManager;
     EditManager editManager;
 
 #if JUCE_DEBUG

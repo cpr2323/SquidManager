@@ -331,7 +331,7 @@ void ChannelEditorComponent::setupComponents ()
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
-    startCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    startCueTextEditor.getMaxValueCallback = [this] () { return squidChannelProperties.getEndCue (); }; // TODO tie in the sample length here
     startCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     startCueTextEditor.updateDataCallback = [this] (juce::int32 value) { startCueUiChanged (value); };
     startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
@@ -345,14 +345,14 @@ void ChannelEditorComponent::setupComponents ()
             else
                 return 25;
         } ();
-        const auto newValue { (squidChannelProperties.getStartCue () / 2) + (multiplier * direction) };
+        const auto newValue { (squidChannelProperties.getStartCue ()) + (multiplier * direction) };
         startCueTextEditor.setValue (newValue);
     };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
     loopCueTextEditor.getMinValueCallback = [this] () { return 0; };
-    loopCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    loopCueTextEditor.getMaxValueCallback = [this] () { return squidChannelProperties.getEndCue (); }; // TODO tie in the sample length here
     loopCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     loopCueTextEditor.updateDataCallback = [this] (juce::int32 value) { loopCueUiChanged (value); };
     loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
@@ -366,14 +366,17 @@ void ChannelEditorComponent::setupComponents ()
             else
                 return 25;
         } ();
-        const auto newValue { (squidChannelProperties.getLoopCue () / 2) + (multiplier * direction) };
+        const auto newValue { (squidChannelProperties.getLoopCue ()) + (multiplier * direction) };
         loopCueTextEditor.setValue (newValue);
     };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
     endCueTextEditor.getMinValueCallback = [this] () { return 0; };
-    endCueTextEditor.getMaxValueCallback = [this] () { return 1000; }; // TODO tie in the sample length here
+    endCueTextEditor.getMaxValueCallback = [this] () { 
+        auto x = 0;
+        return squidChannelProperties.getSampleLength ();
+        }; // TODO tie in the sample length here
     endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };
     endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
@@ -387,7 +390,7 @@ void ChannelEditorComponent::setupComponents ()
             else
                 return 25;
         } ();
-        const auto newValue { (squidChannelProperties.getEndCue () / 2) + (multiplier * direction) };
+        const auto newValue { (squidChannelProperties.getEndCue ()) + (multiplier * direction) };
         endCueTextEditor.setValue (newValue);
     };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
@@ -653,11 +656,13 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
-    sampleManager = systemServices.getSampleManager ();
     editManager = systemServices.getEditManager ();
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     cvAssignEditor.init (squidChannelPropertiesVT);
+
+    // TODO - we need to call this when the sample changes
+    updateLoopPointsView ();
 
     initOutputComboBox ();
 
@@ -758,6 +763,28 @@ void ChannelEditorComponent::initializeCallbacks ()
     };
     squidChannelProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
+
+    squidChannelProperties.onAudioBufferPtrChange = [this] (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
+        {
+            updateLoopPointsView (); };
+}
+
+void ChannelEditorComponent::updateLoopPointsView ()
+{
+    uint32_t startSample { 0 };
+    uint32_t numSamples { 0 };
+    if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
+    {
+        startSample = squidChannelProperties.getLoopCue ();
+        numSamples = squidChannelProperties.getEndCue () - startSample;
+        loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer());
+    }
+    else
+    {
+        loopPointsView.setAudioBuffer (nullptr);
+    }
+    loopPointsView.setLoopPoints (startSample / 2, numSamples / 2);
+    loopPointsView.repaint ();
 }
 
 void ChannelEditorComponent::appendCueSet ()
@@ -846,8 +873,9 @@ void ChannelEditorComponent::decayDataChanged (int decay)
 
 void ChannelEditorComponent::endCueDataChanged (juce::int32 endCue)
 {
-    endCueTextEditor.setText (juce::String (endCue / 2), juce::NotificationType::dontSendNotification);
+    endCueTextEditor.setText (juce::String (endCue), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCue / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::eTrigDataChanged (int eTrig)
@@ -887,8 +915,9 @@ void ChannelEditorComponent::levelDataChanged (int level)
 
 void ChannelEditorComponent::loopCueDataChanged (juce::int32 loopCue)
 {
-    loopCueTextEditor.setText (juce::String (loopCue / 2), false);
+    loopCueTextEditor.setText (juce::String (loopCue), false);
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCue / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::loopModeDataChanged (int loopMode)
@@ -918,8 +947,9 @@ void ChannelEditorComponent::speedDataChanged (int speed)
 
 void ChannelEditorComponent::startCueDataChanged (juce::int32 startCue)
 {
-    startCueTextEditor.setText (juce::String (startCue / 2), juce::NotificationType::dontSendNotification);
+    startCueTextEditor.setText (juce::String (startCue), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCuePoints (startCue / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::stepsDataChanged (int steps)
@@ -973,6 +1003,7 @@ void ChannelEditorComponent::endCueUiChanged (juce::int32 endCue)
 
     squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), squidChannelProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCueByteOffset / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::eTrigUiChanged (int eTrig)
@@ -1015,6 +1046,7 @@ void ChannelEditorComponent::loopCueUiChanged (juce::int32 loopCue)
 
     squidChannelProperties.setCuePoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidChannelProperties.getEndCueSet (curCueSetIndex));
     waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCueByteOffset / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::loopModeUiChanged (int loopMode)
@@ -1050,6 +1082,7 @@ void ChannelEditorComponent::startCueUiChanged (juce::int32 startCue)
 
     squidChannelProperties.setCuePoints (curCueSetIndex, startCueByteOffset, squidChannelProperties.getLoopCueSet (curCueSetIndex), squidChannelProperties.getEndCueSet (curCueSetIndex));
     waveformDisplay.setCuePoints (startCueByteOffset / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    updateLoopPointsView ();
 }
 
 void ChannelEditorComponent::stepsUiChanged (int steps)
@@ -1084,7 +1117,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 
 bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
-    if (files.size () != 1 || ! sampleManager->isSupportedAudioFile (files[0]))
+    if (files.size () != 1 || ! editManager->isSupportedAudioFile (files[0]))
         return false;
 
     return true;

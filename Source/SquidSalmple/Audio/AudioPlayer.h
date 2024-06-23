@@ -6,9 +6,6 @@
 #include "../SquidBankProperties.h"
 #include "../SquidChannelProperties.h"
 #include "../../AppProperties.h"
-//#include "../../Assimil8or/Assimil8orPreset.h"
-#include "../SampleManager/SampleManagerProperties.h"
-#include "../SampleManager/SampleProperties.h"
 
 class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener
@@ -24,9 +21,7 @@ private:
     AudioPlayerProperties audioPlayerProperties;
     AppProperties appProperties;
     SquidBankProperties bankProperties;
-    SampleManagerProperties sampleManagerProperties;
     SquidChannelProperties channelProperties;
-    SampleProperties sampleProperties;
     juce::AudioDeviceManager audioDeviceManager;
     juce::AudioFormatManager audioFormatManager;
     juce::AudioSourcePlayer audioSourcePlayer;

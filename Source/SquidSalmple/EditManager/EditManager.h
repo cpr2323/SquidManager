@@ -8,20 +8,26 @@
 class EditManager
 {
 public:
+    EditManager ();
+
     void init (juce::ValueTree rootPropertiesVT);
 
+    bool isSupportedAudioFile (juce::File file);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
+    void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
 
 private:
     RuntimeRootProperties runtimeRootProperties;
     SquidBankProperties uneditedSquidBankProperties;
     SquidBankProperties squidBankProperties;
-    std::array<SquidChannelProperties, 8> squidChannelPropertiesList;
     juce::File bankDirectory;
+    std::array<SquidChannelProperties, 8> channelPropertiesList;
+
+    juce::AudioFormatManager audioFormatManager;
 
     void copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties);
-
+    void addSampleToChannelProperties (juce::ValueTree channelProperties, juce::File sampleFile);
 };
