@@ -375,7 +375,7 @@ void ChannelEditorComponent::setupComponents ()
     endCueTextEditor.getMinValueCallback = [this] () { return 0; };
     endCueTextEditor.getMaxValueCallback = [this] () { 
         auto x = 0;
-        return squidChannelProperties.getSampleDataSampleLength () * 2;
+        return squidChannelProperties.getSampleDataNumSamples () * 2;
         }; // TODO tie in the sample length here
     endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };
@@ -644,12 +644,6 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
-void ChannelEditorComponent::initWaveformDisplay (juce::File sampleFile, int curCueSet)
-{
-    waveformDisplay.init (sampleFile);
-    setCurCue (curCueSet);
-}
-
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties { rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no };
@@ -737,7 +731,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     {
         initCueSetTabs ();
         auto sampleFileName { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (squidChannelProperties.getChannelIndex () + 1)).getChildFile (squidChannelProperties.getFileName ()) };
-        initWaveformDisplay (sampleFileName, squidChannelProperties.getCurCueSet ());
+        setCurCue (squidChannelProperties.getCurCueSet ());
     };
     squidChannelProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
     squidChannelProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue)
@@ -764,9 +758,14 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 
-    squidChannelProperties.onAudioBufferPtrChange = [this] (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
+    squidChannelProperties.onSampleDataAudioBufferChange = [this] (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
         {
-            updateLoopPointsView (); };
+            updateLoopPointsView ();
+            if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
+                waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
+            else
+                waveformDisplay.init (nullptr);
+        };
 }
 
 void ChannelEditorComponent::updateLoopPointsView ()
@@ -778,6 +777,7 @@ void ChannelEditorComponent::updateLoopPointsView ()
         startSample = squidChannelProperties.getLoopCue ();
         numSamples = squidChannelProperties.getEndCue () - startSample;
         loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer());
+        waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
     }
     else
     {

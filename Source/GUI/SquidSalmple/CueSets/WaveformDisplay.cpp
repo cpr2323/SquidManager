@@ -3,36 +3,15 @@
 
 const auto markerHandleSize { 5 };
 
-WaveformDisplay::WaveformDisplay ()
+void WaveformDisplay::init (juce::AudioBuffer<float>* theAudioBuffer)
 {
-    audioFormatManager.registerBasicFormats ();
+    audioBuffer = theAudioBuffer;
+    if (audioBuffer == nullptr)
+        return;
+    numSamples = audioBuffer->getNumSamples();
 }
 
-void WaveformDisplay::init (juce::File theAudioFile)
-{
-    audioFile = theAudioFile;
-
-    if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (audioFile) }; sampleFileReader != nullptr)
-    {
-        numSamples = sampleFileReader->lengthInSamples;
-        DebugLog ("WaveformDisplay", "init [" + audioFile.getFullPathName () + "] - numSamples = " + juce::String (numSamples).paddedLeft ('0', 6) +
-                  " [0x" + juce::String::toHexString (numSamples).paddedLeft ('0', 6) + "], bitDepth = " + juce::String (sampleFileReader->bitsPerSample) +
-                  ", channels = " + juce::String(sampleFileReader->numChannels) +
-                  ", sampleRate = " + juce::String (sampleFileReader->sampleRate));
-
-        // read in audio data
-        audioBuffer.setSize (sampleFileReader->numChannels, static_cast<int> (numSamples), false, true, false);
-        sampleFileReader->read (&audioBuffer, 0, static_cast<int> (numSamples), 0, true, false);
-        audioBufferPtr = &audioBuffer;
-    }
-    else
-    {
-        audioBufferPtr = nullptr;
-        //jassertfalse;
-    }
-}
-
-void WaveformDisplay::setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd)
+void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd)
 {
     cueStart = newCueStart;
     cueLoop = newCueLoop;
@@ -49,7 +28,7 @@ void WaveformDisplay::resized ()
     const auto dashSize { getHeight () / 11.f };
     dashedSpec = { dashSize, dashSize };
 
-    if (audioBufferPtr == nullptr)
+    if (audioBuffer == nullptr)
     {
         samplesPerPixel = 0;
         sampleStartMarkerX = 0;
@@ -70,10 +49,10 @@ void WaveformDisplay::resized ()
 
 void WaveformDisplay::displayWaveform (juce::Graphics& g)
 {
-    if (audioBufferPtr == nullptr)
+    if (audioBuffer == nullptr)
         return;
     // TODO - implement side selection
-    auto readPtr { audioBufferPtr->getReadPointer (0) };
+    auto readPtr { audioBuffer->getReadPointer (0) };
 
     g.setColour (juce::Colours::black);
     // TODO - get proper end pixel if sample ends before end of display
@@ -116,8 +95,8 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
 
 void WaveformDisplay::displayMarkers (juce::Graphics& g)
 {
-    if (audioBufferPtr == nullptr)
-        return;
+    if (audioBuffer == nullptr)
+        return; 
 
     g.setColour (juce::Colours::white);
 
@@ -148,7 +127,7 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
 void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
 {
-    if (audioBufferPtr == nullptr)
+    if (audioBuffer == nullptr)
         return;
 
     if (sampleStartHandle.contains (e.getPosition ()))
@@ -165,7 +144,7 @@ void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
 
 void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
 {
-    if (audioBufferPtr == nullptr)
+    if (audioBuffer == nullptr)
         return;
 
     switch (handleIndex)
@@ -177,8 +156,8 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kStart:
         {
-            const auto newSampleStart { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<juce::int64> (0), static_cast<juce::int64> (cueEnd)) };
+            const auto newSampleStart { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<uint32_t> (0), static_cast<uint32_t> (cueEnd)) };
             cueStart = clampedSampleStart;
             if (cueStart > cueLoop)
             {
@@ -197,8 +176,8 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kLoop:
         {
-            const auto newLoop { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedLoopLength { std::clamp (newLoop, static_cast<juce::int64> (cueStart), static_cast<juce::int64> (cueEnd)) };
+            const auto newLoop { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedLoopLength { std::clamp (newLoop, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (cueEnd)) };
             cueLoop = clampedLoopLength;
             sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
             sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
@@ -209,8 +188,8 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kEnd:
         {
-            const auto newSampleEnd { static_cast<juce::int64> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<juce::int64> (cueStart), static_cast<juce::int64> (audioBufferPtr->getNumSamples ())) };
+            const auto newSampleEnd { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (audioBuffer->getNumSamples ())) };
             cueEnd = clampedSampleEnd;
             if (cueEnd < cueLoop)
             {

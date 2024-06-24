@@ -164,9 +164,9 @@ namespace SquidSalmple
         const auto k_Reserved2Size { 4 * k8BitSize };
         const auto kSampleEndOffset { k_Reserved2Offset + k_Reserved2Size };
         const auto kSampleEndSize { k32BitSize };
-        const auto kSampleLengthOffset { kSampleEndOffset + kSampleEndSize };
-        const auto kSampleLengthSize { k32BitSize };
-        const auto kQualityOffset { kSampleLengthOffset + kSampleLengthSize };
+        const auto kEndOFDataOffset { kSampleEndOffset + kSampleEndSize };
+        const auto kEndOfDataSize { k32BitSize };
+        const auto kQualityOffset { kEndOFDataOffset + kEndOfDataSize };
         const auto kQualitySize { k8BitSize };
         const auto kLoopOffset { kQualityOffset + kQualitySize };   // NONE, NORMAL, ZIGZAG, GATE, ZIGZAG_GATE,
         const auto kLoopSize { k8BitSize };

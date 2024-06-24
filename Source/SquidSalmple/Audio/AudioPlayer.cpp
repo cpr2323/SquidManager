@@ -152,7 +152,7 @@ void AudioPlayer::prepareSampleForPlayback ()
         sampleRateRatio = sampleRate / channelProperties.getSampleDataSampleRate ();
         resamplingAudioSource->setResamplingRatio (channelProperties.getSampleDataSampleRate () / sampleRate);
         resamplingAudioSource->prepareToPlay (blockSize, sampleRate);
-        sampleBuffer = std::make_unique<juce::AudioBuffer<float>> (channelProperties.getSampleDataNumChannels (), static_cast<int> (channelProperties.getSampleDataSampleLength () * sampleRate / channelProperties.getSampleDataSampleRate ()));
+        sampleBuffer = std::make_unique<juce::AudioBuffer<float>> (channelProperties.getSampleDataNumChannels (), static_cast<int> (channelProperties.getSampleDataNumSamples () * sampleRate / channelProperties.getSampleDataSampleRate ()));
         resamplingAudioSource->getNextAudioBlock (juce::AudioSourceChannelInfo (*sampleBuffer.get ()));
         curSampleOffset = 0;
     }

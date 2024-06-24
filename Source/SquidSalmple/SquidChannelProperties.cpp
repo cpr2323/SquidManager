@@ -114,7 +114,7 @@ void SquidChannelProperties::initValueTree ()
 
     setSampleDataBits (0, false);
     setSampleDataSampleRate (0.0, false);
-    setSampleDataSampleLength (0, false);
+    setSampleDataNumSamples (0, false);
     setSampleDataNumChannels (0, false);
     setSampleDataAudioBuffer ({}, false);
 }
@@ -364,9 +364,9 @@ void SquidChannelProperties::setReverse (int reverse, bool includeSelfCallback)
     setValue (reverse, ReversePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setSampleLength (uint32_t sampleLength, bool includeSelfCallback)
+void SquidChannelProperties::setEndOfData (uint32_t endOfData, bool includeSelfCallback)
 {
-    setValue (static_cast<int> (sampleLength), SampleLengthPropertyId, includeSelfCallback);
+    setValue (static_cast<int> (endOfData), EndOfDataPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setLevel (int level, bool includeSelfCallback)
@@ -474,29 +474,32 @@ int SquidChannelProperties::getBits ()
     return getValue<int> (BitsPropertyId);
 }
 
-void SquidChannelProperties::setSampleDataAudioBuffer (AudioBufferRefCounted::RefCountedPtr audioBuffer, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataAudioBuffer (AudioBufferRefCounted::RefCountedPtr audioBuffer, bool /*includeSelfCallback*/)
 {
-    data.setProperty (AudioBufferPtrPropertyId, audioBuffer.get (), nullptr);
+    // NOTE: I am accessing the VT directly, because at the moment the setValue specialization for pointers ends up being called, breaking the ReferenceCountedObject handler
+    //       in juce::var
+    data.setProperty (SampleDataAudioBufferPropertyId, audioBuffer.get (), nullptr);
 }
 
 void SquidChannelProperties::setSampleDataBits (int bitsPerSample, bool includeSelfCallback)
 {
-    setValue (bitsPerSample, BitsPerSamplePropertyId, includeSelfCallback);
+    setValue (bitsPerSample, SampleDataBitDepthPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setSampleDataSampleRate (double sampleRate, bool includeSelfCallback)
 {
-    setValue (sampleRate, SampleRatePropertyId, includeSelfCallback);
+    setValue (sampleRate, SampleDataSampleRatePropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setSampleDataNumChannels (int numChannels, bool includeSelfCallback)
 {
-    setValue (numChannels, NumChannelsPropertyId, includeSelfCallback);
+    setValue (numChannels, SampleDataNumChannelsPropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setSampleDataSampleLength (juce::int64 lengthInSamples, bool includeSelfCallback)
+// NOTE: this is only 32bits because the sample length of the module is limited to ~11 seconds
+void SquidChannelProperties::setSampleDataNumSamples (uint32_t numSamples, bool includeSelfCallback)
 {
-    setValue (lengthInSamples, LengthInSamplesPropertyId, includeSelfCallback);
+    setValue (static_cast<int> (numSamples), SampleDataNumSamplesPropertyId, includeSelfCallback);
 }
 
 uint16_t SquidChannelProperties::getChannelFlags ()
@@ -656,9 +659,9 @@ int SquidChannelProperties::getReverse ()
     return getValue<int> (ReversePropertyId);
 }
 
-uint32_t SquidChannelProperties::getSampleLength ()
+uint32_t SquidChannelProperties::getEndOfData ()
 {
-    return static_cast<uint32_t> (getValue<int> (SampleLengthPropertyId));
+    return static_cast<uint32_t> (getValue<int> (EndOfDataPropertyId));
 }
 
 int SquidChannelProperties::getLevel ()
@@ -806,27 +809,30 @@ juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
 
 int SquidChannelProperties::getSampleDataBits ()
 {
-    return getValue<int> (BitsPerSamplePropertyId);
+    return getValue<int> (SampleDataBitDepthPropertyId);
 }
 
 double SquidChannelProperties::getSampleDataSampleRate ()
 {
-    return getValue<double> (SampleRatePropertyId);
+    return getValue<double> (SampleDataSampleRatePropertyId);
 }
 
 int SquidChannelProperties::getSampleDataNumChannels ()
 {
-    return getValue<int> (NumChannelsPropertyId);
+    return getValue<int> (SampleDataNumChannelsPropertyId);
 }
 
-juce::int64 SquidChannelProperties::getSampleDataSampleLength ()
+// NOTE: this is only 32bits because the sample length of the module is limited to ~11 seconds
+uint32_t SquidChannelProperties::getSampleDataNumSamples ()
 {
-    return getValue<juce::int64> (LengthInSamplesPropertyId);
+    return static_cast<uint32_t>(getValue<int> (SampleDataNumSamplesPropertyId));
 }
 
 AudioBufferRefCounted::RefCountedPtr SquidChannelProperties::getSampleDataAudioBuffer ()
 {
-    return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*>(data.getProperty (AudioBufferPtrPropertyId).getObject ()));
+    // NOTE: I am accessing the VT directly, because at the moment the getValue specialization for pointers ends up being called, breaking the ReferenceCountedObject handler
+    //       in juce::var
+    return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*>(data.getProperty (SampleDataAudioBufferPropertyId).getObject ()));
 }
 
 void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
@@ -883,7 +889,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setRate (sourceChannelProperties.getRate (), false);
     setRecDest (sourceChannelProperties.getRecDest () , false);
     setReverse (sourceChannelProperties.getReverse (), false);
-    setSampleLength (sourceChannelProperties.getSampleLength (), false);
+    setEndOfData (sourceChannelProperties.getEndOfData (), false);
     setSpeed (sourceChannelProperties.getSpeed (), false);
     setStartCue (sourceChannelProperties.getStartCue (), false);
     setSteps (sourceChannelProperties.getSteps (), false);
@@ -906,7 +912,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
 
     setSampleDataBits (sourceChannelProperties.getSampleDataBits (), false);
     setSampleDataSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
-    setSampleDataSampleLength (sourceChannelProperties.getSampleDataSampleLength (), false);
+    setSampleDataNumSamples (sourceChannelProperties.getSampleDataNumSamples (), false);
     setSampleDataNumChannels (sourceChannelProperties.getSampleDataNumChannels (), false);
     setSampleDataAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
 }
@@ -993,6 +999,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onEndCueChange != nullptr)
                 onEndCueChange (getEndCue ());
         }
+        else if (property == EndOfDataPropertyId)
+        {
+            if (onEndOfDataChange != nullptr)
+                onEndOfDataChange (getEndOfData ());
+        }
         else if (property == ETrigPropertyId)
         {
             if (onETrigChange != nullptr)
@@ -1053,6 +1064,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onNumCueSetsChange != nullptr)
                 onNumCueSetsChange (getNumCueSets ());
         }
+        else if (property == SampleDataNumSamplesPropertyId)
+        {
+            if (onSampleDataNumSamplesChange != nullptr)
+                onSampleDataNumSamplesChange (getSampleDataNumSamples ());
+        }
         else if (property == QuantPropertyId)
         {
             if (onQuantChange != nullptr)
@@ -1072,11 +1088,6 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onReverseChange != nullptr)
                 onReverseChange (getReverse ());
-        }
-        else if (property == SampleLengthPropertyId)
-        {
-            if (onSampleLengthChange != nullptr)
-                onSampleLengthChange (getSampleLength());
         }
         else if (property == SpeedPropertyId)
         {
@@ -1098,30 +1109,25 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onXfadeChange != nullptr)
                 onXfadeChange (getXfade ());
         }
-        else if (property == BitsPerSamplePropertyId)
+        else if (property == SampleDataBitDepthPropertyId)
         {
-            if (onBitsPerSampleChange != nullptr)
-                onBitsPerSampleChange (getSampleDataBits ());
+            if (onSampleDataBitsDepthChange != nullptr)
+                onSampleDataBitsDepthChange (getSampleDataBits ());
         }
-        else if (property == SampleRatePropertyId)
+        else if (property == SampleDataSampleRatePropertyId)
         {
-            if (onSampleRateChange != nullptr)
-                onSampleRateChange (getSampleDataSampleRate ());
+            if (onSampleDataSampleRateChange != nullptr)
+                onSampleDataSampleRateChange (getSampleDataSampleRate ());
         }
-        else if (property == NumChannelsPropertyId)
+        else if (property == SampleDataNumChannelsPropertyId)
         {
-            if (onNumChannelsChange != nullptr)
-                onNumChannelsChange (getSampleDataNumChannels ());
+            if (onSampleDataNumChannelsChange != nullptr)
+                onSampleDataNumChannelsChange (getSampleDataNumChannels ());
         }
-        else if (property == LengthInSamplesPropertyId)
+        else if (property == SampleDataAudioBufferPropertyId)
         {
-            if (onLengthInSamplesChange != nullptr)
-                onLengthInSamplesChange (getSampleDataSampleLength ());
-        }
-        else if (property == AudioBufferPtrPropertyId)
-        {
-            if (onAudioBufferPtrChange != nullptr)
-                onAudioBufferPtrChange (getSampleDataAudioBuffer ());
+            if (onSampleDataAudioBufferChange != nullptr)
+                onSampleDataAudioBufferChange (getSampleDataAudioBuffer ());
         }
     }
 }

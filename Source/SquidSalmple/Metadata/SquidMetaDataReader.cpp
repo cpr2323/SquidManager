@@ -69,6 +69,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setChoke (getValue <SquidSalmple::DataLayout::kChokeSize> (SquidSalmple::DataLayout::kChokeOffset), false);
         squidChannelProperties.setDecay (getValue <SquidSalmple::DataLayout::kDecaySize> (SquidSalmple::DataLayout::kDecayOffset), false);
         squidChannelProperties.setEndCue (getValue <SquidSalmple::DataLayout::kSampleEndSize> (SquidSalmple::DataLayout::kSampleEndOffset), false);
+        squidChannelProperties.setEndOfData (getValue <SquidSalmple::DataLayout::kEndOfDataSize> (SquidSalmple::DataLayout::kEndOFDataOffset), false);
         squidChannelProperties.setETrig (getValue <SquidSalmple::DataLayout::kExternalTriggerSize> (SquidSalmple::DataLayout::kExternalTriggerOffset), false);
         uint16_t frequencyAndType { getValue <SquidSalmple::DataLayout::kCutoffFrequencySize> (SquidSalmple::DataLayout::kCutoffFrequencyOffset) };
         squidChannelProperties.setFilterType (frequencyAndType & 0x000F, false);
@@ -82,7 +83,6 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setRate (getValue <SquidSalmple::DataLayout::kRateSize> (SquidSalmple::DataLayout::kRateOffset), false);
         squidChannelProperties.setRecDest (getValue <SquidSalmple::DataLayout::kRecDestSize> (SquidSalmple::DataLayout::kRecDestOffset), false);
         squidChannelProperties.setReverse (getValue <SquidSalmple::DataLayout::kReverseSize> (SquidSalmple::DataLayout::kReverseOffset), false);
-        squidChannelProperties.setSampleLength (getValue <SquidSalmple::DataLayout::kSampleLengthSize> (SquidSalmple::DataLayout::kSampleLengthOffset), false);
         squidChannelProperties.setSpeed (getValue <SquidSalmple::DataLayout::kSpeedSize> (SquidSalmple::DataLayout::kSpeedOffset), false);
         squidChannelProperties.setStartCue (getValue <SquidSalmple::DataLayout::kSampleStartSize> (SquidSalmple::DataLayout::kSampleStartOffset), false);
         squidChannelProperties.setSteps (getValue<SquidSalmple::DataLayout::kStepTrigNumSize> (SquidSalmple::DataLayout::kStepTrigNumOffset), false);
@@ -109,7 +109,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
 
         ////////////////////////////////////
         // cue sets
-        auto logCueSet = [this, numSamples = squidChannelProperties.getSampleLength ()] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
+        auto logCueSet = [this, numSamples = squidChannelProperties.getEndOfData ()] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
         {
             LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
                 juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
@@ -159,14 +159,14 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     else
     {
         LogReader (sampleFile.getFileName() + " does not contain meta-data");
-        auto numSamples = squidChannelProperties.getSampleDataSampleLength ();
+        auto numSamples = squidChannelProperties.getSampleDataNumSamples ();
         uint32_t endOffset = numSamples * 2;
         // initialize parameters that have defaults related to specific channel or sample
         squidChannelProperties.setChannelIndex (channelIndex, false);
         squidChannelProperties.setChannelSource (channelIndex, false);
         squidChannelProperties.setChoke (channelIndex, false);
         squidChannelProperties.setEndCue (endOffset, false);
-        squidChannelProperties.setSampleLength (endOffset, false);
+        squidChannelProperties.setEndOfData (endOffset, false);
         squidChannelProperties.setRecDest (channelIndex, false);
         squidChannelProperties.setCuePoints (0, 0, 0, endOffset);
     }

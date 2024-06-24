@@ -2,19 +2,15 @@
 
 #include <JuceHeader.h>
 
-using AudioBufferType = juce::AudioBuffer<float>;
-
 class WaveformDisplay : public juce::Component
 {
 public:
-    WaveformDisplay ();
+    void init (juce::AudioBuffer<float>* theAudioBuffer);
+    void setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd);
 
-    void init (juce::File theTestFile);
-    void setCuePoints (juce::int64 newCueStart, juce::int64 newCueLoop, juce::int64 newCueEnd);
-
-    std::function<void (juce::int64 startPoint)> onStartPointChange;
-    std::function<void (juce::int64 loopPoint)> onLoopPointChange;
-    std::function<void (juce::int64 endPoint)> onEndPointChange;
+    std::function<void (uint32_t startPoint)> onStartPointChange;
+    std::function<void (uint32_t loopPoint)> onLoopPointChange;
+    std::function<void (uint32_t endPoint)> onEndPointChange;
 private:
     enum class EditHandleIndex
     {
@@ -23,15 +19,12 @@ private:
         kLoop = 1,
         kEnd = 2,
     };
-    juce::File audioFile;
 
-    juce::int64 cueStart { 0 };
-    juce::int64 cueLoop { 0 };
-    juce::int64 cueEnd { 0 };
+    uint32_t cueStart { 0 };
+    uint32_t cueLoop { 0 };
+    uint32_t cueEnd { 0 };
 
-    juce::AudioFormatManager audioFormatManager;
-    AudioBufferType audioBuffer;
-    AudioBufferType* audioBufferPtr { nullptr };
+    juce::AudioBuffer<float>* audioBuffer { nullptr };
 
     juce::int64 numSamples { 0 };
     int halfHeight { 0 };

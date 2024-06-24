@@ -229,7 +229,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
 
         channelProperties.setSampleDataBits (sampleFileReader->bitsPerSample, false);
         channelProperties.setSampleDataSampleRate (sampleFileReader->sampleRate, false);
-        channelProperties.setSampleDataSampleLength (lengthInSamples, false);
+        channelProperties.setSampleDataNumSamples (lengthInSamples, false);
         channelProperties.setSampleDataNumChannels (sampleFileReader->numChannels, false);
         channelProperties.setSampleDataAudioBuffer (abrc, false);
     }
@@ -237,7 +237,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     {
         channelProperties.setSampleDataBits (0, false);
         channelProperties.setSampleDataSampleRate (0.0, false);
-        channelProperties.setSampleDataSampleLength (0, false);
+        channelProperties.setSampleDataNumSamples (0, false);
         channelProperties.setSampleDataNumChannels (0, false);
         channelProperties.setSampleDataAudioBuffer ({}, false);
     }
