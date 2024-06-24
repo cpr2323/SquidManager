@@ -89,11 +89,11 @@ public:
     void triggerLoadBegin (bool includeSelfCallback);
     void triggerLoadComplete (bool includeSelfCallback);
 
-    void setBitsPerSample (int bitsPerSample, bool includeSelfCallback);
-    void setSampleRate (double sampleRate, bool includeSelfCallback);
-    void setNumChannels (int numChannels, bool includeSelfCallback);
-    void setLengthInSamples (juce::int64, bool includeSelfCallback);
-    void setAudioBuffer (AudioBufferRefCounted::RefCountedPtr, bool includeSelfCallback);
+    void setSampleDataBits (int bitsPerSample, bool includeSelfCallback);
+    void setSampleDataSampleRate (double sampleRate, bool includeSelfCallback);
+    void setSampleDataNumChannels (int numChannels, bool includeSelfCallback);
+    void setSampleDataSampleLength (juce::int64, bool includeSelfCallback);
+    void setSampleDataAudioBuffer (AudioBufferRefCounted::RefCountedPtr, bool includeSelfCallback);
 
     int getAttack ();
     int getBits ();
@@ -145,7 +145,7 @@ public:
 
     int getSampleDataBits ();
     double getSampleDataSampleRate ();
-    int getSampoleDataNumChannels ();
+    int getSampleDataNumChannels ();
     juce::int64 getSampleDataSampleLength ();
     AudioBufferRefCounted::RefCountedPtr getSampleDataAudioBuffer ();
 

@@ -112,11 +112,11 @@ void SquidChannelProperties::initValueTree ()
     setNumCueSets (1, false);
     setCurCueSet (0, false);
 
-    setBitsPerSample (0, false);
-    setSampleRate (0.0, false);
-    setLengthInSamples (0, false);
-    setNumChannels (0, false);
-    setAudioBuffer ({}, false);
+    setSampleDataBits (0, false);
+    setSampleDataSampleRate (0.0, false);
+    setSampleDataSampleLength (0, false);
+    setSampleDataNumChannels (0, false);
+    setSampleDataAudioBuffer ({}, false);
 }
 
 void SquidChannelProperties::setBits (int bits, bool includeSelfCallback)
@@ -474,27 +474,27 @@ int SquidChannelProperties::getBits ()
     return getValue<int> (BitsPropertyId);
 }
 
-void SquidChannelProperties::setAudioBuffer (AudioBufferRefCounted::RefCountedPtr audioBuffer, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataAudioBuffer (AudioBufferRefCounted::RefCountedPtr audioBuffer, bool includeSelfCallback)
 {
     data.setProperty (AudioBufferPtrPropertyId, audioBuffer.get (), nullptr);
 }
 
-void SquidChannelProperties::setBitsPerSample (int bitsPerSample, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataBits (int bitsPerSample, bool includeSelfCallback)
 {
     setValue (bitsPerSample, BitsPerSamplePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setSampleRate (double sampleRate, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataSampleRate (double sampleRate, bool includeSelfCallback)
 {
     setValue (sampleRate, SampleRatePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setNumChannels (int numChannels, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataNumChannels (int numChannels, bool includeSelfCallback)
 {
     setValue (numChannels, NumChannelsPropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setLengthInSamples (juce::int64 lengthInSamples, bool includeSelfCallback)
+void SquidChannelProperties::setSampleDataSampleLength (juce::int64 lengthInSamples, bool includeSelfCallback)
 {
     setValue (lengthInSamples, LengthInSamplesPropertyId, includeSelfCallback);
 }
@@ -814,7 +814,7 @@ double SquidChannelProperties::getSampleDataSampleRate ()
     return getValue<double> (SampleRatePropertyId);
 }
 
-int SquidChannelProperties::getSampoleDataNumChannels ()
+int SquidChannelProperties::getSampleDataNumChannels ()
 {
     return getValue<int> (NumChannelsPropertyId);
 }
@@ -904,11 +904,11 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
 
-    setBitsPerSample (sourceChannelProperties.getSampleDataBits (), false);
-    setSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
-    setLengthInSamples (sourceChannelProperties.getSampleDataSampleLength (), false);
-    setNumChannels (sourceChannelProperties.getSampoleDataNumChannels (), false);
-    setAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
+    setSampleDataBits (sourceChannelProperties.getSampleDataBits (), false);
+    setSampleDataSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
+    setSampleDataSampleLength (sourceChannelProperties.getSampleDataSampleLength (), false);
+    setSampleDataNumChannels (sourceChannelProperties.getSampleDataNumChannels (), false);
+    setSampleDataAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
 }
 
 juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
@@ -1111,7 +1111,7 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         else if (property == NumChannelsPropertyId)
         {
             if (onNumChannelsChange != nullptr)
-                onNumChannelsChange (getSampoleDataNumChannels ());
+                onNumChannelsChange (getSampleDataNumChannels ());
         }
         else if (property == LengthInSamplesPropertyId)
         {

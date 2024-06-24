@@ -160,14 +160,15 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     {
         LogReader (sampleFile.getFileName() + " does not contain meta-data");
         auto numSamples = squidChannelProperties.getSampleDataSampleLength ();
+        uint32_t endOffset = numSamples * 2;
         // initialize parameters that have defaults related to specific channel or sample
         squidChannelProperties.setChannelIndex (channelIndex, false);
         squidChannelProperties.setChannelSource (channelIndex, false);
         squidChannelProperties.setChoke (channelIndex, false);
-        squidChannelProperties.setEndCue (static_cast<uint32_t> (numSamples * 2), false);
-        squidChannelProperties.setSampleLength (static_cast<uint32_t> (numSamples), false);
+        squidChannelProperties.setEndCue (endOffset, false);
+        squidChannelProperties.setSampleLength (endOffset, false);
         squidChannelProperties.setRecDest (channelIndex, false);
-        squidChannelProperties.setCuePoints (0, 0, 0, static_cast<uint32_t> (numSamples * 2));
+        squidChannelProperties.setCuePoints (0, 0, 0, endOffset);
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);

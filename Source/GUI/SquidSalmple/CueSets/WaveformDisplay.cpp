@@ -15,7 +15,7 @@ void WaveformDisplay::init (juce::File theAudioFile)
     if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (audioFile) }; sampleFileReader != nullptr)
     {
         numSamples = sampleFileReader->lengthInSamples;
-        DebugLog ("WaveformDisplay", "init [" + audioFile.getFileName () + "] - numSamples = " + juce::String (numSamples).paddedLeft ('0', 6) +
+        DebugLog ("WaveformDisplay", "init [" + audioFile.getFullPathName () + "] - numSamples = " + juce::String (numSamples).paddedLeft ('0', 6) +
                   " [0x" + juce::String::toHexString (numSamples).paddedLeft ('0', 6) + "], bitDepth = " + juce::String (sampleFileReader->bitsPerSample) +
                   ", channels = " + juce::String(sampleFileReader->numChannels) +
                   ", sampleRate = " + juce::String (sampleFileReader->sampleRate));

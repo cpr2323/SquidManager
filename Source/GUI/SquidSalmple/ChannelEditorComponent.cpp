@@ -375,7 +375,7 @@ void ChannelEditorComponent::setupComponents ()
     endCueTextEditor.getMinValueCallback = [this] () { return 0; };
     endCueTextEditor.getMaxValueCallback = [this] () { 
         auto x = 0;
-        return squidChannelProperties.getSampleLength ();
+        return squidChannelProperties.getSampleDataSampleLength () * 2;
         }; // TODO tie in the sample length here
     endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };

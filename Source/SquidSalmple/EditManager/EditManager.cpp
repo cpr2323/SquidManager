@@ -5,6 +5,7 @@
 
 constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
+constexpr auto kMaxSampleLength { 524287 };
 
 EditManager::EditManager ()
 {
@@ -131,6 +132,8 @@ void EditManager::saveBank ()
 void EditManager::loadBank (juce::File bankDirectoryToLoad)
 {
     SquidBankProperties theSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+    copyBank (theSquidBankProperties, squidBankProperties);
+    copyBank (squidBankProperties, uneditedSquidBankProperties);
 
     // check for info.txt
     auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
@@ -218,24 +221,24 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
     if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
     {
-        const auto lengthInSamples { std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSeconds * kSupportedSampleRate)) };
+        const auto lengthInSamples { std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSampleLength)) };
         AudioBufferRefCounted::RefCountedPtr abrc { new AudioBufferRefCounted () };
 
         abrc->getAudioBuffer()->setSize (sampleFileReader->numChannels, static_cast<int> (lengthInSamples), false, true, false);
         sampleFileReader->read (abrc->getAudioBuffer (), 0, static_cast<int> (lengthInSamples), 0, true, false);
 
-        channelProperties.setBitsPerSample (sampleFileReader->bitsPerSample, false);
-        channelProperties.setSampleRate (sampleFileReader->sampleRate, false);
-        channelProperties.setLengthInSamples (lengthInSamples, false);
-        channelProperties.setNumChannels (sampleFileReader->numChannels, false);
-        channelProperties.setAudioBuffer (abrc, false);
+        channelProperties.setSampleDataBits (sampleFileReader->bitsPerSample, false);
+        channelProperties.setSampleDataSampleRate (sampleFileReader->sampleRate, false);
+        channelProperties.setSampleDataSampleLength (lengthInSamples, false);
+        channelProperties.setSampleDataNumChannels (sampleFileReader->numChannels, false);
+        channelProperties.setSampleDataAudioBuffer (abrc, false);
     }
     else
     {
-        channelProperties.setBitsPerSample (0, false);
-        channelProperties.setSampleRate (0.0, false);
-        channelProperties.setLengthInSamples (0, false);
-        channelProperties.setNumChannels (0, false);
-        channelProperties.setAudioBuffer ({}, false);
+        channelProperties.setSampleDataBits (0, false);
+        channelProperties.setSampleDataSampleRate (0.0, false);
+        channelProperties.setSampleDataSampleLength (0, false);
+        channelProperties.setSampleDataNumChannels (0, false);
+        channelProperties.setSampleDataAudioBuffer ({}, false);
     }
 }
