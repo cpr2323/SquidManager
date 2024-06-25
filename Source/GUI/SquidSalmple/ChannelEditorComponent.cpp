@@ -521,6 +521,34 @@ void ChannelEditorComponent::setupComponents ()
 
     addAndMakeVisible (loopPointsView);
 
+    auto setupPlayButton = [this] (juce::TextButton& playButton, juce::String text, bool initilalEnabledState, juce::String otherButtonText, AudioPlayerProperties::PlayState playState)
+    {
+        playButton.setButtonText (text);
+        playButton.setEnabled (initilalEnabledState);
+        playButton.onClick = [this, text, &playButton, playState, otherButtonText] ()
+        {
+            if (playButton.getButtonText () == "STOP")
+            {
+                // stopping
+                audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+                playButton.setButtonText (text);
+            }
+            else
+            {
+                audioPlayerProperties.setSampleSource (squidChannelProperties.getChannelIndex (), false);
+                audioPlayerProperties.setPlayState (playState, false);
+                playButton.setButtonText ("STOP");
+                if (&playButton == &oneShotPlayButton)
+                    loopPlayButton.setButtonText (otherButtonText);
+                else
+                    oneShotPlayButton.setButtonText (otherButtonText);
+            }
+        };
+        addAndMakeVisible (playButton);
+    };
+    setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayState::loop);
+    setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayState::play);
+
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
     addCueSetButton.setEnabled (false);
@@ -652,6 +680,39 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
 
+    audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
+    audioPlayerProperties.onPlayStateChange = [this] (AudioPlayerProperties::PlayState playState)
+    {
+        if (playState == AudioPlayerProperties::PlayState::stop)
+        {
+            juce::MessageManager::callAsync ([this] ()
+            {
+                oneShotPlayButton.setButtonText ("ONCE");
+                loopPlayButton.setButtonText ("LOOP");
+            });
+        }
+        else if (playState == AudioPlayerProperties::PlayState::play)
+        {
+            juce::MessageManager::callAsync ([this] ()
+            {
+                oneShotPlayButton.setButtonText ("STOP");
+                loopPlayButton.setButtonText ("LOOP");
+            });
+        }
+        else if (playState == AudioPlayerProperties::PlayState::loop)
+        {
+            juce::MessageManager::callAsync ([this] ()
+            {
+                oneShotPlayButton.setButtonText ("ONCE");
+                loopPlayButton.setButtonText ("STOP");
+            });
+        }
+        else
+        {
+            jassertfalse;
+        }
+    };
+
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     cvAssignEditor.init (squidChannelPropertiesVT);
 
@@ -759,13 +820,15 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 
     squidChannelProperties.onSampleDataAudioBufferChange = [this] (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
-        {
-            updateLoopPointsView ();
-            if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
-                waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
-            else
-                waveformDisplay.init (nullptr);
-        };
+    {
+        updateLoopPointsView ();
+        if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
+            waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
+        else
+            waveformDisplay.init (nullptr);
+        oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
+        loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
+    };
 }
 
 void ChannelEditorComponent::updateLoopPointsView ()
@@ -783,6 +846,8 @@ void ChannelEditorComponent::updateLoopPointsView ()
     {
         loopPointsView.setAudioBuffer (nullptr);
     }
+    oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
+    loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
     loopPointsView.setLoopPoints (startSample / 2, numSamples / 2);
     loopPointsView.repaint ();
 }
@@ -1247,6 +1312,8 @@ void ChannelEditorComponent::resized ()
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
 
     loopPointsView.setBounds (outputComboBox.getRight () + spaceBetweenColumns, outputComboBox.getY (), columnWidth * 2, reverseButton.getY () - outputComboBox.getY () - 5);
+    oneShotPlayButton.setBounds (loopPointsView.getX () + 5, loopPointsView.getY () - 3 - kMediumLabelIntSize, 35, kMediumLabelIntSize);
+    loopPlayButton.setBounds (oneShotPlayButton.getRight () + 3, oneShotPlayButton.getY (), 35, kMediumLabelIntSize);
 
     // column four
 //     xOffset += columnWidth + spaceBetweenColumns;

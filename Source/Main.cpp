@@ -254,7 +254,7 @@ public:
 
     void initAudio ()
     {
-        //audioPlayer.init (rootProperties.getValueTree ());
+        audioPlayer.init (rootProperties.getValueTree ());
     }
 
     void initAppDirectory ()

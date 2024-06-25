@@ -11,7 +11,6 @@ class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener
 {
 public:
-    AudioPlayer ();
 
     void init (juce::ValueTree rootProperties);
     void shutdownAudio ();
@@ -23,7 +22,6 @@ private:
     SquidBankProperties bankProperties;
     SquidChannelProperties channelProperties;
     juce::AudioDeviceManager audioDeviceManager;
-    juce::AudioFormatManager audioFormatManager;
     juce::AudioSourcePlayer audioSourcePlayer;
     std::unique_ptr <juce::AudioBuffer<float>> sampleBuffer;
     juce::AudioDeviceSelectorComponent audioSetupComp { audioDeviceManager, 0, 0, 0, 256, false, false, true, false};

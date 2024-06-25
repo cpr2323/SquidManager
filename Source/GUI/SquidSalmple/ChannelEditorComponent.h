@@ -5,6 +5,7 @@
 #include "CvAssigns/CvAssignEditor.h"
 #include "LoopPoints/LoopPointsView.h"
 #include "../../AppProperties.h"
+#include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
 #include "../../Utility/CustomComboBox.h"
@@ -25,6 +26,7 @@ public:
 
 private:
     SquidChannelProperties squidChannelProperties;
+    AudioPlayerProperties audioPlayerProperties;
     AppProperties appProperties;
     EditManager* editManager;
 
@@ -79,6 +81,9 @@ private:
     RoundedSlideSwitch cueStepButton;
 
     LoopPointsView loopPointsView;
+    juce::TextButton oneShotPlayButton;
+    juce::TextButton loopPlayButton;
+
 
     // LOWER PANE
     WaveformDisplay waveformDisplay;
