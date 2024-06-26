@@ -52,10 +52,9 @@ private:
         {
             jassert (bufferToFill.buffer->getNumChannels () == 2);
             // use getNextAudioBlock to fill in the first channel
-            juce::AudioSourceChannelInfo readInfo (bufferToFill.buffer, bufferToFill.startSample, bufferToFill.numSamples);
-            input->getNextAudioBlock (readInfo);
+            input->getNextAudioBlock (bufferToFill);
             // and copy it to the second channel
-            bufferToFill.buffer->copyFrom (1, bufferToFill.startSample, readInfo.buffer->getReadPointer (0), bufferToFill.numSamples);
+            bufferToFill.buffer->copyFrom (1, bufferToFill.startSample, bufferToFill.buffer->getReadPointer (0, bufferToFill.startSample), bufferToFill.numSamples);
         }
     private:
         juce::OptionalScopedPointer<AudioSource> input;
