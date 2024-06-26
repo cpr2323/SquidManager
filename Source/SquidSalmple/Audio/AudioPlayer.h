@@ -28,17 +28,17 @@ private:
 
     juce::CriticalSection dataCS;
     AudioPlayerProperties::PlayState playState { AudioPlayerProperties::PlayState::stop };
+    AudioPlayerProperties::PlayMode playMode { AudioPlayerProperties::PlayMode::once };
     int curSampleOffset { 0 };
     int sampleStart { 0 };
     int sampleLength { 0 };
-    int loopStart { 0 };
-    int loopLength { 0 };
 
     double sampleRate { 44100.0 };
     int blockSize { 128 };
     double sampleRateRatio { 0.0 };
 
     void configureAudioDevice (juce::String deviceName);
+    void handlePlayMode (AudioPlayerProperties::PlayMode newPlayMode);
     void handlePlayState (AudioPlayerProperties::PlayState playState);
     void initFromChannel (int channelIndex);
     void initSamplePoints ();

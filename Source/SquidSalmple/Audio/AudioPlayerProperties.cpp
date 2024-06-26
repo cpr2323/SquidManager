@@ -11,6 +11,11 @@ void AudioPlayerProperties::setPlayState (PlayState playState, bool includeSelfC
     setValue (static_cast<int> (playState), PlayStatePropertyId, includeSelfCallback);
 }
 
+void AudioPlayerProperties::setPlayMode (PlayMode playMode, bool includeSelfCallback)
+{
+    setValue (static_cast<int> (playMode), PlayModePropertyId, includeSelfCallback);
+}
+
 void AudioPlayerProperties::setSampleSource (int channelIndex, bool includeSelfCallback)
 {
     setValue (channelIndex, SampleSourcePropertyId, includeSelfCallback);
@@ -26,6 +31,11 @@ AudioPlayerProperties::PlayState AudioPlayerProperties::getPlayState ()
     return static_cast<PlayState> (getValue<int> (PlayStatePropertyId));
 }
 
+AudioPlayerProperties::PlayMode AudioPlayerProperties::getPlayMode ()
+{
+    return static_cast<PlayMode> (getValue<int> (PlayModePropertyId));
+}
+
 int AudioPlayerProperties::getSampleSource ()
 {
     return getValue<int> (SampleSourcePropertyId);
@@ -39,6 +49,11 @@ void AudioPlayerProperties::valueTreePropertyChanged (juce::ValueTree& treeWhose
         {
             if (onPlayStateChange != nullptr)
                 onPlayStateChange (getPlayState ());
+        }
+        else if (property == PlayModePropertyId)
+        {
+            if (onPlayModeChange != nullptr)
+                onPlayModeChange (getPlayMode ());
         }
         else if (property == SampleSourcePropertyId)
         {

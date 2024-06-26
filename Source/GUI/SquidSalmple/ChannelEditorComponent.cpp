@@ -521,11 +521,11 @@ void ChannelEditorComponent::setupComponents ()
 
     addAndMakeVisible (loopPointsView);
 
-    auto setupPlayButton = [this] (juce::TextButton& playButton, juce::String text, bool initilalEnabledState, juce::String otherButtonText, AudioPlayerProperties::PlayState playState)
+    auto setupPlayButton = [this] (juce::TextButton& playButton, juce::String text, bool initilalEnabledState, juce::String otherButtonText, AudioPlayerProperties::PlayMode playMode)
     {
         playButton.setButtonText (text);
         playButton.setEnabled (initilalEnabledState);
-        playButton.onClick = [this, text, &playButton, playState, otherButtonText] ()
+        playButton.onClick = [this, text, &playButton, playMode, otherButtonText] ()
         {
             if (playButton.getButtonText () == "STOP")
             {
@@ -536,7 +536,8 @@ void ChannelEditorComponent::setupComponents ()
             else
             {
                 audioPlayerProperties.setSampleSource (squidChannelProperties.getChannelIndex (), false);
-                audioPlayerProperties.setPlayState (playState, false);
+                audioPlayerProperties.setPlayMode (playMode, false);
+                audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::play, false);
                 playButton.setButtonText ("STOP");
                 if (&playButton == &oneShotPlayButton)
                     loopPlayButton.setButtonText (otherButtonText);
@@ -546,8 +547,8 @@ void ChannelEditorComponent::setupComponents ()
         };
         addAndMakeVisible (playButton);
     };
-    setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayState::loop);
-    setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayState::play);
+    setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayMode::loop);
+    setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayMode::once);
 
     addCueSetButton.setButtonText ("ADD CUE");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
@@ -693,19 +694,22 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
         }
         else if (playState == AudioPlayerProperties::PlayState::play)
         {
-            juce::MessageManager::callAsync ([this] ()
+            if (audioPlayerProperties.getPlayMode() == AudioPlayerProperties::PlayMode::once)
             {
-                oneShotPlayButton.setButtonText ("STOP");
-                loopPlayButton.setButtonText ("LOOP");
-            });
-        }
-        else if (playState == AudioPlayerProperties::PlayState::loop)
-        {
-            juce::MessageManager::callAsync ([this] ()
+                juce::MessageManager::callAsync ([this] ()
+                {
+                    oneShotPlayButton.setButtonText ("STOP");
+                    loopPlayButton.setButtonText ("LOOP");
+                });
+            }
+            else
             {
-                oneShotPlayButton.setButtonText ("ONCE");
-                loopPlayButton.setButtonText ("STOP");
-            });
+                juce::MessageManager::callAsync ([this] ()
+                {
+                    oneShotPlayButton.setButtonText ("ONCE");
+                    loopPlayButton.setButtonText ("STOP");
+                });
+            }
         }
         else
         {
