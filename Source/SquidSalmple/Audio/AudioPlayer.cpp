@@ -5,7 +5,7 @@
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
-#define LOG_AUDIO_PLAYER 0
+#define LOG_AUDIO_PLAYER 1
 #if LOG_AUDIO_PLAYER
 #define LogAudioPlayer(text) DebugLog ("AudioPlayer", text);
 #else
@@ -57,9 +57,9 @@ void AudioPlayer::initFromChannel (int channelIndex)
     jassert (channelIndex < 8);
     channelProperties.wrap (bankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
-    channelProperties.onFileNameChange = [this] (juce::String fileNameName)
+    channelProperties.onSampleDataAudioBufferChange = [this] (AudioBufferRefCounted::RefCountedPtr)
     {
-        LogAudioPlayer ("zoneProperties.onSampleChange");
+        LogAudioPlayer ("channelProperties.onSampleDataAudioBufferChange");
         initSamplePoints ();
         prepareSampleForPlayback ();
     };
@@ -148,7 +148,7 @@ void AudioPlayer::prepareSampleForPlayback ()
         sampleRateRatio = sampleRate / channelProperties.getSampleDataSampleRate ();
         resamplingAudioSource->setResamplingRatio (channelProperties.getSampleDataSampleRate () / sampleRate);
         resamplingAudioSource->prepareToPlay (blockSize, sampleRate);
-        sampleBuffer = std::make_unique<juce::AudioBuffer<float>> (channelProperties.getSampleDataNumChannels (), static_cast<int> (channelProperties.getSampleDataNumSamples () * sampleRate / channelProperties.getSampleDataSampleRate ()));
+        sampleBuffer = std::make_unique<juce::AudioBuffer<float>> (2, static_cast<int> (channelProperties.getSampleDataNumSamples () * sampleRate / channelProperties.getSampleDataSampleRate ()));
         resamplingAudioSource->getNextAudioBlock (juce::AudioSourceChannelInfo (*sampleBuffer.get ()));
         curSampleOffset = 0;
     }
