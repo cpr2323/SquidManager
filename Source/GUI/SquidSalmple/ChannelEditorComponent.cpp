@@ -791,7 +791,10 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onFilterFrequencyChange = [this] (int filterFrequency) { filterFrequencyDataChanged (filterFrequency); };
     squidChannelProperties.onFilterResonanceChange = [this] (int filterResonance) { filterResonanceDataChanged (filterResonance); };
     squidChannelProperties.onLevelChange = [this] (int level) { levelDataChanged (level); };
-    squidChannelProperties.onLoadBegin = [this] () {};
+    squidChannelProperties.onLoadBegin = [this] ()
+    {
+        audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+    };
     squidChannelProperties.onLoadComplete = [this] ()
     {
         initCueSetTabs ();

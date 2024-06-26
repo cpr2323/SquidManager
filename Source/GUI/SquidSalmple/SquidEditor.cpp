@@ -78,6 +78,10 @@ SquidEditorComponent::SquidEditorComponent ()
         channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);
     }
     addAndMakeVisible (channelTabs);
+    channelTabs.onSelectedTabChanged = [this] (int)
+    {
+        audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+    };
 
     // the Channel tabs are overlaying the Tools button, move the load button to front
     toolsButton.toFront (false);
@@ -90,9 +94,15 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::yes);
+    runtimeRootProperties.onSystemRequestedQuit = [this] ()
+    {
+        audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+    };
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
+
+    audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
 
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
     unEditedSquidBankProperties.wrap (bankManagerProperties.getBank("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
@@ -103,6 +113,10 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
         return true;
     });
     squidBankProperties.onNameChange = [this] (juce::String name) { nameDataChanged (name); };
+    squidBankProperties.onLoadBegin = [this] ()
+    {
+        audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+    };
     nameDataChanged (squidBankProperties.getName ());
 }
 
