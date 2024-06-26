@@ -37,6 +37,30 @@ private:
     int blockSize { 128 };
     double sampleRateRatio { 0.0 };
 
+    class MonoToStereoAudioSource : public juce::AudioSource
+    {
+    public:
+        MonoToStereoAudioSource (AudioSource* inputSource, const bool deleteInputWhenDeleted)
+            : input { inputSource, deleteInputWhenDeleted }
+        {
+            jassert (input != nullptr);
+        }
+
+        void prepareToPlay (int, double) {}
+        void releaseResources () {}
+        void getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
+        {
+            jassert (bufferToFill.buffer->getNumChannels () == 2);
+            // use getNextAudioBlock to fill in the first channel
+            juce::AudioSourceChannelInfo readInfo (bufferToFill.buffer, bufferToFill.startSample, bufferToFill.numSamples);
+            input->getNextAudioBlock (readInfo);
+            // and copy it to the second channel
+            bufferToFill.buffer->copyFrom (1, bufferToFill.startSample, readInfo.buffer->getReadPointer (0), bufferToFill.numSamples);
+        }
+    private:
+        juce::OptionalScopedPointer<AudioSource> input;
+    };
+
     void configureAudioDevice (juce::String deviceName);
     void handlePlayMode (AudioPlayerProperties::PlayMode newPlayMode);
     void handlePlayState (AudioPlayerProperties::PlayState playState);

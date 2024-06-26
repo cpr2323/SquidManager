@@ -144,7 +144,8 @@ void AudioPlayer::prepareSampleForPlayback ()
     {
         LogAudioPlayer ("prepareSampleForPlayback: sample is ready");
         std::unique_ptr <juce::MemoryAudioSource> readerSource { std::make_unique<juce::MemoryAudioSource> (*channelProperties.getSampleDataAudioBuffer ()->getAudioBuffer(), false, false) };
-        std::unique_ptr<juce::ResamplingAudioSource> resamplingAudioSource { std::make_unique<juce::ResamplingAudioSource> (readerSource.get (), false, 2) };
+        std::unique_ptr<MonoToStereoAudioSource> monoToStereoAudioSource { std::make_unique<MonoToStereoAudioSource> (readerSource.get (), false) };
+        std::unique_ptr<juce::ResamplingAudioSource> resamplingAudioSource { std::make_unique<juce::ResamplingAudioSource> (monoToStereoAudioSource.get (), false, 2) };
         sampleRateRatio = sampleRate / channelProperties.getSampleDataSampleRate ();
         resamplingAudioSource->setResamplingRatio (channelProperties.getSampleDataSampleRate () / sampleRate);
         resamplingAudioSource->prepareToPlay (blockSize, sampleRate);
