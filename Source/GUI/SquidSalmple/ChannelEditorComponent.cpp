@@ -1064,11 +1064,11 @@ void ChannelEditorComponent::decayUiChanged (int decay)
 
 void ChannelEditorComponent::endCueUiChanged (juce::int32 endCue)
 {
-    const auto endCueByteOffset { endCue * 2 };
+    const auto endCueByteOffset { endCue };
     squidChannelProperties.setEndCue (endCueByteOffset, false);
 
-    squidChannelProperties.setCueSetPoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), squidChannelProperties.getLoopCueSet (curCueSetIndex), endCueByteOffset);
-    waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, endCueByteOffset / 2);
+    squidChannelProperties.setCueSetEndPoint (curCueSetIndex, endCueByteOffset);
+    waveformDisplay.setCueEndPoint (endCueByteOffset / 2);
     updateLoopPointsView ();
 }
 
@@ -1107,11 +1107,11 @@ void ChannelEditorComponent::levelUiChanged (int level)
 
 void ChannelEditorComponent::loopCueUiChanged (juce::int32 loopCue)
 {
-    const auto loopCueByteOffset { loopCue * 2 };
+    const auto loopCueByteOffset { loopCue };
     squidChannelProperties.setLoopCue (loopCueByteOffset, false);
 
-    squidChannelProperties.setCueSetPoints (curCueSetIndex, squidChannelProperties.getStartCueSet (curCueSetIndex), loopCueByteOffset, squidChannelProperties.getEndCueSet (curCueSetIndex));
-    waveformDisplay.setCuePoints (squidChannelProperties.getStartCueSet (curCueSetIndex) / 2, loopCueByteOffset / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    squidChannelProperties.setCueSetLoopPoint (curCueSetIndex, loopCueByteOffset);
+    waveformDisplay.setCueLoopPoint (loopCueByteOffset / 2);
     updateLoopPointsView ();
 }
 
@@ -1143,11 +1143,11 @@ void ChannelEditorComponent::speedUiChanged (int speed)
 
 void ChannelEditorComponent::startCueUiChanged (juce::int32 startCue)
 {
-    const auto startCueByteOffset { startCue * 2 };
+    const auto startCueByteOffset { startCue };
     squidChannelProperties.setStartCue (startCueByteOffset, false);
 
-    squidChannelProperties.setCueSetPoints (curCueSetIndex, startCueByteOffset, squidChannelProperties.getLoopCueSet (curCueSetIndex), squidChannelProperties.getEndCueSet (curCueSetIndex));
-    waveformDisplay.setCuePoints (startCueByteOffset / 2, squidChannelProperties.getLoopCueSet (curCueSetIndex) / 2, squidChannelProperties.getEndCueSet (curCueSetIndex) / 2);
+    squidChannelProperties.setCueSetStartPoint (curCueSetIndex, startCueByteOffset);
+    waveformDisplay.setCueStartPoint (startCueByteOffset / 2);
     updateLoopPointsView ();
 }
 
