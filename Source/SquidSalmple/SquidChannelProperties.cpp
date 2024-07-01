@@ -144,7 +144,35 @@ void SquidChannelProperties::setChoke (int chokeChannel, bool includeSelfCallbac
     setValue (chokeChannel, ChokePropertyId, includeSelfCallback);
 }
 
-void SquidChannelProperties::setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end)
+void SquidChannelProperties::setCueSetEndPoint (int cueSetIndex, uint32_t end)
+{
+    const auto numCueSets { getNumCueSets () };
+    jassert (cueSetIndex <= numCueSets && cueSetIndex < 64);
+    if (cueSetIndex >= numCueSets)
+        return;
+
+    auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
+    jassert (requestedCueSetVT.isValid ());
+    if (!requestedCueSetVT.isValid ())
+        return;
+    requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int> (end), nullptr);
+}
+
+void SquidChannelProperties::setCueSetLoopPoint (int cueSetIndex, uint32_t loop)
+{
+    const auto numCueSets { getNumCueSets () };
+    jassert (cueSetIndex <= numCueSets && cueSetIndex < 64);
+    if (cueSetIndex >= numCueSets)
+        return;
+
+    auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
+    jassert (requestedCueSetVT.isValid ());
+    if (!requestedCueSetVT.isValid ())
+        return;
+    requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int> (loop), nullptr);
+}
+
+void SquidChannelProperties::setCueSetPoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end)
 {
     const auto numCueSets { getNumCueSets () };
     jassert (cueSetIndex <= numCueSets && cueSetIndex < 64);
@@ -176,6 +204,20 @@ void SquidChannelProperties::setCuePoints (int cueSetIndex, uint32_t start, uint
             return;
         setCueSetProperties (requestedCueSetVT, start, loop, end);
     }
+}
+
+void SquidChannelProperties::setCueSetStartPoint (int cueSetIndex, uint32_t start)
+{
+    const auto numCueSets { getNumCueSets () };
+    jassert (cueSetIndex <= numCueSets && cueSetIndex < 64);
+    if (cueSetIndex >= numCueSets)
+        return;
+
+    auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
+    jassert (requestedCueSetVT.isValid ());
+    if (!requestedCueSetVT.isValid ())
+        return;
+    requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int> (start), nullptr);
 }
 
 void SquidChannelProperties::removeCueSet (int cueSetIndex)

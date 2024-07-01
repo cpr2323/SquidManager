@@ -6,7 +6,10 @@ class WaveformDisplay : public juce::Component
 {
 public:
     void init (juce::AudioBuffer<float>* theAudioBuffer);
+    void setCueEndPoint (uint32_t newCueEnd);
+    void setCueLoopPoint (uint32_t newCueLoop);
     void setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd);
+    void setCueStartPoint (uint32_t newCueStart);
 
     std::function<void (uint32_t startPoint)> onStartPointChange;
     std::function<void (uint32_t loopPoint)> onLoopPointChange;

@@ -44,7 +44,10 @@ public:
     void setChannelIndex (uint8_t channelIndex, bool includeSelfCallback);
     void setChannelSource (uint8_t channelIndex, bool includeSelfCallback);
     void setChoke (int chokeChannel, bool includeSelfCallback);
-    void setCuePoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
+    void setCueSetEndPoint (int cueSetIndex, uint32_t end);
+    void setCueSetLoopPoint (int cueSetIndex, uint32_t loop);
+    void setCueSetPoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
+    void setCueSetStartPoint (int cueSetIndex, uint32_t start);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
     void setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback);
     void setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback);

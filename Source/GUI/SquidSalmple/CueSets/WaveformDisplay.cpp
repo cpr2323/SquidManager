@@ -1,6 +1,13 @@
 #include "WaveformDisplay.h"
 #include "../../../Utility/DebugLog.h"
 
+#define LOG_WAVEFORM_DISPLAY 1
+#if LOG_WAVEFORM_DISPLAY 
+#define LogWaveformDisplay(text) DebugLog ("WaveformDisplay", text);
+#else
+#define LogWaveformDisplay(text) ;
+#endif
+
 const auto markerHandleSize { 5 };
 
 void WaveformDisplay::init (juce::AudioBuffer<float>* theAudioBuffer)
@@ -11,11 +18,32 @@ void WaveformDisplay::init (juce::AudioBuffer<float>* theAudioBuffer)
     numSamples = audioBuffer->getNumSamples();
 }
 
+void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
+{
+    cueEnd = newCueEnd;
+    resized ();
+    repaint ();
+}
+
+void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
+{
+    cueLoop = newCueLoop;
+    resized ();
+    repaint ();
+}
+
 void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd)
 {
     cueStart = newCueStart;
     cueLoop = newCueLoop;
     cueEnd = newCueEnd;
+    resized ();
+    repaint ();
+}
+
+void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
+{
+    cueStart = newCueStart;
     resized ();
     repaint ();
 }
@@ -130,6 +158,7 @@ void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
     if (audioBuffer == nullptr)
         return;
 
+    LogWaveformDisplay ("mouseMove");
     if (sampleStartHandle.contains (e.getPosition ()))
         handleIndex = EditHandleIndex::kStart;
     else if (sampleLoopHandle.contains (e.getPosition ()))
@@ -151,11 +180,13 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
     {
         case EditHandleIndex::kNone:
         {
+            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kNone");
             return;
         }
         break;
         case EditHandleIndex::kStart:
         {
+            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kStart");
             const auto newSampleStart { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
             const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<uint32_t> (0), static_cast<uint32_t> (cueEnd)) };
             cueStart = clampedSampleStart;
@@ -176,6 +207,7 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kLoop:
         {
+            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kLoop");
             const auto newLoop { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
             const auto clampedLoopLength { std::clamp (newLoop, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (cueEnd)) };
             cueLoop = clampedLoopLength;
@@ -188,17 +220,20 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         break;
         case EditHandleIndex::kEnd:
         {
+            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kEnd - starting cueLoop/cueEnd: " + juce::String (cueLoop) + "/" + juce::String (cueEnd));
             const auto newSampleEnd { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
             const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (audioBuffer->getNumSamples ())) };
             cueEnd = clampedSampleEnd;
             if (cueEnd < cueLoop)
             {
                 cueLoop = cueEnd;
+                LogWaveformDisplay ("mouseDrag - moving loop: " + juce::String (cueLoop));
                 sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
                 sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
                 if (onLoopPointChange != nullptr)
                     onLoopPointChange (cueLoop);
             }
+            LogWaveformDisplay ("mouseDrag - moving end: " + juce::String(cueEnd));
             sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
             sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
             if (onEndPointChange != nullptr)

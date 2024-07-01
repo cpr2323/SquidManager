@@ -130,7 +130,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
             const auto endCue { getValue <4> (cueSetOffset + 4) };
             const auto loopCue { getValue <4> (cueSetOffset + 8) };
             logCueSet (curCueSetIndex, startCue, loopCue, endCue);
-            squidChannelProperties.setCuePoints (curCueSetIndex, startCue, loopCue, endCue);
+            squidChannelProperties.setCueSetPoints (curCueSetIndex, startCue, loopCue, endCue);
         }
         squidChannelProperties.setCurCueSet (curCue, false);
 
@@ -168,7 +168,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setEndCue (endOffset, false);
         squidChannelProperties.setEndOfData (endOffset, false);
         squidChannelProperties.setRecDest (channelIndex, false);
-        squidChannelProperties.setCuePoints (0, 0, 0, endOffset);
+        squidChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
     }
 
     squidChannelProperties.setFileName (sampleFile.getFileName (), false);
