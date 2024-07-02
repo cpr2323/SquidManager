@@ -58,14 +58,14 @@ void WaveformDisplay::resized ()
 
     if (audioBuffer == nullptr)
     {
-        samplesPerPixel = 0;
+        samplesPerPixel = 0.f;
         sampleStartMarkerX = 0;
         sampleLoopMarkerX = 0;
         sampleEndMarkerX = 0;
     }
     else
     {
-        samplesPerPixel = static_cast<int> (numSamples / getWidth ());
+        samplesPerPixel = static_cast<float> (numSamples) / getWidth ();
         sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
         sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
         sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
@@ -108,9 +108,9 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
             curSampleValue = nextSampleValue;
 #else
             g.drawLine (static_cast<float> (pixelOffset),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [pixelIndex * samplesPerPixel] * halfHeight))),
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int>(pixelIndex * samplesPerPixel)] * halfHeight))),
                         static_cast<float> (pixelOffset + 1),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [(pixelIndex + 1) * samplesPerPixel] * halfHeight))));
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int>((pixelIndex + 1) * samplesPerPixel)] * halfHeight))));
 
 #endif
         }
