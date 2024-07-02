@@ -275,7 +275,7 @@
         <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="oXG8zp" bigIcon="oXG8zp">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager"/>
