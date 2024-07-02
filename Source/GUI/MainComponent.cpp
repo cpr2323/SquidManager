@@ -16,6 +16,7 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
     squidEditorComponent.init (rootPropertiesVT);
     fileViewComponent.init (rootPropertiesVT);
     bankListComponent.init (rootPropertiesVT);
+    bottomStatusWindow.init (rootPropertiesVT);
     currentFolderComponent.init (rootPropertiesVT);
 
     bankListEditorSplitter.setComponents (&bankListComponent, &squidEditorComponent);
@@ -31,6 +32,7 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
 
     addAndMakeVisible (currentFolderComponent);
     addAndMakeVisible (folderBrowserEditorSplitter);
+    addAndMakeVisible (bottomStatusWindow);
 }
 
 void MainComponent::restoreLayout ()
@@ -58,5 +60,7 @@ void MainComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
     currentFolderComponent.setBounds (localBounds.removeFromTop (30));
+    bottomStatusWindow.setBounds (localBounds.removeFromBottom (toolWindowHeight));
+    localBounds.reduce (3, 3);
     folderBrowserEditorSplitter.setBounds (localBounds);
 }

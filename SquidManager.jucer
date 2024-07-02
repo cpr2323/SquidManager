@@ -44,6 +44,10 @@
           <FILE id="nW16RK" name="SquidEditor.cpp" compile="1" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.cpp"/>
           <FILE id="gLCtHn" name="SquidEditor.h" compile="0" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.h"/>
         </GROUP>
+        <FILE id="ojE3Vc" name="BottomStatusWindow.cpp" compile="1" resource="0"
+              file="Source/GUI/BottomStatusWindow.cpp"/>
+        <FILE id="ybqGIP" name="BottomStatusWindow.h" compile="0" resource="0"
+              file="Source/GUI/BottomStatusWindow.h"/>
         <FILE id="n6iOJp" name="CurrentFolderComponent.cpp" compile="1" resource="0"
               file="Source/GUI/CurrentFolderComponent.cpp"/>
         <FILE id="VkVWDc" name="CurrentFolderComponent.h" compile="0" resource="0"

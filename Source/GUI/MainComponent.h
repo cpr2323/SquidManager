@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "BottomStatusWindow.h"
 #include "CurrentFolderComponent.h"
 #include "GuiProperties.h"
 #include "SquidSalmple/SquidEditor.h"
@@ -17,6 +18,7 @@ public:
 private:
     GuiProperties guiProperties;
     SquidEditorComponent squidEditorComponent;
+    BottomStatusWindow bottomStatusWindow;
     CurrentFolderComponent currentFolderComponent;
     FileViewComponent fileViewComponent;
     BankListComponent bankListComponent;
