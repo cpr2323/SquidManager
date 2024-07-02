@@ -42,7 +42,7 @@ private:
     juce::Label decayLabel;
     CustomTextEditorInt decayTextEditor; // 0-99
     juce::Label endCueLabel;
-    CustomTextEditorInt32 endCueTextEditor; // sampleStart - sample length
+    CustomTextEditorInt32 endCueTextEditor;
     juce::Label eTrigLabel;
     CustomComboBox eTrigComboBox; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     juce::Label fileNameLabel;
@@ -56,7 +56,7 @@ private:
     juce::Label levelLabel;
     CustomTextEditorInt levelTextEditor; // 1-99
     juce::Label loopCueLabel;
-    CustomTextEditorInt32 loopCueTextEditor; // 0 - sample length?, or sampleStart - sampleEnd
+    CustomTextEditorInt32 loopCueTextEditor;
     juce::Label loopModeLabel;
     CustomComboBox loopModeComboBox; // none, normal, zigZag, gate, zigZagGate (0-4)
     juce::Label outputLabel;
@@ -70,7 +70,7 @@ private:
     juce::Label speedLabel;
     CustomTextEditorInt speedTextEditor; // 1 - 99 (50 is normal?, below that is negative speed? above is positive?)
     juce::Label startCueLabel;
-    CustomTextEditorInt32 startCueTextEditor;  // 0 - sampleEnd
+    CustomTextEditorInt32 startCueTextEditor;
     juce::Label stepsLabel;
     CustomComboBox stepsComboBox; // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     juce::Label xfadeLabel;

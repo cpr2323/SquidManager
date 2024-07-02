@@ -187,8 +187,8 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         case EditHandleIndex::kStart:
         {
             LogWaveformDisplay ("mouseDrag - EditHandleIndex::kStart");
-            const auto newSampleStart { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleStart { std::clamp (newSampleStart, static_cast<uint32_t> (0), static_cast<uint32_t> (cueEnd)) };
+            const auto newSampleStart { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleStart { static_cast<uint32_t> (std::clamp (newSampleStart, static_cast<int64_t> (0), static_cast<int64_t> (cueEnd))) };
             cueStart = clampedSampleStart;
             if (cueStart > cueLoop)
             {
@@ -208,9 +208,9 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         case EditHandleIndex::kLoop:
         {
             LogWaveformDisplay ("mouseDrag - EditHandleIndex::kLoop");
-            const auto newLoop { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedLoopLength { std::clamp (newLoop, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (cueEnd)) };
-            cueLoop = clampedLoopLength;
+            const auto newSampleLoop { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleLoop { static_cast<uint32_t> (std::clamp (newSampleLoop, static_cast<int64_t> (cueStart), static_cast<int64_t> (cueEnd))) };
+            cueLoop = clampedSampleLoop;
             sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
             sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
             if (onLoopPointChange != nullptr)
@@ -221,8 +221,8 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         case EditHandleIndex::kEnd:
         {
             LogWaveformDisplay ("mouseDrag - EditHandleIndex::kEnd - starting cueLoop/cueEnd: " + juce::String (cueLoop) + "/" + juce::String (cueEnd));
-            const auto newSampleEnd { static_cast<uint32_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleEnd{ std::clamp (newSampleEnd, static_cast<uint32_t> (cueStart), static_cast<uint32_t> (audioBuffer->getNumSamples ())) };
+            const auto newSampleEnd { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
+            const auto clampedSampleEnd { static_cast<uint32_t> (std::clamp (newSampleEnd, static_cast<int64_t> (cueStart), static_cast<int64_t> (audioBuffer->getNumSamples ()))) };
             cueEnd = clampedSampleEnd;
             if (cueEnd < cueLoop)
             {
