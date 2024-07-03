@@ -47,6 +47,7 @@ private:
     void pasteBank (int bankNumber);
 
     void resized () override;
+    void paint (juce::Graphics& g) override;
     int getNumRows () override;
     juce::String getTooltipForRow (int row) override;
     void listBoxItemClicked (int row, const juce::MouseEvent& me) override;

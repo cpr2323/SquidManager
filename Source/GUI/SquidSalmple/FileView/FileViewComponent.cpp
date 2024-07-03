@@ -15,6 +15,7 @@ const auto kDialogTextEditorName { "foldername" };
 
 FileViewComponent::FileViewComponent ()
 {
+    setOpaque (true);
     openFolderButton.setButtonText ("Open");
     openFolderButton.setTooltip ("Navigate to a specific folder");
     openFolderButton.onClick = [this] () { openFolder (); };
@@ -23,6 +24,7 @@ FileViewComponent::FileViewComponent ()
     newFolderButton.setTooltip ("Create a new folder");
     newFolderButton.onClick = [this] () { newFolder (); };
     addAndMakeVisible (newFolderButton);
+    directoryContentsListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
     addAndMakeVisible (directoryContentsListBox);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
     showAllFiles.setButtonText ("Show All");
@@ -206,8 +208,6 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         fileListItem = " " + filePrefix + file.getFileName ();
     }
 
-    g.setColour (juce::Colours::darkslategrey);
-    g.fillRect (width - 1, 0, 1, height);
     g.setColour (textColor);
     g.drawText (fileListItem, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
 }
@@ -351,3 +351,9 @@ void FileViewComponent::resized ()
     localBounds.removeFromTop (3);
     directoryContentsListBox.setBounds (localBounds);
 }
+
+void FileViewComponent::paint (juce::Graphics& g)
+{
+    g.fillAll (juce::Colours::black);
+}
+

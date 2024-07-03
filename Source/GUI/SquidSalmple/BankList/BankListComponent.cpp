@@ -14,11 +14,13 @@
 
 BankListComponent::BankListComponent ()
 {
+    setOpaque (true);
     showAllBanks.setToggleState (true, juce::NotificationType::dontSendNotification);
     showAllBanks.setButtonText ("Show All");
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { checkBanksThread.start (); };
     addAndMakeVisible (showAllBanks);
+    bankListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
     addAndMakeVisible (bankListBox);
 
     checkBanksThread.onThreadLoop = [this] ()
@@ -253,6 +255,11 @@ void BankListComponent::resized ()
     bankListBox.setBounds (localBounds);
 }
 
+void BankListComponent::paint (juce::Graphics& g)
+{
+    g.fillAll (juce::Colours::black);
+}
+
 int BankListComponent::getNumRows ()
 {
     return numBanks;
@@ -267,7 +274,7 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         if (rowIsSelected)
         {
             lastSelectedBankIndex = row;
-            rowColor = juce::Colours::darkslategrey;
+            rowColor = juce::Colours::black;
             textColor = juce::Colours::yellow;
         }
         else
@@ -285,8 +292,6 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
             presetName = "(bank)";
             textColor = textColor.withAlpha (0.5f);
         }
-        g.setColour (rowColor);
-        g.fillRect (width - 1, 0, 1, height);
         g.setColour (textColor);
         g.drawText ("  " + juce::String (presetNumber) + "-" + presetName, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
     }

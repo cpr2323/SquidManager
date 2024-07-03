@@ -46,11 +46,12 @@ private:
     void openFolder ();
     void updateFromNewData ();
 
+    void resized () override;
+    void paint (juce::Graphics& g) override;
     int getNumRows () override;
     juce::String getTooltipForRow (int row) override;
     void listBoxItemClicked (int row, const juce::MouseEvent& me) override;
     void listBoxItemDoubleClicked (int row, const juce::MouseEvent& me) override;
     void paintListBoxItem (int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
-    void resized () override;
 };
     
