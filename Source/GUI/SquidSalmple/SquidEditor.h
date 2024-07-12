@@ -39,11 +39,84 @@ private:
         }
     };
 
+    class TabbedComponentWithDropTabs : public TabbedComponentWithChangeCallback
+    {
+    public:
+        TabbedComponentWithDropTabs (juce::TabbedButtonBar::Orientation orientation) : TabbedComponentWithChangeCallback (orientation) {}
+        std::function<bool (juce::String fileName)> isSupportedFile;
+        std::function<bool (juce::String fileName, int channelIndex)> loadFile;
+
+    protected:
+        juce::TabBarButton* createTabButton (const juce::String& tabName, int tabIndex) override
+        {
+            return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar(), isSupportedFile, loadFile);
+        }
+
+    private:
+        class FileDropTargetTabBarButton : public juce::TabBarButton,
+                                           public juce::FileDragAndDropTarget
+        {
+        public:
+            FileDropTargetTabBarButton (const juce::String& tabName, juce::TabbedButtonBar& tabbedButtonBar,
+                                        std::function<bool (juce::String fileName)> isSupportedFileCallback,
+                                        std::function<bool (juce::String fileName, int channelIndex)> loadFileCallback)
+                : TabBarButton (tabName, tabbedButtonBar),
+                  isSupportedFile { isSupportedFileCallback },
+                  loadFile { loadFileCallback }
+            {
+            }
+
+            bool isInterestedInFileDrag (const juce::StringArray& files)  override
+            {
+                jassert (isSupportedFile != nullptr);
+                if (files.size () != 1 || ! isSupportedFile (files [0]))
+                    return false;
+
+                return true;
+            }
+            void fileDragEnter (const juce::StringArray& files, int x, int y) override
+            {
+                draggingFile = true;
+                repaint ();
+            }
+            void fileDragMove (const juce::StringArray& files, int x, int y) override
+            {
+            }
+            void fileDragExit (const juce::StringArray& files) override
+            {
+                draggingFile = false;
+                repaint ();
+            }
+            void filesDropped (const juce::StringArray& files, int x, int y) override
+            {
+                DebugLog ("TabbedComponentWithDropTabs", "tab drop index: " + juce::String (getIndex ()));
+                draggingFile = false;
+                repaint ();
+                if (! loadFile (files [0], getIndex ()))
+                {
+                    // TODO - indicate an error?
+                }
+            }
+
+        private:
+            bool draggingFile { false };
+            std::function<bool (juce::String fileName)> isSupportedFile;
+            std::function<bool (juce::String fileName, int channelIndex)> loadFile;
+            void paintOverChildren (juce::Graphics& g) override
+            {
+                TabBarButton::paintOverChildren (g);
+                if (draggingFile)
+                    g.fillAll (juce::Colours::white.withAlpha (0.5f));
+
+            }
+        };
+    };
+
     juce::Label bankNameLabel;
     juce::TextEditor bankNameEditor;
     juce::TextButton saveButton;
     juce::TextButton toolsButton;
-    TabbedComponentWithChangeCallback channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
+    TabbedComponentWithDropTabs channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
     std::unique_ptr<juce::FileChooser> fileChooser;
 
     std::array<ChannelEditorComponent, 8> channelEditorComponents;

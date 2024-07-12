@@ -698,6 +698,11 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
+bool ChannelEditorComponent::loadFile (juce::String fileName)
+{
+    return handleSampleAssignment (fileName);
+}
+
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties { rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no };

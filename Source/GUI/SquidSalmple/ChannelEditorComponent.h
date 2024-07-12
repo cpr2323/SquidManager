@@ -23,6 +23,7 @@ public:
 
     void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void initCueSetTabs ();
+    bool loadFile (juce::String fileName);
 
 private:
     SquidChannelProperties squidChannelProperties;
