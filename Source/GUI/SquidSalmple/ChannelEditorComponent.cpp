@@ -617,6 +617,13 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (cvAssignViewButton);
 
     // WAVEFORM DISPLAY
+    waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& files)
+    {
+        for (auto& file : files)
+            if (! editManager->isSupportedAudioFile (file))
+                return false;
+        return true;
+    };
     waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
     {
         filesDroppedOnCueSetEditor (files);
@@ -864,9 +871,9 @@ void ChannelEditorComponent::initializeCallbacks ()
     {
         updateLoopPointsView ();
         if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
-            waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
+            waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
         else
-            waveformDisplay.init (nullptr);
+            waveformDisplay.setAudioBuffer (nullptr);
         oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
         loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
     };
@@ -881,7 +888,7 @@ void ChannelEditorComponent::updateLoopPointsView ()
         startSample = squidChannelProperties.getLoopCue ();
         numBytes = squidChannelProperties.getEndCue () - startSample;
         loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer());
-        waveformDisplay.init (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
+        waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
     }
     else
     {

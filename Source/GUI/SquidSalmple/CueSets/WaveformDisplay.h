@@ -6,7 +6,7 @@ class WaveformDisplay : public juce::Component,
                         public juce::FileDragAndDropTarget
 {
 public:
-    void init (juce::AudioBuffer<float>* theAudioBuffer);
+    void setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer);
     void setCueEndPoint (uint32_t newCueEnd);
     void setCueLoopPoint (uint32_t newCueLoop);
     void setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd);
@@ -16,6 +16,7 @@ public:
     std::function<void (uint32_t loopPoint)> onLoopPointChange;
     std::function<void (uint32_t endPoint)> onEndPointChange;
     std::function<void (const juce::StringArray& files)> onFilesDropped;
+    std::function<bool (const juce::StringArray& files)> isInterestedInFiles;
 
 private:
     enum class EditHandleIndex

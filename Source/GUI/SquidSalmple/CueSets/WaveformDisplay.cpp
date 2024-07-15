@@ -11,9 +11,9 @@
 
 const auto markerHandleSize { 5 };
 
-void WaveformDisplay::init (juce::AudioBuffer<float>* theAudioBuffer)
+void WaveformDisplay::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
-    LogWaveformDisplay ("init");
+    LogWaveformDisplay ("setAudioBuffer");
     audioBuffer = theAudioBuffer;
     if (audioBuffer == nullptr)
         numSamples = 0;
@@ -266,9 +266,9 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
 
 bool WaveformDisplay::isInterestedInFileDrag (const juce::StringArray& files)
 {
-//     if (files.size () != 1 || !editManager->isSupportedAudioFile (files [0]))
-//         return false;
-    return true;
+    if (isInterestedInFiles == nullptr)
+        return false;
+    return isInterestedInFiles (files);
 }
 
 void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y)
