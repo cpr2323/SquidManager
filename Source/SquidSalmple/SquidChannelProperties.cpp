@@ -203,6 +203,13 @@ void SquidChannelProperties::setCueSetPoints (int cueSetIndex, uint32_t start, u
         if (! requestedCueSetVT.isValid ())
             return;
         setCueSetProperties (requestedCueSetVT, start, loop, end);
+
+        if (cueSetIndex == getCurCueSet ())
+        {
+            setStartCue (start, false);
+            setLoopCue (loop, false);
+            setEndCue (end, false);
+        }
     }
 }
 

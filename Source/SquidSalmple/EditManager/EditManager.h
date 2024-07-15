@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "../SquidBankProperties.h"
 #include "../SquidChannelProperties.h"
+#include "../../AppProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
 class EditManager
@@ -12,6 +13,7 @@ public:
 
     void init (juce::ValueTree rootPropertiesVT);
 
+    void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
     bool isSupportedAudioFile (juce::File file);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
@@ -21,6 +23,7 @@ public:
 
 private:
     RuntimeRootProperties runtimeRootProperties;
+    AppProperties appProperties;
     SquidBankProperties uneditedSquidBankProperties;
     SquidBankProperties squidBankProperties;
     juce::File bankDirectory;
@@ -30,4 +33,5 @@ private:
 
     void copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties);
     void addSampleToChannelProperties (juce::ValueTree channelProperties, juce::File sampleFile);
+public:
 };

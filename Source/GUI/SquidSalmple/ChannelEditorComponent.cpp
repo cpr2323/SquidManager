@@ -18,12 +18,12 @@ const auto kInitialYOffset { 5 };
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
-uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
+static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
 {
     return byteOffset / 2;
 }
 
-uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
+static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
 {
     return sampleOffset * 2;
 }
@@ -1416,11 +1416,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
 
 void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files)
 {
-    // build list of cur sets from file list
-    // concatenate files into one file
-    // load file
-    // set cue sets
-    jassertfalse;
+    editManager->concatenateAndBuildCueSets (files, squidChannelProperties.getChannelIndex ());
 }
 
 void ChannelEditorComponent::initOutputComboBox ()

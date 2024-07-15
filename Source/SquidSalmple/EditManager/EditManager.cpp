@@ -2,10 +2,22 @@
 #include "../Bank/BankManagerProperties.h"
 #include "../Metadata/SquidMetaDataReader.h"
 #include "../Metadata/SquidMetaDataWriter.h"
+#include "../../Utility/DebugLog.h"
+#include "../../Utility/PersistentRootProperties.h"
 
 constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
 constexpr auto kMaxSampleLength { 524287 };
+
+static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
+{
+    return byteOffset / 2;
+}
+
+static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
+{
+    return sampleOffset * 2;
+}
 
 EditManager::EditManager ()
 {
@@ -14,7 +26,9 @@ EditManager::EditManager ()
 
 void EditManager::init (juce::ValueTree rootPropertiesVT)
 {
+    PersistentRootProperties persistentRootProperties { rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no };
     runtimeRootProperties.wrap (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
+    appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
     uneditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
@@ -240,5 +254,75 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
         channelProperties.setSampleDataNumSamples (0, false);
         channelProperties.setSampleDataNumChannels (0, false);
         channelProperties.setSampleDataAudioBuffer ({}, false);
+    }
+}
+
+void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex)
+{
+    auto debugLog = [this] (const juce::String& text) { DebugLog ("EditManager", text); };
+    debugLog ("concatenateAndBuildCueSets");
+    const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
+    const auto outputFile { channelDirectory.getChildFile ("temp.wav") };
+    struct CueSet
+    {
+        uint32_t offset;
+        uint32_t length;
+    };
+    std::vector<CueSet> cueSetList;
+    auto hadError { false };
+    {
+
+        auto outputStream { outputFile.createOutputStream () };
+        juce::WavAudioFormat wavAudioFormat;
+        if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (outputStream.get (), 44100.0, 1, 16, {}, 0) }; writer != nullptr)
+        {
+            // audioFormatWriter will delete the file stream when done
+            outputStream.release ();
+
+            // build list of cur sets from file list
+            // concatenate files into one file
+            uint32_t curSampleOffset { 0 };
+            for (auto& file : files)
+            {
+                std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
+                jassert (reader != nullptr);
+                debugLog ("opened input file: " + file);
+                const auto samplesToRead { curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - (curSampleOffset + reader->lengthInSamples) };
+                if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                {
+                    debugLog ("successful file write: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                    cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                }
+                else
+                {
+                    // handle error
+                    debugLog ("ERROR - when writing file");
+                    hadError = true;
+                }
+                curSampleOffset += samplesToRead;
+                if (curSampleOffset > kMaxSampleLength)
+                    break;
+            }
+        }
+        else
+        {
+            debugLog ("ERROR - unable to open output file: " + outputFile.getFullPathName ());
+            hadError = true;
+        }
+    }
+    if (! hadError)
+    {
+        auto& channelProperties { channelPropertiesList [channelIndex] };
+        // load file
+        loadChannel (channelProperties.getValueTree (), channelIndex, outputFile);
+        // set cue sets
+        for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
+            channelProperties.setCueSetPoints (cueSetIndex, sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
+                                               sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
+                                               sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
+    }
+    else
+    {
+        outputFile.deleteFile ();
     }
 }
