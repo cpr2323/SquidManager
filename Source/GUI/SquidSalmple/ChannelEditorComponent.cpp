@@ -617,6 +617,10 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (cvAssignViewButton);
 
     // WAVEFORM DISPLAY
+    waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
+    {
+        filesDroppedOnCueSetEditor (files);
+    };
     waveformDisplay.onStartPointChange = [this] (juce::int64 startPoint)
     {
         const auto startCueByteOffset { static_cast<int>(startPoint * 2) };
@@ -1202,7 +1206,7 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
 
 bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
 {
-    juce::Logger::outputDebugString ("sample to load: " + fileName);
+    DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + fileName);
     auto srcFile { juce::File (fileName) };
     const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
     auto destFile { channelDirectory.getChildFile (srcFile.getFileName ()) };
@@ -1228,34 +1232,35 @@ bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& fi
     return true;
 }
 
-void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/)
+void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x, int y)
 {
-//    draggingFiles = false;
-//    repaint ();
+    draggingFiles = false;
+    repaint ();
+    const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+    if (!dropBounds.contains (x, y))
+        return;
     if (! handleSampleAssignment (files[0]))
     {
-//        // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
+        // TODO - indicate an error?
     }
 }
 
-//void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int x, int y)
-//{
-//    setDropIndex (files, x, y);
-//    draggingFiles = true;
-//    repaint ();
-//}
+void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int x, int y)
+{
+    draggingFiles = true;
+    repaint ();
+}
 
-//void ChannelEditorComponent::fileDragMove (const juce::StringArray& files, int x, int y)
-//{
-//    setDropIndex (files, x, y);
-//    repaint ();
-//}
+void ChannelEditorComponent::fileDragMove (const juce::StringArray& files, int x, int y)
+{
+   repaint ();
+}
 
-//void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
-//{
-//    draggingFiles = false;
-//    repaint ();
-//}
+void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
+{
+   draggingFiles = false;
+   repaint ();
+}
 
 void ChannelEditorComponent::resized ()
 {
@@ -1387,6 +1392,28 @@ void ChannelEditorComponent::resized ()
 void ChannelEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (juce::Colours::black);
+}
+
+void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
+{
+    if (draggingFiles)
+    {
+        const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+        g.setColour (juce::Colours::white.withAlpha (0.5f));
+        g.fillRect (dropBounds);
+        g.setFont (30.0f);
+        g.setColour (juce::Colours::black);
+        g.drawText ("Drop Here", dropBounds, juce::Justification::centred, false);
+    }
+}
+
+void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files)
+{
+    // build list of cur sets from file list
+    // concatenate files into one file
+    // load file
+    // set cue sets
+    jassertfalse;
 }
 
 void ChannelEditorComponent::initOutputComboBox ()

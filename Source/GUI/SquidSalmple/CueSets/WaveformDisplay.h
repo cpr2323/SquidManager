@@ -2,7 +2,8 @@
 
 #include <JuceHeader.h>
 
-class WaveformDisplay : public juce::Component
+class WaveformDisplay : public juce::Component,
+                        public juce::FileDragAndDropTarget
 {
 public:
     void init (juce::AudioBuffer<float>* theAudioBuffer);
@@ -14,6 +15,8 @@ public:
     std::function<void (uint32_t startPoint)> onStartPointChange;
     std::function<void (uint32_t loopPoint)> onLoopPointChange;
     std::function<void (uint32_t endPoint)> onEndPointChange;
+    std::function<void (const juce::StringArray& files)> onFilesDropped;
+
 private:
     enum class EditHandleIndex
     {
@@ -43,12 +46,20 @@ private:
     int sampleLoopMarkerX { 0 };
     int sampleEndMarkerX { 0 };
     EditHandleIndex handleIndex { EditHandleIndex::kNone };
+    bool draggingFiles { false };
 
     void displayWaveform (juce::Graphics& g);
     void displayMarkers (juce::Graphics& g);
+
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void filesDropped (const juce::StringArray& files, int, int) override;
+    void fileDragEnter (const juce::StringArray& files, int, int) override;
+    //void fileDragMove (const juce::StringArray& files, int, int) override;
+    void fileDragExit (const juce::StringArray& files) override;
 
     void mouseDrag (const juce::MouseEvent& e) override;
     void mouseMove (const juce::MouseEvent& e) override;
     void resized () override;
     void paint (juce::Graphics& g) override;
+    void paintOverChildren (juce::Graphics& g) override;
 };

@@ -10,13 +10,13 @@ class AudioBufferRefCounted : public juce::ReferenceCountedObject
 public:
     AudioBufferRefCounted ()
     {
-        juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
+        //juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
         audioBuffer = std::make_unique<juce::AudioBuffer<float>>();
     }
 
     ~AudioBufferRefCounted ()
     {
-        juce::Logger::outputDebugString ("AudioBufferReferenceCounted dtor");
+        //juce::Logger::outputDebugString ("AudioBufferReferenceCounted dtor");
     }
     using RefCountedPtr = juce::ReferenceCountedObjectPtr<AudioBufferRefCounted>;
 

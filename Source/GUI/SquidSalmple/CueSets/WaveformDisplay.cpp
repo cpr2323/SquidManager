@@ -1,7 +1,8 @@
 #include "WaveformDisplay.h"
 #include "../../../Utility/DebugLog.h"
+#include "../../../Utility/DumpStack.h"
 
-#define LOG_WAVEFORM_DISPLAY 0
+#define LOG_WAVEFORM_DISPLAY 1
 #if LOG_WAVEFORM_DISPLAY 
 #define LogWaveformDisplay(text) DebugLog ("WaveformDisplay", text);
 #else
@@ -12,14 +13,19 @@ const auto markerHandleSize { 5 };
 
 void WaveformDisplay::init (juce::AudioBuffer<float>* theAudioBuffer)
 {
+    LogWaveformDisplay ("init");
     audioBuffer = theAudioBuffer;
     if (audioBuffer == nullptr)
-        return;
-    numSamples = audioBuffer->getNumSamples();
+        numSamples = 0;
+    else
+        numSamples = audioBuffer->getNumSamples();
+    resized ();
+    repaint ();
 }
 
 void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
 {
+    LogWaveformDisplay ("setCueEndPoint");
     cueEnd = newCueEnd;
     resized ();
     repaint ();
@@ -27,6 +33,7 @@ void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
 
 void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
 {
+    LogWaveformDisplay ("setCueEndPoint");
     cueLoop = newCueLoop;
     resized ();
     repaint ();
@@ -34,6 +41,7 @@ void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
 
 void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd)
 {
+    LogWaveformDisplay ("setCuePoints");
     cueStart = newCueStart;
     cueLoop = newCueLoop;
     cueEnd = newCueEnd;
@@ -43,6 +51,7 @@ void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, u
 
 void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
 {
+    LogWaveformDisplay ("setCueStartPoint");
     cueStart = newCueStart;
     resized ();
     repaint ();
@@ -50,6 +59,7 @@ void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
 
 void WaveformDisplay::resized ()
 {
+    LogWaveformDisplay ("resized");
     halfHeight = getHeight () / 2;
     numPixels = getWidth () - 2;
     markerEndY = getHeight () - 2;
@@ -77,6 +87,7 @@ void WaveformDisplay::resized ()
 
 void WaveformDisplay::displayWaveform (juce::Graphics& g)
 {
+    LogWaveformDisplay ("displayWaveform");
     if (audioBuffer == nullptr)
         return;
     // TODO - implement side selection
@@ -123,6 +134,7 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
 
 void WaveformDisplay::displayMarkers (juce::Graphics& g)
 {
+    LogWaveformDisplay ("displayMarkers");
     if (audioBuffer == nullptr)
         return; 
 
@@ -151,6 +163,14 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.drawRect (getLocalBounds ());
+}
+
+void WaveformDisplay::paintOverChildren (juce::Graphics& g)
+{
+    if (draggingFiles)
+    {
+        g.fillAll (juce::Colours::white.withAlpha (0.5f));
+    }
 }
 
 void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
@@ -242,4 +262,41 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
         }
         break;
     }
+}
+
+bool WaveformDisplay::isInterestedInFileDrag (const juce::StringArray& files)
+{
+//     if (files.size () != 1 || !editManager->isSupportedAudioFile (files [0]))
+//         return false;
+    return true;
+}
+
+void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y)
+{
+    draggingFiles = false;
+    repaint ();
+    if (onFilesDropped != nullptr)
+        onFilesDropped (files);
+//     if (!handleSampleAssignment (files [0]))
+//     {
+//         // TODO - indicate an error?
+//     }
+}
+
+void WaveformDisplay::fileDragEnter (const juce::StringArray& files, int x, int y)
+{
+    draggingFiles = true;
+    repaint ();
+}
+
+// void WaveformDisplay::fileDragMove (const juce::StringArray& files, int x, int y)
+// {
+//     setDropType (files, x, y);
+//     repaint ();
+// }
+
+void WaveformDisplay::fileDragExit (const juce::StringArray&)
+{
+    draggingFiles = false;
+    repaint ();
 }

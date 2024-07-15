@@ -30,6 +30,7 @@ private:
     AudioPlayerProperties audioPlayerProperties;
     AppProperties appProperties;
     EditManager* editManager;
+    bool draggingFiles { false };
 
     // Edit fields
     juce::Label attackLabel;
@@ -111,6 +112,7 @@ private:
     void deleteCueSet (int cueSetIndex);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
+    void filesDroppedOnCueSetEditor (const juce::StringArray& files);
     bool handleSampleAssignment (juce::String fileName);
     void initOutputComboBox ();
     void initializeCallbacks ();
@@ -169,10 +171,11 @@ private:
 
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void filesDropped (const juce::StringArray& files, int, int) override;
-//     void fileDragEnter (const juce::StringArray& files, int, int) override;
-//     void fileDragMove (const juce::StringArray& files, int, int) override;
-//     void fileDragExit (const juce::StringArray& files) override;
+    void fileDragEnter (const juce::StringArray& files, int, int) override;
+    void fileDragMove (const juce::StringArray& files, int, int) override;
+    void fileDragExit (const juce::StringArray& files) override;
 
     void resized () override;
     void paint (juce::Graphics& g) override;
+    void paintOverChildren (juce::Graphics& g) override;
 };
