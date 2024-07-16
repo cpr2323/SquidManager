@@ -31,11 +31,10 @@ void SquidChannelProperties::initValueTree ()
     //setCurCueSet (0, false);
     setDecay (0, false);
     setETrig (0, false);
-    setFileName ("", false);
+    setSampleFileName ("", false);
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
     setFilterType (0, false);
-    setFullPath ("", false);
     setLoopMode (0, false);
     setLevel (static_cast<int> (30 * kScaleStep), false);
     setNumCueSets (0, false);
@@ -484,14 +483,9 @@ void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, boo
     requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int>(endCue), nullptr);
 }
 
-void SquidChannelProperties::setFileName (juce::String fileName, bool includeSelfCallback)
+void SquidChannelProperties::setSampleFileName (juce::String fileName, bool includeSelfCallback)
 {
-    setValue (fileName, FileNamePropertyId, includeSelfCallback);
-}
-
-void SquidChannelProperties::setFullPath (juce::String fullPath, bool includeSelfCallback)
-{
-    setValue (fullPath, FullPathTypePropertyId, includeSelfCallback);
+    setValue (fileName, SampleFileNamePropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool /*includeSelfCallback*/)
@@ -779,9 +773,9 @@ uint32_t SquidChannelProperties::getEndCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetEndPropertyId));
 }
 
-juce::String SquidChannelProperties::getFileName ()
+juce::String SquidChannelProperties::getSampleFileName ()
 {
-    return getValue<juce::String> (FileNamePropertyId);
+    return getValue<juce::String> (SampleFileNamePropertyId);
 }
 
 int SquidChannelProperties::getFilterFrequency ()
@@ -797,11 +791,6 @@ int SquidChannelProperties::getFilterResonance ()
 int SquidChannelProperties::getFilterType ()
 {
     return getValue<int> (FilterTypePropertyId);
-}
-
-juce::String SquidChannelProperties::getFullPath ()
-{
-    return getValue<juce::String> (FullPathTypePropertyId);
 }
 
 uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
@@ -926,7 +915,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setNumCueSets (sourceChannelProperties.getNumCueSets (), false);
     setCurCueSet (sourceChannelProperties.getCurCueSet (), false);
     setDecay (sourceChannelProperties.getDecay (), false);
-    setFileName (sourceChannelProperties.getFileName (), false);
+    setSampleFileName (sourceChannelProperties.getSampleFileName (), false);
     setEndCue (sourceChannelProperties.getEndCue (), false);
     setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
     setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
@@ -1058,10 +1047,10 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onETrigChange != nullptr)
                 onETrigChange (getETrig ());
         }
-        else if (property == FileNamePropertyId)
+        else if (property == SampleFileNamePropertyId)
         {
-            if (onFileNameChange != nullptr)
-                onFileNameChange (getFileName ());
+            if (onSampleFileNameChange != nullptr)
+                onSampleFileNameChange (getSampleFileName ());
         }
         else if (property == FilterTypePropertyId)
         {
@@ -1077,11 +1066,6 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onFilterResonanceChange != nullptr)
                 onFilterResonanceChange (getFilterResonance ());
-        }
-        else if (property == FullPathTypePropertyId)
-        {
-            if (onFullPathChange != nullptr)
-                onFullPathChange (getFullPath ());
         }
         else if (property == LevelPropertyId)
         {

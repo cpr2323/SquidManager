@@ -271,7 +271,7 @@ bool WaveformDisplay::isInterestedInFileDrag (const juce::StringArray& files)
     return isInterestedInFiles (files);
 }
 
-void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y)
+void WaveformDisplay::filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
     draggingFiles = false;
     repaint ();
@@ -283,7 +283,7 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y
 //     }
 }
 
-void WaveformDisplay::fileDragEnter (const juce::StringArray& files, int x, int y)
+void WaveformDisplay::fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/)
 {
     draggingFiles = true;
     repaint ();

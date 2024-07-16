@@ -97,19 +97,19 @@ void ChannelEditorComponent::setupComponents ()
         addAndMakeVisible (textButton);
     };
     // FILENAME
-    setupLabel (fileNameLabel, "FILE", kMediumLabelSize, juce::Justification::centred);
-    fileNameSelectLabel.setColour (juce::Label::ColourIds::textColourId, juce::Colours::white);
-    fileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, juce::Colours::black);
-    fileNameSelectLabel.setOutline (juce::Colours::white);
-    fileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
+    setupLabel (sampleFileNameLabel, "FILE", kMediumLabelSize, juce::Justification::centred);
+    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::textColourId, juce::Colours::white);
+    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, juce::Colours::black);
+    sampleFileNameSelectLabel.setOutline (juce::Colours::white);
+    sampleFileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
     {
         if (! handleSampleAssignment (files[0]))
         {
             // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
         }
     };
-    fileNameSelectLabel.onPopupMenuCallback = [this] () {};
-    setupLabel (fileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
+    sampleFileNameSelectLabel.onPopupMenuCallback = [this] () {};
+    setupLabel (sampleFileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
 
     setupLabel (channelSourceLabel, "SAMPLE CHANNEL", kMediumLabelSize, juce::Justification::centred);
     {
@@ -709,9 +709,9 @@ void ChannelEditorComponent::initCueSetTabs ()
         cueSetButtons [cueSetButtonIndex].setEnabled (cueSetButtonIndex < numCueSets);
 };
 
-bool ChannelEditorComponent::loadFile (juce::String fileName)
+bool ChannelEditorComponent::loadFile (juce::String sampleFileName)
 {
-    return handleSampleAssignment (fileName);
+    return handleSampleAssignment (sampleFileName);
 }
 
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
@@ -778,7 +778,6 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     decayDataChanged (squidChannelProperties.getDecay ());
     endCueDataChanged (squidChannelProperties.getEndCue ());
     eTrigDataChanged (squidChannelProperties.getETrig ());
-    fileNameDataChanged (squidChannelProperties.getFileName ());
     filterTypeDataChanged (squidChannelProperties.getFilterType ());
     filterFrequencyDataChanged (squidChannelProperties.getFilterFrequency ());
     filterResonanceDataChanged (squidChannelProperties.getFilterResonance ());
@@ -788,6 +787,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     quantDataChanged (squidChannelProperties.getQuant ());
     rateDataChanged (squidChannelProperties.getRate ());
     reverseDataChanged (squidChannelProperties.getReverse ());
+    sampleFileNameDataChanged (squidChannelProperties.getSampleFileName ());
     speedDataChanged (squidChannelProperties.getSpeed ());
     startCueDataChanged (squidChannelProperties.getStartCue ());
     stepsDataChanged (squidChannelProperties.getSteps ());
@@ -820,7 +820,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onChokeChange = [this] (int choke) { chokeDataChanged (choke); };
     squidChannelProperties.onCurCueSetChange = [this] (int cueSetIndex) { setCurCue (cueSetIndex); };
     squidChannelProperties.onDecayChange = [this] (int decay) { decayDataChanged (decay); };
-    squidChannelProperties.onFileNameChange = [this] (juce::String fileName) { fileNameDataChanged (fileName); };
+    squidChannelProperties.onSampleFileNameChange = [this] (juce::String sampleFileName) { sampleFileNameDataChanged (sampleFileName); };
     squidChannelProperties.onEndCueChange = [this] (int endCue) { endCueDataChanged (endCue); };
     squidChannelProperties.onEndCueSetChange = [this] (int cueIndex, int endCue)
     {
@@ -839,7 +839,6 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onLoadComplete = [this] ()
     {
         initCueSetTabs ();
-        auto sampleFileName { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (squidChannelProperties.getChannelIndex () + 1)).getChildFile (squidChannelProperties.getFileName ()) };
         setCurCue (squidChannelProperties.getCurCueSet ());
     };
     squidChannelProperties.onLoopCueChange = [this] (int loopCue) { loopCueDataChanged (loopCue); };
@@ -997,9 +996,10 @@ void ChannelEditorComponent::eTrigDataChanged (int eTrig)
     eTrigComboBox.setSelectedItemIndex (eTrig, juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::fileNameDataChanged (juce::String fileName)
+void ChannelEditorComponent::sampleFileNameDataChanged (juce::String sampleFileName)
 {
-    fileNameSelectLabel.setText (fileName, juce::NotificationType::dontSendNotification);
+    const auto justTheFileName { juce::File (sampleFileName).getFileNameWithoutExtension() };
+    sampleFileNameSelectLabel.setText (justTheFileName, juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::filterTypeDataChanged (int filterType)
@@ -1092,7 +1092,7 @@ void ChannelEditorComponent::bitsUiChanged (int bits)
 
 void ChannelEditorComponent::configFileSelectorFromChannelSource ()
 {
-    fileNameSelectLabel.setEnabled (squidChannelProperties.getChannelSource () == squidChannelProperties.getChannelIndex ());
+    sampleFileNameSelectLabel.setEnabled (squidChannelProperties.getChannelSource () == squidChannelProperties.getChannelIndex ());
 }
 
 void ChannelEditorComponent::channelSourceUiChanged (uint8_t channelSourceIndex)
@@ -1211,10 +1211,10 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
     squidChannelProperties.setXfade (xfade, false);
 }
 
-bool ChannelEditorComponent::handleSampleAssignment (juce::String fileName)
+bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName)
 {
-    DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + fileName);
-    auto srcFile { juce::File (fileName) };
+    DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + sampleFileName);
+    auto srcFile { juce::File (sampleFileName) };
     const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
     auto destFile { channelDirectory.getChildFile (srcFile.getFileName ()) };
     if (srcFile.getParentDirectory () != channelDirectory)
@@ -1252,15 +1252,10 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
     }
 }
 
-void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int x, int y)
+void ChannelEditorComponent::fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/)
 {
     draggingFiles = true;
     repaint ();
-}
-
-void ChannelEditorComponent::fileDragMove (const juce::StringArray& files, int x, int y)
-{
-   repaint ();
 }
 
 void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
@@ -1281,12 +1276,12 @@ void ChannelEditorComponent::resized ()
     auto yOffset { kInitialYOffset };
 
     // FILENAME
-    fileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    fileNameSelectLabel.setBounds (fileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
+    sampleFileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    sampleFileNameSelectLabel.setBounds (sampleFileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
 
-    channelSourceLabel.setBounds (fileNameSelectLabel.getRight () + 10, yOffset, fieldWidth + 20, kMediumLabelIntSize);
+    channelSourceLabel.setBounds (sampleFileNameSelectLabel.getRight () + 10, yOffset, fieldWidth + 20, kMediumLabelIntSize);
     channelSourceComboBox.setBounds (channelSourceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = fileNameSelectLabel.getBottom () + 3;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
 
     // column one
     bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
@@ -1318,7 +1313,7 @@ void ChannelEditorComponent::resized ()
     reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
     xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = fileNameSelectLabel.getBottom () + 3;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
     //yOffset = kInitialYOffset;
     // column two
     attackLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
@@ -1344,7 +1339,7 @@ void ChannelEditorComponent::resized ()
 
     // column three
     xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = fileNameSelectLabel.getBottom () + 3;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
     chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = chokeComboBox.getBottom () + 3;

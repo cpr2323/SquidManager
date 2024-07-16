@@ -171,7 +171,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
     }
 
-    squidChannelProperties.setFileName (sampleFile.getFileName (), false);
+    squidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
 
     // TODO - remove test code
 //     auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };

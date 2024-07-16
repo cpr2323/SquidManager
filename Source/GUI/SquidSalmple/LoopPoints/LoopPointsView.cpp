@@ -17,7 +17,6 @@ void LoopPointsView::paint (juce::Graphics& g)
     const auto halfHeight { getHeight () / 2 };
 
     g.setColour (juce::Colours::white);
-    const auto numSampleInBuffer { audioBuffer != nullptr ? static_cast<uint32_t>(audioBuffer->getNumSamples ()) : 0 };
     // NOTE: Squid Salmple samples can only be 11 seconds long, so we use a uint32_t to store offsets and length
     if (audioBuffer != nullptr && static_cast<uint32_t>(audioBuffer->getNumSamples ()) >= numSamples && numSamples > 4)
     {

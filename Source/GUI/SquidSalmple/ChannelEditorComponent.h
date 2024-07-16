@@ -23,7 +23,7 @@ public:
 
     void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void initCueSetTabs ();
-    bool loadFile (juce::String fileName);
+    bool loadFile (juce::String sampleFileName);
 
 private:
     SquidChannelProperties squidChannelProperties;
@@ -47,8 +47,8 @@ private:
     CustomTextEditorInt32 endCueTextEditor;
     juce::Label eTrigLabel;
     CustomComboBox eTrigComboBox; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
-    juce::Label fileNameLabel;
-    FileSelectLabel fileNameSelectLabel;
+    juce::Label sampleFileNameLabel;
+    FileSelectLabel sampleFileNameSelectLabel;
     juce::Label filterTypeLabel;
     CustomComboBox filterTypeComboBox; // Off, LP, BP, NT, HP (0-4)
     juce::Label filterFrequencyLabel;
@@ -113,7 +113,7 @@ private:
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
     void filesDroppedOnCueSetEditor (const juce::StringArray& files);
-    bool handleSampleAssignment (juce::String fileName);
+    bool handleSampleAssignment (juce::String sampleFileName);
     void initOutputComboBox ();
     void initializeCallbacks ();
     void setCueEditButtonsEnableState ();
@@ -131,7 +131,6 @@ private:
     void decayDataChanged (int decay);
     void endCueDataChanged (juce::int32 endCue);
     void eTrigDataChanged (int eTrig);
-    void fileNameDataChanged (juce::String fileName);
     void filterTypeDataChanged (int filterType);
     void filterFrequencyDataChanged (int filterFrequency);
     void filterResonanceDataChanged (int filterResonance);
@@ -141,6 +140,7 @@ private:
     void quantDataChanged (int quant);
     void rateDataChanged (int rate);
     void reverseDataChanged (int reverse);
+    void sampleFileNameDataChanged (juce::String sampleFileName);
     void speedDataChanged (int speed);
     void startCueDataChanged (juce::int32 startCue);
     void stepsDataChanged (int steps);
@@ -148,13 +148,13 @@ private:
 
     void attackUiChanged (int attack);
     void bitsUiChanged (int bits);
-    void channelFlagsUiChanged (uint16_t channelFlags);
+    //void channelFlagsUiChanged (uint16_t channelFlags);
     void channelSourceUiChanged (uint8_t channelSourceIndex);
     void chokeUiChanged (int choke);
     void decayUiChanged (int decay);
     void endCueUiChanged (juce::int32 endCue);
     void eTrigUiChanged (int eTrig);
-    void fileNameUiChanged (juce::String fileName);
+    //void fileNameUiChanged (juce::String fileName);
     void filterTypeUiChanged (int filterType);
     void filterFrequencyUiChanged (int filterFrequency);
     void filterResonanceUiChanged (int filterResonance);
@@ -172,7 +172,6 @@ private:
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void filesDropped (const juce::StringArray& files, int, int) override;
     void fileDragEnter (const juce::StringArray& files, int, int) override;
-    void fileDragMove (const juce::StringArray& files, int, int) override;
     void fileDragExit (const juce::StringArray& files) override;
 
     void resized () override;

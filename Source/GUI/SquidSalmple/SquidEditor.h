@@ -47,7 +47,7 @@ private:
         std::function<bool (juce::String fileName, int channelIndex)> loadFile;
 
     protected:
-        juce::TabBarButton* createTabButton (const juce::String& tabName, int tabIndex) override
+        juce::TabBarButton* createTabButton (const juce::String& tabName, int /*tabIndex*/) override
         {
             return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar(), isSupportedFile, loadFile);
         }
@@ -74,20 +74,17 @@ private:
 
                 return true;
             }
-            void fileDragEnter (const juce::StringArray& files, int x, int y) override
+            void fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/) override
             {
                 draggingFile = true;
                 repaint ();
             }
-            void fileDragMove (const juce::StringArray& files, int x, int y) override
-            {
-            }
-            void fileDragExit (const juce::StringArray& files) override
+            void fileDragExit (const juce::StringArray& /*files*/) override
             {
                 draggingFile = false;
                 repaint ();
             }
-            void filesDropped (const juce::StringArray& files, int x, int y) override
+            void filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/) override
             {
                 DebugLog ("TabbedComponentWithDropTabs", "tab drop index: " + juce::String (getIndex ()));
                 draggingFile = false;

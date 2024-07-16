@@ -314,12 +314,13 @@ juce::String BankListComponent::getTooltipForRow (int row)
     return "Preset " + juce::String (row + 1);
 }
 
-void BankListComponent::copyBank (int presetNumber)
+void BankListComponent::copyBank (int /*presetNumber*/)
 {
 //    loadPresetFile (getPresetFile (presetNumber), copyBufferPresetProperties.getValueTree ());
+    jassertfalse;
 }
 
-void BankListComponent::pasteBank (int presetNumber)
+void BankListComponent::pasteBank (int /*presetNumber*/)
 {
 #if 0
     auto doPaste = [this, presetNumber] ()
@@ -353,9 +354,10 @@ void BankListComponent::pasteBank (int presetNumber)
         doPaste ();
     }
 #endif
+    jassertfalse;
 }
 
-void BankListComponent::deleteBank (int presetNumber)
+void BankListComponent::deleteBank (int /*presetNumber*/)
 {
 #if 0
     juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE PRESET", "Are you sure you want to delete '" + FileTypeHelpers::getPresetFileName (presetNumber) + "'", "YES", "NO", nullptr,
@@ -376,6 +378,7 @@ void BankListComponent::deleteBank (int presetNumber)
             }
         }));
 #endif
+    jassertfalse;
 }
 
 juce::File BankListComponent::getBankDirectory (int bankNumber)

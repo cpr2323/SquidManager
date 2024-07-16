@@ -9,10 +9,10 @@ constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
 constexpr auto kMaxSampleLength { 524287 };
 
-static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
-{
-    return byteOffset / 2;
-}
+// static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
+// {
+//     return byteOffset / 2;
+// }
 
 static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
 {
@@ -74,12 +74,12 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
     else
     {
         newSquidChannelProperties.setChannelIndex (channelIndex, false);
-        newSquidChannelProperties.setFileName (sampleFile.getFileName (), false);
+        newSquidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
     }
     theSquidChannelProperties.copyFrom (newSquidChannelProperties.getValueTree ());
 }
 
-void EditManager::saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile)
+void EditManager::saveChannel (juce::ValueTree /*squidChannelPropertiesVT*/, uint8_t /*channelIndex*/, juce::File /*sampleFile*/)
 {
     // create temp file
     // write the audio data
@@ -106,6 +106,7 @@ void EditManager::saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
         // TODO - handle error
     }
 #endif
+    jassertfalse;
 }
 
 void EditManager::saveBank ()
@@ -121,7 +122,7 @@ void EditManager::saveBank ()
         auto channelDirectory { bankDirectory.getChildFile (juce::String (channelIndex + 1)) };
         SquidMetaDataWriter squidMetaDataWriter;
         SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
-        auto originalFile { channelDirectory.getChildFile (squidChannelPropertiesToSave.getFileName ()) };
+        auto originalFile { juce::File (squidChannelPropertiesToSave.getSampleFileName ()) };
         auto tempFile { originalFile.withFileExtension ("tmp") };
         if (squidMetaDataWriter.write (squidChannelPropertiesToSave.getValueTree (), originalFile, tempFile))
         {
@@ -182,7 +183,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
             if (oldStyleNamingSampleFile.exists () && !oldStyleNamingSampleFile.isDirectory ())
             {
                 // create folder
-                if (!channelDirectory.createDirectory ())
+                if (! channelDirectory.createDirectory ())
                 {
                     // TODO - report error in creating directory
                 }
@@ -206,7 +207,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
 
 // TODO - this is not complete. it takes a bankIndex, but I think that is incorrect, in that the EditManager only deals with the edit buffer
 //        refer to client code to decide how to change things
-void EditManager::loadBankDefaults (uint8_t bankIndex)
+void EditManager::loadBankDefaults (uint8_t /*bankIndex*/)
 {
     SquidBankProperties defaultSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
     copyBank (defaultSquidBankProperties, squidBankProperties);
@@ -235,7 +236,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
     if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
     {
-        const auto lengthInSamples { std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSampleLength)) };
+        const auto lengthInSamples { static_cast<uint32_t> (std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSampleLength))) };
         AudioBufferRefCounted::RefCountedPtr abrc { new AudioBufferRefCounted () };
 
         abrc->getAudioBuffer()->setSize (sampleFileReader->numChannels, static_cast<int> (lengthInSamples), false, true, false);
@@ -287,7 +288,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                 std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
                 jassert (reader != nullptr);
                 debugLog ("opened input file: " + file);
-                const auto samplesToRead { curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - (curSampleOffset + reader->lengthInSamples) };
+                const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - (curSampleOffset + reader->lengthInSamples)) };
                 if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                 {
                     debugLog ("successful file write: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
@@ -314,7 +315,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     {
         auto& channelProperties { channelPropertiesList [channelIndex] };
         // load file
-        loadChannel (channelProperties.getValueTree (), channelIndex, outputFile);
+        loadChannel (channelProperties.getValueTree (), static_cast<uint8_t> (channelIndex), outputFile);
         // set cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
             channelProperties.setCueSetPoints (cueSetIndex, sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),

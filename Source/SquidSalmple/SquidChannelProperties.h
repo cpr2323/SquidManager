@@ -57,8 +57,6 @@ public:
     void setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback);
     void setEndOfData (uint32_t endOfData, bool includeSelfCallback);
     void setETrig (int eTrig, bool includeSelfCallback);
-    void setFileName (juce::String fileName, bool includeSelfCallback);
-    void setFullPath (juce::String fullPath, bool includeSelfCallback);
     void setFilterFrequency (int filterFrequency, bool includeSelfCallback);
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
@@ -71,6 +69,7 @@ public:
     void setRate (int rate, bool includeSelfCallback);
     void setRecDest (int channelIndex, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
+    void setSampleFileName (juce::String fileName, bool includeSelfCallback);
     void setSpeed (int speed, bool includeSelfCallback); // internally 1 - 65500, externally 1-99
     void setStartCue (uint32_t startCue, bool includeSelfCallback);
     void setStartCueSet (int cueSetIndex, uint32_t startCue, bool includeSelfCallback);
@@ -113,11 +112,9 @@ public:
     uint32_t getEndCueSet (int cueSetIndex);
     uint32_t getEndOfData ();
     int getETrig ();
-    juce::String getFileName ();
     int getFilterFrequency ();
     int getFilterResonance ();
     int getFilterType ();
-    juce::String getFullPath ();
     int getLevel ();
     uint32_t getLoopCue ();
     uint32_t getLoopCueSet (int cueSetIndex);
@@ -127,6 +124,7 @@ public:
     int getRate ();
     int getRecDest ();
     int getReverse ();
+    juce::String getSampleFileName ();
     int getSpeed ();
     uint32_t getStartCue ();
     uint32_t getStartCueSet (int cueSetIndex);
@@ -169,11 +167,9 @@ public:
     std::function<void (int cueSetIndex, uint32_t endCue)> onEndCueSetChange;
     std::function<void (uint32_t endOfData)> onEndOfDataChange;
     std::function<void (int eTrig)> onETrigChange;
-    std::function<void (juce::String fileName)> onFileNameChange;
     std::function<void (int filterFrequency)> onFilterFrequencyChange;
     std::function<void (int filterResonance)> onFilterResonanceChange;
     std::function<void (int filterType)> onFilterTypeChange;
-    std::function<void (juce::String fullPath)> onFullPathChange;
     std::function<void (int level)> onLevelChange;
     std::function<void ()> onLoadBegin;
     std::function<void ()> onLoadComplete;
@@ -185,6 +181,7 @@ public:
     std::function<void (int rate)> onRateChange;
     std::function<void (int channelIndex)> onRecDestChange;
     std::function<void (int reverse)> onReverseChange;
+    std::function<void (juce::String fileName)> onSampleFileNameChange;
     std::function<void (int speed)> onSpeedChange;
     std::function<void (uint32_t startCue)> onStartCueChange;
     std::function<void (int cueSetIndex, uint32_t startCue)> onStartCueSetChange;
@@ -215,11 +212,9 @@ public:
     static inline const juce::Identifier EndCuePropertyId           { "endCue" };
     static inline const juce::Identifier EndOfDataPropertyId        { "endOfData" };
     static inline const juce::Identifier ETrigPropertyId            { "eTrig" };
-    static inline const juce::Identifier FileNamePropertyId         { "_fileName" };
     static inline const juce::Identifier FilterFrequencyPropertyId  { "filterFrequency" };
     static inline const juce::Identifier FilterResonancePropertyId  { "filterResonance" };
     static inline const juce::Identifier FilterTypePropertyId       { "filterType" };
-    static inline const juce::Identifier FullPathTypePropertyId     { "_fullPath" };
     static inline const juce::Identifier LevelPropertyId            { "level" };
     static inline const juce::Identifier LoopCuePropertyId          { "loopCue" };
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
@@ -228,6 +223,7 @@ public:
     static inline const juce::Identifier RatePropertyId             { "rate" };
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
+    static inline const juce::Identifier SampleFileNamePropertyId   { "_sampleFileName" };
     static inline const juce::Identifier SpeedPropertyId            { "speed" };
     static inline const juce::Identifier StartCuePropertyId         { "startCue" };
     static inline const juce::Identifier StepsPropertyId            { "steps" };
