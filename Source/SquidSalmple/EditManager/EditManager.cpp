@@ -124,13 +124,26 @@ void EditManager::saveBank ()
         SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
         auto originalFile { juce::File (squidChannelPropertiesToSave.getSampleFileName ()) };
         auto tempFile { originalFile.withFileExtension ("tmp") };
+        // write out the file with the new metadata to a tmp file
         if (squidMetaDataWriter.write (squidChannelPropertiesToSave.getValueTree (), originalFile, tempFile))
         {
+            // now move the old file out of the way with extension 'old'
             if (originalFile.moveFileTo (originalFile.withFileExtension ("old")))
             {
-                tempFile.moveFileTo (tempFile.withFileExtension ("wav"));
+                const auto newFile { tempFile.withFileExtension ("wav") };
+                // now move the new file to one with the extension of wav
+                tempFile.moveFileTo (newFile);
+                // and delete the original
                 originalFile.withFileExtension ("old").moveToTrash ();
-                copyBank (squidBankProperties, uneditedSquidBankProperties);
+                // also delete any other wav or _wav files in directory
+                for (const auto& entry : juce::RangedDirectoryIterator (tempFile.getParentDirectory (), false, "*", juce::File::findFiles))
+                {
+                    if (entry.getFile () == newFile)
+                        continue;
+                    const auto extension { entry.getFile ().getFileExtension ().toLowerCase ()};
+                    if (extension == ".wav" || extension == "._wav")
+                        entry.getFile ().moveToTrash ();
+                }
             }
             else
             {
@@ -142,6 +155,8 @@ void EditManager::saveBank ()
             // TODO - handle error
         }
     }
+    // finally, copy the new data to the unedited buffer
+    copyBank (squidBankProperties, uneditedSquidBankProperties);
 }
 
 void EditManager::loadBank (juce::File bankDirectoryToLoad)
@@ -234,8 +249,12 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
 {
     jassert (sampleFile.exists ());
     SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-    if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { audioFormatManager.createReaderFor (sampleFile) }; sampleFileReader != nullptr)
+    juce::WavAudioFormat wavAudioFormat;
+    auto inputStream { sampleFile.createInputStream () };
+    // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
+    if (std::unique_ptr<juce::AudioFormatReader> sampleFileReader { wavAudioFormat.createReaderFor (inputStream.get (), true) }; sampleFileReader != nullptr)
     {
+        inputStream.release ();
         const auto lengthInSamples { static_cast<uint32_t> (std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSampleLength))) };
         AudioBufferRefCounted::RefCountedPtr abrc { new AudioBufferRefCounted () };
 
@@ -250,6 +269,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     }
     else
     {
+        inputStream.release ();
         channelProperties.setSampleDataBits (0, false);
         channelProperties.setSampleDataSampleRate (0.0, false);
         channelProperties.setSampleDataNumSamples (0, false);
@@ -263,7 +283,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     auto debugLog = [this] (const juce::String& text) { DebugLog ("EditManager", text); };
     debugLog ("concatenateAndBuildCueSets");
     const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
-    const auto outputFile { channelDirectory.getChildFile ("temp.wav") };
+    const auto outputFile { channelDirectory.getChildFile ("temp._wav") };
     struct CueSet
     {
         uint32_t offset;
@@ -272,7 +292,6 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     std::vector<CueSet> cueSetList;
     auto hadError { false };
     {
-
         auto outputStream { outputFile.createOutputStream () };
         juce::WavAudioFormat wavAudioFormat;
         if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (outputStream.get (), 44100.0, 1, 16, {}, 0) }; writer != nullptr)

@@ -1216,11 +1216,14 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + sampleFileName);
     auto srcFile { juce::File (sampleFileName) };
     const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
-    auto destFile { channelDirectory.getChildFile (srcFile.getFileName ()) };
+    auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
     if (srcFile.getParentDirectory () != channelDirectory)
     {
         // TODO handle case where file of same name already exists
         // TODO should copy be moved to a thread?
+        // since we are copying the file from elsewhere, we will save it to a file with a "magic" extension
+        // this is so we can undo things if the Bank is not saved, and we don't use the normal 'wav' extension
+        // in case the app crashes, or something, and the extra file would confuse the module
         srcFile.copyFileTo (destFile);
         // TODO handle failure
     }
