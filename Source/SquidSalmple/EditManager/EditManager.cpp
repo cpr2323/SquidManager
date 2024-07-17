@@ -346,3 +346,14 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         outputFile.deleteFile ();
     }
 }
+
+void EditManager::cleanUpTempFiles (juce::File bankFolder)
+{
+    for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+    {
+        auto channelFolder { bankFolder.getChildFile (juce::String (channelIndex + 1)) };
+        for (const auto& entry : juce::RangedDirectoryIterator (channelFolder, false, "*._wav", juce::File::findFiles))
+            entry.getFile ().moveToTrash ();
+    }
+
+}

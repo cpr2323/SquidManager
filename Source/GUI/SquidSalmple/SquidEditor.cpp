@@ -103,6 +103,15 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     runtimeRootProperties.onSystemRequestedQuit = [this] ()
     {
         audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
+        runtimeRootProperties.setPreferredQuitState (RuntimeRootProperties::QuitState::idle, false);
+        bankLoseEditWarning ("Exiting SquidManager", [this] ()
+        {
+            editManager->cleanUpTempFiles (appProperties.getRecentlyUsedFile (0));
+            juce::MessageManager::callAsync ([this] () { runtimeRootProperties.setQuitState (RuntimeRootProperties::QuitState::now, false); });
+        }, [this] ()
+        {
+            // do nothing
+        });
     };
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
@@ -140,6 +149,32 @@ void SquidEditorComponent::timerCallback ()
 {
     // check if data has changed
     saveButton.setEnabled (! BankHelpers::areEntireBanksEqual (unEditedSquidBankProperties.getValueTree (), squidBankProperties.getValueTree ()));
+}
+
+void SquidEditorComponent::bankLoseEditWarning (juce::String title, std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction)
+{
+    jassert (overwriteFunction != nullptr);
+    jassert (cancelFunction != nullptr);
+
+    if (BankHelpers::areEntireBanksEqual (unEditedSquidBankProperties.getValueTree (), squidBankProperties.getValueTree ()))
+    {
+        overwriteFunction ();
+    }
+    else
+    {
+        juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, title,
+            "You have not saved a Bank that you have edited.\n  Select Continue to lose your changes.\n  Select Cancel to go back and save.", "Continue (lose changes)", "Cancel", nullptr,
+            juce::ModalCallbackFunction::create ([this, overwriteFunction, cancelFunction] (int option)
+            {
+                juce::MessageManager::callAsync ([this, option, overwriteFunction, cancelFunction] ()
+                {
+                    if (option == 1) // Continue
+                        overwriteFunction ();
+                    else // cancel
+                        cancelFunction ();
+                });
+            }));
+    }
 }
 
 void SquidEditorComponent::resized ()

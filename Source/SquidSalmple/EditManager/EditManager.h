@@ -14,6 +14,7 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
 
     void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
+    void cleanUpTempFiles (juce::File bankFolder);
     bool isSupportedAudioFile (juce::File file);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
