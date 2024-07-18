@@ -15,6 +15,7 @@ public:
     SquidEditorComponent ();
 
     void init (juce::ValueTree rootPropertiesVT);
+    void bankLoseEditWarning (juce::String title, std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction);
 
 private:
     RuntimeRootProperties runtimeRootProperties;
@@ -120,7 +121,6 @@ private:
 
     void nameUiChanged (juce::String name);
     void nameDataChanged (juce::String name);
-    void bankLoseEditWarning (juce::String title, std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction);
 
     void timerCallback () override;
     void resized () override;

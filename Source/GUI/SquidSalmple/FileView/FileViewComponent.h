@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "../../../AppProperties.h"
+#include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../Utility/DirectoryDataProperties.h"
 #include "../../../Utility/LambdaThread.h"
 
@@ -15,11 +16,12 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
 
     std::function<void (juce::File audioFile)> onAudioFileSelected;
-    std::function<void (std::function<void ()>, std::function<void ()>)> overwritePresetOrCancel;
+    std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
 
 private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
+    EditManager* editManager { nullptr };
 
     juce::CriticalSection directoryListQuickLookupListLock;
     std::vector<juce::ValueTree> directoryListQuickLookupListA;

@@ -418,6 +418,8 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 
         auto completeSelection = [this, row] ()
         {
+            editManager->cleanUpTempFiles (appProperties.getRecentlyUsedFile (0));
+
             auto [bankNumber, thisBankExists, presetName] { bankInfoList [row] };
             auto bankDirectory { getBankDirectory (bankNumber) };
             appProperties.addRecentlyUsedFile (bankDirectory.getFullPathName ());

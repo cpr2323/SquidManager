@@ -1,5 +1,5 @@
 #include "FileViewComponent.h"
-//#include "../../../Assimil8or/Preset/PresetHelpers.h"
+#include "../../../SystemServices.h"
 #include "../../../Utility/PersistentRootProperties.h"
 #include "../../../Utility/RuntimeRootProperties.h"
 #include "../../../Utility/WatchDogTimer.h"
@@ -46,6 +46,9 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
 
     RuntimeRootProperties runtimeRootProperties (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    editManager = systemServices.getEditManager ();
+
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
@@ -297,6 +300,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
     {
         auto completeSelection = [this, row] ()
         {
+            editManager->cleanUpTempFiles (appProperties.getRecentlyUsedFile (0));
             if (! isRootFolder && row == 0)
             {
                 appProperties.setMostRecentFolder (juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory ().getFullPathName ());
@@ -309,14 +313,14 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
             }
         };
 
-        if (overwritePresetOrCancel != nullptr)
+        if (overwriteBankOrCancel != nullptr)
         {
             auto cancelSelection = [this] ()
             {
                 directoryContentsListBox.selectRow (lastSelectedRow, false, true);
             };
 
-            overwritePresetOrCancel (completeSelection, cancelSelection);
+            overwriteBankOrCancel (completeSelection, cancelSelection);
         }
         else
         {

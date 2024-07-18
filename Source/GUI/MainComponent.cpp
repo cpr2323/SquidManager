@@ -19,6 +19,15 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
     bottomStatusWindow.init (rootPropertiesVT);
     currentFolderComponent.init (rootPropertiesVT);
 
+    fileViewComponent.overwriteBankOrCancel = [this] (std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction)
+    {
+        squidEditorComponent.bankLoseEditWarning ("Overwriting Bank Preset", overwriteFunction, cancelFunction);
+    };
+    bankListComponent.overwriteBankOrCancel = [this] (std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction)
+    {
+        squidEditorComponent.bankLoseEditWarning ("Overwriting Bank Preset", overwriteFunction, cancelFunction);
+    };
+
     bankListEditorSplitter.setComponents (&bankListComponent, &squidEditorComponent);
     bankListEditorSplitter.setHorizontalSplit (false);
 
