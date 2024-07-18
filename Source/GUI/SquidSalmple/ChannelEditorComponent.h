@@ -89,7 +89,32 @@ private:
 
     // LOWER PANE
     WaveformDisplay waveformDisplay;
-    std::array<juce::TextButton, 64> cueSetButtons;
+    class CueSetButton : public juce::TextButton
+    {
+    public:
+        CueSetButton ()
+            : TextButton ()
+        {
+            setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
+            setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+            setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
+            setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+        }
+        void enablementChanged () override
+        {
+            if (isEnabled ())
+            {
+                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
+                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+            }
+            else
+            {
+                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
+                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
+            }
+        }
+    };
+    std::array<CueSetButton, 64> cueSetButtons;
     CvAssignEditor cvAssignEditor;
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
