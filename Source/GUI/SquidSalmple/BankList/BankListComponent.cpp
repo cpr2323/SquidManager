@@ -159,7 +159,7 @@ void BankListComponent::checkBanks ()
             }
             else
             {
-                // if the entry is not a preset file, but we had started processing preset files, then we are done, because the files are sorted by type
+                // if the entry is not a bank file, but we had started processing bank files, then we are done, because the files are sorted by type
                 if (inBankList)
                     return false;
             }
@@ -282,18 +282,18 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
             rowColor = juce::Colours::black;
             textColor = juce::Colours::whitesmoke;
         }
-        auto [presetNumber, thisPresetExists, presetName] { bankInfoList [row] };
-        if (thisPresetExists)
+        auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+        if (thisBankExists)
         {
 
         }
         else
         {
-            presetName = "(bank)";
+            bankName = "(bank)";
             textColor = textColor.withAlpha (0.5f);
         }
         g.setColour (textColor);
-        g.drawText ("  " + juce::String (presetNumber) + "-" + presetName, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
+        g.drawText ("  " + juce::String (bankNumber) + "-" + bankName, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
     }
 }
 
@@ -311,7 +311,7 @@ void BankListComponent::timerCallback ()
 
 juce::String BankListComponent::getTooltipForRow (int row)
 {
-    return "Preset " + juce::String (row + 1);
+    return "Bank " + juce::String (row + 1);
 }
 
 void BankListComponent::copyBank (int /*presetNumber*/)
@@ -412,7 +412,7 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
     }
     else
     {
-        // don't reload the currently loaded preset
+        // don't reload the currently loaded bank
         if (row == lastSelectedBankIndex)
             return;
 
@@ -420,7 +420,7 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         {
             editManager->cleanUpTempFiles (appProperties.getRecentlyUsedFile (0));
 
-            auto [bankNumber, thisBankExists, presetName] { bankInfoList [row] };
+            auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
             auto bankDirectory { getBankDirectory (bankNumber) };
             appProperties.addRecentlyUsedFile (bankDirectory.getFullPathName ());
             if (thisBankExists)
