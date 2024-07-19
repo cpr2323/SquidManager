@@ -49,10 +49,8 @@ bool EditManager::isSupportedAudioFile (juce::File file)
     std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
     if (reader == nullptr)
         return false;
-    // TODO - the module can only accept mono files, but if one loads a stereo is it converted to mono, this will need to be added as well
     // check for any format settings that are unsupported
-    // NOTE - UNTIL I IMPLEMENT STEREO CONVERSION I AM ONLY ALLOW MONO TO BE LOADED
-    if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels != 1) || (reader->sampleRate != 44100))
+    if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels > 2) || (reader->sampleRate != 44100))
         return false;
 
     return true;
@@ -257,14 +255,36 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
         inputStream.release ();
         const auto lengthInSamples { static_cast<uint32_t> (std::min (sampleFileReader->lengthInSamples, static_cast<juce::int64> (kMaxSampleLength))) };
         AudioBufferRefCounted::RefCountedPtr abrc { new AudioBufferRefCounted () };
+        abrc->getAudioBuffer ()->setSize (1, static_cast<int> (lengthInSamples), false, true, false);
 
-        abrc->getAudioBuffer()->setSize (sampleFileReader->numChannels, static_cast<int> (lengthInSamples), false, true, false);
-        sampleFileReader->read (abrc->getAudioBuffer (), 0, static_cast<int> (lengthInSamples), 0, true, false);
+        if (sampleFileReader->numChannels == 1)
+        {
+            sampleFileReader->read (abrc->getAudioBuffer (), 0, static_cast<int> (lengthInSamples), 0, true, false);
+        }
+        else
+        {
+            // convert to mono
+            juce::AudioBuffer<float> stereoAudioBuffer;
+            stereoAudioBuffer.setSize (sampleFileReader->numChannels, static_cast<int> (lengthInSamples), false, true, false);
+            sampleFileReader->read (&stereoAudioBuffer, 0, static_cast<int> (lengthInSamples), 0, true, true);
+
+            constexpr float sqrRootOfTwo { 1.41421356237f };
+            auto leftChannelReadPtr { stereoAudioBuffer.getReadPointer (0) };
+            auto rightChannelReadPtr { stereoAudioBuffer.getReadPointer (1) };
+            auto monoWritePtr { abrc->getAudioBuffer ()->getWritePointer (0) };
+            for (auto sampleCounter { 0 }; sampleCounter < lengthInSamples; ++sampleCounter)
+            {
+                *monoWritePtr = (*leftChannelReadPtr + *rightChannelReadPtr) / sqrRootOfTwo;
+                ++monoWritePtr;
+                ++leftChannelReadPtr;
+                ++rightChannelReadPtr;
+            }
+        }
 
         channelProperties.setSampleDataBits (sampleFileReader->bitsPerSample, false);
         channelProperties.setSampleDataSampleRate (sampleFileReader->sampleRate, false);
         channelProperties.setSampleDataNumSamples (lengthInSamples, false);
-        channelProperties.setSampleDataNumChannels (sampleFileReader->numChannels, false);
+        channelProperties.setSampleDataNumChannels (1, false);
         channelProperties.setSampleDataAudioBuffer (abrc, false);
     }
     else

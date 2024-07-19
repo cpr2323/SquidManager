@@ -21,6 +21,7 @@ constexpr const char* kVersionDecorator { " [ALPHA 3]" };
 #include "SquidSalmple/SquidChannelProperties.h"
 #include "SquidSalmple/Metadata/SquidMetaDataReader.h"
 #include "SquidSalmple/Metadata/SquidMetaDataWriter.h"
+#include "SquidSalmple/Metadata/BusyChunkReader.h"
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -35,28 +36,6 @@ void crashHandler (void* /*data*/)
     FlushDebugLog ();
 }
 
-#define RUN_READ_WRITE_TEST 0
-#if JUCE_DEBUG
-#if RUN_READ_WRITE_TEST 
-void runSquidMetaDataReadTest (juce::File testFolder)
-{
-    auto inputFile { testFolder.getChildFile ("MetaDataReadTest.wav") };
-    SquidMetaDataReader squidMetaDataReader;
-    SquidChannelProperties squidChannelProperties { squidMetaDataReader.read (inputFile),
-                                                    SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
-
-    auto outputFile { testFolder.getChildFile ("MetaDataWriteTest.wav") };
-    SquidMetaDataWriter squidMetaDataWriter;
-    squidMetaDataWriter.write (squidChannelProperties.getValueTree (), inputFile, outputFile);
-
-    SquidChannelProperties squidChannelProperties2 { squidMetaDataReader.read (outputFile),
-                                                      SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
-
-    jassert (BankHelpers::areChannelsEqual (squidChannelProperties.getValueTree (), squidChannelProperties2.getValueTree ()));
-}
-#endif
-#endif
-
 class SquidManagerApplication : public juce::JUCEApplication, public juce::Timer
 {
 public:
@@ -67,52 +46,18 @@ public:
 
     void initialise ([[maybe_unused]] const juce::String& commandLine) override
     {
-#if 0
-        class AudioBufferReferenceCounted : public juce::ReferenceCountedObject
-        {
-        public:
-            AudioBufferReferenceCounted ()
-            {
-                juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
-                audioBuffer = new juce::AudioBuffer<float> ();
-            }
-
-            ~AudioBufferReferenceCounted ()
-            {
-                juce::Logger::outputDebugString ("AudioBufferReferenceCounted dtor");
-                delete audioBuffer;
-            }
-            using Ptr = juce::ReferenceCountedObjectPtr<AudioBufferReferenceCounted>;
-
-            juce::AudioBuffer<float>* getAudioBuffer () { return audioBuffer; }
-
-        private:
-            juce::AudioBuffer<float>* audioBuffer;
-
-        };
-        {
-            juce::Logger::outputDebugString ("instantiating abrc");
-            AudioBufferReferenceCounted::Ptr abrc { new AudioBufferReferenceCounted () };
-            juce::Logger::outputDebugString ("instantiating abrc2");
-            auto abrc2 { abrc };
-            juce::ValueTree testVT ("test");
-            juce::Logger::outputDebugString ("adding to VT");
-            juce::Logger::outputDebugString ("reference count before adding to VT: " + juce::String(abrc->getReferenceCount()));
-            testVT.setProperty ("abrc", abrc.get (), nullptr);
-            juce::Logger::outputDebugString ("reference count after adding to VT: " + juce::String (abrc->getReferenceCount ()));
-            auto abrc3 { AudioBufferReferenceCounted::Ptr(static_cast<AudioBufferReferenceCounted*>(testVT.getProperty ("abrc").getObject ())) };
-            juce::Logger::outputDebugString ("reference count after retrieving it from VT: " + juce::String (abrc->getReferenceCount ()));
-            auto ab { abrc3->getAudioBuffer () };
-            juce::Logger::outputDebugString ("reference count after create object from ptr: " + juce::String (abrc->getReferenceCount ()));
-            juce::Logger::outputDebugString ("deleting abrc");
-            abrc = nullptr;
-            juce::Logger::outputDebugString ("deleting abrc2");
-            abrc2 = nullptr;
-            juce::Logger::outputDebugString ("abrc3  and VT going out of scope");
-        }
-#endif
-
         initAppDirectory ();
+
+#if 0
+        // MARKER READ TEST
+        //auto fileWithMarkers { appDirectory.getChildFile("1_wih_markers.wav") };
+        auto fileWithMarkers { appDirectory.getChildFile ("TestWav1_1.wav") };
+        BusyChunkReader bcr;
+        auto markersList { bcr.getMarkerList (fileWithMarkers) };
+        for (auto& marker : markersList)
+            juce::Logger::outputDebugString ("marker sample offset: " + juce::String (marker));
+        // ----------------
+#endif
         initLogger ();
         initCrashHandler ();
         initPropertyRoots ();

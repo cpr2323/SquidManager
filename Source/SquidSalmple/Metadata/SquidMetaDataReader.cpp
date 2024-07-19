@@ -11,6 +11,11 @@
 #define LogReader(text) ;
 #endif
 
+static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
+{
+    return sampleOffset * 2;
+}
+
 void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File sampleFile, uint8_t channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
@@ -18,7 +23,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     SquidChannelProperties squidChannelProperties { channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
-    if (busyChunkReader.read (sampleFile, busyChunkData))
+    if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
         LogReader (sampleFile.getFileName () + " contains meta-data");
         jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
@@ -165,10 +170,31 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setChannelIndex (channelIndex, false);
         squidChannelProperties.setChannelSource (channelIndex, false);
         squidChannelProperties.setChoke (channelIndex, false);
-        squidChannelProperties.setEndCue (endOffset, false);
         squidChannelProperties.setEndOfData (endOffset, false);
         squidChannelProperties.setRecDest (channelIndex, false);
-        squidChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
+        auto markerList { busyChunkReader.getMarkerList (sampleFile) };
+        if (markerList.size () != 0)
+        {
+            // import markers
+            for (auto sampleOffsetIndex { 0 }; sampleOffsetIndex < markerList.size (); sampleOffsetIndex += 2)
+            {
+                const auto startCue { sampleOffsetToByteOffset (markerList [sampleOffsetIndex]) };
+                const auto nextSampleOffsetIndex { sampleOffsetIndex + 1 };
+                const auto endCue { nextSampleOffsetIndex < markerList.size () ? sampleOffsetToByteOffset (markerList [nextSampleOffsetIndex]) : endOffset };
+                squidChannelProperties.setCueSetPoints (sampleOffsetIndex / 2, startCue, startCue, endCue);
+            }
+            // set initial cue points to first cue set
+            squidChannelProperties.setStartCue (squidChannelProperties.getStartCueSet (0), false);
+            squidChannelProperties.setLoopCue (squidChannelProperties.getLoopCueSet (0), false);
+            squidChannelProperties.setEndCue (squidChannelProperties.getEndCueSet (0), false);
+        }
+        else
+        {
+            // set end cue to end of sample
+            squidChannelProperties.setEndCue (endOffset, false);
+            // set first cue set
+            squidChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
+        }
     }
 
     squidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
