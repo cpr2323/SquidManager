@@ -24,6 +24,14 @@
                   file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.cpp"/>
             <FILE id="uM4wKH" name="CvAssignEditor.h" compile="0" resource="0"
                   file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.h"/>
+            <FILE id="eDgSvT" name="CvAssignParameter.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignParameter.cpp"/>
+            <FILE id="ih1OeM" name="CvAssignParameter.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignParameter.h"/>
+            <FILE id="zTC2Ct" name="CvAssignSection.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignSection.cpp"/>
+            <FILE id="MkABYw" name="CvAssignSection.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignSection.h"/>
           </GROUP>
           <GROUP id="{B38C8863-B2A0-5AB2-D11C-92D8CBC1ED31}" name="CueSets">
             <FILE id="cW58eY" name="WaveformDisplay.cpp" compile="1" resource="0"
