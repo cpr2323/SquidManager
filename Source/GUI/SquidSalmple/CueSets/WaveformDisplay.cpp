@@ -2,7 +2,7 @@
 #include "../../../Utility/DebugLog.h"
 #include "../../../Utility/DumpStack.h"
 
-#define LOG_WAVEFORM_DISPLAY 1
+#define LOG_WAVEFORM_DISPLAY 0
 #if LOG_WAVEFORM_DISPLAY 
 #define LogWaveformDisplay(text) DebugLog ("WaveformDisplay", text);
 #else

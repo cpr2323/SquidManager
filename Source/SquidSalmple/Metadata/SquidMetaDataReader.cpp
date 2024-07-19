@@ -175,12 +175,16 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         auto markerList { busyChunkReader.getMarkerList (sampleFile) };
         if (markerList.size () != 0)
         {
+            LogReader ("importing markers");
             // import markers
             for (auto sampleOffsetIndex { 0 }; sampleOffsetIndex < markerList.size (); sampleOffsetIndex += 2)
             {
                 const auto startCue { sampleOffsetToByteOffset (markerList [sampleOffsetIndex]) };
                 const auto nextSampleOffsetIndex { sampleOffsetIndex + 1 };
                 const auto endCue { nextSampleOffsetIndex < markerList.size () ? sampleOffsetToByteOffset (markerList [nextSampleOffsetIndex]) : endOffset };
+                LogReader ("import - cue set " + juce::String (sampleOffsetIndex / 2) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + 
+                           "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+                jassert ((startCue <= endCue) || (numSamples == 0 && startCue == 0 && endCue == 0));
                 squidChannelProperties.setCueSetPoints (sampleOffsetIndex / 2, startCue, startCue, endCue);
             }
             // set initial cue points to first cue set
