@@ -118,6 +118,16 @@ private:
 
     NoArrowComboBoxLnF noArrowComboBoxLnF;
 
+    class CueEditButtonLnF : public juce::LookAndFeel_V4
+    {
+    public:
+        juce::Font getTextButtonFont (juce::TextButton&, int /*buttonHeight*/) override
+        {
+            return juce::Font (11);
+        }
+    };
+    CueEditButtonLnF cueEditButtonLnF;
+
     juce::TextButton addCueSetButton;
     juce::TextButton deleteCueSetButton;
 

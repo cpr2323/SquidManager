@@ -47,6 +47,8 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
 ChannelEditorComponent ::~ChannelEditorComponent ()
 {
+    addCueSetButton.setLookAndFeel (nullptr);
+    deleteCueSetButton.setLookAndFeel (nullptr);
     outputComboBox.setLookAndFeel (nullptr);
     stepsComboBox.setLookAndFeel (nullptr);
     eTrigComboBox.setLookAndFeel (nullptr);
@@ -576,11 +578,13 @@ void ChannelEditorComponent::setupComponents ()
     setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayMode::loop);
     setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayMode::once);
 
-    addCueSetButton.setButtonText ("ADD CUE");
+    addCueSetButton.setLookAndFeel (&cueEditButtonLnF);
+    addCueSetButton.setButtonText ("+");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
     addCueSetButton.setEnabled (false);
     addAndMakeVisible (addCueSetButton);
-    deleteCueSetButton.setButtonText ("DELETE CUE");
+    deleteCueSetButton.setLookAndFeel (&cueEditButtonLnF);
+    deleteCueSetButton.setButtonText ("-");
     deleteCueSetButton.onClick = [this] () { deleteCueSet (squidChannelProperties.getCurCueSet ()); };
     deleteCueSetButton.setEnabled (false);
     addAndMakeVisible (deleteCueSetButton);
@@ -1343,14 +1347,17 @@ void ChannelEditorComponent::resized ()
 
     // CUE SETS STUFF BETWEEN CHANNEL PARAMETERS AND CV ASSIGNS EDITOR
     // CUE SET BUTTONS
-    addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, reverseButton.getY (), fieldWidth, kParameterLineHeight);
-    deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
     xOffset = xInitialOffSet;
     yOffset = reverseButton.getBottom () + 10 + kHeightOfCueSetButton;
+    const auto kHeightOfWaveformDisplay { cvAssignEditor.getY () - yOffset - 5 - kHeightOfCueSetButton };
+    const auto kWidthOfCueEditButtons { 15 };
+    addCueSetButton.setBounds (xInitialOffSet, yOffset, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
+    deleteCueSetButton.setBounds (xInitialOffSet, yOffset + (kHeightOfWaveformDisplay / 2) + 2, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
     // WAVEFORM
-    waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, cvAssignEditor.getY () - yOffset - 5- kHeightOfCueSetButton);
+    const auto kWaveformXOffset { kWidthOfCueEditButtons + 2};
+    waveformDisplay.setBounds (xOffset + kWaveformXOffset, yOffset, kWidthOfWaveformEditor - kWaveformXOffset, kHeightOfWaveformDisplay);
     // CUE SET TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
     {
