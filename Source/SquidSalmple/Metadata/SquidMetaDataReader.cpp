@@ -79,7 +79,6 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         uint16_t frequencyAndType { getValue <SquidSalmple::DataLayout::kCutoffFrequencySize> (SquidSalmple::DataLayout::kCutoffFrequencyOffset) };
         squidChannelProperties.setFilterType (frequencyAndType & 0x000F, false);
         squidChannelProperties.setFilterFrequency (frequencyAndType >> 4, false);
-        LogReader ("filter frequency: " + juce::String(squidChannelProperties.getFilterFrequency()));
         squidChannelProperties.setFilterResonance (getValue <SquidSalmple::DataLayout::kResonanceSize> (SquidSalmple::DataLayout::kResonanceOffset), false);
         squidChannelProperties.setLevel (getValue <SquidSalmple::DataLayout::kLevelSize> (SquidSalmple::DataLayout::kLevelOffset), false);
         squidChannelProperties.setLoopCue (getValue <SquidSalmple::DataLayout::kLoopPositionSize> (SquidSalmple::DataLayout::kLoopPositionOffset), false);
@@ -114,10 +113,12 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
 
         ////////////////////////////////////
         // cue sets
-        auto logCueSet = [this, numSamples = squidChannelProperties.getEndOfData ()] (uint8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
+        auto logCueSet = [this, numSamples = squidChannelProperties.getEndOfData ()] (int8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
         {
-            LogReader ("read - cue set " + juce::String (cueSetIndex) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + "], loop = " +
-                juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) + "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+            LogReader ("read - cue set " + (cueSetIndex == -1 ? "current" : juce::String (cueSetIndex)) +
+                       ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                       "], loop = " + juce::String (loopCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (loopCue).paddedLeft ('0', 6) +
+                       "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
             jassert ((startCue <= loopCue && loopCue < endCue) || (numSamples == 0 && startCue == 0 && loopCue == 0 && endCue == 0));
         };
 
@@ -125,7 +126,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         const auto curCue { getValue <SquidSalmple::DataLayout::kCuesSelectedSize> (SquidSalmple::DataLayout::kCuesSelectedOffset) };
         //squidChannelProperties.setNumCueSets (numCues, false); // don't do this, because the count is updated below by squidChannelProperties.addCueSet
         LogReader ("read - cur cue meta data (cue set " + juce::String (curCue) + "):");
-        logCueSet (0, squidChannelProperties.getStartCue (), squidChannelProperties.getLoopCue (), squidChannelProperties.getEndCue ());
+        logCueSet (-1, squidChannelProperties.getStartCue (), squidChannelProperties.getLoopCue (), squidChannelProperties.getEndCue ());
 
         LogReader ("read - Cue List: " + juce::String (numCues));
         for (uint8_t curCueSetIndex { 0 }; curCueSetIndex < numCues; ++curCueSetIndex)
@@ -172,8 +173,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setChoke (channelIndex, false);
         squidChannelProperties.setEndOfData (endOffset, false);
         squidChannelProperties.setRecDest (channelIndex, false);
-        auto markerList { busyChunkReader.getMarkerList (sampleFile) };
-        if (markerList.size () != 0)
+        if (auto markerList { busyChunkReader.getMarkerList (sampleFile) }; markerList.size () != 0)
         {
             LogReader ("importing markers");
             // import markers
@@ -182,10 +182,14 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
                 const auto startCue { sampleOffsetToByteOffset (markerList [sampleOffsetIndex]) };
                 const auto nextSampleOffsetIndex { sampleOffsetIndex + 1 };
                 const auto endCue { nextSampleOffsetIndex < markerList.size () ? sampleOffsetToByteOffset (markerList [nextSampleOffsetIndex]) : endOffset };
-                LogReader ("import - cue set " + juce::String (sampleOffsetIndex / 2) + ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) + 
+                const auto cueSetIndex { sampleOffsetIndex / 2 };
+                LogReader ("import - cue set " + juce::String (cueSetIndex) +
+                           ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                           "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
                            "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
-                jassert ((startCue <= endCue) || (numSamples == 0 && startCue == 0 && endCue == 0));
-                squidChannelProperties.setCueSetPoints (sampleOffsetIndex / 2, startCue, startCue, endCue);
+
+                jassert ((startCue <= endCue));
+                squidChannelProperties.setCueSetPoints (cueSetIndex, startCue, startCue, endCue);
             }
             // set initial cue points to first cue set
             squidChannelProperties.setStartCue (squidChannelProperties.getStartCueSet (0), false);
