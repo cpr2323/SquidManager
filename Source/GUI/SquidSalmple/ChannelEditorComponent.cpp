@@ -113,7 +113,7 @@ void ChannelEditorComponent::setupComponents ()
     sampleFileNameSelectLabel.onPopupMenuCallback = [this] () {};
     setupLabel (sampleFileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
 
-    setupLabel (channelSourceLabel, "SAMPLE CHANNEL", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (channelSourceLabel, "SOURCE", kMediumLabelSize, juce::Justification::centred);
     {
         for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
         {
@@ -1251,56 +1251,21 @@ void ChannelEditorComponent::resized ()
     // FILENAME
     sampleFileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     sampleFileNameSelectLabel.setBounds (sampleFileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
-
-    channelSourceLabel.setBounds (sampleFileNameSelectLabel.getRight () + 10, yOffset, fieldWidth + 20, kMediumLabelIntSize);
-    channelSourceComboBox.setBounds (channelSourceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = sampleFileNameSelectLabel.getBottom () + 3;
 
     // column one
-    bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = bitsTextEditor.getBottom () + 3;
-    rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    // only one of these is visible for a given channel
-    // Speed for Channels 1-5
-    yOffset = rateComboBox.getBottom () + 3;
-    speedLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    speedTextEditor.setBounds (speedLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    // Quantize for Channels 6-8
-    quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = quantComboBox.getBottom () + 3;
-    filterTypeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterTypeComboBox.setBounds (filterTypeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterTypeComboBox.getBottom () + 3;
-    filterFrequencyLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterFrequencyTextEditor.setBounds (filterFrequencyLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterFrequencyTextEditor.getBottom () + 3;
-    filterResonanceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterResonanceTextEditor.setBounds (filterResonanceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterResonanceTextEditor.getBottom () + 3;
     levelLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     levelTextEditor.setBounds (levelLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = levelTextEditor.getBottom () + 3;
-    reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-    xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-    //yOffset = kInitialYOffset;
-    // column two
     attackLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     attackTextEditor.setBounds (attackLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = attackTextEditor.getBottom () + 3;
     decayLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     decayTextEditor.setBounds (decayLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = decayTextEditor.getBottom () + 3;
-    loopModeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    loopModeComboBox.setBounds (loopModeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = loopModeComboBox.getBottom () + 3;
-    xfadeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    xfadeTextEditor.setBounds (xfadeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = xfadeTextEditor.getBottom () + 3;
+    outputLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    outputComboBox.setBounds (outputLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = outputComboBox.getBottom () + 3;
     startCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     startCueTextEditor.setBounds (startCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = startCueTextEditor.getBottom () + 3;
@@ -1310,9 +1275,52 @@ void ChannelEditorComponent::resized ()
     endCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
 
+    loopPointsView.setBounds (startCueTextEditor.getRight () + spaceBetweenColumns, startCueTextEditor.getY (), columnWidth * 2, endCueTextEditor.getBottom () - startCueTextEditor.getY ());
+    oneShotPlayButton.setBounds (loopPointsView.getX () + 2, loopPointsView.getY () + 2, 35, kMediumLabelIntSize);
+    loopPlayButton.setBounds (loopPointsView.getX () + 2, loopPointsView.getBottom () - 2 - kMediumLabelIntSize, 35, kMediumLabelIntSize);
+
+    // column two
+    xOffset += columnWidth + spaceBetweenColumns;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
+    filterTypeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterTypeComboBox.setBounds (filterTypeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = filterTypeComboBox.getBottom () + 3;
+    filterFrequencyLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterFrequencyTextEditor.setBounds (filterFrequencyLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = filterFrequencyTextEditor.getBottom () + 3;
+    filterResonanceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    filterResonanceTextEditor.setBounds (filterResonanceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = filterResonanceTextEditor.getBottom () + 3;
+    reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
+
     // column three
     xOffset += columnWidth + spaceBetweenColumns;
     yOffset = sampleFileNameSelectLabel.getBottom () + 3;
+    // only one of these is visible for a given channel
+    // Speed for Channels 1-5
+    speedLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    speedTextEditor.setBounds (speedLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    // Quantize for Channels 6-8
+    quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = quantComboBox.getBottom () + 3;
+    bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = bitsTextEditor.getBottom () + 3;
+    rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = rateComboBox.getBottom () + 3;
+
+    // column four
+    xOffset += columnWidth + spaceBetweenColumns;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
+    loopModeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    loopModeComboBox.setBounds (loopModeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = loopModeComboBox.getBottom () + 3;
+    xfadeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    xfadeTextEditor.setBounds (xfadeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = xfadeTextEditor.getBottom () + 3;
     chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = chokeComboBox.getBottom () + 3;
@@ -1322,22 +1330,17 @@ void ChannelEditorComponent::resized ()
     stepsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     stepsComboBox.setBounds (stepsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = stepsComboBox.getBottom () + 3;
-    outputLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    outputComboBox.setBounds (outputLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = outputComboBox.getBottom () + 3;
+    channelSourceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    channelSourceComboBox.setBounds (channelSourceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+
+    // column five
+    xOffset += columnWidth + spaceBetweenColumns;
+    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
     cueRandomLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     cueRandomButton.setBounds (cueRandomLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
     yOffset = cueRandomButton.getBottom () + 3;
     cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-
-    loopPointsView.setBounds (outputComboBox.getRight () + spaceBetweenColumns, outputComboBox.getY (), columnWidth * 2, reverseButton.getY () - outputComboBox.getY () - 5);
-    oneShotPlayButton.setBounds (loopPointsView.getX () + 5, loopPointsView.getY () - 3 - kMediumLabelIntSize, 35, kMediumLabelIntSize);
-    loopPlayButton.setBounds (oneShotPlayButton.getRight () + 3, oneShotPlayButton.getY (), 35, kMediumLabelIntSize);
-
-    // column four
-//     xOffset += columnWidth + spaceBetweenColumns;
-//     yOffset = kInitialYOffset;
 
     const auto kWidthOfWaveformEditor { 962 };
 
@@ -1350,7 +1353,7 @@ void ChannelEditorComponent::resized ()
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
     xOffset = xInitialOffSet;
-    yOffset = reverseButton.getBottom () + 10 + kHeightOfCueSetButton;
+    yOffset = endCueTextEditor.getBottom () + kMediumLabelIntSize + 5 + kHeightOfCueSetButton;
     const auto kHeightOfWaveformDisplay { cvAssignEditor.getY () - yOffset - 5 - kHeightOfCueSetButton };
     const auto kWidthOfCueEditButtons { 15 };
     addCueSetButton.setBounds (xInitialOffSet, yOffset, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
