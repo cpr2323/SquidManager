@@ -585,36 +585,8 @@ void ChannelEditorComponent::setupComponents ()
     deleteCueSetButton.setEnabled (false);
     addAndMakeVisible (deleteCueSetButton);
 
-    // LOWER PANEL SELECT BUTTONS
-    cueSetViewButton.setButtonText ("CUE SETS");
-    cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
-    cueSetViewButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-    cueSetViewButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-    cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-    cueSetViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
-    cueSetViewButton.onClick = [this] ()
-    {
-        if (cueSetViewButton.getToggleState ())
-            return;
-        cueSetViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
-        cvAssignViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-        setLowerPaneView (LowerPaneView::cueSets);
-    };
-    addAndMakeVisible (cueSetViewButton);
-    cvAssignViewButton.setButtonText ("CV ASSIGN");
-    cvAssignViewButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-    cvAssignViewButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-    cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-    cvAssignViewButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
-    cvAssignViewButton.onClick = [this] ()
-    {
-        if (cvAssignViewButton.getToggleState ())
-            return;
-        cvAssignViewButton.setToggleState (true, juce::NotificationType::dontSendNotification);
-        cueSetViewButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-        setLowerPaneView (LowerPaneView::cvAssigns);
-    };
-    addAndMakeVisible (cvAssignViewButton);
+    // CV ASSIGN EDITOR
+    addAndMakeVisible (cvAssignEditor);
 
     // WAVEFORM DISPLAY
     waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& files)
@@ -654,8 +626,6 @@ void ChannelEditorComponent::setupComponents ()
         cueSetButtons [cueSetIndex].onClick = [this, cueSetIndex] () { setCurCue (cueSetIndex); };
         addAndMakeVisible (cueSetButtons [cueSetIndex]);
     }
-    // CV ASSIGN EDITOR
-    addChildComponent (cvAssignEditor);
 }
 
 int ChannelEditorComponent::getUiValue (int internalValue)
@@ -1365,20 +1335,22 @@ void ChannelEditorComponent::resized ()
 //     xOffset += columnWidth + spaceBetweenColumns;
 //     yOffset = kInitialYOffset;
 
-    // LOWER PANE VIEW BUTTONS
-    cueSetViewButton.setBounds (getWidth () - 40 - 60 - 20 - 60, reverseButton.getY (), fieldWidth, kParameterLineHeight);
-    cvAssignViewButton.setBounds (cueSetViewButton.getRight () + 10, reverseButton.getY (), fieldWidth, kParameterLineHeight);
+    const auto kWidthOfWaveformEditor { 962 };
 
+    // CV ASSIGNS EDITOR AT BOTTOM
+    constexpr auto kCvAssignHeight { 100 };
+    cvAssignEditor.setBounds (xInitialOffSet, getHeight() - 5 - kCvAssignHeight, kWidthOfWaveformEditor, kCvAssignHeight);
+
+    // CUE SETS STUFF BETWEEN CHANNEL PARAMETERS AND CV ASSIGNS EDITOR
     // CUE SET BUTTONS
     addCueSetButton.setBounds (endCueTextEditor.getRight () + 60, reverseButton.getY (), fieldWidth, kParameterLineHeight);
     deleteCueSetButton.setBounds (addCueSetButton.getRight () + 10, addCueSetButton.getY (), fieldWidth, kParameterLineHeight);
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
-    const auto kWidthOfWaveformEditor { 962 };
     xOffset = xInitialOffSet;
     yOffset = reverseButton.getBottom () + 10 + kHeightOfCueSetButton;
     // WAVEFORM
-    waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, getHeight () - yOffset - (kHeightOfCueSetButton * 2));
+    waveformDisplay.setBounds (xOffset, yOffset, kWidthOfWaveformEditor, cvAssignEditor.getY () - yOffset - 5- kHeightOfCueSetButton);
     // CUE SET TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
     {
@@ -1386,8 +1358,6 @@ void ChannelEditorComponent::resized ()
         cueSetButtons [cueSetIndex].setBounds (buttonX, waveformDisplay.getY () - kHeightOfCueSetButton, kWidthOfCueSetButton, kHeightOfCueSetButton);
         cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
     }
-
-    cvAssignEditor.setBounds (cueSetButtons [0].getX (), cueSetButtons [0].getY (), cueSetButtons [63].getRight () - cueSetButtons [0].getX (), cueSetButtons [63].getBottom () - cueSetButtons [0].getY ());
 }
 
 void ChannelEditorComponent::paint (juce::Graphics& g)
@@ -1425,25 +1395,5 @@ void ChannelEditorComponent::initOutputComboBox ()
     {
         outputComboBox.addItem ("5-6", 1);
         outputComboBox.addItem ("7-8", 2);
-    }
-}
-
-void ChannelEditorComponent::setLowerPaneView (LowerPaneView whichView)
-{
-    auto setCuetSetVisibility = [this] (bool isVisible)
-    {
-        waveformDisplay.setVisible (isVisible);
-        for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size (); ++cueSetIndex)
-            cueSetButtons [cueSetIndex].setVisible (isVisible);
-    };
-    if (whichView == LowerPaneView::cueSets)
-    {
-        setCuetSetVisibility (true);
-        cvAssignEditor.setVisible (false);
-    }
-    else
-    {
-        setCuetSetVisibility (false);
-        cvAssignEditor.setVisible (true);
     }
 }

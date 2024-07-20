@@ -9,8 +9,11 @@ public:
     void init (juce::ValueTree rootPropertiesVT);
 
 private:
-    std::array<juce::TextButton, 8> cvSelectButtons;
+    juce::Label curCvAssignIndexLabel;
+    juce::TextButton upButton;
+    juce::TextButton downButton;
     std::array<CvAssignSection, 8> cvAssignSectionList;
+    int curCvAssignIndex { 0 };
 
     void paint (juce::Graphics& g);
     void resized () override;
