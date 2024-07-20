@@ -86,7 +86,6 @@ private:
     juce::TextButton oneShotPlayButton;
     juce::TextButton loopPlayButton;
 
-
     // LOWER PANE
     WaveformDisplay waveformDisplay;
     class CueSetButton : public juce::TextButton
