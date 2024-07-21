@@ -8,21 +8,21 @@ struct ParameterEntry
 };
 const auto kParameterList { std::vector<ParameterEntry> 
 {
-    {CvParameterIndex::Bits, "BITS"},
-    {CvParameterIndex::Rate, "RATE"},
-    {CvParameterIndex::Speed, "SPEED"},
     {CvParameterIndex::Level, "LEVEL"},
     {CvParameterIndex::Attack, "ATTACK"},
     {CvParameterIndex::Decay, "DECAY"},
+    {CvParameterIndex::StartCue, "STARTQ"},
+    {CvParameterIndex::LoopCue, "LOOPQ"},
+    {CvParameterIndex::EndCue, "ENDQ"},
     {CvParameterIndex::FiltFreq, "FREQ"},
     {CvParameterIndex::FiltRes, "RES"},
-    {CvParameterIndex::StartCue, "STARTQ"},
-    {CvParameterIndex::EndCue, "ENDQ"},
-    {CvParameterIndex::LoopCue, "LOOPQ"},
-    {CvParameterIndex::LoopMode, "LPMODE"},
     {CvParameterIndex::Reverse, "REVERSE"},
-    {CvParameterIndex::CueSet, "CUE SET"},
+    {CvParameterIndex::Speed, "SPEED"},
+    {CvParameterIndex::Bits, "BITS"},
+    {CvParameterIndex::Rate, "RATE"},
+    {CvParameterIndex::LoopMode, "LPMODE"},
     {CvParameterIndex::ETrig, "ETRIG"},
+    {CvParameterIndex::CueSet, "CUE SET"},
 } };
 
 CvAssignSection::CvAssignSection ()
