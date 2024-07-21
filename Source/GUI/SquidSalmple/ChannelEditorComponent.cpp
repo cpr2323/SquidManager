@@ -1197,6 +1197,8 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + sampleFileName);
     auto srcFile { juce::File (sampleFileName) };
     const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
+    if (! channelDirectory.exists ())
+        channelDirectory.createDirectory ();
     auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
     if (srcFile.getParentDirectory () != channelDirectory)
     {

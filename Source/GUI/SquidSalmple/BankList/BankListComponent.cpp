@@ -423,10 +423,9 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
             auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
             auto bankDirectory { getBankDirectory (bankNumber) };
             appProperties.addRecentlyUsedFile (bankDirectory.getFullPathName ());
-            if (thisBankExists)
-                loadBank (bankDirectory);
-            else
-                loadDefault (row);
+            if (! thisBankExists)
+                bankDirectory.createDirectory ();
+            loadBank (bankDirectory);
             bankListBox.selectRow (row, false, true);
             bankListBox.scrollToEnsureRowIsOnscreen (row);
             // TODO - should this be done in EditManager::loadBank

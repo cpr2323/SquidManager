@@ -120,7 +120,10 @@ void EditManager::saveBank ()
         auto channelDirectory { bankDirectory.getChildFile (juce::String (channelIndex + 1)) };
         SquidMetaDataWriter squidMetaDataWriter;
         SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
-        auto originalFile { juce::File (squidChannelPropertiesToSave.getSampleFileName ()) };
+        auto sampleFileName { squidChannelPropertiesToSave.getSampleFileName () };
+        if (sampleFileName.isEmpty ())
+            continue;
+        auto originalFile { juce::File (sampleFileName) };
         auto tempFile { originalFile.withFileExtension ("tmp") };
         // write out the file with the new metadata to a tmp file
         if (squidMetaDataWriter.write (squidChannelPropertiesToSave.getValueTree (), originalFile, tempFile))
@@ -165,16 +168,17 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
 
     // check for info.txt
     auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
-    // read bank name if file exists
+    auto newBankName { juce::String () };
     if (infoTxtFile.exists ())
     {
+        // read bank name if file exists
         auto infoTxtInputStream { infoTxtFile.createInputStream () };
         auto firstLine { infoTxtInputStream->readNextLine () };
         theSquidBankProperties.setName (firstLine.substring (0, 11), true);
     }
     else
     {
-        theSquidBankProperties.setName (bankDirectoryToLoad.getFileName().substring (0, 11), true);
+         newBankName = bankDirectoryToLoad.getFileName().substring (0, 11);
     }
 
     // iterate over the channel folders and load sample 
@@ -216,6 +220,8 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
     bankDirectory = bankDirectoryToLoad;
     copyBank (theSquidBankProperties, squidBankProperties);
     copyBank (squidBankProperties, uneditedSquidBankProperties);
+    if (! newBankName.isEmpty ())
+        squidBankProperties.setName (newBankName, true);
 }
 
 // TODO - this is not complete. it takes a bankIndex, but I think that is incorrect, in that the EditManager only deals with the edit buffer
@@ -272,7 +278,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
             auto leftChannelReadPtr { stereoAudioBuffer.getReadPointer (0) };
             auto rightChannelReadPtr { stereoAudioBuffer.getReadPointer (1) };
             auto monoWritePtr { abrc->getAudioBuffer ()->getWritePointer (0) };
-            for (auto sampleCounter { 0 }; sampleCounter < lengthInSamples; ++sampleCounter)
+            for (uint32_t sampleCounter { 0 }; sampleCounter < lengthInSamples; ++sampleCounter)
             {
                 *monoWritePtr = (*leftChannelReadPtr + *rightChannelReadPtr) / sqrRootOfTwo;
                 ++monoWritePtr;
@@ -303,7 +309,9 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     auto debugLog = [this] (const juce::String& text) { DebugLog ("EditManager", text); };
     debugLog ("concatenateAndBuildCueSets");
     const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
-    const auto outputFile { channelDirectory.getChildFile ("temp._wav") };
+    if (! channelDirectory.exists ())
+        channelDirectory.createDirectory ();
+    const auto outputFile { channelDirectory.getChildFile ("new._wav") };
     struct CueSet
     {
         uint32_t offset;
