@@ -136,6 +136,7 @@ private:
     void appendCueSet ();
     void configFileSelectorFromChannelSource ();
     void deleteCueSet (int cueSetIndex);
+    int getFilterFrequencyUiValue (int internalValue);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
     void filesDroppedOnCueSetEditor (const juce::StringArray& files);

@@ -653,6 +653,16 @@ void ChannelEditorComponent::setFilterEnableState ()
     const auto filterEnabled { squidChannelProperties.getFilterType () != 0 };
     filterFrequencyTextEditor.setEnabled (filterEnabled);
     filterResonanceTextEditor.setEnabled (filterEnabled);
+    if (filterEnabled)
+    {
+        filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue (squidChannelProperties.getFilterFrequency ())), juce::NotificationType::dontSendNotification);
+        filterResonanceTextEditor.setText (juce::String (getUiValue (squidChannelProperties.getFilterResonance ())), juce::NotificationType::dontSendNotification);
+    }
+    else
+    {
+        filterFrequencyTextEditor.setText ("--", juce::NotificationType::dontSendNotification);
+        filterResonanceTextEditor.setText ("--", juce::NotificationType::dontSendNotification);
+    }
 }
 
 void ChannelEditorComponent::setCurCue (int cueSetIndex)
@@ -885,6 +895,11 @@ void ChannelEditorComponent::deleteCueSet (int cueSetIndex)
     squidChannelProperties.removeCueSet (cueSetIndex);
 }
 
+int ChannelEditorComponent::getFilterFrequencyUiValue (int internalValue)
+{
+    return (internalValue == 0 ? 99 : 98 - ((internalValue - 55) / 40));
+}
+
 // Data Changed functions
 void ChannelEditorComponent::attackDataChanged (int attack)
 {
@@ -980,11 +995,7 @@ void ChannelEditorComponent::filterTypeDataChanged (int filterType)
 
 void ChannelEditorComponent::filterFrequencyDataChanged (int filterFrequency)
 {
-    auto getFilterFrequencyUiValue = [] (int internalValue)
-    {
-        return (internalValue == 0 ? 99 : 98 - ((internalValue - 55) / 40));
-    };
-    filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue(filterFrequency)), juce::NotificationType::dontSendNotification);
+    filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue (filterFrequency)), juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::filterResonanceDataChanged (int filterResonance)
