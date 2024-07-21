@@ -27,20 +27,20 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
         LogReader (sampleFile.getFileName () + " contains meta-data");
-        //jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
         const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
         if ((busyChunkVersion & 0xFFFFFF00) != (kSignatureAndVersionCurrent & 0xFFFFFF00))
         {
             juce::Logger::outputDebugString ("'busy' metadata chunk has wrong signature");
-            jassertfalse;
-            return;
         }
-        if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
-            juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
-        if ((busyChunkVersion & 0x000000FF) < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
-            juce::Logger::outputDebugString ("Unsupported version. Reverting to default meta-data");
         else
-            validMetaData = true;
+        {
+            if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
+                juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
+            if ((busyChunkVersion & 0x000000FF) < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
+                juce::Logger::outputDebugString ("Unsupported version. Reverting to default meta-data");
+            else
+                validMetaData = true;
+        }
     }
     if (validMetaData)
     {
