@@ -23,10 +23,11 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     SquidChannelProperties squidChannelProperties { channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
+    auto validMetaData { false };
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
         LogReader (sampleFile.getFileName () + " contains meta-data");
-        jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
+        //jassert (busyChunkData.getSize () == SquidSalmple::DataLayout::kEndOfData);
         const auto busyChunkVersion { getValue <SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout::kBusyChunkSignatureAndVersionOffset) };
         if ((busyChunkVersion & 0xFFFFFF00) != (kSignatureAndVersionCurrent & 0xFFFFFF00))
         {
@@ -36,7 +37,13 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         }
         if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
             juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
-
+        if ((busyChunkVersion & 0x000000FF) < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
+            juce::Logger::outputDebugString ("Unsupported version. Reverting to default meta-data");
+        else
+            validMetaData = true;
+    }
+    if (validMetaData)
+    {
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
