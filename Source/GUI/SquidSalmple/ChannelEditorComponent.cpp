@@ -516,15 +516,15 @@ void ChannelEditorComponent::setupComponents ()
         if (cueRandomButton.getToggleState ())
         {
             // turn cue random on
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueRandom, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ChannelFlags::kCueRandom, false);
             // turn cue stepped off (in case it is on)
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueStepped, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
             cueStepButton.setToggleState (false, juce::NotificationType::dontSendNotification);
         }
         else
         {
             // turn cue random off
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueRandom, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
         }
     };
     addAndMakeVisible (cueRandomButton);
@@ -534,15 +534,15 @@ void ChannelEditorComponent::setupComponents ()
         if (cueStepButton.getToggleState ())
         {
             // turn cue step on
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ChannelFlags::kCueStepped, false);
             // turn cue random off (in case it is on)
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueRandom, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
             cueRandomButton.setToggleState (false, juce::NotificationType::dontSendNotification);
         }
         else
         {
             // turn cue step off
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ~ChannelFlags::kCueStepped, false);
+            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
         }
     };
     addAndMakeVisible (cueStepButton);
@@ -1353,7 +1353,7 @@ void ChannelEditorComponent::resized ()
     const auto kHeightOfCueSetButton { 20 };
     const auto kWidthOfCueSetButton { 30 };
     xOffset = xInitialOffSet;
-    yOffset = endCueTextEditor.getBottom () + kMediumLabelIntSize + 5 + kHeightOfCueSetButton;
+    yOffset = endCueTextEditor.getBottom () + 5 + kHeightOfCueSetButton;
     const auto kHeightOfWaveformDisplay { cvAssignEditor.getY () - yOffset - 5 - kHeightOfCueSetButton };
     const auto kWidthOfCueEditButtons { 15 };
     addCueSetButton.setBounds (xInitialOffSet, yOffset, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
