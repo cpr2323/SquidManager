@@ -4,7 +4,7 @@
 #include "../SquidChannelProperties.h"
 #include "../../Utility/DebugLog.h"
 
-#define LOG_READER 1
+#define LOG_READER 0
 #if LOG_READER
 #define LogReader(text) DebugLog ("SquidMetaDataReader", text);
 #else
