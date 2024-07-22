@@ -120,7 +120,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
 
         ////////////////////////////////////
         // cue sets
-        auto logCueSet = [this, numSamples = squidChannelProperties.getEndOfData ()] (int8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
+        auto logCueSet = [this, numSamples = squidChannelProperties.getEndOfData ()] ([[maybe_unused]] int8_t cueSetIndex, uint32_t startCue, uint32_t loopCue, uint32_t endCue)
         {
             LogReader ("read - cue set " + (cueSetIndex == -1 ? "current" : juce::String (cueSetIndex)) +
                        ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +

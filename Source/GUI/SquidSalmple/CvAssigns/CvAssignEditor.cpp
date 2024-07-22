@@ -51,8 +51,8 @@ void CvAssignEditor::paint (juce::Graphics& g)
 {
     g.setColour (juce::Colours::white);
     g.drawLine (0, 0, 15, 0);
-    g.drawLine (0, 0, 0, getHeight ());
-    g.drawLine (0, getHeight (), 15, getHeight ());
+    g.drawLine (0.f, 0.f, 0.f, static_cast<float> (getHeight ()));
+    g.drawLine (0.f, static_cast<float> (getHeight ()), 15.f, static_cast<float> (getHeight ()));
 }
 
 void CvAssignEditor::resized ()
