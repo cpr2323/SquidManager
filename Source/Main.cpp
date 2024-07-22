@@ -14,7 +14,7 @@
 #include "Utility/ValueTreeFile.h"
 #include "Utility/ValueTreeMonitor.h"
 
-constexpr const char* kVersionDecorator { " [ALPHA 3]" };
+constexpr const char* kVersionDecorator { " [BETA 1]" };
 
 // for testing
 #include "SquidSalmple/Bank/BankHelpers.h"
