@@ -35,8 +35,27 @@ ChannelEditorComponent::ChannelEditorComponent ()
     toolsButton.setTooltip ("Channel Tools");
     toolsButton.onClick = [this] ()
     {
-        if (displayToolsMenu != nullptr)
-            displayToolsMenu (squidChannelProperties.getChannelIndex());
+        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
+        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
+        juce::PopupMenu editMenu;
+        editMenu.setLookAndFeel (popupMenuLnF);
+        editMenu.addSectionHeader ("Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1));
+        editMenu.addSeparator ();
+        {
+            // Clone
+            juce::PopupMenu cloneMenu;
+            editMenu.addSubMenu ("Clone", cloneMenu);
+        }
+        editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+            //channelProperties [channelIndex].copyFrom (defaultChannelProperties.getValueTree ());
+        });
+        editMenu.addItem ("Revert", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+            //channelProperties [channelIndex].copyFrom (unEditedPresetProperties.getValueTree ());
+        });
+        editMenu.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+
     };
     addAndMakeVisible (toolsButton);
     setupComponents ();

@@ -125,30 +125,6 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
         channelEditorComponents [channelIndex].init (channelPropertiesVT, rootPropertiesVT);
-        channelEditorComponents [channelIndex].displayToolsMenu = [this, channelPropertiesVT] (int channelIndex)
-        {
-            SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-            popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
-            juce::PopupMenu editMenu;
-            editMenu.setLookAndFeel (popupMenuLnF);
-            editMenu.addSectionHeader ("Channel " + juce::String (channelProperties.getChannelIndex () + 1));
-            editMenu.addSeparator ();
-            {
-                // Clone
-                juce::PopupMenu cloneMenu;
-                editMenu.addSubMenu ("Clone", cloneMenu);
-            }
-            editMenu.addItem ("Default", true, false, [this, channelIndex] ()
-            {
-                //channelProperties [channelIndex].copyFrom (defaultChannelProperties.getValueTree ());
-            });
-            editMenu.addItem ("Revert", true, false, [this, channelIndex] ()
-            {
-                //channelProperties [channelIndex].copyFrom (unEditedPresetProperties.getValueTree ());
-            });
-            editMenu.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
-        };
         return true;
     });
     squidBankProperties.onNameChange = [this] (juce::String name) { nameDataChanged (name); };
