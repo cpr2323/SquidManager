@@ -616,7 +616,10 @@ void ChannelEditorComponent::setupComponents ()
     };
     waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
     {
-        filesDroppedOnCueSetEditor (files);
+        if (files.size () == 1)
+            handleSampleAssignment (files [0]);
+        else
+            filesDroppedOnCueSetEditor (files);
     };
     waveformDisplay.onStartPointChange = [this] (juce::int64 startPoint)
     {
@@ -753,6 +756,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     };
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+    waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
     cvAssignEditor.init (squidChannelPropertiesVT);
 
     // TODO - we need to call this when the sample changes
@@ -1412,7 +1416,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
         g.fillRect (dropBounds);
         g.setFont (30.0f);
         g.setColour (juce::Colours::black);
-        g.drawText ("Drop Here", dropBounds, juce::Justification::centred, false);
+        g.drawText ("Assign sample to Channel " + juce::String(squidChannelProperties.getChannelIndex () + 1), dropBounds, juce::Justification::centred, false);
     }
 }
 

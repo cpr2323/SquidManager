@@ -6,6 +6,7 @@ class WaveformDisplay : public juce::Component,
                         public juce::FileDragAndDropTarget
 {
 public:
+    void setChannelIndex (int theChannelIndex);
     void setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer);
     void setCueEndPoint (uint32_t newCueEnd);
     void setCueLoopPoint (uint32_t newCueLoop);
@@ -32,6 +33,7 @@ private:
     uint32_t cueEnd { 0 };
 
     juce::AudioBuffer<float>* audioBuffer { nullptr };
+    int channelIndex { 0 };
 
     juce::int64 numSamples { 0 };
     int halfHeight { 0 };
@@ -47,7 +49,7 @@ private:
     int sampleLoopMarkerX { 0 };
     int sampleEndMarkerX { 0 };
     EditHandleIndex handleIndex { EditHandleIndex::kNone };
-    bool draggingFiles { false };
+    int draggingFilesCount { 0 };
 
     void displayWaveform (juce::Graphics& g);
     void displayMarkers (juce::Graphics& g);

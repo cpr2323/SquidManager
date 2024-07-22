@@ -11,6 +11,11 @@
 
 const auto markerHandleSize { 5 };
 
+void WaveformDisplay::setChannelIndex (int theChannelIndex)
+{
+    channelIndex = theChannelIndex;
+}
+
 void WaveformDisplay::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
     LogWaveformDisplay ("setAudioBuffer");
@@ -167,9 +172,15 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
 void WaveformDisplay::paintOverChildren (juce::Graphics& g)
 {
-    if (draggingFiles)
+    if (draggingFilesCount > 0)
     {
         g.fillAll (juce::Colours::white.withAlpha (0.5f));
+        g.setFont (30.0f);
+        g.setColour (juce::Colours::black);
+        if (draggingFilesCount == 1)
+            g.drawText ("Assign sample to Channel " + juce::String (channelIndex + 1), getLocalBounds(), juce::Justification::centred, false);
+        else
+            g.drawText ("Concatenate samples with Cue Sets and assign to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
     }
 }
 
@@ -273,7 +284,7 @@ bool WaveformDisplay::isInterestedInFileDrag (const juce::StringArray& files)
 
 void WaveformDisplay::filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
-    draggingFiles = false;
+    draggingFilesCount = 0;
     repaint ();
     if (onFilesDropped != nullptr)
         onFilesDropped (files);
@@ -283,9 +294,9 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int /*x*/, i
 //     }
 }
 
-void WaveformDisplay::fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/)
+void WaveformDisplay::fileDragEnter (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
-    draggingFiles = true;
+    draggingFilesCount = files.size ();
     repaint ();
 }
 
@@ -297,6 +308,6 @@ void WaveformDisplay::fileDragEnter (const juce::StringArray& /*files*/, int /*x
 
 void WaveformDisplay::fileDragExit (const juce::StringArray&)
 {
-    draggingFiles = false;
+    draggingFilesCount = 0;
     repaint ();
 }
