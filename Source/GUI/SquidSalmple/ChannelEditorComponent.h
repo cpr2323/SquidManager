@@ -137,6 +137,7 @@ private:
     void configFileSelectorFromChannelSource ();
     void deleteCueSet (int cueSetIndex);
     int getFilterFrequencyUiValue (int internalValue);
+    int getFilterFrequencyInternalValue (int uiValue);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
     void filesDroppedOnCueSetEditor (const juce::StringArray& files);
@@ -187,6 +188,7 @@ private:
     void levelUiChanged (int level);
     void loopCueUiChanged (juce::int32 loopCue);
     void loopModeUiChanged (int loopMode);
+    void outputUiChanged (int selectedIndex);
     void quantUiChanged (int quant);
     void rateUiChanged (int rate);
     void reverseUiChanged (int reverse);

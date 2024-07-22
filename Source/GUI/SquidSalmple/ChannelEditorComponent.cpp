@@ -127,7 +127,7 @@ void ChannelEditorComponent::setupComponents ()
     channelSourceComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setChannelSource (static_cast<uint8_t>(std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
+        squidChannelProperties.setChannelSource (static_cast<uint8_t>(std::clamp (channelSourceComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
     };
     setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t>(channelSourceComboBox.getSelectedItemIndex ())); });
 
@@ -165,8 +165,8 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)), true);
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction};
+        squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)) - 1, true);
     };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
@@ -236,9 +236,46 @@ void ChannelEditorComponent::setupComponents ()
     setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
     setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
+    filterFrequencyTextEditor.getMinValueCallback = [this] () { return 0; };
+    filterFrequencyTextEditor.getMaxValueCallback = [this] () { return 99; };
+    filterFrequencyTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    filterFrequencyTextEditor.updateDataCallback = [this] (int value) { filterFrequencyUiChanged (value); };
+    filterFrequencyTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { filterFrequencyTextEditor.getText().getIntValue() + (multiplier * direction) };
+        filterFrequencyTextEditor.setValue (newValue);
+    };
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
+
     // FILTER RESONANCE
     setupLabel (filterResonanceLabel, "RESO", kMediumLabelSize, juce::Justification::centred);
+    filterResonanceTextEditor.getMinValueCallback = [this] () { return 0; };
+    filterResonanceTextEditor.getMaxValueCallback = [this] () { return 99; };
+    filterResonanceTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    filterResonanceTextEditor.updateDataCallback = [this] (int value) { filterResonanceUiChanged (value); };
+    filterResonanceTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { getUiValue (squidChannelProperties.getFilterResonance ()) + (multiplier * direction) };
+        filterResonanceTextEditor.setValue (newValue);
+    };
     setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
     // LEVEL
     setupLabel (levelLabel, "LEVEL", kMediumLabelSize, juce::Justification::centred);
@@ -314,6 +351,12 @@ void ChannelEditorComponent::setupComponents ()
         loopModeComboBox.addItem ("ZigZag Gate", loopId++);
     }
     loopModeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    loopModeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setLoopMode (static_cast<uint8_t>(std::clamp (loopModeComboBox.getSelectedItemIndex () + scrollAmount, 0, loopModeComboBox.getNumItems () - 1)), true);
+    };
+
     setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
@@ -434,6 +477,12 @@ void ChannelEditorComponent::setupComponents ()
         }
     }
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    chokeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setChoke (static_cast<uint8_t>(std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)), true);
+    };
+
     setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedItemIndex ()); }); // C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
@@ -442,6 +491,11 @@ void ChannelEditorComponent::setupComponents ()
         eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
     eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    eTrigComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setETrig (static_cast<uint8_t>(std::clamp (eTrigComboBox.getSelectedItemIndex () + scrollAmount, 0, eTrigComboBox.getNumItems () - 1)), true);
+    };
     setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps 
     setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
@@ -449,65 +503,25 @@ void ChannelEditorComponent::setupComponents ()
     for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
     stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    stepsComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        squidChannelProperties.setSteps (static_cast<uint8_t>(std::clamp (stepsComboBox.getSelectedItemIndex () + scrollAmount, 0, stepsComboBox.getNumItems () - 1)), true);
+    };
     setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     // Output
     setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
     outputComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    outputComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * (-1 * direction) };
+        const auto selectedIndex { static_cast<uint8_t>(std::clamp (outputComboBox.getSelectedItemIndex () + scrollAmount, 0, outputComboBox.getNumItems () - 1)) };
+        outputComboBox.setSelectedItemIndex (selectedIndex);
+        outputUiChanged (selectedIndex);
+    };
     setupComboBox (outputComboBox, "Output", [this] ()
     {
-        //           alt out 
-        // chan | false | true
-        // -----+-------+------
-        //  1   |  1-2  | 3-4
-        //  2   |  1-2  | 3-4
-        //  3   |  3-4  | 1-2
-        //  4   |  3-4  | 1-2
-        // -----+-------+------
-        //  5   |  5-6  | 7-8
-        //  6   |  5-6  | 7-8
-        //  7   |  7-8  | 5-6
-        //  8   |  7-8  | 5-6
-        const auto channelIndex = squidChannelProperties.getChannelIndex (); // 0-7
-        const auto selectedIndex { outputComboBox.getSelectedItemIndex () }; // 0-1
-        auto disableAltOut = [this] ()
-        {
-            const auto offFlag { ~ChannelFlags::kNeighborOutput };
-            const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () & offFlag) };
-            squidChannelProperties.setChannelFlags (newFlags, false);
-        };
-        auto enableAltOut = [this] ()
-        {
-            const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput) };
-            squidChannelProperties.setChannelFlags (newFlags, false);
-        };
-        if (channelIndex < 2) // 1-2
-        {
-            if (selectedIndex == 0)
-                disableAltOut ();
-            else
-                enableAltOut ();
-        }
-        else if (channelIndex < 4) // 3-4
-        {
-            if (selectedIndex == 1)
-                disableAltOut ();
-            else
-                enableAltOut ();
-        }
-        else if (channelIndex < 6) // 5-6
-        {
-            if (selectedIndex == 0)
-                disableAltOut ();
-            else
-                enableAltOut ();
-        }
-        else // 7-8
-        {
-            if (selectedIndex == 1)
-                disableAltOut ();
-            else
-                enableAltOut ();
-        }
+        outputUiChanged (outputComboBox.getSelectedItemIndex ());
     });
 
     setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
@@ -900,6 +914,12 @@ int ChannelEditorComponent::getFilterFrequencyUiValue (int internalValue)
     return (internalValue == 0 ? 99 : 98 - ((internalValue - 55) / 40));
 }
 
+int ChannelEditorComponent::getFilterFrequencyInternalValue (int uiValue)
+{
+    const auto invertedValue = 99 - uiValue;
+    return (invertedValue == 0 ? 0 : 55 + ((invertedValue - 1) * 40));
+}
+
 // Data Changed functions
 void ChannelEditorComponent::attackDataChanged (int attack)
 {
@@ -1116,12 +1136,7 @@ void ChannelEditorComponent::filterTypeUiChanged (int filter)
 
 void ChannelEditorComponent::filterFrequencyUiChanged (int filterFrequency)
 {
-    auto getFileterFrequencyInternalValue = [] (int uiValue)
-    {
-        const auto invertedValue = 99 - uiValue;
-        return (invertedValue == 0 ? 0 : 55 + ((invertedValue - 1) * 40));
-    };
-    squidChannelProperties.setFilterFrequency (getFileterFrequencyInternalValue (filterFrequency), false);
+    squidChannelProperties.setFilterFrequency (getFilterFrequencyInternalValue (filterFrequency), false);
 }
 
 void ChannelEditorComponent::filterResonanceUiChanged (int filterResonance)
@@ -1418,5 +1433,61 @@ void ChannelEditorComponent::initOutputComboBox ()
     {
         outputComboBox.addItem ("5-6", 1);
         outputComboBox.addItem ("7-8", 2);
+    }
+}
+
+void ChannelEditorComponent::outputUiChanged (int selectedIndex)
+{
+    //           alt out 
+    // chan | false | true
+    // -----+-------+------
+    //  1   |  1-2  | 3-4
+    //  2   |  1-2  | 3-4
+    //  3   |  3-4  | 1-2
+    //  4   |  3-4  | 1-2
+    // -----+-------+------
+    //  5   |  5-6  | 7-8
+    //  6   |  5-6  | 7-8
+    //  7   |  7-8  | 5-6
+    //  8   |  7-8  | 5-6
+    const auto channelIndex = squidChannelProperties.getChannelIndex (); // 0-7
+    auto disableAltOut = [this] ()
+    {
+        const auto offFlag { ~ChannelFlags::kNeighborOutput };
+        const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () & offFlag) };
+        squidChannelProperties.setChannelFlags (newFlags, false);
+    };
+    auto enableAltOut = [this] ()
+    {
+        const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput) };
+        squidChannelProperties.setChannelFlags (newFlags, false);
+    };
+    if (channelIndex < 2) // 1-2
+    {
+        if (selectedIndex == 0)
+            disableAltOut ();
+        else
+            enableAltOut ();
+    }
+    else if (channelIndex < 4) // 3-4
+    {
+        if (selectedIndex == 1)
+            disableAltOut ();
+        else
+            enableAltOut ();
+    }
+    else if (channelIndex < 6) // 5-6
+    {
+        if (selectedIndex == 0)
+            disableAltOut ();
+        else
+            enableAltOut ();
+    }
+    else // 7-8
+    {
+        if (selectedIndex == 1)
+            disableAltOut ();
+        else
+            enableAltOut ();
     }
 }
