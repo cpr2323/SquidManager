@@ -16,13 +16,6 @@
 
 constexpr const char* kVersionDecorator { " [BETA 1]" };
 
-// for testing
-#include "SquidSalmple/Bank/BankHelpers.h"
-#include "SquidSalmple/SquidChannelProperties.h"
-#include "SquidSalmple/Metadata/SquidMetaDataReader.h"
-#include "SquidSalmple/Metadata/SquidMetaDataWriter.h"
-#include "SquidSalmple/Metadata/BusyChunkReader.h"
-
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
 #define ENABLE_MELATONIN_INSPECTOR 0
@@ -47,17 +40,6 @@ public:
     void initialise ([[maybe_unused]] const juce::String& commandLine) override
     {
         initAppDirectory ();
-
-#if 0
-        // MARKER READ TEST
-        //auto fileWithMarkers { appDirectory.getChildFile("1_wih_markers.wav") };
-        auto fileWithMarkers { appDirectory.getChildFile ("TestWav1_1.wav") };
-        BusyChunkReader bcr;
-        auto markersList { bcr.getMarkerList (fileWithMarkers) };
-        for (auto& marker : markersList)
-            juce::Logger::outputDebugString ("marker sample offset: " + juce::String (marker));
-        // ----------------
-#endif
         initLogger ();
         initCrashHandler ();
         initPropertyRoots ();
