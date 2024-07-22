@@ -15,7 +15,7 @@ private:
     std::array<CvAssignSection, 8> cvAssignSectionList;
     int curCvAssignIndex { 0 };
 
-    void paint (juce::Graphics& g);
+    void paint (juce::Graphics& g) override;
     void resized () override;
     void selectCvAssigns (int cvSelectButtonIndex);
 };

@@ -59,6 +59,6 @@ private:
     void cvAssignOffsetDataChanged (int offset);
     void cvAssignOffsetUiChanged (int offset);
 
-    void paint (juce::Graphics& g);
+    void paint (juce::Graphics& g) override;
     void resized () override;
 };
