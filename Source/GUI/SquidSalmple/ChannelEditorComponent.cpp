@@ -31,6 +31,14 @@ static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
 ChannelEditorComponent::ChannelEditorComponent ()
 {
     setOpaque (true);
+    toolsButton.setButtonText ("TOOLS");
+    toolsButton.setTooltip ("Channel Tools");
+    toolsButton.onClick = [this] ()
+    {
+        if (displayToolsMenu != nullptr)
+            displayToolsMenu (squidChannelProperties.getChannelIndex());
+    };
+    addAndMakeVisible (toolsButton);
     setupComponents ();
 
 #if 0
@@ -711,6 +719,11 @@ bool ChannelEditorComponent::loadFile (juce::String sampleFileName)
     return handleSampleAssignment (sampleFileName);
 }
 
+juce::ValueTree ChannelEditorComponent::getChannelPropertiesVT ()
+{
+    return squidChannelProperties.getValueTree ();
+}
+
 void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties { rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no };
@@ -1283,6 +1296,7 @@ void ChannelEditorComponent::resized ()
     // FILENAME
     sampleFileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     sampleFileNameSelectLabel.setBounds (sampleFileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
+    toolsButton.setBounds (getWidth () - 43, sampleFileNameSelectLabel.getY (), 40, 20);
     yOffset = sampleFileNameSelectLabel.getBottom () + 3;
 
     // column one
