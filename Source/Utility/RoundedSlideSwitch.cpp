@@ -1,8 +1,32 @@
 #include "RoundedSlideSwitch.h"
+#include "DebugLog.h"
 
 RoundedSlideSwitch::RoundedSlideSwitch () : Button ({})
 {
     setClickingTogglesState (true);
+}
+
+void RoundedSlideSwitch::mouseDown (const juce::MouseEvent& mouseEvent)
+{
+    if (mouseEvent.mods.isPopupMenu ())
+    {
+        if (onPopupMenuCallback != nullptr)
+            onPopupMenuCallback ();
+        wasPopupMenuClick = true;
+    }
+    else
+    {
+        Button::mouseDown (mouseEvent);
+        wasPopupMenuClick = false;
+    }
+}
+
+void RoundedSlideSwitch::mouseUp (const juce::MouseEvent& mouseEvent)
+{
+    if (wasPopupMenuClick)
+        wasPopupMenuClick = false;
+    else
+        Button::mouseUp (mouseEvent);
 }
 
 void RoundedSlideSwitch::buttonStateChanged ()
