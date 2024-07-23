@@ -22,11 +22,18 @@ public:
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
+    juce::ValueTree getUneditedBankProperties ();
+    juce::ValueTree getDefaultBankProperties ();
+    juce::ValueTree getUneditedChannelProperties (int channelIndex);
+    juce::ValueTree getDefaultChannelProperties (int channelIndex);
+
+
 
 private:
     RuntimeRootProperties runtimeRootProperties;
     AppProperties appProperties;
     SquidBankProperties uneditedSquidBankProperties;
+    SquidBankProperties defaultSquidBankProperties;
     SquidBankProperties squidBankProperties;
     juce::File bankDirectory;
     std::array<SquidChannelProperties, 8> channelPropertiesList;

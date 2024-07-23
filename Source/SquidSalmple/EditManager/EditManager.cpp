@@ -12,6 +12,7 @@ constexpr auto kMaxSampleLength { 524287 };
 EditManager::EditManager ()
 {
     audioFormatManager.registerBasicFormats ();
+    defaultSquidBankProperties.wrap ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
 }
 
 void EditManager::init (juce::ValueTree rootPropertiesVT)
@@ -148,6 +149,26 @@ void EditManager::saveBank ()
     }
     // finally, copy the new data to the unedited buffer
     copyBank (squidBankProperties, uneditedSquidBankProperties);
+}
+
+juce::ValueTree EditManager::getUneditedBankProperties ()
+{
+    return uneditedSquidBankProperties.getValueTree ();
+}
+
+juce::ValueTree EditManager::getDefaultBankProperties ()
+{
+    return defaultSquidBankProperties.getValueTree ();
+}
+
+juce::ValueTree EditManager::getUneditedChannelProperties (int channelIndex)
+{
+    return uneditedSquidBankProperties.getChannelVT (channelIndex);
+}
+
+juce::ValueTree EditManager::getDefaultChannelProperties (int channelIndex)
+{
+    return defaultSquidBankProperties.getChannelVT (channelIndex);
 }
 
 void EditManager::loadBank (juce::File bankDirectoryToLoad)

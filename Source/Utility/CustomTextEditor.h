@@ -91,7 +91,9 @@ private:
 
     void mouseDown (const juce::MouseEvent& mouseEvent) override
     {
-        if (! customComponentMouseHandler.mouseDown (mouseEvent, onPopupMenuCallback, [this] () { jassert (onFocusLost != nullptr); onFocusLost (); }))
+        if (! isEnabled ())
+            return;
+        else if (! customComponentMouseHandler.mouseDown (mouseEvent, onPopupMenuCallback, [this] () { jassert (onFocusLost != nullptr); onFocusLost (); }))
             juce::TextEditor::mouseDown (mouseEvent);
     }
 

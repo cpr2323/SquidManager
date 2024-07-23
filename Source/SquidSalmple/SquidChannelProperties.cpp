@@ -927,6 +927,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setDecay (sourceChannelProperties.getDecay (), false);
     setSampleFileName (sourceChannelProperties.getSampleFileName (), false);
     setEndCue (sourceChannelProperties.getEndCue (), false);
+    setETrig (sourceChannelProperties.getETrig (), false);
     setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
     setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
     setFilterType (sourceChannelProperties.getFilterType (), false);
