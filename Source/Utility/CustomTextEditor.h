@@ -4,7 +4,6 @@
 #include "DebugLog.h"
 #include "CustomComponentMouseHandler.h"
 #include "ErrorHelpers.h"
-#include "SinglePoleFilter.h"
 
 #define LOG_MOUSE_DRAG_INFO 0
 #if LOG_MOUSE_DRAG_INFO

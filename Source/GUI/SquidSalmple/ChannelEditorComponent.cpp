@@ -146,7 +146,9 @@ void ChannelEditorComponent::setupComponents ()
             // TODO - indicate an error? first thought was a red outline that fades out over a couple of second
         }
     };
-    sampleFileNameSelectLabel.onPopupMenuCallback = [this] () {};
+    sampleFileNameSelectLabel.onPopupMenuCallback = [this] ()
+    {
+    };
     setupLabel (sampleFileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
 
     setupLabel (channelSourceLabel, "SOURCE", kMediumLabelSize, juce::Justification::centred);
@@ -164,6 +166,9 @@ void ChannelEditorComponent::setupComponents ()
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setChannelSource (static_cast<uint8_t>(std::clamp (channelSourceComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
+    };
+    channelSourceComboBox.onPopupMenuCallback = [this] ()
+    {
     };
     setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t>(channelSourceComboBox.getSelectedItemIndex ())); });
 
@@ -187,6 +192,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
         bitsTextEditor.setValue (newValue);
     };
+    bitsTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
     // RATE
     setupLabel (rateLabel, "RATE", kMediumLabelSize, juce::Justification::centred);
@@ -203,6 +211,9 @@ void ChannelEditorComponent::setupComponents ()
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction};
         squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)) - 1, true);
+    };
+    rateComboBox.onPopupMenuCallback = [this] ()
+    {
     };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
@@ -224,6 +235,9 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
         speedTextEditor.setValue (newValue);
+    };
+    speedTextEditor.onPopupMenuCallback = [this] ()
+    {
     };
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
     // QUANTIZE
@@ -252,6 +266,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setQuant (std::clamp (quantComboBox.getSelectedItemIndex () + scrollAmount, 0, quantComboBox.getNumItems () - 1), true);
     };
+    quantComboBox.onPopupMenuCallback = [this] ()
+    {
+    };
     setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
@@ -268,6 +285,9 @@ void ChannelEditorComponent::setupComponents ()
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setFilterType (std::clamp (filterTypeComboBox.getSelectedItemIndex () + scrollAmount, 0, filterTypeComboBox.getNumItems () - 1), true);
+    };
+    filterTypeComboBox.onPopupMenuCallback = [this] ()
+    {
     };
     setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
@@ -289,6 +309,9 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto newValue { filterFrequencyTextEditor.getText().getIntValue() + (multiplier * direction) };
         filterFrequencyTextEditor.setValue (newValue);
+    };
+    filterFrequencyTextEditor.onPopupMenuCallback = [this] ()
+    {
     };
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
 
@@ -312,6 +335,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto newValue { getUiValue (squidChannelProperties.getFilterResonance ()) + (multiplier * direction) };
         filterResonanceTextEditor.setValue (newValue);
     };
+    filterResonanceTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
     // LEVEL
     setupLabel (levelLabel, "LEVEL", kMediumLabelSize, juce::Justification::centred);
@@ -332,6 +358,9 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
         levelTextEditor.setValue (newValue);
+    };
+    levelTextEditor.onPopupMenuCallback = [this] ()
+    {
     };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
     // ATTACK
@@ -354,6 +383,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
         attackTextEditor.setValue (newValue);
     };
+    attackTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
     // DECAY
     setupLabel (decayLabel, "DECAY", kMediumLabelSize, juce::Justification::centred);
@@ -375,6 +407,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
         decayTextEditor.setValue (newValue);
     };
+    decayTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
     // LOOP MODE
     setupLabel (loopModeLabel, "LOOP MODE", kMediumLabelSize, juce::Justification::centred);
@@ -392,7 +427,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setLoopMode (static_cast<uint8_t>(std::clamp (loopModeComboBox.getSelectedItemIndex () + scrollAmount, 0, loopModeComboBox.getNumItems () - 1)), true);
     };
-
+    loopModeComboBox.onPopupMenuCallback = [this] ()
+    {
+    };
     setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
     setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
@@ -414,10 +451,16 @@ void ChannelEditorComponent::setupComponents ()
         const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
         xfadeTextEditor.setValue (newValue);
     };
+    xfadeTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
     setupLabel (reverseLabel, "REVERSE", kMediumLabelSize, juce::Justification::centred);
     reverseButton.onClick = [this] () { reverseUiChanged (reverseButton.getToggleState ()); };
+    reverseButton.onPopupMenuCallback = [this] ()
+    {
+    };
     addAndMakeVisible (reverseButton);
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
@@ -446,6 +489,9 @@ void ChannelEditorComponent::setupComponents ()
             loopCueTextEditor.setValue (newValue);
         startCueTextEditor.setValue (newValue);
     };
+    startCueTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
@@ -471,6 +517,9 @@ void ChannelEditorComponent::setupComponents ()
         else
             newValue = SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()) + valueOffset;
         loopCueTextEditor.setValue (newValue);
+    };
+    loopCueTextEditor.onPopupMenuCallback = [this] ()
+    {
     };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
@@ -500,6 +549,9 @@ void ChannelEditorComponent::setupComponents ()
             loopCueTextEditor.setValue (newValue);
         endCueTextEditor.setValue (newValue);
     };
+    endCueTextEditor.onPopupMenuCallback = [this] ()
+    {
+    };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
@@ -518,7 +570,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setChoke (static_cast<uint8_t>(std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)), true);
     };
-
+    chokeComboBox.onPopupMenuCallback = [this] ()
+    {
+    };
     setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedItemIndex ()); }); // C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
@@ -532,6 +586,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setETrig (static_cast<uint8_t>(std::clamp (eTrigComboBox.getSelectedItemIndex () + scrollAmount, 0, eTrigComboBox.getNumItems () - 1)), true);
     };
+    eTrigComboBox.onPopupMenuCallback = [this] ()
+    {
+    };
     setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps 
     setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
@@ -544,6 +601,9 @@ void ChannelEditorComponent::setupComponents ()
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setSteps (static_cast<uint8_t>(std::clamp (stepsComboBox.getSelectedItemIndex () + scrollAmount, 0, stepsComboBox.getNumItems () - 1)), true);
     };
+    stepsComboBox.onPopupMenuCallback = [this] ()
+    {
+    };
     setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     // Output
     setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
@@ -555,11 +615,11 @@ void ChannelEditorComponent::setupComponents ()
         outputComboBox.setSelectedItemIndex (selectedIndex);
         outputUiChanged (selectedIndex);
     };
-    setupComboBox (outputComboBox, "Output", [this] ()
+    outputComboBox.onPopupMenuCallback = [this] ()
     {
-        outputUiChanged (outputComboBox.getSelectedItemIndex ());
-    });
-
+    };
+    setupComboBox (outputComboBox, "Output", [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
+    // CUE RANDOM
     setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
     cueRandomButton.onClick = [this] ()
     {
@@ -577,6 +637,10 @@ void ChannelEditorComponent::setupComponents ()
             squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
         }
     };
+    cueRandomButton.onPopupMenuCallback = [this] ()
+    {
+    };
+    // CUE STEP
     addAndMakeVisible (cueRandomButton);
     setupLabel (cueStepLabel, "CUE STEP", kMediumLabelSize, juce::Justification::centred);
     cueStepButton.onClick = [this] ()
@@ -597,8 +661,10 @@ void ChannelEditorComponent::setupComponents ()
     };
     addAndMakeVisible (cueStepButton);
 
+    // LOOP POINTS VIEW
     addAndMakeVisible (loopPointsView);
 
+    // PLAY BUTTONS
     auto setupPlayButton = [this] (juce::TextButton& playButton, juce::String text, bool initilalEnabledState, juce::String otherButtonText, AudioPlayerProperties::PlayMode playMode)
     {
         playButton.setButtonText (text);
@@ -628,6 +694,7 @@ void ChannelEditorComponent::setupComponents ()
     setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayMode::loop);
     setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayMode::once);
 
+    // CUE SET ADD/DELETE BUTTONS
     addCueSetButton.setLookAndFeel (&cueEditButtonLnF);
     addCueSetButton.setButtonText ("+");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
