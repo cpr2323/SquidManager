@@ -44,8 +44,27 @@ ChannelEditorComponent::ChannelEditorComponent ()
         {
             // Clone
             juce::PopupMenu cloneMenu;
+            {
+                juce::PopupMenu cloneSettingsMenu;
+                cloneMenu.addSubMenu ("Settings", cloneSettingsMenu);
+            }
+            {
+                juce::PopupMenu cloneSampleAndSettingsMenu;
+                cloneMenu.addSubMenu ("Sample/Settings", cloneSampleAndSettingsMenu);
+            }
+            {
+                juce::PopupMenu cloneCvAssignsMenu;
+                cloneMenu.addSubMenu ("CV Assign", cloneCvAssignsMenu);
+            }
             editMenu.addSubMenu ("Clone", cloneMenu);
         }
+        {
+            juce::PopupMenu swapMenu;
+            editMenu.addSubMenu("Swap", swapMenu);
+        }
+        editMenu.addItem ("Clear Cue Sets", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+        });
         editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
             //channelProperties [channelIndex].copyFrom (defaultChannelProperties.getValueTree ());
