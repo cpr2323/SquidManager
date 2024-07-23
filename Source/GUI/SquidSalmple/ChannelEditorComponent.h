@@ -25,9 +25,6 @@ public:
     void initCueSetTabs ();
     bool loadFile (juce::String sampleFileName);
 
-    // TODO - can we make this local, since we should be able to access the edits through the EditManager
-    std::function<void (int channelIndex)> displayToolsMenu;
-
     juce::ValueTree getChannelPropertiesVT ();
 
 private:
