@@ -139,6 +139,10 @@ private:
 
     void appendCueSet ();
     void configFileSelectorFromChannelSource ();
+    juce::PopupMenu createChannelCloneMenu (std::function <void (SquidChannelProperties&)> setter,
+                                            std::function<bool (SquidChannelProperties&)> canCloneCallback,
+                                            std::function<bool (SquidChannelProperties&)> canCloneToAllCallback);
+    juce::PopupMenu createChannelEditMenu (std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
     void deleteCueSet (int cueSetIndex);
     int getFilterFrequencyUiValue (int internalValue);
     int getFilterFrequencyInternalValue (int uiValue);

@@ -81,7 +81,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
 #endif
 }
 
-ChannelEditorComponent ::~ChannelEditorComponent ()
+ChannelEditorComponent::~ChannelEditorComponent ()
 {
     addCueSetButton.setLookAndFeel (nullptr);
     deleteCueSetButton.setLookAndFeel (nullptr);
@@ -95,6 +95,77 @@ ChannelEditorComponent ::~ChannelEditorComponent ()
     rateComboBox.setLookAndFeel (nullptr);
     channelSourceComboBox.setLookAndFeel (nullptr);
 }
+
+juce::PopupMenu ChannelEditorComponent::createChannelCloneMenu (std::function <void (SquidChannelProperties&)> setter,
+                                                                std::function<bool (SquidChannelProperties&)> canCloneCallback,
+                                                                std::function<bool (SquidChannelProperties&)> canCloneToAllCallback)
+{
+    jassert (setter != nullptr);
+    jassert (canCloneCallback != nullptr);
+    jassert (canCloneToAllCallback != nullptr);
+    const auto channelIndex { squidChannelProperties.getChannelIndex () };
+    juce::PopupMenu cloneMenu;
+    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
+    {
+        if (destChannelIndex != channelIndex)
+        {
+            auto canCloneToDestChannel { true };
+            editManager->forChannels ({ destChannelIndex }, [this, canCloneCallback, &canCloneToDestChannel] (juce::ValueTree channelPropertiesVT)
+            {
+                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                canCloneToDestChannel = canCloneCallback (destChannelProperties);
+            });
+            if (canCloneToDestChannel)
+            {
+                cloneMenu.addItem ("To Channel " + juce::String (destChannelIndex + 1), true, false, [this, destChannelIndex, setter] ()
+                {
+                    editManager->forChannels ({ destChannelIndex }, [this, setter] (juce::ValueTree channelPropertiesVT)
+                    {
+                        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                        setter (destChannelProperties);
+                    });
+                });
+            }
+        }
+    }
+    std::vector<int> channelIndexList;
+    // build list of other channels
+    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
+        if (destChannelIndex != channelIndex)
+            channelIndexList.emplace_back (destChannelIndex);
+    auto canCloneDestChannelCount { 0 };
+    editManager->forChannels ({ channelIndexList }, [this, canCloneToAllCallback, &canCloneDestChannelCount] (juce::ValueTree channelPropertiesVT)
+    {
+        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+        if (canCloneToAllCallback (destChannelProperties))
+            ++canCloneDestChannelCount;
+    });
+    if (canCloneDestChannelCount > 0)
+    {
+        cloneMenu.addItem ("To All", true, false, [this, setter, channelIndexList] ()
+        {
+            // clone to other channels
+            editManager->forChannels (channelIndexList, [this, setter] (juce::ValueTree channelPropertiesVT)
+            {
+                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                setter (destChannelProperties);
+            });
+        });
+    }
+    return cloneMenu;
+}
+
+juce::PopupMenu ChannelEditorComponent::createChannelEditMenu (std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
+{
+    juce::PopupMenu editMenu;
+    editMenu.addSubMenu ("Clone", createChannelCloneMenu (setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
+    if (resetter != nullptr)
+        editMenu.addItem ("Default", true, false, [this, resetter] () { resetter (); });
+    if (reverter != nullptr)
+        editMenu.addItem ("Revert", true, false, [this, reverter] () { reverter (); });
+
+    return editMenu;
+};
 
 void ChannelEditorComponent::setupComponents ()
 {
@@ -361,6 +432,11 @@ void ChannelEditorComponent::setupComponents ()
     };
     levelTextEditor.onPopupMenuCallback = [this] ()
     {
+        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setLevel(squidChannelProperties.getLevel (), false); },
+                                    nullptr, //[this] () { channelProperties.setLevel (defaultChannelProperties.getPitch (), true); },
+                                    nullptr /*[this] () { channelProperties.setLevel (uneditedChannelProperties.getPitch (), true); }*/)};
+        editMenu.showMenuAsync ({}, [this] (int) {});
+
     };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
     // ATTACK

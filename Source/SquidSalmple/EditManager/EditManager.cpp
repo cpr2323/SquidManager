@@ -375,3 +375,13 @@ void EditManager::cleanUpTempFiles (juce::File bankFolder)
     }
 
 }
+
+void EditManager::forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback)
+{
+    jassert (channelCallback != nullptr);
+    for (const auto channelIndex : channelIndexList)
+    {
+        jassert (channelIndex >= 0 && channelIndex < 8);
+        channelCallback (channelPropertiesList [channelIndex].getValueTree ());
+    }
+}

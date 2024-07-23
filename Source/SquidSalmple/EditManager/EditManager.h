@@ -15,6 +15,7 @@ public:
 
     void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
     void cleanUpTempFiles (juce::File bankFolder);
+    void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     bool isSupportedAudioFile (juce::File file);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
