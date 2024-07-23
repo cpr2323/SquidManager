@@ -18,16 +18,6 @@ const auto kInitialYOffset { 5 };
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
-static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
-{
-    return byteOffset / 2;
-}
-
-static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
-{
-    return sampleOffset * 2;
-}
-
 ChannelEditorComponent::ChannelEditorComponent ()
 {
     setOpaque (true);
@@ -432,7 +422,7 @@ void ChannelEditorComponent::setupComponents ()
     // START
     setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
-    startCueTextEditor.getMaxValueCallback = [this] () { return byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
+    startCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
     startCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     startCueTextEditor.updateDataCallback = [this] (juce::int32 value) { startCueUiChanged (value); };
     startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
@@ -448,19 +438,19 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto valueOffset { multiplier * direction };
         auto newValue { 0 };
-        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (byteOffsetToSampleOffset (squidChannelProperties.getStartCue ())))
+        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ())))
             newValue = 0;
         else
-            newValue = byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()) + valueOffset;
-        if (newValue > static_cast<int> (byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
+            newValue = SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()) + valueOffset;
+        if (newValue > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
             loopCueTextEditor.setValue (newValue);
         startCueTextEditor.setValue (newValue);
     };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
-    loopCueTextEditor.getMinValueCallback = [this] () { return byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
-    loopCueTextEditor.getMaxValueCallback = [this] () { return byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
+    loopCueTextEditor.getMinValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
+    loopCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
     loopCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     loopCueTextEditor.updateDataCallback = [this] (juce::int32 value) { loopCueUiChanged (value); };
     loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
@@ -476,16 +466,16 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto valueOffset { multiplier * direction };
         auto newValue { 0 };
-        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
+        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
             newValue = 0;
         else
-            newValue = byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()) + valueOffset;
+            newValue = SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()) + valueOffset;
         loopCueTextEditor.setValue (newValue);
     };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
     setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
-    endCueTextEditor.getMinValueCallback = [this] () { return byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
+    endCueTextEditor.getMinValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
     endCueTextEditor.getMaxValueCallback = [this] () { return squidChannelProperties.getSampleDataNumSamples (); };
     endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };
@@ -502,11 +492,11 @@ void ChannelEditorComponent::setupComponents ()
         } ();
         const auto valueOffset { multiplier * direction };
         auto newValue { 0 };
-        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (byteOffsetToSampleOffset (squidChannelProperties.getEndCue ())))
+        if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ())))
             newValue = 0;
         else
-            newValue = byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()) + valueOffset;
-        if (newValue < static_cast<int> (byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
+            newValue = SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()) + valueOffset;
+        if (newValue < static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
             loopCueTextEditor.setValue (newValue);
         endCueTextEditor.setValue (newValue);
     };
@@ -737,9 +727,9 @@ void ChannelEditorComponent::setCurCue (int cueSetIndex)
     curCueSetIndex = cueSetIndex;
     squidChannelProperties.setCurCueSet (cueSetIndex, false);
     cueSetButtons [cueSetIndex].setToggleState (true, juce::NotificationType::dontSendNotification);
-    waveformDisplay.setCuePoints (byteOffsetToSampleOffset (squidChannelProperties.getStartCueSet (cueSetIndex)),
-                                  byteOffsetToSampleOffset (squidChannelProperties.getLoopCueSet (cueSetIndex)), 
-                                  byteOffsetToSampleOffset (squidChannelProperties.getEndCueSet (cueSetIndex)));
+    waveformDisplay.setCuePoints (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCueSet (cueSetIndex)),
+                                  SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCueSet (cueSetIndex)),
+                                  SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCueSet (cueSetIndex)));
     squidChannelProperties.setStartCue (squidChannelProperties.getStartCueSet (cueSetIndex), true);
     squidChannelProperties.setLoopCue (squidChannelProperties.getLoopCueSet (cueSetIndex), true);
     squidChannelProperties.setEndCue (squidChannelProperties.getEndCueSet (cueSetIndex), true);
@@ -874,7 +864,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onEndCueSetChange = [this] (int cueIndex, int endCue)
     {
         if (cueIndex == curCueSetIndex)
-            waveformDisplay.setCueEndPoint (byteOffsetToSampleOffset (endCue));
+            waveformDisplay.setCueEndPoint (SquidChannelProperties::byteOffsetToSampleOffset (endCue));
     };
     squidChannelProperties.onETrigChange = [this] (int eTrig) { eTrigDataChanged (eTrig); };
     squidChannelProperties.onFilterTypeChange = [this] (int filter) { filterTypeDataChanged (filter); };
@@ -894,7 +884,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onLoopCueSetChange = [this] (int cueIndex, int loopCue)
     {
         if (cueIndex == curCueSetIndex)
-            waveformDisplay.setCueLoopPoint (byteOffsetToSampleOffset (loopCue));
+            waveformDisplay.setCueLoopPoint (SquidChannelProperties::byteOffsetToSampleOffset (loopCue));
     };
     squidChannelProperties.onLoopModeChange = [this] (int loopMode) { loopModeDataChanged (loopMode); };
     squidChannelProperties.onNumCueSetsChange = [this] (int /*numCueSets*/)
@@ -910,7 +900,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onStartCueSetChange = [this] (int cueIndex, int startCue)
     {
         if (cueIndex == curCueSetIndex)
-            waveformDisplay.setCueStartPoint (byteOffsetToSampleOffset (startCue));
+            waveformDisplay.setCueStartPoint (SquidChannelProperties::byteOffsetToSampleOffset (startCue));
     };
     squidChannelProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
@@ -944,7 +934,7 @@ void ChannelEditorComponent::updateLoopPointsView ()
     }
     oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
     loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
-    loopPointsView.setLoopPoints (byteOffsetToSampleOffset (startSample), byteOffsetToSampleOffset (numBytes));
+    loopPointsView.setLoopPoints (SquidChannelProperties::byteOffsetToSampleOffset (startSample), SquidChannelProperties::byteOffsetToSampleOffset (numBytes));
     loopPointsView.repaint ();
 }
 
@@ -1045,7 +1035,7 @@ void ChannelEditorComponent::decayDataChanged (int decay)
 
 void ChannelEditorComponent::endCueDataChanged (juce::int32 endCueByteOffset)
 {
-    const auto endCueSampleOffset { byteOffsetToSampleOffset(endCueByteOffset) };
+    const auto endCueSampleOffset { SquidChannelProperties::byteOffsetToSampleOffset(endCueByteOffset) };
     endCueTextEditor.setText (juce::String (endCueSampleOffset), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCueEndPoint (endCueSampleOffset);
     updateLoopPointsView ();
@@ -1085,7 +1075,7 @@ void ChannelEditorComponent::levelDataChanged (int level)
 
 void ChannelEditorComponent::loopCueDataChanged (juce::int32 loopCueByteOffset)
 {
-    const auto loopCueSampleOffset { byteOffsetToSampleOffset (loopCueByteOffset) };
+    const auto loopCueSampleOffset { SquidChannelProperties::byteOffsetToSampleOffset (loopCueByteOffset) };
     loopCueTextEditor.setText (juce::String (loopCueSampleOffset), false);
     waveformDisplay.setCueLoopPoint (loopCueSampleOffset);
     updateLoopPointsView ();
@@ -1118,7 +1108,7 @@ void ChannelEditorComponent::speedDataChanged (int speed)
 
 void ChannelEditorComponent::startCueDataChanged (juce::int32 startCueByteOffset)
 {
-    const auto startCueSampleOffset { byteOffsetToSampleOffset (startCueByteOffset) };
+    const auto startCueSampleOffset { SquidChannelProperties::byteOffsetToSampleOffset (startCueByteOffset) };
     startCueTextEditor.setText (juce::String (startCueSampleOffset), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCueStartPoint (startCueSampleOffset);
     updateLoopPointsView ();
@@ -1170,7 +1160,7 @@ void ChannelEditorComponent::decayUiChanged (int decay)
 
 void ChannelEditorComponent::endCueUiChanged (juce::int32 endCueSampleOffset)
 {
-    const auto endCueByteOffset { sampleOffsetToByteOffset (endCueSampleOffset) };
+    const auto endCueByteOffset { SquidChannelProperties::sampleOffsetToByteOffset (endCueSampleOffset) };
     squidChannelProperties.setEndCue (endCueByteOffset, false);
     squidChannelProperties.setCueSetEndPoint (curCueSetIndex, endCueByteOffset);
 
@@ -1208,7 +1198,7 @@ void ChannelEditorComponent::levelUiChanged (int level)
 
 void ChannelEditorComponent::loopCueUiChanged (juce::int32 loopCueSampleOffset)
 {
-    const auto loopCueByteOffset { sampleOffsetToByteOffset (loopCueSampleOffset) };
+    const auto loopCueByteOffset { SquidChannelProperties::sampleOffsetToByteOffset (loopCueSampleOffset) };
     squidChannelProperties.setLoopCue (loopCueByteOffset, false);
     squidChannelProperties.setCueSetLoopPoint (curCueSetIndex, loopCueByteOffset);
 
@@ -1244,7 +1234,7 @@ void ChannelEditorComponent::speedUiChanged (int speed)
 
 void ChannelEditorComponent::startCueUiChanged (juce::int32 startCueSampleOffset)
 {
-    const auto startCueByteOffset { sampleOffsetToByteOffset (startCueSampleOffset) };
+    const auto startCueByteOffset { SquidChannelProperties::sampleOffsetToByteOffset (startCueSampleOffset) };
     squidChannelProperties.setStartCue (startCueByteOffset, false);
     squidChannelProperties.setCueSetStartPoint (curCueSetIndex, startCueByteOffset);
 

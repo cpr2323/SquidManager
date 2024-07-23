@@ -197,6 +197,9 @@ public:
     void copyFrom (juce::ValueTree sourceVT);
     static juce::ValueTree create (uint8_t channelIndex);
     juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
+    static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset);
+    static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset);
+
 
     static inline const juce::Identifier SquidChannelTypeId { "SquidChannel" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };

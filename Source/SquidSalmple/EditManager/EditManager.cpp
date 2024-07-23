@@ -9,16 +9,6 @@ constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
 constexpr auto kMaxSampleLength { 524287 };
 
-// static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset)
-// {
-//     return byteOffset / 2;
-// }
-
-static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset)
-{
-    return sampleOffset * 2;
-}
-
 EditManager::EditManager ()
 {
     audioFormatManager.registerBasicFormats ();
@@ -365,9 +355,9 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         loadChannel (channelProperties.getValueTree (), static_cast<uint8_t> (channelIndex), outputFile);
         // set cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
-            channelProperties.setCueSetPoints (cueSetIndex, sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
+            channelProperties.setCueSetPoints (cueSetIndex, SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
     }
     else
     {

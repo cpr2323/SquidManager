@@ -821,6 +821,16 @@ juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int param
     return parameterVT;
 }
 
+uint32_t SquidChannelProperties::byteOffsetToSampleOffset (uint32_t byteOffset)
+{
+    return byteOffset / 2;
+}
+
+uint32_t SquidChannelProperties::sampleOffsetToByteOffset (uint32_t sampleOffset)
+{
+    return sampleOffset * 2;
+}
+
 juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
 {
     jassert (cueSetIndex < getNumCueSets ());
