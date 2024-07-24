@@ -6,7 +6,7 @@ class CvAssignSection : public juce::Component
 {
 public:
     CvAssignSection ();
-    void init (juce::ValueTree rootPropertiesVT, int theCvIndex);
+    void init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex);
 
 private:
     juce::Label cvAssignLabel;

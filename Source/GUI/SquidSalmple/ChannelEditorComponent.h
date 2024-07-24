@@ -31,7 +31,7 @@ private:
     SquidChannelProperties squidChannelProperties;
     AudioPlayerProperties audioPlayerProperties;
     AppProperties appProperties;
-    EditManager* editManager;
+    EditManager* editManager { nullptr };
     bool draggingFiles { false };
 
     juce::TextButton toolsButton;

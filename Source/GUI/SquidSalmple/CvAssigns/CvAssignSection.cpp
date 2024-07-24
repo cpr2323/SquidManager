@@ -35,12 +35,12 @@ CvAssignSection::CvAssignSection ()
     }
 }
 
-void CvAssignSection::init (juce::ValueTree rootPropertiesVT, int theCvIndex)
+void CvAssignSection::init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex)
 {
     for (auto curParameterIndex { 0 }; curParameterIndex < cvAssignParameterList.size (); ++curParameterIndex)
     {
         auto& curParameter { cvAssignParameterList [curParameterIndex] };
-        curParameter.init (rootPropertiesVT, theCvIndex, kParameterList [curParameterIndex].parameterIndex);
+        curParameter.init (rootPropertiesVT, channelPropertiesVT, theCvIndex, kParameterList [curParameterIndex].parameterIndex);
     }
 }
 

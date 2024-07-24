@@ -6,7 +6,7 @@ class CvAssignEditor : public juce::Component
 {
 public:
     CvAssignEditor ();
-    void init (juce::ValueTree rootPropertiesVT);
+    void init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT);
 
 private:
     juce::Label curCvAssignIndexLabel;

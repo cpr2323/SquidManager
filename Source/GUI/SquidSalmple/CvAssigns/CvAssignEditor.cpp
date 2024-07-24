@@ -38,12 +38,12 @@ CvAssignEditor::CvAssignEditor ()
     selectCvAssigns (curCvAssignIndex);
 }
 
-void CvAssignEditor::init (juce::ValueTree rootPropertiesVT)
+void CvAssignEditor::init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT)
 {
     for (auto cvIndex { 0 }; cvIndex < cvAssignSectionList.size (); ++cvIndex)
     {
         auto& cvAssignSection { cvAssignSectionList [cvIndex] };
-        cvAssignSection.init (rootPropertiesVT, cvIndex);
+        cvAssignSection.init (rootPropertiesVT, channelPropertiesVT, cvIndex);
     }
 }
 

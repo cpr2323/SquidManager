@@ -1,6 +1,5 @@
 #include "ChannelEditorComponent.h"
 #include "../../SystemServices.h"
-#include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
@@ -1248,7 +1247,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
-    cvAssignEditor.init (squidChannelPropertiesVT);
+    cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
 
     // TODO - we need to call this when the sample changes
     updateLoopPointsView ();
@@ -1432,7 +1431,7 @@ void ChannelEditorComponent::channelSourceDataChanged (uint8_t channelSourceInde
     channelSourceComboBox.setSelectedItemIndex (channelSourceIndex, juce::NotificationType::dontSendNotification);
 }
 
-void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
+void ChannelEditorComponent::channelFlagsDataChanged ([[maybe_unused]] uint16_t channelFlags)
 {
     // handle cue random flag
     cueRandomButton.setToggleState (editManager->isCueRandomOn (squidChannelProperties.getChannelIndex ()), juce::NotificationType::dontSendNotification);

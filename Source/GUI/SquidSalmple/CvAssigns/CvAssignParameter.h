@@ -1,5 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
+#include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../SquidSalmple/SquidChannelProperties.h"
 #include "../../../Utility/CustomTextEditor.h"
 #include "../../../Utility/RoundedSlideSwitch.h"
@@ -9,13 +10,15 @@ class CvAssignParameter : public juce::Component
 public:
     CvAssignParameter ();
     ~CvAssignParameter ();
-    void init (juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex);
+    void init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex);
     void setParameterLabel (juce::String parameterText);
 
 private:
     int cvIndex { -1 };
     int parameterIndex { -1 };
     SquidChannelProperties squidChannelProperties;
+    EditManager* editManager { nullptr };
+
     juce::Label parameterLabel;
     juce::Label assignEnableLabel;
     RoundedSlideSwitch assignEnableButton;
