@@ -16,6 +16,8 @@ public:
     void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
     void cleanUpTempFiles (juce::File bankFolder);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
+    juce::PopupMenu createChannelCloneMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canCloneCallback, std::function <bool (SquidChannelProperties&)> canCloneToAllCallback);
+    juce::PopupMenu createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
     bool isAltOutput (int channelIndex);
     bool isAltOutput (juce::ValueTree channelPropertiesVT);
     bool isSupportedAudioFile (juce::File file);

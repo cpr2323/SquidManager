@@ -520,3 +520,75 @@ void EditManager::forChannels (std::vector<int> channelIndexList, std::function<
         channelCallback (channelPropertiesList [channelIndex].getValueTree ());
     }
 }
+
+juce::PopupMenu EditManager::createChannelCloneMenu (int channelIndex,
+                                                     std::function <void (SquidChannelProperties&)> setter,
+                                                     std::function <bool (SquidChannelProperties&)> canCloneCallback,
+                                                     std::function <bool (SquidChannelProperties&)> canCloneToAllCallback)
+{
+    jassert (setter != nullptr);
+    jassert (canCloneCallback != nullptr);
+    jassert (canCloneToAllCallback != nullptr);
+    //const auto channelIndex { squidChannelProperties.getChannelIndex () };
+    juce::PopupMenu cloneMenu;
+    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
+    {
+        if (destChannelIndex != channelIndex)
+        {
+            auto canCloneToDestChannel { true };
+            forChannels ({ destChannelIndex }, [this, canCloneCallback, &canCloneToDestChannel] (juce::ValueTree channelPropertiesVT)
+            {
+                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                canCloneToDestChannel = canCloneCallback (destChannelProperties);
+            });
+            if (canCloneToDestChannel)
+            {
+                cloneMenu.addItem ("To Channel " + juce::String (destChannelIndex + 1), true, false, [this, destChannelIndex, setter] ()
+                {
+                    forChannels ({ destChannelIndex }, [this, setter] (juce::ValueTree channelPropertiesVT)
+                    {
+                        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                        setter (destChannelProperties);
+                    });
+                });
+            }
+        }
+    }
+    std::vector<int> channelIndexList;
+    // build list of other channels
+    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
+        if (destChannelIndex != channelIndex)
+            channelIndexList.emplace_back (destChannelIndex);
+    auto canCloneDestChannelCount { 0 };
+    forChannels ({ channelIndexList }, [this, canCloneToAllCallback, &canCloneDestChannelCount] (juce::ValueTree channelPropertiesVT)
+    {
+        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+        if (canCloneToAllCallback (destChannelProperties))
+            ++canCloneDestChannelCount;
+    });
+    if (canCloneDestChannelCount > 0)
+    {
+        cloneMenu.addItem ("To All", true, false, [this, setter, channelIndexList] ()
+        {
+            // clone to other channels
+            forChannels (channelIndexList, [this, setter] (juce::ValueTree channelPropertiesVT)
+            {
+                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                setter (destChannelProperties);
+            });
+        });
+    }
+    return cloneMenu;
+}
+
+juce::PopupMenu EditManager::createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
+{
+    juce::PopupMenu editMenu;
+    editMenu.addSubMenu ("Clone", createChannelCloneMenu (channelIndex, setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
+    if (resetter != nullptr)
+        editMenu.addItem ("Default", true, false, [this, resetter] () { resetter (); });
+    if (reverter != nullptr)
+        editMenu.addItem ("Revert", true, false, [this, reverter] () { reverter (); });
+
+    return editMenu;
+};

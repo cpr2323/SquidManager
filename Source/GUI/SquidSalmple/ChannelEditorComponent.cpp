@@ -96,77 +96,6 @@ ChannelEditorComponent::~ChannelEditorComponent ()
     channelSourceComboBox.setLookAndFeel (nullptr);
 }
 
-juce::PopupMenu ChannelEditorComponent::createChannelCloneMenu (std::function <void (SquidChannelProperties&)> setter,
-                                                                std::function<bool (SquidChannelProperties&)> canCloneCallback,
-                                                                std::function<bool (SquidChannelProperties&)> canCloneToAllCallback)
-{
-    jassert (setter != nullptr);
-    jassert (canCloneCallback != nullptr);
-    jassert (canCloneToAllCallback != nullptr);
-    const auto channelIndex { squidChannelProperties.getChannelIndex () };
-    juce::PopupMenu cloneMenu;
-    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
-    {
-        if (destChannelIndex != channelIndex)
-        {
-            auto canCloneToDestChannel { true };
-            editManager->forChannels ({ destChannelIndex }, [this, canCloneCallback, &canCloneToDestChannel] (juce::ValueTree channelPropertiesVT)
-            {
-                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                canCloneToDestChannel = canCloneCallback (destChannelProperties);
-            });
-            if (canCloneToDestChannel)
-            {
-                cloneMenu.addItem ("To Channel " + juce::String (destChannelIndex + 1), true, false, [this, destChannelIndex, setter] ()
-                {
-                    editManager->forChannels ({ destChannelIndex }, [this, setter] (juce::ValueTree channelPropertiesVT)
-                    {
-                        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                        setter (destChannelProperties);
-                    });
-                });
-            }
-        }
-    }
-    std::vector<int> channelIndexList;
-    // build list of other channels
-    for (auto destChannelIndex { 0 }; destChannelIndex < 8; ++destChannelIndex)
-        if (destChannelIndex != channelIndex)
-            channelIndexList.emplace_back (destChannelIndex);
-    auto canCloneDestChannelCount { 0 };
-    editManager->forChannels ({ channelIndexList }, [this, canCloneToAllCallback, &canCloneDestChannelCount] (juce::ValueTree channelPropertiesVT)
-    {
-        SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-        if (canCloneToAllCallback (destChannelProperties))
-            ++canCloneDestChannelCount;
-    });
-    if (canCloneDestChannelCount > 0)
-    {
-        cloneMenu.addItem ("To All", true, false, [this, setter, channelIndexList] ()
-        {
-            // clone to other channels
-            editManager->forChannels (channelIndexList, [this, setter] (juce::ValueTree channelPropertiesVT)
-            {
-                SquidChannelProperties destChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                setter (destChannelProperties);
-            });
-        });
-    }
-    return cloneMenu;
-}
-
-juce::PopupMenu ChannelEditorComponent::createChannelEditMenu (std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
-{
-    juce::PopupMenu editMenu;
-    editMenu.addSubMenu ("Clone", createChannelCloneMenu (setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
-    if (resetter != nullptr)
-        editMenu.addItem ("Default", true, false, [this, resetter] () { resetter (); });
-    if (reverter != nullptr)
-        editMenu.addItem ("Revert", true, false, [this, reverter] () { reverter (); });
-
-    return editMenu;
-};
-
 void ChannelEditorComponent::setupComponents ()
 {
     auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
@@ -242,19 +171,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     channelSourceComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setChannelSource (squidChannelProperties.getChannelSource (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setChannelSource (defaultChannelProperties.getChannelSource (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setChannelSource (uneditedChannelProperties.getChannelSource (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex(),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setChannelSource (squidChannelProperties.getChannelSource (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setChannelSource (defaultChannelProperties.getChannelSource (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setChannelSource (uneditedChannelProperties.getChannelSource (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t>(channelSourceComboBox.getSelectedItemIndex ())); });
@@ -281,19 +214,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     bitsTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setBits (squidChannelProperties.getBits (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setBits (defaultChannelProperties.getBits (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setBits (uneditedChannelProperties.getBits (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setBits (squidChannelProperties.getBits (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setBits (defaultChannelProperties.getBits (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setBits (uneditedChannelProperties.getBits (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
@@ -315,19 +252,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     rateComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setRate (squidChannelProperties.getRate (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setRate (defaultChannelProperties.getRate (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setRate (uneditedChannelProperties.getRate (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setRate (squidChannelProperties.getRate (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setRate (defaultChannelProperties.getRate (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setRate (uneditedChannelProperties.getRate (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
@@ -353,19 +294,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     speedTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setSpeed (squidChannelProperties.getSpeed (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setSpeed (defaultChannelProperties.getSpeed (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setSpeed (uneditedChannelProperties.getSpeed (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setSpeed (squidChannelProperties.getSpeed (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setSpeed (defaultChannelProperties.getSpeed (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setSpeed (uneditedChannelProperties.getSpeed (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
@@ -397,19 +342,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     quantComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setQuant (squidChannelProperties.getQuant (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setQuant (defaultChannelProperties.getQuant (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setQuant (uneditedChannelProperties.getQuant (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setQuant (squidChannelProperties.getQuant (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setQuant (defaultChannelProperties.getQuant (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setQuant (uneditedChannelProperties.getQuant (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
@@ -431,19 +380,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterTypeComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setFilterType (squidChannelProperties.getFilterType (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterType (defaultChannelProperties.getFilterType (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterType (uneditedChannelProperties.getFilterType (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setFilterType (squidChannelProperties.getFilterType (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterType (defaultChannelProperties.getFilterType (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterType (uneditedChannelProperties.getFilterType (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
@@ -469,19 +422,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterFrequencyTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setFilterFrequency (squidChannelProperties.getFilterFrequency (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterFrequency (defaultChannelProperties.getFilterFrequency (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterFrequency (uneditedChannelProperties.getFilterFrequency(), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setFilterFrequency (squidChannelProperties.getFilterFrequency (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterFrequency (defaultChannelProperties.getFilterFrequency (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterFrequency (uneditedChannelProperties.getFilterFrequency(), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
@@ -508,19 +465,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterResonanceTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setFilterResonance (squidChannelProperties.getFilterResonance (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterResonance (defaultChannelProperties.getFilterResonance (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setFilterResonance (uneditedChannelProperties.getFilterResonance (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setFilterResonance (squidChannelProperties.getFilterResonance (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterResonance (defaultChannelProperties.getFilterResonance (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setFilterResonance (uneditedChannelProperties.getFilterResonance (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
@@ -546,19 +507,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     levelTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setLevel (squidChannelProperties.getLevel (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLevel (defaultChannelProperties.getLevel (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLevel (uneditedChannelProperties.getLevel (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setLevel (squidChannelProperties.getLevel (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLevel (defaultChannelProperties.getLevel (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLevel (uneditedChannelProperties.getLevel (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
@@ -584,19 +549,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     attackTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setAttack (squidChannelProperties.getAttack (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setAttack (defaultChannelProperties.getAttack (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setAttack (uneditedChannelProperties.getAttack (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setAttack (squidChannelProperties.getAttack (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setAttack (defaultChannelProperties.getAttack (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setAttack (uneditedChannelProperties.getAttack (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
@@ -622,19 +591,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     decayTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setDecay (squidChannelProperties.getDecay (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setDecay (defaultChannelProperties.getDecay (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setDecay (uneditedChannelProperties.getDecay (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setDecay (squidChannelProperties.getDecay (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setDecay (defaultChannelProperties.getDecay (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setDecay (uneditedChannelProperties.getDecay (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
@@ -656,19 +629,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     loopModeComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setLoopMode (squidChannelProperties.getLoopMode (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLoopMode (defaultChannelProperties.getLoopMode (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLoopMode (uneditedChannelProperties.getLoopMode (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setLoopMode (squidChannelProperties.getLoopMode (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLoopMode (defaultChannelProperties.getLoopMode (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLoopMode (uneditedChannelProperties.getLoopMode (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
@@ -694,19 +671,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     xfadeTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setXfade (squidChannelProperties.getXfade (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setXfade (defaultChannelProperties.getXfade (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setXfade (uneditedChannelProperties.getXfade (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setXfade (squidChannelProperties.getXfade (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setXfade (defaultChannelProperties.getXfade (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setXfade (uneditedChannelProperties.getXfade (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
@@ -715,19 +696,23 @@ void ChannelEditorComponent::setupComponents ()
     reverseButton.onClick = [this] () { reverseUiChanged (reverseButton.getToggleState ()); };
     reverseButton.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setReverse (squidChannelProperties.getReverse (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setReverse (defaultChannelProperties.getReverse (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setReverse (uneditedChannelProperties.getReverse (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setReverse (squidChannelProperties.getReverse (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setReverse (defaultChannelProperties.getReverse (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setReverse (uneditedChannelProperties.getReverse (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     addAndMakeVisible (reverseButton);
@@ -760,19 +745,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     startCueTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setStartCue (squidChannelProperties.getStartCue (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setStartCue (defaultChannelProperties.getStartCue (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setStartCue (uneditedChannelProperties.getStartCue (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setStartCue (squidChannelProperties.getStartCue (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setStartCue (defaultChannelProperties.getStartCue (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setStartCue (uneditedChannelProperties.getStartCue (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
@@ -803,19 +792,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     loopCueTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setLoopCue (squidChannelProperties.getLoopCue (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLoopCue (defaultChannelProperties.getLoopCue (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setLoopCue(uneditedChannelProperties.getLoopCue (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setLoopCue (squidChannelProperties.getLoopCue (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLoopCue (defaultChannelProperties.getLoopCue (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setLoopCue(uneditedChannelProperties.getLoopCue (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
@@ -848,19 +841,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     endCueTextEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setEndCue (squidChannelProperties.getEndCue (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setEndCue (defaultChannelProperties.getEndCue (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setEndCue (uneditedChannelProperties.getEndCue (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setEndCue (squidChannelProperties.getEndCue (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setEndCue (defaultChannelProperties.getEndCue (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setEndCue (uneditedChannelProperties.getEndCue (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
@@ -883,19 +880,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     chokeComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setChoke (squidChannelProperties.getChoke (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setChoke (defaultChannelProperties.getChoke (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setChoke (uneditedChannelProperties.getChoke (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setChoke (squidChannelProperties.getChoke (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setChoke (defaultChannelProperties.getChoke (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setChoke (uneditedChannelProperties.getChoke (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedItemIndex ()); }); // C1, C2, C3, C4, C5, C6, C7, C8
@@ -913,19 +914,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     eTrigComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setETrig (squidChannelProperties.getETrig (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setETrig (defaultChannelProperties.getETrig (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setETrig (uneditedChannelProperties.getETrig (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setETrig (squidChannelProperties.getETrig (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setETrig (defaultChannelProperties.getETrig (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setETrig (uneditedChannelProperties.getETrig (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
@@ -942,19 +947,23 @@ void ChannelEditorComponent::setupComponents ()
     };
     stepsComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu ([this] (SquidChannelProperties& destChannelProperties) { destChannelProperties.setSteps (squidChannelProperties.getSteps (), false); },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                         SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setSteps (defaultChannelProperties.getSteps (), true);
-                                    },
-                                    [this] ()
-                                    {
-                                        SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                                          SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                                        squidChannelProperties.setSteps (uneditedChannelProperties.getSteps (), true);
-                                    }) };
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setSteps (squidChannelProperties.getSteps (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setSteps (defaultChannelProperties.getSteps (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setSteps (uneditedChannelProperties.getSteps (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
@@ -970,7 +979,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     outputComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu (
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setAltOutput (destChannelProperties.getChannelIndex (), editManager->isAltOutput (squidChannelProperties.getChannelIndex ()));
@@ -994,7 +1003,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     cueRandomButton.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu (
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setCueRandom (destChannelProperties.getChannelIndex (), editManager->isCueRandomOn (squidChannelProperties.getChannelIndex ()));
@@ -1018,7 +1027,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     cueStepButton.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { createChannelEditMenu (
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setCueStep (destChannelProperties.getChannelIndex (), editManager->isCueStepOn (squidChannelProperties.getChannelIndex ()));
