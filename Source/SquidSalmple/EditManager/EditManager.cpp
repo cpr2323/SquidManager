@@ -1,5 +1,6 @@
 #include "EditManager.h"
 #include "../Bank/BankManagerProperties.h"
+#include "../Metadata/SquidSalmpleDefs.h"
 #include "../Metadata/SquidMetaDataReader.h"
 #include "../Metadata/SquidMetaDataWriter.h"
 #include "../../Utility/DebugLog.h"
@@ -45,6 +46,30 @@ bool EditManager::isSupportedAudioFile (juce::File file)
         return false;
 
     return true;
+}
+
+bool EditManager::isCueRandomOn (int channelIndex)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    return channelPropertiesList [channelIndex].getChannelFlags () & ChannelFlags::kCueRandom;
+}
+
+bool EditManager::isCueRandomOn (juce::ValueTree channelPropertiesVT)
+{
+    SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    return channelProperties.getChannelFlags () & ChannelFlags::kCueRandom;
+}
+
+bool EditManager::isCueStepOn (int channelIndex)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    return channelPropertiesList [channelIndex].getChannelFlags () & ChannelFlags::kCueStepped;
+}
+
+bool EditManager::isCueStepOn (juce::ValueTree channelPropertiesVT)
+{
+    SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    return channelProperties.getChannelFlags () & ChannelFlags::kCueStepped;
 }
 
 void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile)
@@ -149,6 +174,42 @@ void EditManager::saveBank ()
     }
     // finally, copy the new data to the unedited buffer
     copyBank (squidBankProperties, uneditedSquidBankProperties);
+}
+
+void EditManager::setCueRandom (int channelIndex, bool on)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    auto& channelProperties { channelPropertiesList [channelIndex] };
+    if (on)
+    {
+        // turn cue random on
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () | ChannelFlags::kCueRandom, false);
+        // turn cue stepped off (in case it is on)
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
+    }
+    else
+    {
+        // turn cue random off
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
+    }
+}
+
+void EditManager::setCueStep (int channelIndex, bool on)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    auto& channelProperties { channelPropertiesList [channelIndex] };
+    if (on)
+    {
+        // turn cue step on
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () | ChannelFlags::kCueStepped, false);
+        // turn cue random off (in case it is on)
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
+    }
+    else
+    {
+        // turn cue step off
+        channelProperties.setChannelFlags (channelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
+    }
 }
 
 juce::ValueTree EditManager::getUneditedBankProperties ()

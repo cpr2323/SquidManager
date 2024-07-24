@@ -219,6 +219,8 @@ void ChannelEditorComponent::setupComponents ()
     };
     sampleFileNameSelectLabel.onPopupMenuCallback = [this] ()
     {
+        // Clone
+        // Revert
     };
     setupLabel (sampleFileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
 
@@ -972,50 +974,52 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (outputComboBox, "Output", [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
     // CUE RANDOM
+    setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
     cueRandomButton.onClick = [this] ()
     {
-        if (cueRandomButton.getToggleState ())
-        {
-            // turn cue random on
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ChannelFlags::kCueRandom, false);
-            // turn cue stepped off (in case it is on)
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
-            cueStepButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            // turn cue random off
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
-        }
+        editManager->setCueRandom (squidChannelProperties.getChannelIndex (), cueRandomButton.getToggleState ());
     };
     cueRandomButton.onPopupMenuCallback = [this] ()
     {
-        // TODO
+        auto editMenu { createChannelEditMenu (
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                editManager->setCueRandom (destChannelProperties.getChannelIndex (), editManager->isCueRandomOn (squidChannelProperties.getChannelIndex ()));
+            },
+            [this] ()
+            {
+                 editManager->setCueRandom (squidChannelProperties.getChannelIndex (), editManager->isCueRandomOn (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ())));
+            },
+            [this] ()
+            {
+                editManager->setCueRandom (squidChannelProperties.getChannelIndex (), editManager->isCueRandomOn (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ())));
+            }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
     addAndMakeVisible (cueRandomButton);
     // CUE STEP
+    setupLabel (cueStepLabel, "CUE STEP", kMediumLabelSize, juce::Justification::centred);
     cueStepButton.onClick = [this] ()
     {
-        if (cueStepButton.getToggleState ())
-        {
-            // turn cue step on
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () | ChannelFlags::kCueStepped, false);
-            // turn cue random off (in case it is on)
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueRandom, false);
-            cueRandomButton.setToggleState (false, juce::NotificationType::dontSendNotification);
-        }
-        else
-        {
-            // turn cue step off
-            squidChannelProperties.setChannelFlags (squidChannelProperties.getChannelFlags () & ~ChannelFlags::kCueStepped, false);
-        }
+        editManager->setCueStep (squidChannelProperties.getChannelIndex (), cueStepButton.getToggleState ());
     };
     cueStepButton.onPopupMenuCallback = [this] ()
     {
-        // TODO
+        auto editMenu { createChannelEditMenu (
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                editManager->setCueStep (destChannelProperties.getChannelIndex (), editManager->isCueStepOn (squidChannelProperties.getChannelIndex ()));
+            },
+            [this] ()
+            {
+                 editManager->setCueStep (squidChannelProperties.getChannelIndex (), editManager->isCueStepOn (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ())));
+            },
+            [this] ()
+            {
+                editManager->setCueStep (squidChannelProperties.getChannelIndex (), editManager->isCueStepOn (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ())));
+            }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupLabel (cueStepLabel, "CUE STEP", kMediumLabelSize, juce::Justification::centred);
     addAndMakeVisible (cueStepButton);
 
     // LOOP POINTS VIEW
@@ -1409,10 +1413,10 @@ void ChannelEditorComponent::channelSourceDataChanged (uint8_t channelSourceInde
 void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
 {
     // handle cue random flag
-    cueRandomButton.setToggleState (channelFlags & ChannelFlags::kCueRandom, juce::NotificationType::dontSendNotification);
+    cueRandomButton.setToggleState (editManager->isCueRandomOn (squidChannelProperties.getChannelIndex ()), juce::NotificationType::dontSendNotification);
 
     // handle cue step flag
-    cueStepButton.setToggleState (channelFlags & ChannelFlags::kCueStepped, juce::NotificationType::dontSendNotification);
+    cueStepButton.setToggleState (editManager->isCueStepOn (squidChannelProperties.getChannelIndex ()), juce::NotificationType::dontSendNotification);
 
     // handle neighbor out flag
     const auto useAltOut { channelFlags & ChannelFlags::kNeighborOutput };

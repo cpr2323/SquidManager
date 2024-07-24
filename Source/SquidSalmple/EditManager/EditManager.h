@@ -17,17 +17,21 @@ public:
     void cleanUpTempFiles (juce::File bankFolder);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     bool isSupportedAudioFile (juce::File file);
+    bool isCueRandomOn (int channelIndex);
+    bool isCueRandomOn (juce::ValueTree channelPropertiesVT);
+    bool isCueStepOn (int channelIndex);
+    bool isCueStepOn (juce::ValueTree channelPropertiesVT);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
+    void setCueRandom (int channelIndex, bool on);
+    void setCueStep (int channelIndex, bool on);
     juce::ValueTree getUneditedBankProperties ();
     juce::ValueTree getDefaultBankProperties ();
     juce::ValueTree getUneditedChannelProperties (int channelIndex);
     juce::ValueTree getDefaultChannelProperties (int channelIndex);
-
-
 
 private:
     RuntimeRootProperties runtimeRootProperties;
