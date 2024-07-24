@@ -17,19 +17,19 @@ CvAssignParameter::CvAssignParameter ()
         auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
-//                destChannelProperties.setChannelSource (squidChannelProperties.getChannelSource (), false);
+                destChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, squidChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
             },
             [this] ()
             {
-//                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-//                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-//                squidChannelProperties.setChannelSource (defaultChannelProperties.getChannelSource (), true);
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
             },
             [this] ()
             {
-//                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-//                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-//                squidChannelProperties.setChannelSource (uneditedChannelProperties.getChannelSource (), true);
+               SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+               squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -58,6 +58,7 @@ CvAssignParameter::CvAssignParameter ()
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
     {
+        //void setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback);
     };
     addAndMakeVisible (cvAttenuateEditor);
 
@@ -84,6 +85,7 @@ CvAssignParameter::CvAssignParameter ()
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
     {
+        //void setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback);
     };
     addAndMakeVisible (cvOffsetEditor);
 }
