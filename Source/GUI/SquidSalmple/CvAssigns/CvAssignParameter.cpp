@@ -7,8 +7,8 @@ CvAssignParameter::CvAssignParameter ()
     addAndMakeVisible (parameterLabel);
 
     // ENABLE BUTTON
-    assignEnableButton.setLookAndFeel (&textOnLeftToggleButtonLnF);
-    assignEnableButton.setButtonText ("ON");
+    assignEnableLabel.setText ("ON", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible (assignEnableLabel);
     assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
     addAndMakeVisible (assignEnableButton);
 
@@ -20,19 +20,19 @@ CvAssignParameter::CvAssignParameter ()
     cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvAttenuateEditor.updateDataCallback = [this] (int value) { cvAssignAttenuateUiChanged (value); };
     cvAttenuateEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
-        {
-            const auto multiplier = [this, dragSpeed] ()
-                {
-                    if (dragSpeed == DragSpeed::slow)
-                        return 1;
-                    else if (dragSpeed == DragSpeed::medium)
-                        return 10;
-                    else
-                        return 25;
-                } ();
-            const auto newValue { squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
-            cvAttenuateEditor.setValue (newValue);
-        };
+    {
+        const auto multiplier = [this, dragSpeed] ()
+            {
+                if (dragSpeed == DragSpeed::slow)
+                    return 1;
+                else if (dragSpeed == DragSpeed::medium)
+                    return 10;
+                else
+                    return 25;
+            } ();
+        const auto newValue { squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
+        cvAttenuateEditor.setValue (newValue);
+    };
     addAndMakeVisible (cvAttenuateEditor);
 
     // OFFSET TEXT EDITOR
@@ -153,7 +153,9 @@ void CvAssignParameter::resized ()
     const auto lineHeight { localBounds.getHeight () / 4 };
     parameterLabel.setBounds (localBounds.removeFromTop (lineHeight));
     localBounds.removeFromTop (1);
-    assignEnableButton.setBounds (localBounds.removeFromTop (lineHeight));
+    auto assignEnableLine { localBounds.removeFromTop (lineHeight).withTrimmedBottom(1) };
+    assignEnableLabel.setBounds (assignEnableLine.removeFromLeft (assignEnableLine.getWidth () / 2));
+    assignEnableButton.setBounds (assignEnableLine.withTrimmedTop(3).withTrimmedBottom(5).withTrimmedRight(3));
 
     localBounds.removeFromTop (1);
     auto cvAttenuateBounds { localBounds.removeFromTop (lineHeight) };

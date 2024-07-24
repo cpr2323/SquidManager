@@ -2,6 +2,7 @@
 #include <JuceHeader.h>
 #include "../../../SquidSalmple/SquidChannelProperties.h"
 #include "../../../Utility/CustomTextEditor.h"
+#include "../../../Utility/RoundedSlideSwitch.h"
 
 class TextOnLeftToggleButtonLnF : public juce::LookAndFeel_V4
 {
@@ -44,13 +45,14 @@ private:
     int parameterIndex { -1 };
     SquidChannelProperties squidChannelProperties;
     juce::Label parameterLabel;
-    juce::ToggleButton assignEnableButton;
+    juce::Label assignEnableLabel;
+    RoundedSlideSwitch assignEnableButton;
     juce::Label cvAttenuateLabel;
     CustomTextEditorInt cvAttenuateEditor;
     juce::Label cvOffsetLabel;
     CustomTextEditorInt cvOffsetEditor;
 
-    TextOnLeftToggleButtonLnF textOnLeftToggleButtonLnF;
+    //TextOnLeftToggleButtonLnF textOnLeftToggleButtonLnF;
 
     void cvAssignEnableDataChanged (bool enabled);
     void cvAssignEnableUiChanged (bool enabled);
