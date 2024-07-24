@@ -970,7 +970,20 @@ void ChannelEditorComponent::setupComponents ()
     };
     outputComboBox.onPopupMenuCallback = [this] ()
     {
-        // TODO
+        auto editMenu { createChannelEditMenu (
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                editManager->setAltOutput (destChannelProperties.getChannelIndex (), editManager->isAltOutput (squidChannelProperties.getChannelIndex ()));
+            },
+            [this] ()
+            {
+                 editManager->setAltOutput (squidChannelProperties.getChannelIndex (), editManager->isAltOutput (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ())));
+            },
+            [this] ()
+            {
+                 editManager->setAltOutput (squidChannelProperties.getChannelIndex (), editManager->isAltOutput (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ())));
+            }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (outputComboBox, "Output", [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
     // CUE RANDOM
@@ -1419,8 +1432,8 @@ void ChannelEditorComponent::channelFlagsDataChanged (uint16_t channelFlags)
     cueStepButton.setToggleState (editManager->isCueStepOn (squidChannelProperties.getChannelIndex ()), juce::NotificationType::dontSendNotification);
 
     // handle neighbor out flag
-    const auto useAltOut { channelFlags & ChannelFlags::kNeighborOutput };
     const auto channelIndex { squidChannelProperties.getChannelIndex () };
+    const auto useAltOut { editManager->isAltOutput (channelIndex) };
     if (channelIndex < 2) // 1-2
     {
         if (useAltOut)
@@ -1925,43 +1938,32 @@ void ChannelEditorComponent::outputUiChanged (int selectedIndex)
     //  7   |  7-8  | 5-6
     //  8   |  7-8  | 5-6
     const auto channelIndex = squidChannelProperties.getChannelIndex (); // 0-7
-    auto disableAltOut = [this] ()
-    {
-        const auto offFlag { ~ChannelFlags::kNeighborOutput };
-        const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () & offFlag) };
-        squidChannelProperties.setChannelFlags (newFlags, false);
-    };
-    auto enableAltOut = [this] ()
-    {
-        const auto newFlags { static_cast<uint16_t> (squidChannelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput) };
-        squidChannelProperties.setChannelFlags (newFlags, false);
-    };
     if (channelIndex < 2) // 1-2
     {
         if (selectedIndex == 0)
-            disableAltOut ();
+            editManager->setAltOutput(channelIndex, false);
         else
-            enableAltOut ();
+            editManager->setAltOutput (channelIndex, true);
     }
     else if (channelIndex < 4) // 3-4
     {
         if (selectedIndex == 1)
-            disableAltOut ();
+            editManager->setAltOutput (channelIndex, false);
         else
-            enableAltOut ();
+            editManager->setAltOutput (channelIndex, true);
     }
     else if (channelIndex < 6) // 5-6
     {
         if (selectedIndex == 0)
-            disableAltOut ();
+            editManager->setAltOutput (channelIndex, false);
         else
-            enableAltOut ();
+            editManager->setAltOutput (channelIndex, true);
     }
     else // 7-8
     {
         if (selectedIndex == 1)
-            disableAltOut ();
+            editManager->setAltOutput (channelIndex, false);
         else
-            enableAltOut ();
+            editManager->setAltOutput (channelIndex, true);
     }
 }

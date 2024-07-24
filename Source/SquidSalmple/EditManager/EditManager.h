@@ -16,6 +16,8 @@ public:
     void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
     void cleanUpTempFiles (juce::File bankFolder);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
+    bool isAltOutput (int channelIndex);
+    bool isAltOutput (juce::ValueTree channelPropertiesVT);
     bool isSupportedAudioFile (juce::File file);
     bool isCueRandomOn (int channelIndex);
     bool isCueRandomOn (juce::ValueTree channelPropertiesVT);
@@ -28,6 +30,8 @@ public:
     void saveBank ();
     void setCueRandom (int channelIndex, bool on);
     void setCueStep (int channelIndex, bool on);
+    void setAltOutput (int channelIndex, bool useAltOutput);
+    void setAltOutput (juce::ValueTree channelPropertiesVT, bool useAltOutput);
     juce::ValueTree getUneditedBankProperties ();
     juce::ValueTree getDefaultBankProperties ();
     juce::ValueTree getUneditedChannelProperties (int channelIndex);
@@ -44,7 +48,10 @@ private:
 
     juce::AudioFormatManager audioFormatManager;
 
-    void copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties);
     void addSampleToChannelProperties (juce::ValueTree channelProperties, juce::File sampleFile);
-public:
+    void copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties);
+    bool isAltOutput (SquidChannelProperties& channelProperties);
+    bool isCueRandomOn (SquidChannelProperties& channelProperties);
+    bool isCueStepOn (SquidChannelProperties& channelProperties);
+    void setAltOutput (SquidChannelProperties& channelProperties, bool useAltOutput);
 };

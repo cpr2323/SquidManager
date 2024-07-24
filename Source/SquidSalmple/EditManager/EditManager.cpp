@@ -31,6 +31,50 @@ void EditManager::init (juce::ValueTree rootPropertiesVT)
     });
 }
 
+bool EditManager::isAltOutput (int channelIndex)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    return isAltOutput (channelPropertiesList [channelIndex]);
+}
+
+bool EditManager::isAltOutput (juce::ValueTree channelPropertiesVT)
+{
+    SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    return isAltOutput (channelProperties);
+}
+
+bool EditManager::isAltOutput (SquidChannelProperties& channelProperties)
+{
+    return (channelProperties.getChannelFlags () & ChannelFlags::kNeighborOutput) != 0;
+}
+
+void EditManager::setAltOutput (SquidChannelProperties& channelProperties, bool useAltOutput)
+{
+    if (useAltOutput)
+    {
+        const auto newFlags { static_cast<uint16_t> (channelProperties.getChannelFlags () | ChannelFlags::kNeighborOutput) };
+        channelProperties.setChannelFlags (newFlags, false);
+    }
+    else
+    {
+        const auto offFlag { ~ChannelFlags::kNeighborOutput };
+        const auto newFlags { static_cast<uint16_t> (channelProperties.getChannelFlags () & offFlag) };
+        channelProperties.setChannelFlags (newFlags, false);
+    }
+}
+
+void EditManager::setAltOutput (int channelIndex, bool useAltOutput)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    setAltOutput (channelPropertiesList [channelIndex], useAltOutput);
+}
+
+void EditManager::setAltOutput (juce::ValueTree channelPropertiesVT, bool useAltOutput)
+{
+    SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    setAltOutput (channelProperties, useAltOutput);
+}
+
 bool EditManager::isSupportedAudioFile (juce::File file)
 {
     // 16
@@ -51,24 +95,34 @@ bool EditManager::isSupportedAudioFile (juce::File file)
 bool EditManager::isCueRandomOn (int channelIndex)
 {
     jassert (channelIndex >= 0 && channelIndex < 8);
-    return channelPropertiesList [channelIndex].getChannelFlags () & ChannelFlags::kCueRandom;
+    return isCueRandomOn (channelPropertiesList [channelIndex]);
 }
 
 bool EditManager::isCueRandomOn (juce::ValueTree channelPropertiesVT)
 {
     SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    return isCueRandomOn (channelProperties);
+}
+
+bool EditManager::isCueRandomOn (SquidChannelProperties& channelProperties)
+{
     return channelProperties.getChannelFlags () & ChannelFlags::kCueRandom;
 }
 
 bool EditManager::isCueStepOn (int channelIndex)
 {
     jassert (channelIndex >= 0 && channelIndex < 8);
-    return channelPropertiesList [channelIndex].getChannelFlags () & ChannelFlags::kCueStepped;
+    return isCueStepOn (channelPropertiesList [channelIndex]);
 }
 
 bool EditManager::isCueStepOn (juce::ValueTree channelPropertiesVT)
 {
     SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+    return isCueStepOn (channelProperties);
+}
+
+bool EditManager::isCueStepOn (SquidChannelProperties& channelProperties)
+{
     return channelProperties.getChannelFlags () & ChannelFlags::kCueStepped;
 }
 
@@ -300,7 +354,6 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
 //        refer to client code to decide how to change things
 void EditManager::loadBankDefaults (uint8_t /*bankIndex*/)
 {
-    SquidBankProperties defaultSquidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
     copyBank (defaultSquidBankProperties, squidBankProperties);
     copyBank (squidBankProperties, uneditedSquidBankProperties);
 }
