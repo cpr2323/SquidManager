@@ -58,7 +58,24 @@ CvAssignParameter::CvAssignParameter ()
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
     {
-        //void setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback);
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+            },
+            [this] ()
+            {
+               SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+               squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+            }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
     };
     addAndMakeVisible (cvAttenuateEditor);
 
@@ -83,9 +100,26 @@ CvAssignParameter::CvAssignParameter ()
         const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex) + (multiplier * direction) };
         cvOffsetEditor.setValue (newValue);
     };
-    cvAttenuateEditor.onPopupMenuCallback = [this] ()
+    cvOffsetEditor.onPopupMenuCallback = [this] ()
     {
-        //void setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback);
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+            },
+            [this] ()
+            {
+               SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+               squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+            }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
     };
     addAndMakeVisible (cvOffsetEditor);
 }
