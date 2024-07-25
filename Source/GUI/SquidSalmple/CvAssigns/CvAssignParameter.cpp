@@ -53,7 +53,7 @@ CvAssignParameter::CvAssignParameter ()
             else
                 return 25;
         } ();
-        const auto newValue { squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex) + (multiplier * direction) };
+        const auto newValue { getCvAttenuatonUiValue (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex)) + (multiplier * direction) };
         cvAttenuateEditor.setValue (newValue);
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
@@ -166,6 +166,22 @@ void CvAssignParameter::setParameterLabel (juce::String parameterText)
     parameterLabel.setText (parameterText, juce::NotificationType::dontSendNotification);
 }
 
+int CvAssignParameter::getCvAttenuatonUiValue (int internalValue)
+{
+    if (internalValue > 99)
+        return 100 - internalValue;
+    else
+        return internalValue;
+}
+
+int CvAssignParameter::getCvAttenuatonInternalValue (int uiValue)
+{
+    if (uiValue < 0)
+        return 100 + std::abs (uiValue);
+    else
+        return uiValue;
+}
+
 void CvAssignParameter::cvAssignEnableDataChanged (bool enabled)
 {
     assignEnableButton.setToggleState (enabled, juce::NotificationType::dontSendNotification);
@@ -178,26 +194,12 @@ void CvAssignParameter::cvAssignEnableUiChanged (bool enabled)
 
 void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
 {
-    const auto uiAttenuationValue = [attenuation] ()
-    {
-        if (attenuation > 99)
-            return 100 - attenuation;
-        else
-            return attenuation;
-    } ();
-    cvAttenuateEditor.setText (juce::String (uiAttenuationValue), juce::NotificationType::dontSendNotification);
+    cvAttenuateEditor.setText (juce::String (getCvAttenuatonUiValue (attenuation)), juce::NotificationType::dontSendNotification);
 }
 
 void CvAssignParameter::cvAssignAttenuateUiChanged (int attenuation)
 {
-    const auto rawAttenuationValue = [attenuation] ()
-    {
-        if (attenuation < 0)
-            return 100 + std::abs (attenuation);
-        else
-            return attenuation;
-    } ();
-    squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, rawAttenuationValue, false);
+    squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, getCvAttenuatonInternalValue (attenuation), false);
 }
 
 void CvAssignParameter::cvAssignOffsetDataChanged (int offset)

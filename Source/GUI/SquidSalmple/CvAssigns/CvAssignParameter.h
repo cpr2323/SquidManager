@@ -27,6 +27,9 @@ private:
     juce::Label cvOffsetLabel;
     CustomTextEditorInt cvOffsetEditor;
 
+    int getCvAttenuatonUiValue (int internalValue);
+    int getCvAttenuatonInternalValue (int uiValue);
+
     void cvAssignEnableDataChanged (bool enabled);
     void cvAssignEnableUiChanged (bool enabled);
     void cvAssignAttenuateDataChanged (int attenuation);
