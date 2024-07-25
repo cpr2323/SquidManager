@@ -1709,6 +1709,10 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
     auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
+    auto currentSampleFile { juce::File (squidChannelProperties.getSampleFileName ()) };
+    // if the currently assigned sample is a "temp" file, we will delete it
+    if (currentSampleFile.getFileExtension () == "._wav")
+        currentSampleFile.deleteFile ();
     if (srcFile.getParentDirectory () != channelDirectory)
     {
         // TODO handle case where file of same name already exists
@@ -1722,6 +1726,13 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
     //        but it's possible that the file gets deleted somehow after selection
     jassert (destFile.exists ());
+    const auto originalFileName { squidChannelProperties.getValueTree ().getProperty (SquidChannelProperties::OriginalFileNamePropertyId).toString () };
+    // if the current sample file is NOT a temp file, we will store the name for easy 'revert'
+    if (currentSampleFile.getFileExtension () == ".wav")
+    {
+        jassert (originalFileName.isEmpty ());
+        squidChannelProperties.getValueTree ().setProperty (SquidChannelProperties::OriginalFileNamePropertyId, currentSampleFile.getFullPathName (), nullptr);
+    }
     editManager->loadChannel (squidChannelProperties.getValueTree (), squidChannelProperties.getChannelIndex (), destFile);
     return true;
 }

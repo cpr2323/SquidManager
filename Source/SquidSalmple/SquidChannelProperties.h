@@ -200,7 +200,6 @@ public:
     static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset);
     static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset);
 
-
     static inline const juce::Identifier SquidChannelTypeId { "SquidChannel" };
     static inline const juce::Identifier AttackPropertyId           { "attack" };
     static inline const juce::Identifier BitsPropertyId             { "bits" };
@@ -227,6 +226,7 @@ public:
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
     static inline const juce::Identifier SampleFileNamePropertyId   { "_sampleFileName" };
+    static inline const juce::Identifier OriginalFileNamePropertyId { "_originalSampleFileName" };
     static inline const juce::Identifier SpeedPropertyId            { "speed" };
     static inline const juce::Identifier StartCuePropertyId         { "startCue" };
     static inline const juce::Identifier StepsPropertyId            { "steps" };

@@ -63,10 +63,16 @@ SquidEditorComponent::SquidEditorComponent ()
         pm.addSectionHeader ("Bank");
         pm.addSeparator ();
 
-        pm.addItem ("Import", false, false, [this] () { /*importBank ();*/ });
-        pm.addItem ("Export", false, false, [this] () { /*exportBank ();*/ });
-        pm.addItem ("Default", false, false, [this] () { /*setBankToDefaults ();*/ });
-        pm.addItem ("Revert", false, false, [this] () { /*revertBank ();*/ });
+        //pm.addItem ("Import", false, false, [this] () { /*importBank ();*/ });
+        //pm.addItem ("Export", false, false, [this] () { /*exportBank ();*/ });
+        pm.addItem ("Default", false, false, [this] ()
+        {
+            SquidBankProperties defaultBankProperties (editManager->getDefaultBankProperties (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+        });
+        pm.addItem ("Revert", false, false, [this] ()
+        {
+            SquidBankProperties uneditedBankProperties (editManager->getUneditedBankProperties (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+        });
 
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
     };

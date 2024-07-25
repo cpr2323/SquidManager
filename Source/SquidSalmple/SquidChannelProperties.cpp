@@ -32,6 +32,7 @@ void SquidChannelProperties::initValueTree ()
     setDecay (0, false);
     setETrig (0, false);
     setSampleFileName ("", false);
+    setValue ("", OriginalFileNamePropertyId, false);
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
     setFilterType (0, false);
