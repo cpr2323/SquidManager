@@ -30,6 +30,8 @@ public:
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
+    void setChannelDefaults (int channelIndex);
+    void setChannelUnedited (int channelIndex);
     void setCueRandom (int channelIndex, bool on);
     void setCueStep (int channelIndex, bool on);
     void setAltOutput (int channelIndex, bool useAltOutput);

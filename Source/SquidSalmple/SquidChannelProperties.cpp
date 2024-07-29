@@ -32,7 +32,6 @@ void SquidChannelProperties::initValueTree ()
     setDecay (0, false);
     setETrig (0, false);
     setSampleFileName ("", false);
-    setValue ("", OriginalFileNamePropertyId, false);
     setFilterFrequency (0, false);
     setFilterResonance (0, false);
     setFilterType (0, false);
@@ -960,6 +959,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
 
+    // copy raw sample info
     setSampleDataBits (sourceChannelProperties.getSampleDataBits (), false);
     setSampleDataSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
     setSampleDataNumSamples (sourceChannelProperties.getSampleDataNumSamples (), false);

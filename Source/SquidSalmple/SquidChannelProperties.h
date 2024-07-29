@@ -226,7 +226,6 @@ public:
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
     static inline const juce::Identifier SampleFileNamePropertyId   { "_sampleFileName" };
-    static inline const juce::Identifier OriginalFileNamePropertyId { "_originalSampleFileName" };
     static inline const juce::Identifier SpeedPropertyId            { "speed" };
     static inline const juce::Identifier StartCuePropertyId         { "startCue" };
     static inline const juce::Identifier StepsPropertyId            { "steps" };

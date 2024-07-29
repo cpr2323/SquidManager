@@ -230,6 +230,34 @@ void EditManager::saveBank ()
     copyBank (squidBankProperties, uneditedSquidBankProperties);
 }
 
+void EditManager::setChannelDefaults (int channelIndex)
+{
+    SquidChannelProperties defaultChannelProperties (defaultSquidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+
+    auto& channelProperties { channelPropertiesList[channelIndex] };
+    defaultChannelProperties.setChannelIndex (channelIndex, false);
+    defaultChannelProperties.setChannelSource (channelIndex, false);
+    defaultChannelProperties.setChoke (channelIndex, false);
+    defaultChannelProperties.setEndOfData (channelProperties.getEndOfData (), false);
+    defaultChannelProperties.setRecDest (channelIndex, false);
+    defaultChannelProperties.setSampleFileName (channelProperties.getSampleFileName (), false);
+    addSampleToChannelProperties (defaultChannelProperties.getValueTree (), channelProperties.getSampleFileName ());
+    const auto endOffset { SquidChannelProperties::sampleOffsetToByteOffset (defaultChannelProperties.getSampleDataNumSamples ()) };
+    defaultChannelProperties.setEndCue (endOffset, false);
+    defaultChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
+
+    channelProperties.copyFrom (defaultChannelProperties.getValueTree ());
+}
+
+void EditManager::setChannelUnedited (int channelIndex)
+{
+    auto& channelProperties { channelPropertiesList [channelIndex] };
+    auto currentSampleFile { juce::File (channelProperties.getSampleFileName ()) };
+    if (currentSampleFile.getFileExtension () == "._wav")
+        currentSampleFile.moveToTrash ();
+    channelProperties.copyFrom (uneditedSquidBankProperties.getChannelVT (channelIndex));
+}
+
 void EditManager::setCueRandom (int channelIndex, bool on)
 {
     jassert (channelIndex >= 0 && channelIndex < 8);

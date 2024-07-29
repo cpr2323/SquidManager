@@ -56,11 +56,11 @@ ChannelEditorComponent::ChannelEditorComponent ()
         });
         editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
-            //channelProperties [channelIndex].copyFrom (defaultChannelProperties.getValueTree ());
+            editManager->setChannelDefaults (squidChannelProperties.getChannelIndex ());
         });
         editMenu.addItem ("Revert", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
-            //channelProperties [channelIndex].copyFrom (unEditedPresetProperties.getValueTree ());
+            editManager->setChannelUnedited (squidChannelProperties.getChannelIndex ());
         });
         editMenu.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
 
@@ -1726,13 +1726,6 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
     //        but it's possible that the file gets deleted somehow after selection
     jassert (destFile.exists ());
-    const auto originalFileName { squidChannelProperties.getValueTree ().getProperty (SquidChannelProperties::OriginalFileNamePropertyId).toString () };
-    // if the current sample file is NOT a temp file, we will store the name for easy 'revert'
-    if (currentSampleFile.getFileExtension () == ".wav")
-    {
-        jassert (originalFileName.isEmpty ());
-        squidChannelProperties.getValueTree ().setProperty (SquidChannelProperties::OriginalFileNamePropertyId, currentSampleFile.getFullPathName (), nullptr);
-    }
     editManager->loadChannel (squidChannelProperties.getValueTree (), squidChannelProperties.getChannelIndex (), destFile);
     return true;
 }
