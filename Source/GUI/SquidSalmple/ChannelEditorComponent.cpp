@@ -53,6 +53,14 @@ ChannelEditorComponent::ChannelEditorComponent ()
         }
         editMenu.addItem ("Clear Cue Sets", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
+            squidChannelProperties.setCurCueSet (0, false);
+            for (auto cueSetCount { squidChannelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
+                squidChannelProperties.removeCueSet (cueSetCount - 1);
+            const auto endOffset { SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()) };
+            squidChannelProperties.setStartCue (0, true);
+            squidChannelProperties.setLoopCue (0, true);
+            squidChannelProperties.setEndCue (endOffset, true);
+            squidChannelProperties.setCueSetPoints (0, 0, 0, SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()));
         });
         editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {

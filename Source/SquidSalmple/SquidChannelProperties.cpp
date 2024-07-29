@@ -253,6 +253,8 @@ void SquidChannelProperties::removeCueSet (int cueSetIndex)
     setNumCueSets (numCueSets - 1, true);
     if (curCueSet >= numCueSets - 1)
         setCurCueSet (numCueSets - 2, true);
+    else if (cueSetIndex >= numCueSets - 1)
+        setCurCueSet (numCueSets - 2, true);
     else
         setCurCueSet (cueSetIndex, true);
 }
