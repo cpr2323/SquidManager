@@ -603,10 +603,10 @@ void EditManager::forChannels (std::vector<int> channelIndexList, std::function<
     }
 }
 
-juce::PopupMenu EditManager::createChannelCloneMenu (int channelIndex,
-                                                     std::function <void (SquidChannelProperties&)> setter,
-                                                     std::function <bool (SquidChannelProperties&)> canCloneCallback,
-                                                     std::function <bool (SquidChannelProperties&)> canCloneToAllCallback)
+juce::PopupMenu EditManager::createChannelInteractionMenu (int channelIndex, juce::String interactionArticle,
+                                                           std::function <void (SquidChannelProperties&)> setter,
+                                                           std::function <bool (SquidChannelProperties&)> canCloneCallback,
+                                                           std::function <bool (SquidChannelProperties&)> canCloneToAllCallback)
 {
     jassert (setter != nullptr);
     jassert (canCloneCallback != nullptr);
@@ -625,7 +625,7 @@ juce::PopupMenu EditManager::createChannelCloneMenu (int channelIndex,
             });
             if (canCloneToDestChannel)
             {
-                cloneMenu.addItem ("To Channel " + juce::String (destChannelIndex + 1), true, false, [this, destChannelIndex, setter] ()
+                cloneMenu.addItem (interactionArticle + " Channel " + juce::String (destChannelIndex + 1), true, false, [this, destChannelIndex, setter] ()
                 {
                     forChannels ({ destChannelIndex }, [this, setter] (juce::ValueTree channelPropertiesVT)
                     {
@@ -650,7 +650,7 @@ juce::PopupMenu EditManager::createChannelCloneMenu (int channelIndex,
     });
     if (canCloneDestChannelCount > 0)
     {
-        cloneMenu.addItem ("To All", true, false, [this, setter, channelIndexList] ()
+        cloneMenu.addItem (interactionArticle + " All", true, false, [this, setter, channelIndexList] ()
         {
             // clone to other channels
             forChannels (channelIndexList, [this, setter] (juce::ValueTree channelPropertiesVT)
@@ -666,7 +666,7 @@ juce::PopupMenu EditManager::createChannelCloneMenu (int channelIndex,
 juce::PopupMenu EditManager::createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
 {
     juce::PopupMenu editMenu;
-    editMenu.addSubMenu ("Clone", createChannelCloneMenu (channelIndex, setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
+    editMenu.addSubMenu ("Clone", createChannelInteractionMenu (channelIndex, "To", setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
     if (resetter != nullptr)
         editMenu.addItem ("Default", true, false, [this, resetter] () { resetter (); });
     if (reverter != nullptr)

@@ -48,7 +48,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
             editMenu.addSubMenu ("Clone", cloneMenu);
         }
         {
-            auto swapMenu { editManager->createChannelCloneMenu (squidChannelProperties.getChannelIndex (),
+            auto swapMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "With", 
                 [this] (SquidChannelProperties& destChannelProperties)
                 {
                     editManager->swapChannels (squidChannelProperties.getChannelIndex (), destChannelProperties.getChannelIndex ());
