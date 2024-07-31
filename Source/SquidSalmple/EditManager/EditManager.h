@@ -36,6 +36,7 @@ public:
     void setCueStep (int channelIndex, bool on);
     void setAltOutput (int channelIndex, bool useAltOutput);
     void setAltOutput (juce::ValueTree channelPropertiesVT, bool useAltOutput);
+    void swapChannels (int firstChannel, int secondChannel);
     juce::ValueTree getUneditedBankProperties ();
     juce::ValueTree getDefaultBankProperties ();
     juce::ValueTree getUneditedChannelProperties (int channelIndex);

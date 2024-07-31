@@ -48,7 +48,15 @@ ChannelEditorComponent::ChannelEditorComponent ()
             editMenu.addSubMenu ("Clone", cloneMenu);
         }
         {
-            juce::PopupMenu swapMenu;
+            auto swapMenu { editManager->createChannelCloneMenu (squidChannelProperties.getChannelIndex (),
+                [this] (SquidChannelProperties& destChannelProperties)
+                {
+                    editManager->swapChannels (squidChannelProperties.getChannelIndex (), destChannelProperties.getChannelIndex ());
+                },
+                [this] (SquidChannelProperties&) { return true; },
+                [this] (SquidChannelProperties&) { return false; } 
+            )};
+
             editMenu.addSubMenu("Swap", swapMenu);
         }
         editMenu.addItem ("Clear Cue Sets", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()

@@ -75,6 +75,60 @@ void EditManager::setAltOutput (juce::ValueTree channelPropertiesVT, bool useAlt
     setAltOutput (channelProperties, useAltOutput);
 }
 
+void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
+{
+    auto& firstChannelProperties { channelPropertiesList [firstChannelIndex] };
+    auto& secondChannelProperties { channelPropertiesList [secondChannelIndex] };
+    // copy files into respective folders
+    auto copyFileAsTemp = [this] (juce::File srcFile, int dstChannelIndex)
+    {
+        if (srcFile == juce::File ())
+            return juce::File ();
+        const auto destChannelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (dstChannelIndex + 1)) };
+        if (!destChannelDirectory.exists ())
+            destChannelDirectory.createDirectory ();
+        const auto destFile { destChannelDirectory.getChildFile (srcFile.getFileNameWithoutExtension ()).withFileExtension ("._tmp") };
+        srcFile.copyFileTo (destFile);
+        if (srcFile.getFileExtension () == "._wav")
+            srcFile.deleteFile ();
+        return destFile;
+    };
+    auto renameTempFileToActualFile = [] (juce::File tempFileToRename)
+        {
+            auto newNameFile { tempFileToRename.withFileExtension ("._wav") };
+            if (newNameFile.exists ())
+                newNameFile.deleteFile ();
+            tempFileToRename.moveFileTo (newNameFile);
+            return newNameFile.getFullPathName ();
+        };
+    // we need to copy the files to temp names, in case the file names are the same (ie. the first copy would have overwritten the second file)
+    // before we could copy it.
+    auto tempSecondFile { copyFileAsTemp (firstChannelProperties.getSampleFileName (), secondChannelProperties.getChannelIndex ()) };
+    auto tempFirstFile { copyFileAsTemp (secondChannelProperties.getSampleFileName (), firstChannelProperties.getChannelIndex ()) };
+    // after both files are copied, we can give them their intended names
+    auto newSecondFileName { renameTempFileToActualFile (tempSecondFile) };
+    auto newFirstFileName { renameTempFileToActualFile (tempFirstFile) };
+    // swap SquidChannelProperties
+    auto getNewChannelProperties = [] (juce::ValueTree channelProperties, int newChannelIndex, juce::String newFileName)
+        {
+            SquidChannelProperties newChannelProperties (channelProperties.createCopy (), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+            newChannelProperties.setSampleFileName (newFileName, false);
+            auto oldChannelIndex { newChannelProperties.getChannelIndex () };
+            newChannelProperties.setChannelIndex (newChannelIndex, false);
+            if (newChannelProperties.getChannelSource () == oldChannelIndex)
+                newChannelProperties.setChannelSource (newChannelIndex, false);
+            if (newChannelProperties.getChoke () == oldChannelIndex)
+                newChannelProperties.setChoke (newChannelIndex, false);
+            if (newChannelProperties.getRecDest () == oldChannelIndex)
+                newChannelProperties.setRecDest (newChannelIndex, false);
+            return newChannelProperties.getValueTree ();
+        };
+    auto newSecondChannelProperties { getNewChannelProperties (firstChannelProperties.getValueTree (), secondChannelProperties.getChannelIndex (), newSecondFileName) };
+    auto newFirstChannelProperties { getNewChannelProperties (secondChannelProperties.getValueTree (), firstChannelProperties.getChannelIndex (), newFirstFileName) };
+    firstChannelProperties.copyFrom (newFirstChannelProperties);
+    secondChannelProperties.copyFrom (newSecondChannelProperties);
+}
+
 bool EditManager::isSupportedAudioFile (juce::File file)
 {
     // 16
