@@ -923,6 +923,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     }
 
     // Copy properties
+    const auto destIndex { getChannelIndex () };
     const auto srcIndex { sourceChannelProperties.getChannelIndex () };
     const auto shouldCheckIndex { checkIndex == CheckIndex::yes };
     setAttack (sourceChannelProperties.getAttack (), false);
@@ -930,8 +931,12 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setChannelFlags (sourceChannelProperties.getChannelFlags (), false);
     if (! shouldCheckIndex || sourceChannelProperties.getChannelSource () != srcIndex)
         setChannelSource (sourceChannelProperties.getChannelSource (), false);
+    else
+        setChannelSource (destIndex, false);
     if (! shouldCheckIndex || sourceChannelProperties.getChoke () != srcIndex)
         setChoke (sourceChannelProperties.getChoke (), false);
+    else
+        setChoke (destIndex, false);
     if (copyType == CopyType::all)
         setNumCueSets (sourceChannelProperties.getNumCueSets (), false);
     if (copyType == CopyType::all)
@@ -953,6 +958,8 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setRate (sourceChannelProperties.getRate (), false);
     if (! shouldCheckIndex || sourceChannelProperties.getRecDest () != srcIndex)
         setRecDest (sourceChannelProperties.getRecDest (), false);
+    else
+        setRecDest (destIndex, false);
     setReverse (sourceChannelProperties.getReverse (), false);
     if (copyType == CopyType::all)
         setEndOfData (sourceChannelProperties.getEndOfData (), false);

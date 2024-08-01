@@ -49,8 +49,16 @@ ChannelEditorComponent::ChannelEditorComponent ()
                 auto cloneSampleAndSettingsMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "To",
                     [this] (SquidChannelProperties& destChannelProperties)
                     {
-                        // TODO - need to copy sample file
                         destChannelProperties.copyFrom (squidChannelProperties.getValueTree (), SquidChannelProperties::all, SquidChannelProperties::CheckIndex::yes);
+                        if (auto currentDestFile { juce::File (destChannelProperties.getSampleFileName ()) }; currentDestFile.getFileExtension () == "._wav")
+                            currentDestFile.deleteFile ();
+                        if (auto currentSrcFile { juce::File (squidChannelProperties.getSampleFileName ()) }; currentSrcFile != juce::File ())
+                        {
+                            const auto destChannelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (destChannelProperties.getChannelIndex () + 1)) };
+                            auto destFile { destChannelDirectory.getChildFile (currentSrcFile.getFileNameWithoutExtension ()).withFileExtension ("._wav") };
+                            currentSrcFile.copyFileTo (destFile);
+                            destChannelProperties.setSampleFileName (destFile.getFullPathName (), false);
+                        }
                     },
                     [this] (SquidChannelProperties&) { return true; },
                     [this] (SquidChannelProperties&) { return true; }
