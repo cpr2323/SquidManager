@@ -885,64 +885,80 @@ AudioBufferRefCounted::RefCountedPtr SquidChannelProperties::getSampleDataAudioB
     return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*>(data.getProperty (SampleDataAudioBufferPropertyId).getObject ()));
 }
 
-void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
+void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyType, CheckIndex checkIndex)
 {
     SquidChannelProperties sourceChannelProperties (sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-    // Copy CV Assigns
-    for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
+
+    if (copyType == CopyType::all)
     {
-        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+        // Copy CV Assigns
+        for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
-            auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
-            auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
-            const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
-            const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-            const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
-            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
-            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-            dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+            for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+            {
+                auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+                auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
+                const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
+                const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
+                const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
+                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+            }
         }
+
+        // Clear old Cue Sets
+        auto dstCueSetListVT { data.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
+        jassert (dstCueSetListVT.isValid ());
+        dstCueSetListVT.removeAllChildren (nullptr);
+
+        // Copy new Cue Sets
+        auto srcCueSetListVT { sourceVT.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
+        jassert (srcCueSetListVT.isValid ());
+        ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
+            {
+                dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
+                return true;
+            });
     }
 
-    // Clear old Cue Sets
-    auto dstCueSetListVT { data.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
-    jassert (dstCueSetListVT.isValid ());
-    dstCueSetListVT.removeAllChildren (nullptr);
-
-    // Copy new Cue Sets
-    auto srcCueSetListVT { sourceVT.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
-    jassert (srcCueSetListVT.isValid ());
-    ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
-    {
-        dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
-        return true;
-    });
-
     // Copy properties
+    const auto srcIndex { sourceChannelProperties.getChannelIndex () };
+    const auto shouldCheckIndex { checkIndex == CheckIndex::yes };
     setAttack (sourceChannelProperties.getAttack (), false);
     setBits (sourceChannelProperties.getBits (), false);
     setChannelFlags (sourceChannelProperties.getChannelFlags (), false);
-    setChannelSource (sourceChannelProperties.getChannelSource(), false);
-    setChoke (sourceChannelProperties.getChoke (), false);
-    setNumCueSets (sourceChannelProperties.getNumCueSets (), false);
-    setCurCueSet (sourceChannelProperties.getCurCueSet (), false);
+    if (! shouldCheckIndex || sourceChannelProperties.getChannelSource () != srcIndex)
+        setChannelSource (sourceChannelProperties.getChannelSource (), false);
+    if (! shouldCheckIndex || sourceChannelProperties.getChoke () != srcIndex)
+        setChoke (sourceChannelProperties.getChoke (), false);
+    if (copyType == CopyType::all)
+        setNumCueSets (sourceChannelProperties.getNumCueSets (), false);
+    if (copyType == CopyType::all)
+        setCurCueSet (sourceChannelProperties.getCurCueSet (), false);
     setDecay (sourceChannelProperties.getDecay (), false);
-    setSampleFileName (sourceChannelProperties.getSampleFileName (), false);
-    setEndCue (sourceChannelProperties.getEndCue (), false);
+    if (copyType == CopyType::all)
+        setSampleFileName (sourceChannelProperties.getSampleFileName (), false);
+    if (copyType == CopyType::all)
+        setEndCue (sourceChannelProperties.getEndCue (), false);
     setETrig (sourceChannelProperties.getETrig (), false);
     setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
     setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
     setFilterType (sourceChannelProperties.getFilterType (), false);
-    setLoopCue (sourceChannelProperties.getLoopCue (), false);
+    if (copyType == CopyType::all)
+        setLoopCue (sourceChannelProperties.getLoopCue (), false);
     setLoopMode (sourceChannelProperties.getLoopMode (), false);
     setLevel (sourceChannelProperties.getLevel (), false);
     setQuant (sourceChannelProperties.getQuant (), false);
     setRate (sourceChannelProperties.getRate (), false);
-    setRecDest (sourceChannelProperties.getRecDest () , false);
+    if (! shouldCheckIndex || sourceChannelProperties.getRecDest () != srcIndex)
+        setRecDest (sourceChannelProperties.getRecDest (), false);
     setReverse (sourceChannelProperties.getReverse (), false);
-    setEndOfData (sourceChannelProperties.getEndOfData (), false);
+    if (copyType == CopyType::all)
+        setEndOfData (sourceChannelProperties.getEndOfData (), false);
     setSpeed (sourceChannelProperties.getSpeed (), false);
-    setStartCue (sourceChannelProperties.getStartCue (), false);
+    if (copyType == CopyType::all)
+        setStartCue (sourceChannelProperties.getStartCue (), false);
     setSteps (sourceChannelProperties.getSteps (), false);
     setXfade (sourceChannelProperties.getXfade (), false);
 
@@ -961,12 +977,15 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT)
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
 
-    // copy raw sample info
-    setSampleDataBits (sourceChannelProperties.getSampleDataBits (), false);
-    setSampleDataSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
-    setSampleDataNumSamples (sourceChannelProperties.getSampleDataNumSamples (), false);
-    setSampleDataNumChannels (sourceChannelProperties.getSampleDataNumChannels (), false);
-    setSampleDataAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
+    if (copyType == CopyType::all)
+    {
+        // copy raw sample info
+        setSampleDataBits (sourceChannelProperties.getSampleDataBits (), false);
+        setSampleDataSampleRate (sourceChannelProperties.getSampleDataSampleRate (), false);
+        setSampleDataNumSamples (sourceChannelProperties.getSampleDataNumSamples (), false);
+        setSampleDataNumChannels (sourceChannelProperties.getSampleDataNumChannels (), false);
+        setSampleDataAudioBuffer (sourceChannelProperties.getSampleDataAudioBuffer (), false);
+    }
 }
 
 juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)

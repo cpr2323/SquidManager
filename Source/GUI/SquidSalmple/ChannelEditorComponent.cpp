@@ -34,15 +34,58 @@ ChannelEditorComponent::ChannelEditorComponent ()
             // Clone
             juce::PopupMenu cloneMenu;
             {
-                juce::PopupMenu cloneSettingsMenu;
-                cloneMenu.addSubMenu ("Settings", cloneSettingsMenu);
+                auto cloneSettingsMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "To",
+                    [this] (SquidChannelProperties& destChannelProperties)
+                    {
+                        destChannelProperties.copyFrom (squidChannelProperties.getValueTree(), SquidChannelProperties::mainSettings, SquidChannelProperties::CheckIndex::yes);
+                    },
+                    [this] (SquidChannelProperties&) { return true; },
+                    [this] (SquidChannelProperties&) { return true; }
+                ) };
+                cloneMenu.addSubMenu ("Main Settings", cloneSettingsMenu);
             }
             {
-                juce::PopupMenu cloneSampleAndSettingsMenu;
-                cloneMenu.addSubMenu ("Sample/Settings", cloneSampleAndSettingsMenu);
+                auto cloneSampleAndSettingsMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "To",
+                    [this] (SquidChannelProperties& destChannelProperties)
+                    {
+                        // TODO - need to copy sample file
+                        destChannelProperties.copyFrom (squidChannelProperties.getValueTree (), SquidChannelProperties::all, SquidChannelProperties::CheckIndex::yes);
+                    },
+                    [this] (SquidChannelProperties&) { return true; },
+                    [this] (SquidChannelProperties&) { return true; }
+                ) };
+                cloneMenu.addSubMenu ("Entire Channel", cloneSampleAndSettingsMenu);
             }
             {
                 juce::PopupMenu cloneCvAssignsMenu;
+                {
+                    for (auto cvSrcIndex { 0 }; cvSrcIndex < 8; ++cvSrcIndex)
+                    {
+                        juce::PopupMenu cloneCvAssignsDestCatagoryMenu;
+                        juce::PopupMenu cloneCvAssignsDestCvMenu;
+                        for (auto cvDestIndex { 0 }; cvDestIndex < 8; ++cvDestIndex)
+                        {
+                            if (cvDestIndex != cvSrcIndex)
+                                cloneCvAssignsDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this] () {});
+                        }
+                        cloneCvAssignsDestCatagoryMenu.addSubMenu ("CV", cloneCvAssignsDestCvMenu);
+
+                        juce::PopupMenu cloneCvAssignsChannelDestMenu;
+                        for (auto channelDestIndex { 0 }; channelDestIndex < 8; ++channelDestIndex)
+                        {
+                            if (channelDestIndex != squidChannelProperties.getChannelIndex ())
+                            {
+                                juce::PopupMenu cloneCvAssignsChannelDestCvMenu;
+                                for (auto cvDestIndex { 0 }; cvDestIndex < 8; ++cvDestIndex)
+                                    cloneCvAssignsChannelDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this] () {});
+                                cloneCvAssignsChannelDestMenu.addSubMenu ("Channel " + juce::String (channelDestIndex + 1), cloneCvAssignsChannelDestCvMenu);
+                            }
+                        }
+                        cloneCvAssignsDestCatagoryMenu.addSubMenu ("Channel", cloneCvAssignsChannelDestMenu);
+
+                        cloneCvAssignsMenu.addSubMenu ("CV " + juce::String (cvSrcIndex + 1), cloneCvAssignsDestCatagoryMenu);
+                    }
+                }
                 cloneMenu.addSubMenu ("CV Assign", cloneCvAssignsMenu);
             }
             editMenu.addSubMenu ("Clone", cloneMenu);

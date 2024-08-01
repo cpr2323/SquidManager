@@ -110,23 +110,23 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
     auto newFirstFileName { renameTempFileToActualFile (tempFirstFile) };
     // swap SquidChannelProperties
     auto getNewChannelProperties = [] (juce::ValueTree channelProperties, int newChannelIndex, juce::String newFileName)
-        {
-            SquidChannelProperties newChannelProperties (channelProperties.createCopy (), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
-            newChannelProperties.setSampleFileName (newFileName, false);
-            auto oldChannelIndex { newChannelProperties.getChannelIndex () };
-            newChannelProperties.setChannelIndex (newChannelIndex, false);
-            if (newChannelProperties.getChannelSource () == oldChannelIndex)
-                newChannelProperties.setChannelSource (newChannelIndex, false);
-            if (newChannelProperties.getChoke () == oldChannelIndex)
-                newChannelProperties.setChoke (newChannelIndex, false);
-            if (newChannelProperties.getRecDest () == oldChannelIndex)
-                newChannelProperties.setRecDest (newChannelIndex, false);
-            return newChannelProperties.getValueTree ();
-        };
+    {
+        SquidChannelProperties newChannelProperties (channelProperties.createCopy (), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+        newChannelProperties.setSampleFileName (newFileName, false);
+        auto oldChannelIndex { newChannelProperties.getChannelIndex () };
+        newChannelProperties.setChannelIndex (newChannelIndex, false);
+        if (newChannelProperties.getChannelSource () == oldChannelIndex)
+            newChannelProperties.setChannelSource (newChannelIndex, false);
+        if (newChannelProperties.getChoke () == oldChannelIndex)
+            newChannelProperties.setChoke (newChannelIndex, false);
+        if (newChannelProperties.getRecDest () == oldChannelIndex)
+            newChannelProperties.setRecDest (newChannelIndex, false);
+        return newChannelProperties.getValueTree ();
+    };
     auto newSecondChannelProperties { getNewChannelProperties (firstChannelProperties.getValueTree (), secondChannelProperties.getChannelIndex (), newSecondFileName) };
     auto newFirstChannelProperties { getNewChannelProperties (secondChannelProperties.getValueTree (), firstChannelProperties.getChannelIndex (), newFirstFileName) };
-    firstChannelProperties.copyFrom (newFirstChannelProperties);
-    secondChannelProperties.copyFrom (newSecondChannelProperties);
+    firstChannelProperties.copyFrom (newFirstChannelProperties, SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
+    secondChannelProperties.copyFrom (newSecondChannelProperties, SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 bool EditManager::isSupportedAudioFile (juce::File file)
@@ -198,7 +198,7 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
         newSquidChannelProperties.setChannelIndex (channelIndex, false);
         newSquidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
     }
-    theSquidChannelProperties.copyFrom (newSquidChannelProperties.getValueTree ());
+    theSquidChannelProperties.copyFrom (newSquidChannelProperties.getValueTree (), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 void EditManager::saveChannel (juce::ValueTree /*squidChannelPropertiesVT*/, uint8_t /*channelIndex*/, juce::File /*sampleFile*/)
@@ -300,7 +300,7 @@ void EditManager::setChannelDefaults (int channelIndex)
     defaultChannelProperties.setEndCue (endOffset, false);
     defaultChannelProperties.setCueSetPoints (0, 0, 0, endOffset);
 
-    channelProperties.copyFrom (defaultChannelProperties.getValueTree ());
+    channelProperties.copyFrom (defaultChannelProperties.getValueTree (), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 void EditManager::setChannelUnedited (int channelIndex)
@@ -309,7 +309,7 @@ void EditManager::setChannelUnedited (int channelIndex)
     auto currentSampleFile { juce::File (channelProperties.getSampleFileName ()) };
     if (currentSampleFile.getFileExtension () == "._wav")
         currentSampleFile.moveToTrash ();
-    channelProperties.copyFrom (uneditedSquidBankProperties.getChannelVT (channelIndex));
+    channelProperties.copyFrom (uneditedSquidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 void EditManager::setCueRandom (int channelIndex, bool on)
@@ -450,7 +450,7 @@ void EditManager::copyBank (SquidBankProperties& srcBankProperties, SquidBankPro
                                                         SquidChannelProperties::WrapperType::owner,
                                                         SquidChannelProperties::EnableCallbacks::no };
         destChannelProperties.triggerLoadBegin (false);
-        destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex));
+        destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
         destChannelProperties.triggerLoadComplete (false);
     }
     destBankProperties.triggerLoadComplete (false);

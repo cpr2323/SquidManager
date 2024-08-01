@@ -29,6 +29,8 @@ private:
 class SquidChannelProperties : public ValueTreeWrapper<SquidChannelProperties>
 {
 public:
+    enum CopyType { mainSettings, all };
+    enum CheckIndex { no, yes };
     SquidChannelProperties () noexcept : ValueTreeWrapper (SquidChannelTypeId)
     {
     }
@@ -194,7 +196,7 @@ public:
     std::function<void (uint32_t numSamples)> onSampleDataNumSamplesChange;
     std::function<void (AudioBufferRefCounted::RefCountedPtr audioBufferRefCountedObj)> onSampleDataAudioBufferChange;
 
-    void copyFrom (juce::ValueTree sourceVT);
+    void copyFrom (juce::ValueTree sourceVT, CopyType copyType, CheckIndex checkIndex);
     static juce::ValueTree create (uint8_t channelIndex);
     juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
     static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset);
