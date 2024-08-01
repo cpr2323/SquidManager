@@ -593,6 +593,27 @@ void EditManager::cleanUpTempFiles (juce::File bankFolder)
 
 }
 
+void EditManager::cloneCvAssigns (int srcChannelIndex, int srcCvAssignIndex, int destChannelIndex, int destCvAssignIndex)
+{
+    jassert (srcChannelIndex >= 0 && srcChannelIndex < 8);
+    jassert (srcCvAssignIndex>= 0 && srcCvAssignIndex < 8);
+    jassert (destChannelIndex >= 0 && destChannelIndex < 8);
+    jassert (destCvAssignIndex >= 0 && destCvAssignIndex < 8);
+    auto& srcChannelProperties { channelPropertiesList [srcChannelIndex] };
+    auto& destChannelProperties { channelPropertiesList [destChannelIndex] };
+    for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+    {
+        auto srcParameterVT { srcChannelProperties.getCvParameterVT (srcCvAssignIndex, curParameterIndex) };
+        auto dstParameterVT { destChannelProperties.getCvParameterVT (destCvAssignIndex, curParameterIndex) };
+        const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
+        const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
+        const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+        dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
+        dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+        dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+    }
+}
+
 void EditManager::forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback)
 {
     jassert (channelCallback != nullptr);

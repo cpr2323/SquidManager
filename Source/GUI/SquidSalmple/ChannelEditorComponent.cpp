@@ -1,5 +1,6 @@
 #include "ChannelEditorComponent.h"
 #include "../../SystemServices.h"
+#include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
@@ -66,7 +67,10 @@ ChannelEditorComponent::ChannelEditorComponent ()
                         for (auto cvDestIndex { 0 }; cvDestIndex < 8; ++cvDestIndex)
                         {
                             if (cvDestIndex != cvSrcIndex)
-                                cloneCvAssignsDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this] () {});
+                                cloneCvAssignsDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this, cvSrcIndex, cvDestIndex] ()
+                                {
+                                    editManager->cloneCvAssigns (squidChannelProperties.getChannelIndex (), cvSrcIndex, squidChannelProperties.getChannelIndex (), cvDestIndex);
+                                });
                         }
                         cloneCvAssignsDestCatagoryMenu.addSubMenu ("CV", cloneCvAssignsDestCvMenu);
 
@@ -77,7 +81,10 @@ ChannelEditorComponent::ChannelEditorComponent ()
                             {
                                 juce::PopupMenu cloneCvAssignsChannelDestCvMenu;
                                 for (auto cvDestIndex { 0 }; cvDestIndex < 8; ++cvDestIndex)
-                                    cloneCvAssignsChannelDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this] () {});
+                                    cloneCvAssignsChannelDestCvMenu.addItem ("CV " + juce::String (cvDestIndex + 1), true, false, [this, cvSrcIndex, channelDestIndex, cvDestIndex] ()
+                                    {
+                                        editManager->cloneCvAssigns (squidChannelProperties.getChannelIndex (), cvSrcIndex, channelDestIndex, cvDestIndex);
+                                    });
                                 cloneCvAssignsChannelDestMenu.addSubMenu ("Channel " + juce::String (channelDestIndex + 1), cloneCvAssignsChannelDestCvMenu);
                             }
                         }
