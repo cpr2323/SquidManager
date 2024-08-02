@@ -26,7 +26,7 @@ public:
     std::function<void ()> onLoadComplete;
 
     void copyFrom (juce::ValueTree sourceVT);
-    static juce::ValueTree create ();
+    //static juce::ValueTree create ();
     void forEachChannel (std::function<bool (juce::ValueTree channelVT, int channelIndex)> channelVTCallback);
     juce::ValueTree getChannelVT (int channelIndex);
 

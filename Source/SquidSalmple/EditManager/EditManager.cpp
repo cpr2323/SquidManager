@@ -14,6 +14,12 @@ EditManager::EditManager ()
 {
     audioFormatManager.registerBasicFormats ();
     defaultSquidBankProperties.wrap ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+    defaultSquidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
+    {
+        // fully initialize the channel properties
+        SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+        return true;
+    });
 }
 
 void EditManager::init (juce::ValueTree rootPropertiesVT)
@@ -282,6 +288,27 @@ void EditManager::saveBank ()
     }
     // finally, copy the new data to the unedited buffer
     copyBank (squidBankProperties, uneditedSquidBankProperties);
+}
+
+void EditManager::cleanupChannelTempFiles ()
+{
+    for (auto& channelProperties : channelPropertiesList)
+    {
+        auto currentSampleFile { juce::File (channelProperties.getSampleFileName ()) };
+        if (currentSampleFile.getFileExtension () == "._wav")
+            currentSampleFile.moveToTrash ();
+    }
+}
+void EditManager::setBankDefaults ()
+{
+    cleanupChannelTempFiles ();
+    squidBankProperties.copyFrom (defaultSquidBankProperties.getValueTree ());
+}
+
+void EditManager::setBankUnedited ()
+{
+    cleanupChannelTempFiles ();
+    squidBankProperties.copyFrom (uneditedSquidBankProperties.getValueTree ());
 }
 
 void EditManager::setChannelDefaults (int channelIndex)

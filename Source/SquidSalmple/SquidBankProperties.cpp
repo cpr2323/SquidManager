@@ -33,6 +33,17 @@ juce::String SquidBankProperties::getName ()
     return getValue<juce::String> (NamePropertyId);
 }
 
+void SquidBankProperties::copyFrom (juce::ValueTree sourceVT)
+{
+    SquidBankProperties srcBankProperties (sourceVT, SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+    setName (srcBankProperties.getName (), false);
+    for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+    {
+        SquidChannelProperties destChannelProperties (getChannelVT (channelIndex), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+        destChannelProperties.copyFrom (srcBankProperties.getChannelVT (channelIndex), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
+    }
+}
+
 void SquidBankProperties::forEachChannel (std::function<bool (juce::ValueTree channelVT, int channelIndex)> channelVTCallback)
 {
     jassert (channelVTCallback != nullptr);

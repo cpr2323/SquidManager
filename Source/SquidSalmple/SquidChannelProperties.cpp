@@ -842,19 +842,19 @@ juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
     auto cueSetListVT { data.getChildWithName (CueSetListTypeId) };
     jassert (cueSetListVT.isValid ());
     auto cueListCount { 0 };
-    juce::ValueTree reqeustedCueSetVT;
-    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueSetIndex, &cueListCount, &reqeustedCueSetVT] (juce::ValueTree cueSetVT)
+    juce::ValueTree requestedCueSetVT;
+    ValueTreeHelpers::forEachChildOfType (cueSetListVT, CueSetTypeId, [this, cueSetIndex, &cueListCount, &requestedCueSetVT] (juce::ValueTree cueSetVT)
     {
         if (cueListCount == cueSetIndex)
         {
-            reqeustedCueSetVT = cueSetVT;
+            requestedCueSetVT = cueSetVT;
             return false;
         }
         ++cueListCount;
         return true;
     });
-    jassert (reqeustedCueSetVT.isValid ());
-    return reqeustedCueSetVT;
+    jassert (requestedCueSetVT.isValid ());
+    return requestedCueSetVT;
 }
 
 int SquidChannelProperties::getSampleDataBits ()
@@ -916,10 +916,10 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
         auto srcCueSetListVT { sourceVT.getChildWithName (SquidChannelProperties::CueSetListTypeId) };
         jassert (srcCueSetListVT.isValid ());
         ValueTreeHelpers::forEachChildOfType (srcCueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &dstCueSetListVT] (juce::ValueTree cueSetVT)
-            {
-                dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
-                return true;
-            });
+        {
+            dstCueSetListVT.addChild (cueSetVT.createCopy (), -1, nullptr);
+            return true;
+        });
     }
 
     // Copy properties

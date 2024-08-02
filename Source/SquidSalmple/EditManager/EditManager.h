@@ -31,6 +31,8 @@ public:
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
+    void setBankDefaults ();
+    void setBankUnedited ();
     void setChannelDefaults (int channelIndex);
     void setChannelUnedited (int channelIndex);
     void setCueRandom (int channelIndex, bool on);
@@ -55,6 +57,7 @@ private:
     juce::AudioFormatManager audioFormatManager;
 
     void addSampleToChannelProperties (juce::ValueTree channelProperties, juce::File sampleFile);
+    void cleanupChannelTempFiles ();
     void copyBank (SquidBankProperties& srcBankProperties, SquidBankProperties& destBankProperties);
     bool isAltOutput (SquidChannelProperties& channelProperties);
     bool isCueRandomOn (SquidChannelProperties& channelProperties);

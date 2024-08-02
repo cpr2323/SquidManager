@@ -65,13 +65,13 @@ SquidEditorComponent::SquidEditorComponent ()
 
         //pm.addItem ("Import", false, false, [this] () { /*importBank ();*/ });
         //pm.addItem ("Export", false, false, [this] () { /*exportBank ();*/ });
-        pm.addItem ("Default", false, false, [this] ()
+        pm.addItem ("Default", true, false, [this] ()
         {
-            SquidBankProperties defaultBankProperties (editManager->getDefaultBankProperties (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+            editManager->setBankDefaults ();
         });
-        pm.addItem ("Revert", false, false, [this] ()
+        pm.addItem ("Revert", true, false, [this] ()
         {
-            SquidBankProperties uneditedBankProperties (editManager->getUneditedBankProperties (), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::no);
+            editManager->setBankUnedited ();
         });
 
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
