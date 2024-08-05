@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "BankListProperties.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../Utility/DirectoryDataProperties.h"
@@ -21,10 +22,8 @@ public:
 private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
+    BankListProperties bankListProperties;
     EditManager* editManager { nullptr };
-//     PresetProperties presetProperties;
-//     PresetProperties unEditedPresetProperties;
-//     PresetProperties copyBufferPresetProperties;
 
     juce::ToggleButton showAllBanks { "Show All" };
     juce::ListBox bankListBox { {}, this };
@@ -40,7 +39,6 @@ private:
     void deleteBank (int bankNumber);
     juce::File getBankDirectory (int bankNumber);
     void forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback);
-    void loadBankDirectory (juce::File bankDirectory, juce::ValueTree vt);
     void loadDefault (int row);
     void loadFirstBank ();
     void loadBank (juce::File bankDirectory);

@@ -5,7 +5,7 @@
 #include "../../../Utility/RuntimeRootProperties.h"
 #include "../../../Utility/WatchDogTimer.h"
 
-#define LOG_BANK_LIST 0
+#define LOG_BANK_LIST 1
 #if LOG_BANK_LIST
 #define LogBankList(text) DebugLog ("BankListComponent", text);
 #else
@@ -40,20 +40,39 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
 
+    bankListProperties.wrap (runtimeRootProperties.getValueTree (), BankListProperties::WrapperType::owner, BankListProperties::EnableCallbacks::no);
+
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
         LogBankList ("init - directoryDataProperties.onRootScanComplete");
-        if (! checkBanksThread.isThreadRunning ())
+        // clear list
+        juce::MessageManager::callAsync ([this] ()
         {
-            LogBankList ("init - directoryDataProperties.onRootScanComplete - starting thread");
-            checkBanksThread.startThread ();
-        }
-        else
-        {
-            LogBankList ("init - directoryDataProperties.onRootScanComplete - starting timer");
-            startTimer (1);
-        }
+            if (! checkBanksThread.isThreadRunning ())
+            {
+                FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+                auto newFolder = juce::File (rootFolder.getName ());
+                const auto isNewFolder { newFolder != currentFolder };
+                LogBankList (isNewFolder ? "new folder " + newFolder.getFileName () : "no folder change");
+                if (isNewFolder)
+                {
+                    LogBankList ("clearing bank list");
+                    for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
+                        bankInfoList [curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
+                    bankListBox.updateContent ();
+                    bankListBox.scrollToEnsureRowIsOnscreen (0);
+                    bankListBox.repaint ();
+                }
+                LogBankList ("init - directoryDataProperties.onRootScanComplete - starting thread");
+                checkBanksThread.startThread ();
+            }
+            else
+            {
+                LogBankList ("init - directoryDataProperties.onRootScanComplete - starting timer");
+                startTimer (1);
+            }
+        });
     };
 //     directoryDataProperties.onStatusChange = [this] (DirectoryDataProperties::ScanStatus status)
 //     {
@@ -111,6 +130,7 @@ void BankListComponent::forEachBankDirectory (std::function<bool (juce::File ban
 
 void BankListComponent::checkBanks ()
 {
+    LogBankList ("BankListComponent::checkBanks - start");
     WatchdogTimer timer;
     timer.start (100000);
 
@@ -120,8 +140,8 @@ void BankListComponent::checkBanks ()
     const auto showAll { showAllBanks.getToggleState () };
 
     // clear bank info list
-    for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
-        bankInfoList[curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
+//     for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
+//         bankInfoList[curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
 
     if (showAll)
         numBanks = kMaxBanks;
@@ -137,9 +157,12 @@ void BankListComponent::checkBanks ()
             const auto bankId { folderName.substring (5).getIntValue () };
             if (folderName.substring (0, 5) == "Bank " && bankId > 0 && bankId < 100)
             {
+                bankListProperties.setStatus ("Scanning Bank Folder: " + folderName, false);
                 inBankList = true;
                 const auto fileToCheck { juce::File (folderProperties.getName ()) };
 
+                // separate checkBanks from reading in of info.text, so that checkBanks can finish more quickly
+                // add visual indicator for loading, since loading from USB could take much longer
                 auto infoTxtFile { fileToCheck.getChildFile ("info.txt") };
                 auto bankName { juce::String () };
                 // read bank name if file exists
@@ -166,6 +189,7 @@ void BankListComponent::checkBanks ()
         }
         return true; // keep looking
     });
+    bankListProperties.setStatus ("", false);
 
     const auto isNewFolder { currentFolder != previousFolder };
     LogBankList (isNewFolder ? "new folder " + currentFolder.getFileName () : "no folder change");
@@ -181,7 +205,7 @@ void BankListComponent::checkBanks ()
     });
     previousFolder = currentFolder;
 
-    //juce::Logger::outputDebugString ("PresetListComponent::checkPresets - elapsed time: " + juce::String (timer.getElapsedTime ()));
+    LogBankList("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
 }
 
 void BankListComponent::loadFirstBank ()
@@ -219,27 +243,6 @@ void BankListComponent::loadFirstBank ()
 void BankListComponent::loadDefault (int row)
 {
     editManager->loadBankDefaults (static_cast<uint8_t> (row));
-}
-
-void BankListComponent::loadBankDirectory (juce::File presetFile, juce::ValueTree presetPropertiesVT)
-{
-    jassertfalse;
-#if 0
-    juce::StringArray fileContents;
-    presetFile.readLines (fileContents);
-
-    Assimil8orPreset assimil8orPreset;
-    assimil8orPreset.parse (fileContents);
-
-    // TODO - is this redundant, since assimil8orPreset.parse resets it's PresetProperties to defaults already
-    // first set preset to defaults
-    PresetProperties::copyTreeProperties (ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType),
-                                          presetPropertiesVT);
-    // then load new preset
-    PresetProperties::copyTreeProperties (assimil8orPreset.getPresetVT (), presetPropertiesVT);
-
-    //ValueTreeHelpers::dumpValueTreeContent (presetPropertiesVT, true, [this] (juce::String text) { juce::Logger::outputDebugString (text); });
-#endif
 }
 
 void BankListComponent::loadBank (juce::File bankDirectory)

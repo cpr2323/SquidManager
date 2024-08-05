@@ -18,6 +18,10 @@
                   file="Source/GUI/SquidSalmple/BankList/BankListComponent.cpp"/>
             <FILE id="C9HiKk" name="BankListComponent.h" compile="0" resource="0"
                   file="Source/GUI/SquidSalmple/BankList/BankListComponent.h"/>
+            <FILE id="dBpr5F" name="BankListProperties.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListProperties.cpp"/>
+            <FILE id="JfPE95" name="BankListProperties.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListProperties.h"/>
           </GROUP>
           <GROUP id="{CF8427FF-33A4-34E4-FE9F-913BB06EA68B}" name="CvAssigns">
             <FILE id="xHehJH" name="CvAssignEditor.cpp" compile="1" resource="0"

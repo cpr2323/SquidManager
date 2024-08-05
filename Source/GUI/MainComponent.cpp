@@ -16,6 +16,8 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
     squidEditorComponent.init (rootPropertiesVT);
     fileViewComponent.init (rootPropertiesVT);
     bankListComponent.init (rootPropertiesVT);
+    // NOTE: bottomStatusWindow uses the BankListProperties, so it has to be initialised after BankListComponent.
+    //       I dislike these kinds of requirements, so maybe figure out a different way at some point
     bottomStatusWindow.init (rootPropertiesVT);
     currentFolderComponent.init (rootPropertiesVT);
 

@@ -55,7 +55,7 @@ public:
 
         initUi ();
 
-        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
+        ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
 
         // async quit timer
         startTimer (125);
