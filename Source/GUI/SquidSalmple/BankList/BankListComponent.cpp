@@ -161,8 +161,6 @@ void BankListComponent::checkBanks ()
                 inBankList = true;
                 const auto fileToCheck { juce::File (folderProperties.getName ()) };
 
-                // separate checkBanks from reading in of info.text, so that checkBanks can finish more quickly
-                // add visual indicator for loading, since loading from USB could take much longer
                 auto infoTxtFile { fileToCheck.getChildFile ("info.txt") };
                 auto bankName { juce::String () };
                 // read bank name if file exists
