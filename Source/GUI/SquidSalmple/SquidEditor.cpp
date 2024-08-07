@@ -37,6 +37,7 @@ SquidEditorComponent::SquidEditorComponent ()
 
     // NAME
     setupLabel (bankNameLabel, "NAME", kMediumLabelSize, juce::Justification::centred);
+    bankNameEditor.setTooltip ("Bank Name. Maximum of 11 characters long. Stored in the info.txt file in the bank folder");
     bankNameEditor.onFocusLost = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onReturnKey = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     // TODO - make sure I have the correct valid character set

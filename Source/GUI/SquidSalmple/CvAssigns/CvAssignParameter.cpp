@@ -11,6 +11,7 @@ CvAssignParameter::CvAssignParameter ()
     // ENABLE BUTTON
     assignEnableLabel.setText ("ON", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (assignEnableLabel);
+    assignEnableButton.setTooltip ("CV Assign Enable. Enables control of this parameter via CV.");
     assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
     assignEnableButton.onPopupMenuCallback = [this] ()
     {
@@ -38,6 +39,7 @@ CvAssignParameter::CvAssignParameter ()
     // ATTENUATE TEXT EDITOR
     cvAttenuateLabel.setText ("ATN", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (cvAttenuateLabel);
+    cvAttenuateEditor.setTooltip ("Attenuate CV Input. Adjusts the amount of attenuation applied to the CV before sending it to this parameter. Attenuation can be postive or negative.");
     cvAttenuateEditor.getMinValueCallback = [this] () { return -99; };
     cvAttenuateEditor.getMaxValueCallback = [this] () { return 99; };
     cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
@@ -82,6 +84,7 @@ CvAssignParameter::CvAssignParameter ()
     // OFFSET TEXT EDITOR
     cvOffsetLabel.setText ("OFS", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (cvOffsetLabel);
+    cvOffsetEditor.setTooltip ("Offset CV Input. Adjusts the amount of offset applied to the CV before sending it to this parameter.");
     cvOffsetEditor.getMinValueCallback = [this] () { return 0; };
     cvOffsetEditor.getMaxValueCallback = [this] () { return 99; };
     cvOffsetEditor.toStringCallback = [this] (int value) { return juce::String (value); };
