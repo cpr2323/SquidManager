@@ -14,7 +14,7 @@
 #include "Utility/ValueTreeFile.h"
 #include "Utility/ValueTreeMonitor.h"
 
-constexpr const char* kVersionDecorator { " [BETA 2]" };
+constexpr const char* kVersionDecorator { " [BETA 3]" };
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -47,15 +47,9 @@ public:
         initAudio ();
         initSystemServices ();
 
-#if RUN_READ_WRITE_TEST 
-#if JUCE_DEBUG
-        runSquidMetaDataReadTest (appDirectory);
-#endif
-#endif
-
         initUi ();
 
-        ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
+        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
 
         // async quit timer
         startTimer (125);

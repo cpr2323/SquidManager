@@ -14,7 +14,7 @@ EditManager::EditManager ()
 {
     audioFormatManager.registerBasicFormats ();
     defaultSquidBankProperties.wrap ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
-    defaultSquidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
+    defaultSquidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, [[maybe_unused]]int channelIndex)
     {
         // fully initialize the channel properties
         SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
@@ -120,9 +120,9 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
         SquidChannelProperties newChannelProperties (channelProperties.createCopy (), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
         newChannelProperties.setSampleFileName (newFileName, false);
         auto oldChannelIndex { newChannelProperties.getChannelIndex () };
-        newChannelProperties.setChannelIndex (newChannelIndex, false);
+        newChannelProperties.setChannelIndex (static_cast<uint8_t> (newChannelIndex), false);
         if (newChannelProperties.getChannelSource () == oldChannelIndex)
-            newChannelProperties.setChannelSource (newChannelIndex, false);
+            newChannelProperties.setChannelSource (static_cast<uint8_t> (newChannelIndex), false);
         if (newChannelProperties.getChoke () == oldChannelIndex)
             newChannelProperties.setChoke (newChannelIndex, false);
         if (newChannelProperties.getRecDest () == oldChannelIndex)
@@ -316,8 +316,8 @@ void EditManager::setChannelDefaults (int channelIndex)
     SquidChannelProperties defaultChannelProperties (defaultSquidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
 
     auto& channelProperties { channelPropertiesList[channelIndex] };
-    defaultChannelProperties.setChannelIndex (channelIndex, false);
-    defaultChannelProperties.setChannelSource (channelIndex, false);
+    defaultChannelProperties.setChannelIndex (static_cast<uint8_t> (channelIndex), false);
+    defaultChannelProperties.setChannelSource (static_cast<uint8_t> (channelIndex), false);
     defaultChannelProperties.setChoke (channelIndex, false);
     defaultChannelProperties.setEndOfData (channelProperties.getEndOfData (), false);
     defaultChannelProperties.setRecDest (channelIndex, false);
@@ -564,15 +564,17 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             // build list of cur sets from file list
             // concatenate files into one file
             uint32_t curSampleOffset { 0 };
+            int numFilesProcessed { 0 };
             for (auto& file : files)
             {
+                ++numFilesProcessed;
                 std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
                 jassert (reader != nullptr);
-                debugLog ("opened input file: " + file);
-                const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - (curSampleOffset + reader->lengthInSamples)) };
+                debugLog ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
+                const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength  - curSampleOffset) };
                 if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                 {
-                    debugLog ("successful file write: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                    debugLog ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
                     cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
                 }
                 else
@@ -582,7 +584,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                     hadError = true;
                 }
                 curSampleOffset += samplesToRead;
-                if (curSampleOffset > kMaxSampleLength)
+                if (curSampleOffset >= kMaxSampleLength || hadError)
                     break;
             }
         }
@@ -596,10 +598,13 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     {
         auto& channelProperties { channelPropertiesList [channelIndex] };
         // load file
+        channelProperties.triggerLoadBegin (false);
         loadChannel (channelProperties.getValueTree (), static_cast<uint8_t> (channelIndex), outputFile);
+        channelProperties.triggerLoadComplete (false);
         // set cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
-            channelProperties.setCueSetPoints (cueSetIndex, SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
+            channelProperties.setCueSetPoints (cueSetIndex,
+                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
                                                SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
                                                SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
     }
