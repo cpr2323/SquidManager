@@ -50,12 +50,14 @@ ChannelEditorComponent::ChannelEditorComponent ()
                     [this] (SquidChannelProperties& destChannelProperties)
                     {
                         destChannelProperties.copyFrom (squidChannelProperties.getValueTree (), SquidChannelProperties::all, SquidChannelProperties::CheckIndex::yes);
-                        if (auto currentDestFile { juce::File (destChannelProperties.getSampleFileName ()) }; currentDestFile.getFileExtension () == "._wav")
-                            currentDestFile.deleteFile ();
                         if (auto currentSrcFile { juce::File (squidChannelProperties.getSampleFileName ()) }; currentSrcFile != juce::File ())
                         {
-                            const auto destChannelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (destChannelProperties.getChannelIndex () + 1)) };
-                            auto destFile { destChannelDirectory.getChildFile (currentSrcFile.getFileNameWithoutExtension ()).withFileExtension ("._wav") };
+                            auto destFile { juce::File (destChannelProperties.getSampleFileName()).withFileExtension ("._wav") };
+                            auto destChannelDirectory { destFile.getParentDirectory () };
+                            if (! destChannelDirectory.exists ())
+                                destChannelDirectory.createDirectory ();
+                            if (destFile.exists ())
+                                destFile.deleteFile ();
                             currentSrcFile.copyFileTo (destFile);
                             destChannelProperties.setSampleFileName (destFile.getFullPathName (), false);
                         }

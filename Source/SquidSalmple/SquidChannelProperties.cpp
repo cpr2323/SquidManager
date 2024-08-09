@@ -943,7 +943,16 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
         setCurCueSet (sourceChannelProperties.getCurCueSet (), false);
     setDecay (sourceChannelProperties.getDecay (), false);
     if (copyType == CopyType::all)
-        setSampleFileName (sourceChannelProperties.getSampleFileName (), false);
+    {
+        auto destFileNameString { juce::String () };
+        const auto srcFileName { juce::File (sourceChannelProperties.getSampleFileName ()) };
+        if (srcFileName != juce::File ())
+        {
+            const auto destFileName { srcFileName.getParentDirectory ().getParentDirectory ().getChildFile (juce::String (getChannelIndex () + 1)).getChildFile (srcFileName.getFileName ()) };
+            destFileNameString = destFileName.getFullPathName ();
+        }
+        setSampleFileName (destFileNameString, false);
+    }
     if (copyType == CopyType::all)
         setEndCue (sourceChannelProperties.getEndCue (), false);
     setETrig (sourceChannelProperties.getETrig (), false);
