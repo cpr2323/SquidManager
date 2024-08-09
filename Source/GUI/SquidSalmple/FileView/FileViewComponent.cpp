@@ -28,7 +28,7 @@ FileViewComponent::FileViewComponent ()
     addAndMakeVisible (directoryContentsListBox);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
     showAllFiles.setButtonText ("Show All");
-    showAllFiles.setTooltip ("Show all files, or show just Assimil8or files");
+    showAllFiles.setTooltip ("Show all files, or show just Squid Salmple files");
     showAllFiles.onClick = [this] () { updateFromNewDataThread.start (); };
     addAndMakeVisible (showAllFiles);
 
@@ -132,7 +132,7 @@ void FileViewComponent::buildQuickLookupList ()
 
 void FileViewComponent::openFolder ()
 {
-    fileChooser.reset (new juce::FileChooser ("Please select the folder to scan as an Assimil8or SD Card...",
+    fileChooser.reset (new juce::FileChooser ("Please select the folder to scan as an Squid Salmple USB drive...",
                                                appProperties.getMostRecentFolder (), ""));
     fileChooser->launchAsync (juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectDirectories, [this] (const juce::FileChooser& fc) mutable
     {
