@@ -36,6 +36,7 @@ private:
 
     void copyBank (int bankNumber);
     void checkBanks ();
+    void checkForFolderChange ();
     void deleteBank (int bankNumber);
     juce::File getBankDirectory (int bankNumber);
     void forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback);

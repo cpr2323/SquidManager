@@ -51,19 +51,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
         {
             if (! checkBanksThread.isThreadRunning ())
             {
-                FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
-                auto newFolder = juce::File (rootFolder.getName ());
-                const auto isNewFolder { newFolder != currentFolder };
-                LogBankList (isNewFolder ? "new folder " + newFolder.getFileName () : "no folder change");
-                if (isNewFolder)
-                {
-                    LogBankList ("clearing bank list");
-                    for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
-                        bankInfoList [curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
-                    bankListBox.updateContent ();
-                    bankListBox.scrollToEnsureRowIsOnscreen (0);
-                    bankListBox.repaint ();
-                }
+                checkForFolderChange ();
                 LogBankList ("init - directoryDataProperties.onRootScanComplete - starting thread");
                 checkBanksThread.startThread ();
             }
@@ -104,6 +92,23 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
     checkBanksThread.startThread ();
 }
 
+void BankListComponent::checkForFolderChange ()
+{
+    LogBankList ("checkForFolderChange");
+    FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+    auto newFolder = juce::File (rootFolder.getName ());
+    const auto isNewFolder { newFolder != currentFolder };
+    LogBankList (isNewFolder ? "new folder " + newFolder.getFileName () : "no folder change");
+    if (isNewFolder)
+    {
+        LogBankList ("clearing bank list");
+        numBanks = 0;
+        bankListBox.updateContent ();
+        bankListBox.scrollToEnsureRowIsOnscreen (0);
+        bankListBox.repaint ();
+    }
+}
+
 void BankListComponent::forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback)
 {
     jassert (bankDirectoryCallback != nullptr);
@@ -140,8 +145,8 @@ void BankListComponent::checkBanks ()
     const auto showAll { showAllBanks.getToggleState () };
 
     // clear bank info list
-//     for (auto curBanknfoIndex { 0 }; curBanknfoIndex < bankInfoList.size (); ++curBanknfoIndex)
-//         bankInfoList[curBanknfoIndex] = { curBanknfoIndex + 1, false, "" };
+     for (auto curBankInfoIndex { 0 }; curBankInfoIndex < bankInfoList.size (); ++curBankInfoIndex)
+         bankInfoList [curBankInfoIndex] = { curBankInfoIndex + 1, false, "" };
 
     if (showAll)
         numBanks = kMaxBanks;
@@ -303,6 +308,7 @@ void BankListComponent::timerCallback ()
     LogBankList ("timerCallback - enter");
     if (! checkBanksThread.isThreadRunning ())
     {
+        checkForFolderChange ();
         LogBankList ("timerCallback - starting thread, stopping timer");
         checkBanksThread.start ();
         stopTimer ();
