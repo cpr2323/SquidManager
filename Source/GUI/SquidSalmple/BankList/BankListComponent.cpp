@@ -1,4 +1,5 @@
 #include "BankListComponent.h"
+#include "../../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../../SystemServices.h"
 #include "../../../Utility/DebugLog.h"
 #include "../../../Utility/PersistentRootProperties.h"
@@ -62,33 +63,17 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
             }
         });
     };
-//     directoryDataProperties.onStatusChange = [this] (DirectoryDataProperties::ScanStatus status)
-//     {
-//         switch (status)
-//         {
-//             case DirectoryDataProperties::ScanStatus::empty:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::scanning:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::canceled:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::done:
-//             {
-//                 checkPresetsThread.startThread ();
-//             }
-//             break;
-//         }
-//     };
-//     PresetManagerProperties presetManagerProperties (runtimeRootProperties.getValueTree (), PresetManagerProperties::WrapperType::owner, PresetManagerProperties::EnableCallbacks::no);
-//     unEditedPresetProperties.wrap (presetManagerProperties.getPreset ("unedited"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
-//     presetProperties.wrap (presetManagerProperties.getPreset ("edit"), PresetProperties::WrapperType::client, PresetProperties::EnableCallbacks::yes);
-
+    BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    uneditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    uneditedSquidBankProperties.onNameChange = [this] (juce::String newName)
+    {
+        if (lastSelectedBankIndex < bankInfoList.size ())
+        {
+            auto [bankNumber, thisBankExists, bankName] { bankInfoList [lastSelectedBankIndex] };
+            bankInfoList [lastSelectedBankIndex] = { bankNumber, thisBankExists, newName };
+            bankListBox.repaintRow (lastSelectedBankIndex);
+        }
+    };
     checkBanksThread.startThread ();
 }
 
@@ -176,10 +161,10 @@ void BankListComponent::checkBanks ()
                 }
 
                 if (showAll)
-                    bankInfoList [bankId - 1] = { bankId, true, bankName};
+                    bankInfoList [bankId - 1] = { bankId, true, bankName };
                 else
                 {
-                    bankInfoList [numBanks] = { bankId, true, bankName};
+                    bankInfoList [numBanks] = { bankId, true, bankName };
                     ++numBanks;
                 }
             }
@@ -291,11 +276,12 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
         if (thisBankExists)
         {
-
+            if (bankName.isEmpty ())
+                bankName = "(no name)";
         }
         else
         {
-            bankName = "(bank)";
+            bankName = "(empty)";
             textColor = textColor.withAlpha (0.5f);
         }
         g.setColour (textColor);
@@ -423,6 +409,7 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         if (row == lastSelectedBankIndex)
             return;
 
+        lastSelectedBankIndex = row;
         auto completeSelection = [this, row] ()
         {
             editManager->cleanUpTempFiles (appProperties.getRecentlyUsedFile (0));

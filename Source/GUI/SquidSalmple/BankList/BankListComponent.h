@@ -23,6 +23,7 @@ private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
     BankListProperties bankListProperties;
+    SquidBankProperties uneditedSquidBankProperties;
     EditManager* editManager { nullptr };
 
     juce::ToggleButton showAllBanks { "Show All" };

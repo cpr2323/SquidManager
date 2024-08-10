@@ -403,17 +403,12 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
 
     // check for info.txt
     auto infoTxtFile { bankDirectoryToLoad.getChildFile ("info.txt") };
-    auto newBankName { juce::String () };
     if (infoTxtFile.exists ())
     {
         // read bank name if file exists
         auto infoTxtInputStream { infoTxtFile.createInputStream () };
         auto firstLine { infoTxtInputStream->readNextLine () };
         theSquidBankProperties.setName (firstLine.substring (0, 11), true);
-    }
-    else
-    {
-         newBankName = bankDirectoryToLoad.getFileName().substring (0, 11);
     }
 
     // iterate over the channel folders and load sample 
@@ -455,8 +450,6 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
     bankDirectory = bankDirectoryToLoad;
     copyBank (theSquidBankProperties, squidBankProperties);
     copyBank (squidBankProperties, uneditedSquidBankProperties);
-    if (! newBankName.isEmpty ())
-        squidBankProperties.setName (newBankName, true);
 }
 
 // TODO - this is not complete. it takes a bankIndex, but I think that is incorrect, in that the EditManager only deals with the edit buffer
