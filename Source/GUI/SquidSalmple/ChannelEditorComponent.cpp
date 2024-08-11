@@ -142,18 +142,8 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
     };
     addAndMakeVisible (toolsButton);
+    addAndMakeVisible (sampleLengthLabel);
     setupComponents ();
-
-#if 0
-    // test our 1-99 scaling code
-    for (auto uiValue { 1 }; uiValue < 100; ++uiValue)
-    {
-        const auto internalValue { getInternalValue (uiValue) };
-        const auto recalculatedUiValue { getUiValue (internalValue) };
-        jassert (uiValue == recalculatedUiValue);
-        DebugLog ("ChannelEditorComponent", juce::String (uiValue) + " : " + juce::String (internalValue) + " : " + juce::String (recalculatedUiValue));
-    }
-#endif
 }
 
 ChannelEditorComponent::~ChannelEditorComponent ()
@@ -1462,9 +1452,16 @@ void ChannelEditorComponent::initializeCallbacks ()
     {
         updateLoopPointsView ();
         if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
+        {
             waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
+            sampleLengthLabel.setText ("(" + juce::String (squidChannelProperties.getSampleDataNumSamples () / squidChannelProperties.getSampleDataSampleRate (), 2) + " seconds/" +
+                                       juce::String (squidChannelProperties.getSampleDataNumSamples ()) + " samples)", juce::NotificationType::dontSendNotification);
+        }
         else
+        {
             waveformDisplay.setAudioBuffer (nullptr);
+            sampleLengthLabel.setText ("", juce::NotificationType::dontSendNotification);
+        }
         oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
         loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
     };
@@ -1882,6 +1879,7 @@ void ChannelEditorComponent::resized ()
     sampleFileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     sampleFileNameSelectLabel.setBounds (sampleFileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
     toolsButton.setBounds (getWidth () - 43, sampleFileNameSelectLabel.getY (), 40, 20);
+    sampleLengthLabel.setBounds (sampleFileNameSelectLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
     yOffset = sampleFileNameSelectLabel.getBottom () + 3;
 
     // column one

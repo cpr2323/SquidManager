@@ -35,6 +35,7 @@ private:
     bool draggingFiles { false };
 
     juce::TextButton toolsButton;
+    juce::Label sampleLengthLabel;
 
     // Edit fields
     juce::Label attackLabel;
