@@ -29,6 +29,7 @@ public:
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
+    void renameSample (int channelIndex, juce::String newSampleName);
     void saveChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
     void saveBank ();
     void setBankDefaults ();

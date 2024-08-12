@@ -18,6 +18,8 @@ const auto kInitialYOffset { 5 };
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
+const auto kDialogTextEditorName { "samplename" };
+
 ChannelEditorComponent::ChannelEditorComponent ()
 {
     setOpaque (true);
@@ -119,6 +121,31 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
             editMenu.addSubMenu("Swap", swapMenu);
         }
+        editMenu.addItem ("Rename Sample", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+            const auto currentFileName { juce::File (squidChannelProperties.getSampleFileName ()).getFileNameWithoutExtension () };
+            renameAlertWindow = std::make_unique<juce::AlertWindow> ("RENAME SAMPLE", "Enter the new name for '" + currentFileName + "'", juce::MessageBoxIconType::NoIcon);
+            renameAlertWindow->addTextEditor (kDialogTextEditorName, currentFileName, {});
+            renameAlertWindow->addButton ("RENAME", 1, juce::KeyPress (juce::KeyPress::returnKey, 0, 0));
+            renameAlertWindow->addButton ("CANCEL", 0, juce::KeyPress (juce::KeyPress::escapeKey, 0, 0));
+            auto* textEdtitor { renameAlertWindow->getTextEditor (kDialogTextEditorName) };
+            auto* createButton { renameAlertWindow->getButton ("RENAME") };
+            auto* cancelButton { renameAlertWindow->getButton ("CANCEL") };
+            textEdtitor->setExplicitFocusOrder (1);
+            createButton->setExplicitFocusOrder (2);
+            cancelButton->setExplicitFocusOrder (3);
+            renameAlertWindow->enterModalState (true, juce::ModalCallbackFunction::create ([this, channelIndex] (int option)
+            {
+                renameAlertWindow->exitModalState (option);
+                renameAlertWindow->setVisible (false);
+                if (option == 1) // ok
+                {
+                    auto newSampleName { renameAlertWindow->getTextEditorContents (kDialogTextEditorName) };
+                    editManager->renameSample (channelIndex, newSampleName);
+                }
+                renameAlertWindow.reset ();
+            }));
+        });
         editMenu.addItem ("Clear Cue Sets", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
             squidChannelProperties.setCurCueSet (0, false);

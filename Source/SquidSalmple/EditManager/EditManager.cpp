@@ -6,6 +6,13 @@
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/PersistentRootProperties.h"
 
+#define LOG_EDIT_MANAGER 0
+#if LOG_EDIT_MANAGER
+#define LogEditManager(text) DebugLog ("BankListComponent", text);
+#else
+#define LogEditManager(text) ;
+#endif
+
 constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
 constexpr auto kMaxSampleLength { 524287 };
@@ -207,6 +214,28 @@ void EditManager::loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t
     theSquidChannelProperties.copyFrom (newSquidChannelProperties.getValueTree (), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
+void EditManager::renameSample (int channelIndex, juce::String newSampleName)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    auto currentFile { juce::File (channelPropertiesList[channelIndex].getSampleFileName ()) };
+    auto newFile {currentFile.getParentDirectory ().getChildFile (newSampleName).withFileExtension ("._wav") };
+    LogEditManager ("Current File: " + currentFile.getFullPathName ());
+    LogEditManager ("New File: " + newFile.getFullPathName ());
+    if (currentFile.getFileExtension () == ".wav")
+    {
+        LogEditManager ("Copying");
+        auto copySuccess { currentFile.copyFileTo (newFile) };
+        jassert (copySuccess == true);
+    }
+    else // assume files ends with ._wav
+    {
+        LogEditManager ("Renaming");
+        auto renameSuccess { currentFile.moveFileTo (newFile) };
+        jassert (renameSuccess == true);
+    }
+    channelPropertiesList [channelIndex].setSampleFileName (newFile.getFullPathName (), false);
+}
+
 void EditManager::saveChannel (juce::ValueTree /*squidChannelPropertiesVT*/, uint8_t /*channelIndex*/, juce::File /*sampleFile*/)
 {
     // create temp file
@@ -264,6 +293,7 @@ void EditManager::saveBank ()
                 const auto newFile { tempFile.withFileExtension ("wav") };
                 // now move the new file to one with the extension of wav
                 tempFile.moveFileTo (newFile);
+                squidChannelPropertiesToSave.setSampleFileName (newFile.getFullPathName (), false);
                 // and delete the original
                 originalFile.withFileExtension ("old").moveToTrash ();
                 // also delete any other wav or _wav files in directory

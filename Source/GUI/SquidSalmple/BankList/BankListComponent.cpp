@@ -6,7 +6,7 @@
 #include "../../../Utility/RuntimeRootProperties.h"
 #include "../../../Utility/WatchDogTimer.h"
 
-#define LOG_BANK_LIST 1
+#define LOG_BANK_LIST 0
 #if LOG_BANK_LIST
 #define LogBankList(text) DebugLog ("BankListComponent", text);
 #else

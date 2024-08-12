@@ -108,6 +108,7 @@ namespace BankHelpers
                channelPropertiesOne.getReverse () == channelPropertiesTwo.getReverse () &&
                channelPropertiesOne.getSpeed () == channelPropertiesTwo.getSpeed () &&
                channelPropertiesOne.getStartCue () == channelPropertiesTwo.getStartCue () &&
+               channelPropertiesOne.getSampleFileName() == channelPropertiesTwo.getSampleFileName () &&
                channelPropertiesOne.getSteps () == channelPropertiesTwo.getSteps () &&
                channelPropertiesOne.getXfade () == channelPropertiesTwo.getXfade ();
     };

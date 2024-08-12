@@ -34,6 +34,8 @@ private:
     EditManager* editManager { nullptr };
     bool draggingFiles { false };
 
+    std::unique_ptr<juce::AlertWindow> renameAlertWindow;
+
     juce::TextButton toolsButton;
     juce::Label sampleLengthLabel;
 
