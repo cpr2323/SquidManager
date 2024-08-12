@@ -44,6 +44,18 @@ void CvAssignSection::init (juce::ValueTree rootPropertiesVT, juce::ValueTree ch
     }
 }
 
+void CvAssignSection::setEnableState (int cvParameterIndex, bool enabled)
+{
+    for (auto& cvAssignParameter : cvAssignParameterList)
+    {
+        if (cvAssignParameter.getParameterIndex () == cvParameterIndex)
+        {
+            cvAssignParameter.setEnabled (enabled);
+            break;
+        }
+    }
+}
+
 void CvAssignSection::resized ()
 {
     const auto assignParameterWidth { static_cast<int>(getWidth () / cvAssignParameterList.size ()) };

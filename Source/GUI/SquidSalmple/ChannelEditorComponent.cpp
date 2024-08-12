@@ -1276,6 +1276,9 @@ void ChannelEditorComponent::setFilterEnableState ()
     const auto filterEnabled { squidChannelProperties.getFilterType () != 0 };
     filterFrequencyTextEditor.setEnabled (filterEnabled);
     filterResonanceTextEditor.setEnabled (filterEnabled);
+    cvAssignEditor.setEnableState (CvParameterIndex::FiltFreq, filterEnabled);
+    cvAssignEditor.setEnableState (CvParameterIndex::FiltRes, filterEnabled);
+    cvAssignEditor.repaint ();
     if (filterEnabled)
     {
         filterFrequencyTextEditor.setText (juce::String (getFilterFrequencyUiValue (squidChannelProperties.getFilterFrequency ())), juce::NotificationType::dontSendNotification);
@@ -1369,6 +1372,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
     waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
     cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
+    cvAssignEditor.setEnableState (CvParameterIndex::Speed, squidChannelProperties.getChannelIndex () < 5);
 
     // TODO - we need to call this when the sample changes
     updateLoopPointsView ();

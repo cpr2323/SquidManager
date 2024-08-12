@@ -169,6 +169,11 @@ void CvAssignParameter::setParameterLabel (juce::String parameterText)
     parameterLabel.setText (parameterText, juce::NotificationType::dontSendNotification);
 }
 
+int CvAssignParameter::getParameterIndex ()
+{
+    return parameterIndex;
+}
+
 int CvAssignParameter::getCvAttenuatonUiValue (int internalValue)
 {
     if (internalValue > 99)
@@ -215,10 +220,31 @@ void CvAssignParameter::cvAssignOffsetUiChanged (int offset)
     squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, offset, false);
 }
 
+void CvAssignParameter::enablementChanged ()
+{
+    const auto enabled { isEnabled () };
+    parameterLabel.setEnabled (enabled);
+    assignEnableLabel.setEnabled (enabled);
+    assignEnableButton.setEnabled (enabled);
+    cvAttenuateLabel.setEnabled (enabled);
+    cvAttenuateEditor.setEnabled (enabled);
+    cvOffsetLabel.setEnabled (enabled);
+    cvOffsetEditor.setEnabled (enabled);
+}
+
 void CvAssignParameter::paint (juce::Graphics& g)
 {
     g.setColour (juce::Colours::white.darker (0.3f));
     g.drawRect (getLocalBounds ());
+}
+
+void CvAssignParameter::paintOverChildren (juce::Graphics& g)
+{
+    if (! isEnabled())
+    {
+        g.setColour (juce::Colours::white.withAlpha (0.5f));
+        g.fillAll ();
+    }
 }
 
 void CvAssignParameter::resized ()

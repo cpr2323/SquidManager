@@ -12,6 +12,7 @@ public:
     ~CvAssignParameter ();
     void init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex);
     void setParameterLabel (juce::String parameterText);
+    int getParameterIndex ();
 
 private:
     int cvIndex { -1 };
@@ -37,6 +38,8 @@ private:
     void cvAssignOffsetDataChanged (int offset);
     void cvAssignOffsetUiChanged (int offset);
 
+    void enablementChanged () override;
     void paint (juce::Graphics& g) override;
+    void paintOverChildren (juce::Graphics& g) override;
     void resized () override;
 };

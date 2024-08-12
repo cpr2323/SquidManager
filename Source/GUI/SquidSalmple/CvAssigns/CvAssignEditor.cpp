@@ -47,6 +47,12 @@ void CvAssignEditor::init (juce::ValueTree rootPropertiesVT, juce::ValueTree cha
     }
 }
 
+void CvAssignEditor::setEnableState (int cvParameterIndex, bool enabled)
+{
+    for (auto& cvAssignSection : cvAssignSectionList)
+        cvAssignSection.setEnableState (cvParameterIndex, enabled);
+}
+
 void CvAssignEditor::paint (juce::Graphics& g)
 {
     g.setColour (juce::Colours::white);
