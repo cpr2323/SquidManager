@@ -563,8 +563,7 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
 
 void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex)
 {
-    auto debugLog = [this] (const juce::String& text) { DebugLog ("EditManager", text); };
-    debugLog ("concatenateAndBuildCueSets");
+    LogEditManager ("concatenateAndBuildCueSets");
     const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
@@ -584,7 +583,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             // audioFormatWriter will delete the file stream when done
             outputStream.release ();
 
-            // build list of cur sets from file list
+            // build list of cue sets from file list
             // concatenate files into one file
             uint32_t curSampleOffset { 0 };
             int numFilesProcessed { 0 };
@@ -593,17 +592,17 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                 ++numFilesProcessed;
                 std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
                 jassert (reader != nullptr);
-                debugLog ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
+                LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
                 const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength  - curSampleOffset) };
                 if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                 {
-                    debugLog ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                    LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
                     cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
                 }
                 else
                 {
                     // handle error
-                    debugLog ("ERROR - when writing file");
+                    LogEditManager ("ERROR - when writing file");
                     hadError = true;
                 }
                 curSampleOffset += samplesToRead;
@@ -613,7 +612,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         }
         else
         {
-            debugLog ("ERROR - unable to open output file: " + outputFile.getFullPathName ());
+            LogEditManager ("ERROR - unable to open output file: " + outputFile.getFullPathName ());
             hadError = true;
         }
     }
@@ -623,6 +622,10 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         // load file
         channelProperties.triggerLoadBegin (false);
         loadChannel (channelProperties.getValueTree (), static_cast<uint8_t> (channelIndex), outputFile);
+        // remove any cue sets created by embedded markers
+        channelProperties.setCurCueSet (0, false);
+        for (auto cueSetCount { channelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
+            channelProperties.removeCueSet (cueSetCount - 1);
         channelProperties.triggerLoadComplete (false);
         // set cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)

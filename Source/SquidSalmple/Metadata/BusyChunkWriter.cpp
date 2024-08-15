@@ -1,49 +1,33 @@
 #include "BusyChunkWriter.h"
 
 // TODO - handle error conditions
-bool BusyChunkWriter::write (juce::File inputSampleFile, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData)
+bool BusyChunkWriter::write (juce::AudioBuffer<float>& audioBuffer, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData)
 {
-    // open input file
-    auto inputSampleStream { inputSampleFile.createInputStream () };
-    jassert (inputSampleStream != nullptr && inputSampleStream->openedOk ());
+    // write audio data
+    {
+        // create/open temp file
+        auto outputSampleStream { outputSampleFile.createOutputStream () };
+        jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
+        outputSampleStream->setPosition (0);
+        outputSampleStream->truncate ();
+        juce::WavAudioFormat wavAudioFormat;
+        std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (outputSampleStream.release (), 44100.0, 1, 16, {}, 0) };
+        jassert (writer != nullptr);
+        if (writer == nullptr)
+            return false;
+        auto writeSuccess { writer->writeFromAudioSampleBuffer (audioBuffer, 0, audioBuffer.getNumSamples ()) };
+        jassert (writeSuccess == true);
+        if (writeSuccess == false)
+            return false;
+    }
 
-    // create/open temp file
+    // write metadata
     auto outputSampleStream { outputSampleFile.createOutputStream () };
     jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
-    outputSampleStream->setPosition (0);
-    outputSampleStream->truncate ();
-    juce::MemoryBlock chunkData;
-
-    while (true)
-    {
-        //juce::Logger::outputDebugString ("offset: " + juce::String::toHexString (inputSampleStream->getPosition ()));
-        auto chunk { getChunkData (inputSampleStream.get ()) };
-        if (! chunk.has_value ())
-            break;
-        auto chunkInfo { chunk.value () };
-
-        chunkData.setSize (chunkInfo.chunkLength);
-        // read chunk data from input file
-        const auto bytesRead { inputSampleStream->read (chunkData.getData (), chunkInfo.chunkLength) };
-        jassert (bytesRead == static_cast<int> (chunkInfo.chunkLength));
-
-        // write all non busy chunks (ie. skip old busy chunk, if one exists)
-        if (std::memcmp (kBusyChunkType, chunkInfo.chunkType, 4) != 0)
-        {
-            // write chunk identifier
-            auto writeSuccess { outputSampleStream->write (chunkInfo.chunkType, 4) };
-            jassert (writeSuccess == true);
-            // write length
-            uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (chunkInfo.chunkLength) };
-            writeSuccess = outputSampleStream->write (&chunkLength, 4);
-            jassert (writeSuccess == true);
-            // write chunk data to output file
-            writeSuccess = outputSampleStream->write (chunkData.getData (), chunkData.getSize ());
-            jassert (writeSuccess == true);
-        }
-    }
+    auto positionAtEndSuccess { outputSampleStream->setPosition (outputSampleFile.getSize()) };
+    jassert (positionAtEndSuccess == true);
     // write new busy chunk identifier
-    auto writeSuccess { outputSampleStream->write (kBusyChunkType, 4) };
+    auto writeSuccess = outputSampleStream->write (kBusyChunkType, 4);
     jassert (writeSuccess == true);
     // write length
     uint32_t chunkLength { juce::ByteOrder::swapIfBigEndian (static_cast<uint32_t> (busyChunkData.getSize ())) };

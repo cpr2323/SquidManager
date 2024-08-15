@@ -93,7 +93,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     writeReserved (SquidSalmple::DataLayout::k_Reserved13Offset, SquidSalmple::DataLayout::k_Reserved13Size, [&squidChannelProperties] () { return squidChannelProperties.getReserved13Data (); });
 
     BusyChunkWriter busyChunkWriter;
-    const auto writeSuccess { busyChunkWriter.write (inputSampleFile, outputSampleFile, busyChunkData) };
+    auto audioBuffer { squidChannelProperties.getSampleDataAudioBuffer () };
+    const auto writeSuccess { busyChunkWriter.write (*(squidChannelProperties.getSampleDataAudioBuffer()->getAudioBuffer()), outputSampleFile, busyChunkData) };
     jassert (writeSuccess == true);
 
     return true;

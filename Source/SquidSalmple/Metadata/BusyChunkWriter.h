@@ -8,7 +8,7 @@ class BusyChunkWriter
 public:
     BusyChunkWriter () = default;
 
-    bool write (juce::File inputSampleFile, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData);
+    bool write (juce::AudioBuffer<float>& audioBuffer, juce::File outputSampleFile, juce::MemoryBlock& busyChunkData);
 
 private:
     static inline char kBusyChunkType [4] { 'b', 'u', 's', 'y' };
