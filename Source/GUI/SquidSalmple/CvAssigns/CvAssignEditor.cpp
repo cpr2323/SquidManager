@@ -22,7 +22,7 @@ CvAssignEditor::CvAssignEditor ()
     downButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
     downButton.onClick = [this] ()
     {
-        if (curCvAssignIndex == 7)
+        if (curCvAssignIndex == cvAssignSectionList.size () - 1)
             return;
         selectCvAssigns (curCvAssignIndex + 1);
     };
