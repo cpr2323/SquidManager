@@ -973,21 +973,22 @@ void ChannelEditorComponent::setupComponents ()
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
-    {
-        for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
-        {
-            // TODO - the channel index is not known until ::init is called
-            //const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) + (squidChannelProperties.getChannelIndex () == curChannelIndex ? "(self)" : "") };
-            const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
-            chokeComboBox.addItem (channelString, curChannelIndex + 1);
-        }
-    }
+//     {
+//         for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
+//         {
+//             // TODO - the channel index is not known until ::init is called
+//             //const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) + (squidChannelProperties.getChannelIndex () == curChannelIndex ? "(self)" : "") };
+//             const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
+//             chokeComboBox.addItem (channelString, curChannelIndex + 1);
+//         }
+//     }
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     chokeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setChoke (static_cast<uint8_t>(std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)), true);
+        const auto newItemIndex { static_cast<uint8_t>(std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)) };
+        squidChannelProperties.setChoke (chokeComboBox.getItemId (newItemIndex) - 1, true);
     };
     chokeComboBox.onPopupMenuCallback = [this] ()
     {
@@ -1010,7 +1011,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedItemIndex ()); }); // C1, C2, C3, C4, C5, C6, C7, C8
+    setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedId () - 1); }); // Off, C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
     eTrigComboBox.setTooltip ("EOS Trigger. Selecting a channel will start playback of that channel when this one ends. Selecting On will cause a trigger to happen on the Trigger Output.");
@@ -1374,6 +1375,16 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
     cvAssignEditor.setEnableState (CvParameterIndex::Speed, squidChannelProperties.getChannelIndex () < 5);
 
+    chokeComboBox.addItem ("Off", squidChannelProperties.getChannelIndex () + 1);
+    for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
+    {
+        if (curChannelIndex != squidChannelProperties.getChannelIndex ())
+        {
+            const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
+            chokeComboBox.addItem (channelString, curChannelIndex + 1);
+        }
+    }
+
     // TODO - we need to call this when the sample changes
     updateLoopPointsView ();
 
@@ -1606,7 +1617,7 @@ void ChannelEditorComponent::channelFlagsDataChanged ([[maybe_unused]] uint16_t 
 
 void ChannelEditorComponent::chokeDataChanged (int choke)
 {
-    chokeComboBox.setSelectedItemIndex (choke, juce::NotificationType::dontSendNotification);
+    chokeComboBox.setSelectedId (choke + 1, juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::decayDataChanged (int decay)
