@@ -973,15 +973,6 @@ void ChannelEditorComponent::setupComponents ()
     setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
-//     {
-//         for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
-//         {
-//             // TODO - the channel index is not known until ::init is called
-//             //const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) + (squidChannelProperties.getChannelIndex () == curChannelIndex ? "(self)" : "") };
-//             const auto channelString { juce::String ("C") + juce::String (curChannelIndex + 1) };
-//             chokeComboBox.addItem (channelString, curChannelIndex + 1);
-//         }
-//     }
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     chokeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
