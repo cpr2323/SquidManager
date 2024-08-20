@@ -13,7 +13,7 @@ private:
     juce::Label curCvAssignIndexLabel;
     juce::TextButton upButton;
     juce::TextButton downButton;
-    std::array<CvAssignSection, 8> cvAssignSectionList;
+    std::array<CvAssignSection, 7> cvAssignSectionList;
     int curCvAssignIndex { 0 };
 
     void paint (juce::Graphics& g) override;
