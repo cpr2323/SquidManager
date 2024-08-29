@@ -27,9 +27,13 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getLoopMode ()), SquidSalmple::DataLayout::kLoopOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getQuant ()), SquidSalmple::DataLayout::kQuantizeModeOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRate ()), SquidSalmple::DataLayout::kRateOffset);
+    setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRecDest ()), SquidSalmple::DataLayout::kRecDestOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout::kReverseOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getEndOfData ()), SquidSalmple::DataLayout::kEndOFDataOffset);
-    setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout::kSpeedOffset);
+    if (squidChannelProperties.getChannelIndex() < 5)
+        setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout::kSpeedOffset);
+    else
+        setUInt16 (static_cast<uint16_t> (32750), SquidSalmple::DataLayout::kSpeedOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getStartCue ()), SquidSalmple::DataLayout::kSampleStartOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getSteps ()), SquidSalmple::DataLayout::kStepTrigNumOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getXfade ()), SquidSalmple::DataLayout::kXfadeOffset);

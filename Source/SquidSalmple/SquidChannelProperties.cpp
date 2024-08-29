@@ -22,7 +22,7 @@ const constexpr char* kReserved13DatDefault { "253..............................
 void SquidChannelProperties::initValueTree ()
 {
     setAttack (0, false);
-    setBits (16, false);
+    setBits (0, false);
     setChannelFlags (0, false);
     setChannelIndex (0, false); // needs to be initialized to the correct value for the specific channel this represents
     setChannelSource (0, false);  // needs to be initialized to the correct value for the specific channel this represents
