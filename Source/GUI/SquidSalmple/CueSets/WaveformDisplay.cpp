@@ -9,7 +9,7 @@
 #define LogWaveformDisplay(text) ;
 #endif
 
-const auto markerHandleSize { 5 };
+const auto markerHandleSize { 10 };
 
 void WaveformDisplay::setChannelIndex (int theChannelIndex)
 {
