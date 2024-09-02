@@ -1,7 +1,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "BottomStatusWindow.h"
+#include "CurrentFolderComponent.h"
 #include "GuiProperties.h"
+#include "SquidSalmple/SquidEditor.h"
+#include "SquidSalmple/FileView/FileViewComponent.h"
+#include "SquidSalmple/BankList/BankListComponent.h"
 #include "../Utility/SplitWindowComponent.h"
 
 class MainComponent : public juce::Component
@@ -12,6 +17,13 @@ public:
 
 private:
     GuiProperties guiProperties;
+    SquidEditorComponent squidEditorComponent;
+    BottomStatusWindow bottomStatusWindow;
+    CurrentFolderComponent currentFolderComponent;
+    FileViewComponent fileViewComponent;
+    BankListComponent bankListComponent;
+    SplitWindowComponent bankListEditorSplitter;
+    SplitWindowComponent folderBrowserEditorSplitter;
 
     juce::TooltipWindow tooltipWindow;
 

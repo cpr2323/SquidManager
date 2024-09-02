@@ -24,11 +24,10 @@ public:
 
     enum TypeIndex
     {
-        folder,
-        systemFile,
-        presetFile,
-        audioFile,
         unknownFile,
+        folder,
+        systemFile, // module specific files, that aren't a preset
+        audioFile, // audio file that is the correct (enough) format for the module
         size
     };
 
@@ -54,12 +53,12 @@ public:
     juce::ValueTree getRootFolderVT ();
 
     static inline const juce::Identifier DirectoryDataTypeId { "DirectoryData" };
-    static inline const juce::Identifier ProgressPropertyId   { "progress" };
-    static inline const juce::Identifier RootFolderPropertyId { "rootFolder" };
+    static inline const juce::Identifier ProgressPropertyId         { "progress" };
+    static inline const juce::Identifier RootFolderPropertyId       { "rootFolder" };
     static inline const juce::Identifier RootScanCompletePropertyId { "rootScanComplete" };
-    static inline const juce::Identifier ScanDepthPropertyId  { "scanDepth" };
-    static inline const juce::Identifier StartScanPropertyId  { "startScan" };
-    static inline const juce::Identifier StatusPropertyId     { "status" };
+    static inline const juce::Identifier ScanDepthPropertyId        { "scanDepth" };
+    static inline const juce::Identifier StartScanPropertyId        { "startScan" };
+    static inline const juce::Identifier StatusPropertyId           { "status" };
 
     static inline const juce::Identifier DirectoryValueTreeTypeId { "directoryValueTree" };
 
@@ -198,6 +197,7 @@ public:
 
     static inline const juce::Identifier FolderTypeId { "Folder" };
     static inline const juce::Identifier NamePropertyId             { "name" };
+    static inline const juce::Identifier TypePropertyId             { "type" };
     static inline const juce::Identifier StatusPropertyId           { "status" };
     static inline const juce::Identifier CreationTimePropertyId     { "createTime" };
     static inline const juce::Identifier ModificationTimePropertyId { "modificationTime" };
@@ -212,6 +212,7 @@ public:
         juce::ValueTree fileVT { FolderTypeId };
         fileVT.setProperty (NamePropertyId, filePath, nullptr);
         fileVT.setProperty (StatusPropertyId, "unscanned", nullptr);
+        fileVT.setProperty (TypePropertyId, static_cast<int> (DirectoryDataProperties::TypeIndex::folder), nullptr);
         fileVT.setProperty (CreationTimePropertyId, createTime, nullptr);
         fileVT.setProperty (ModificationTimePropertyId, modificationTime, nullptr);
         return fileVT;

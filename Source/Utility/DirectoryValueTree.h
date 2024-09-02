@@ -6,6 +6,8 @@
 #include "../Utility/ValueTreeMonitor.h"
 #include "../Utility/WatchDogTimer.h"
 
+using FileTypeIdentifierCallback = std::function<int (juce::File)>;
+
 class DirectoryValueTree : public juce::Thread,
                            private juce::Timer,
                            private juce::AsyncUpdater
@@ -16,6 +18,7 @@ public:
 
     void init (juce::ValueTree rootPropertiesVT);
     juce::ValueTree getDirectoryDataPropertiesVT ();
+    void setFileTypeIdentifier (FileTypeIdentifierCallback theFileTypeIdentifierCallback);
 
 private:
     enum class ScanType
@@ -36,6 +39,7 @@ private:
     juce::AudioFormatManager audioFormatManager;
     LambdaThread scanThread { "ScanThread", 1000 };
     LambdaThread checkThread { "CheckThread", 1000 };
+    FileTypeIdentifierCallback fileTypeIdentifierCallback;
 
     int scanDepth { -1 };
     juce::int64 lastScanInProgressUpdate {};

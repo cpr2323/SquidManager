@@ -14,7 +14,7 @@ namespace ValueTreeHelpers
         no,
         yes
     };
-    bool compareChidrenAndThierPropertiesUnordered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure);
+    bool compareChildrenAndThierPropertiesUnordered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure);
     bool comparePropertiesUnOrdered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure);
     void dumpValueTreeContent (juce::ValueTree vt, bool displayProperties, std::function<void (juce::String)> displayFunction);
     juce::ValueTree findChild (juce::ValueTree parent, std::function<bool (juce::ValueTree child)> findChildCallback);

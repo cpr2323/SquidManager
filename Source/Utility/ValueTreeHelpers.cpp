@@ -1,6 +1,11 @@
 #include "ValueTreeHelpers.h"
 #include "Crc.h"
 
+static void DebugLog (juce::String logLine)
+{
+    juce::Logger::outputDebugString (logLine);
+}
+
 static void dumpValueTreeContentInternal (juce::ValueTree vt, bool displayProperties, int indentLevel, std::function<void (juce::String)> displayFunction)
 {
     jassert (displayFunction != nullptr);
@@ -131,15 +136,16 @@ namespace ValueTreeHelpers
         overwriteExistingProperties (source, dest);
     }
 
-    bool compareChidrenAndThierPropertiesUnordered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure)
+    // NOTE: a property that begins with "_" will not be compared
+    bool compareChildrenAndThierPropertiesUnordered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure)
     {
         auto result { true };
         auto firstVtIterator { firstVT.begin () };
         auto secondVtIterator { secondVT.begin () };
         if (firstVT.getNumChildren () != secondVT.getNumChildren ())
         {
-//             if (logCompareFailures == LogCompareFailures::yes)
-//                 DebugLog ("compareChidrenAndThierPropertiesUnordered number of children differ - first: " + String (firstVT.getNumChildren ()) + ", second: " + String (secondVT.getNumChildren ()));
+             if (logCompareFailures == LogCompareFailures::yes)
+                 DebugLog ("compareChidrenAndThierPropertiesUnordered number of children differ - first: " + juce::String (firstVT.getNumChildren ()) + ", second: " + juce::String (secondVT.getNumChildren ()));
             jassertfalse;
             return false;
         }
@@ -148,8 +154,8 @@ namespace ValueTreeHelpers
         {
             if (! comparePropertiesUnOrdered (*firstVtIterator, *secondVtIterator, logCompareFailures, stopAtFirstFailure))
             {
-//                 if (logCompareFailures == LogCompareFailures::yes)
-//                     DebugLog ("compareChidrenAndThierPropertiesUnordered/comparePropertiesUnOrdered failed. child index: " + String (childIndex));
+                 if (logCompareFailures == LogCompareFailures::yes)
+                     DebugLog ("compareChidrenAndThierPropertiesUnordered/comparePropertiesUnOrdered failed. child index: " + juce::String (childIndex));
                 jassertfalse;
                 return false;
             }
@@ -160,28 +166,36 @@ namespace ValueTreeHelpers
         return result;
     }
 
+    // NOTE: a property that begins with "_" will not be compared
     bool comparePropertiesUnOrdered (juce::ValueTree firstVT, juce::ValueTree secondVT, LogCompareFailures logCompareFailures, StopAtFirstFailure stopAtFirstFailure)
     {
         auto success { true };
         if (logCompareFailures == LogCompareFailures::yes)
         {
-//             if (firstVT.getNumProperties () != secondVT.getNumProperties ())
-//                 DebugLog ("comparePropertiesUnOrdered - firstVT.getNumProperties (): " + String (firstVT.getNumProperties ()) +
-//                     ", secondVT.getNumProperties ():" + String (secondVT.getNumProperties ()));
+            if (firstVT.getNumProperties () != secondVT.getNumProperties ())
+                DebugLog ("comparePropertiesUnOrdered - firstVT.getNumProperties (): " + juce::String (firstVT.getNumProperties ()) +
+                    ", secondVT.getNumProperties ():" + juce::String (secondVT.getNumProperties ()));
         }
         for (auto propertyIndex { 0 }; propertyIndex < firstVT.getNumProperties (); ++propertyIndex)
         {
             const auto propertyName { firstVT.getPropertyName (propertyIndex) };
+            // we skip properties that begin with "_"
+            if (propertyName.toString ().startsWith ("_"))
+            {
+                DebugLog ("skipping property: " + propertyName);
+                continue;
+            }
             if (logCompareFailures == LogCompareFailures::yes)
             {
-                //DebugLog ("checking property ("+String (propertyIndex)+"): " + propertyName);
-//                 if (! secondVT.hasProperty (propertyName))
-//                     DebugLog ("comparePropertiesUnOrdered - ! secondVT.hasProperty (" + propertyName + ")");
-//                 if (firstVT.getProperty (propertyName) != secondVT.getProperty (propertyName))
-//                     DebugLog ("comparePropertiesUnOrdered - firstVT.getProperty (" + propertyName + ") [" + firstVT.getProperty (propertyName).toString () + "] != [" + secondVT.getProperty (propertyName).toString () + "] secondVT.getProperty (" + propertyName + ")");
+                DebugLog ("checking property ("+ juce::String (propertyIndex)+"): " + propertyName);
+                if (! secondVT.hasProperty (propertyName))
+                    DebugLog ("comparePropertiesUnOrdered - ! secondVT.hasProperty (" + propertyName + ")");
+                if (firstVT.getProperty (propertyName) != secondVT.getProperty (propertyName))
+                    DebugLog ("comparePropertiesUnOrdered - firstVT.getProperty (" + propertyName + ") [" + firstVT.getProperty (propertyName).toString () + "] != [" + secondVT.getProperty (propertyName).toString () + "] secondVT.getProperty (" + propertyName + ")");
             }
             if (! secondVT.hasProperty (propertyName) || firstVT.getProperty (propertyName) != secondVT.getProperty (propertyName))
             {
+                jassertfalse;
                 success = false;
                 if (stopAtFirstFailure == StopAtFirstFailure::yes)
                     break;

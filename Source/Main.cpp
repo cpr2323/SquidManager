@@ -1,7 +1,11 @@
 #include <JuceHeader.h>
 #include "AppProperties.h"
+#include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
+#include "SquidSalmple/Audio/AudioPlayer.h"
+#include "SquidSalmple/Bank/BankManagerProperties.h"
+#include "SquidSalmple/SquidBankProperties.h"
 #include "Utility/DebugLog.h"
 #include "Utility/DirectoryValueTree.h"
 #include "Utility/PersistentRootProperties.h"
@@ -10,8 +14,7 @@
 #include "Utility/ValueTreeFile.h"
 #include "Utility/ValueTreeMonitor.h"
 
-// for testing
-#include "SquidSalmple/SquidMetaDataProperties.h"
+constexpr const char* kVersionDecorator { "" };
 
 // this requires the third party Melatonin Inspector be installed and added to the project
 // https://github.com/sudara/melatonin_inspector
@@ -40,9 +43,13 @@ public:
         initLogger ();
         initCrashHandler ();
         initPropertyRoots ();
-        initAudio ();
         initSquidSalmple ();
+        initAudio ();
+        initSystemServices ();
+
         initUi ();
+
+        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
 
         // async quit timer
         startTimer (125);
@@ -90,40 +97,64 @@ public:
 
     void initSquidSalmple ()
     {
-// TEST CODE TO WRITE OUT empty SquidMetaDataProperties
-//         SquidMetaDataProperties squidMetaDataProperties { {}, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-//         auto xmlToWrite { squidMetaDataProperties.getValueTree ().createXml () };
+        SquidBankProperties squidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
+        //runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
+
+        BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+        bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());
+        bankManagerProperties.addBank ("unedited", squidBankProperties.getValueTree ().createCopy ());
+
+        // add the Preset Manager to the Runtime Root
+        runtimeRootProperties.getValueTree ().addChild (bankManagerProperties.getValueTree (), -1, nullptr);
+
+        // setup the directory scanner
+        directoryValueTree.init (runtimeRootProperties.getValueTree ());
+        directoryDataProperties.wrap (directoryValueTree.getDirectoryDataPropertiesVT (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::no);
+        directoryDataProperties.setScanDepth (0, false);
+        // debug tool for watching changes on the Directory Data Properties Value Tree
+        //directoryDataMonitor.assign (directoryDataProperties.getValueTreeRef ());
+
+        // when the folder being viewed changes, signal the directory scanner to rescan
+        appProperties.onMostRecentFolderChange = [this] (juce::String folderName)
+        {
+            directoryDataProperties.setRootFolder (folderName, false);
+            directoryDataProperties.triggerStartScan (false);
+        };
+
+// TEST CODE TO WRITE OUT empty SquidChannelProperties
+//         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+//         auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
 //         auto squidMetaDataXmlFile { appDirectory.getChildFile("SquidMetaDataXmlFile").withFileExtension(".xml") };
 //         xmlToWrite->writeTo (squidMetaDataXmlFile, {});
 
 // TEST CODE TO VERIFY PARSING OF DEFAULT, MIN, and MAX
-        auto getMetaDataProperties = [] (const char* parameterPresetXml)
-        {
-            juce::XmlDocument xmlDoc { parameterPresetXml };
-            auto xmlElement { xmlDoc.getDocumentElement (false) };
-            //             if (auto parseError { xmlDoc.getLastParseError () }; parseError != "")
-            //                 juce::Logger::outputDebugString ("XML Parsing Error for ParameterPreset type '" + parameterPresetType + "': " + parseError);
-                        // NOTE: this is a hard failure, which indicates there is a problem in the file the parameterPresetXml passed in
-            jassert (xmlDoc.getLastParseError () == "");
-            if (xmlElement == nullptr)
-                return juce::ValueTree ();
-
-            auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
-            return parameterPreset;
-        };
-
-        auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
-        SquidMetaDataProperties defaultProperties { defaultMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-        auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
-        SquidMetaDataProperties minProperties { minMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
-        auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
-        SquidMetaDataProperties maxProperties { maxMetaDataVT, SquidMetaDataProperties::WrapperType::owner, SquidMetaDataProperties::EnableCallbacks::no };
+//         auto getMetaDataProperties = [] (const char* parameterPresetXml)
+//         {
+//             juce::XmlDocument xmlDoc { parameterPresetXml };
+//             auto xmlElement { xmlDoc.getDocumentElement (false) };
+//             //             if (auto parseError { xmlDoc.getLastParseError () }; parseError != "")
+//             //                 juce::Logger::outputDebugString ("XML Parsing Error for ParameterPreset type '" + parameterPresetType + "': " + parseError);
+//                         // NOTE: this is a hard failure, which indicates there is a problem in the file the parameterPresetXml passed in
+//             jassert (xmlDoc.getLastParseError () == "");
+//             if (xmlElement == nullptr)
+//                 return juce::ValueTree ();
+// 
+//             auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
+//             return parameterPreset;
+//         };
+// 
+//         auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
+//         SquidChannelProperties defaultProperties { defaultMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+//         auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
+//         SquidChannelProperties minProperties { minMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
+//         auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
+//         SquidChannelProperties maxProperties { maxMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     }
 
     void initUi ()
     {
         guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::owner, GuiProperties::EnableCallbacks::no);
-        mainWindow.reset (new MainWindow (getApplicationName () + " - v" + getApplicationVersion (), rootProperties.getValueTree ()));
+        mainWindow.reset (new MainWindow (getApplicationName () + " - " + getVersionDisplayString (), rootProperties.getValueTree ()));
     }
 
     void initPropertyRoots ()
@@ -144,6 +175,7 @@ public:
 
     void initAudio ()
     {
+        audioPlayer.init (rootProperties.getValueTree ());
     }
 
     void initAppDirectory ()
@@ -165,6 +197,11 @@ public:
         }
     }
 
+    juce::String getVersionDisplayString ()
+    {
+        return "v" + getApplicationVersion () + juce::String (kVersionDecorator);
+    }
+
     void initLogger ()
     {
         auto getSessionTextForLogFile = [this] ()
@@ -177,7 +214,7 @@ public:
                     return result;
             };
             const auto nl { juce::String ("\n") };
-            auto welcomeText { juce::String (getApplicationName () + " - v" + getApplicationVersion () + " Log File" + nl) };
+            auto welcomeText { juce::String (getApplicationName () + " - " + getVersionDisplayString() + " Log File" + nl) };
             welcomeText += " OS: " + resultOrNa (juce::SystemStats::getOperatingSystemName ()) + nl;
             welcomeText += " Device Description: " + resultOrNa (juce::SystemStats::getDeviceDescription ()) + nl;
             welcomeText += " Device Manufacturer: " + resultOrNa (juce::SystemStats::getDeviceManufacturer ()) + nl;
@@ -195,6 +232,27 @@ public:
     void initCrashHandler ()
     {
         juce::SystemStats::setApplicationCrashHandler (crashHandler);
+    }
+
+    void initSystemServices ()
+    {
+        // initialize services
+        editManager.init (rootProperties.getValueTree ());
+
+        // connect services to the SystemServices VTW
+        SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
+        systemServices.setEditManager (&editManager);
+
+        directoryValueTree.setFileTypeIdentifier ([this] (juce::File file)
+        {
+            if (editManager.isSupportedAudioFile (file))
+                return DirectoryDataProperties::TypeIndex::audioFile;
+            return DirectoryDataProperties::TypeIndex::unknownFile;
+        });
+
+        // start the initial directory scan, based on the last accessed folder stored in the app properties
+        directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);
+        directoryDataProperties.triggerStartScan (false);
     }
 
     //==============================================================================
@@ -275,10 +333,16 @@ private:
     std::unique_ptr<juce::FileLogger> fileLogger;
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
+    AudioPlayer audioPlayer;
 
+    // System Services
+    EditManager editManager;
+
+#if JUCE_DEBUG
     ValueTreeMonitor audioConfigPropertiesMonitor;
     ValueTreeMonitor directoryDataMonitor;
     ValueTreeMonitor presetPropertiesMonitor;
+#endif
 };
 
 // This macro generates the main () routine that launches the app.

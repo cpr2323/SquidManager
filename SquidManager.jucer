@@ -1,30 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="fI98C5" name="SquidManager" projectType="guiapp" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
               version="1.0" companyName="OmOhmProductions">
   <MAINGROUP id="GjwloP" name="SquidManager">
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
-        <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple"/>
+        <GROUP id="{6D09B227-5F89-5161-AE01-C04F9BC564A2}" name="SquidSalmple">
+          <GROUP id="{2E696543-C366-0ED1-28E3-8C22BAA5DD82}" name="LoopPoints">
+            <FILE id="WwXdd9" name="LoopPointsView.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/LoopPoints/LoopPointsView.cpp"/>
+            <FILE id="wgmQSf" name="LoopPointsView.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/LoopPoints/LoopPointsView.h"/>
+          </GROUP>
+          <GROUP id="{43385A79-1DF4-DE7E-3AF5-8FB0CBD50581}" name="BankList">
+            <FILE id="cdRU4B" name="BankListComponent.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListComponent.cpp"/>
+            <FILE id="C9HiKk" name="BankListComponent.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListComponent.h"/>
+            <FILE id="dBpr5F" name="BankListProperties.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListProperties.cpp"/>
+            <FILE id="JfPE95" name="BankListProperties.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/BankList/BankListProperties.h"/>
+          </GROUP>
+          <GROUP id="{CF8427FF-33A4-34E4-FE9F-913BB06EA68B}" name="CvAssigns">
+            <FILE id="xHehJH" name="CvAssignEditor.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.cpp"/>
+            <FILE id="uM4wKH" name="CvAssignEditor.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignEditor.h"/>
+            <FILE id="eDgSvT" name="CvAssignParameter.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignParameter.cpp"/>
+            <FILE id="ih1OeM" name="CvAssignParameter.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignParameter.h"/>
+            <FILE id="zTC2Ct" name="CvAssignSection.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignSection.cpp"/>
+            <FILE id="MkABYw" name="CvAssignSection.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CvAssigns/CvAssignSection.h"/>
+          </GROUP>
+          <GROUP id="{B38C8863-B2A0-5AB2-D11C-92D8CBC1ED31}" name="CueSets">
+            <FILE id="cW58eY" name="WaveformDisplay.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/CueSets/WaveformDisplay.cpp"/>
+            <FILE id="yRLgjs" name="WaveformDisplay.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/CueSets/WaveformDisplay.h"/>
+          </GROUP>
+          <GROUP id="{EA1DB8B4-D69A-8BD0-21C5-74D7752005B2}" name="FileView">
+            <FILE id="QrgY9d" name="FileViewComponent.cpp" compile="1" resource="0"
+                  file="Source/GUI/SquidSalmple/FileView/FileViewComponent.cpp"/>
+            <FILE id="WDrHhv" name="FileViewComponent.h" compile="0" resource="0"
+                  file="Source/GUI/SquidSalmple/FileView/FileViewComponent.h"/>
+          </GROUP>
+          <FILE id="Ritfi9" name="ChannelEditorComponent.cpp" compile="1" resource="0"
+                file="Source/GUI/SquidSalmple/ChannelEditorComponent.cpp"/>
+          <FILE id="XS0q7L" name="ChannelEditorComponent.h" compile="0" resource="0"
+                file="Source/GUI/SquidSalmple/ChannelEditorComponent.h"/>
+          <FILE id="nW16RK" name="SquidEditor.cpp" compile="1" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.cpp"/>
+          <FILE id="gLCtHn" name="SquidEditor.h" compile="0" resource="0" file="Source/GUI/SquidSalmple/SquidEditor.h"/>
+        </GROUP>
+        <FILE id="ojE3Vc" name="BottomStatusWindow.cpp" compile="1" resource="0"
+              file="Source/GUI/BottomStatusWindow.cpp"/>
+        <FILE id="ybqGIP" name="BottomStatusWindow.h" compile="0" resource="0"
+              file="Source/GUI/BottomStatusWindow.h"/>
+        <FILE id="n6iOJp" name="CurrentFolderComponent.cpp" compile="1" resource="0"
+              file="Source/GUI/CurrentFolderComponent.cpp"/>
+        <FILE id="VkVWDc" name="CurrentFolderComponent.h" compile="0" resource="0"
+              file="Source/GUI/CurrentFolderComponent.h"/>
         <FILE id="slTz4o" name="GuiProperties.cpp" compile="1" resource="0"
               file="Source/GUI/GuiProperties.cpp"/>
         <FILE id="J2fZpV" name="GuiProperties.h" compile="0" resource="0" file="Source/GUI/GuiProperties.h"/>
         <FILE id="jcdqSb" name="MainComponent.cpp" compile="1" resource="0"
               file="Source/GUI/MainComponent.cpp"/>
         <FILE id="ZPS2SJ" name="MainComponent.h" compile="0" resource="0" file="Source/GUI/MainComponent.h"/>
+        <FILE id="oXG8zp" name="sqedit2_2.png" compile="0" resource="1" file="Source/GUI/sqedit2_2.png"/>
       </GROUP>
       <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
+        <GROUP id="{093728E3-D7D3-A91D-5A0D-8FA266A178D7}" name="Audio">
+          <FILE id="KJWT1Q" name="AudioPlayer.cpp" compile="1" resource="0" file="Source/SquidSalmple/Audio/AudioPlayer.cpp"/>
+          <FILE id="OoNm5a" name="AudioPlayer.h" compile="0" resource="0" file="Source/SquidSalmple/Audio/AudioPlayer.h"/>
+          <FILE id="r7ICXU" name="AudioPlayerProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Audio/AudioPlayerProperties.cpp"/>
+          <FILE id="EjGa9F" name="AudioPlayerProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Audio/AudioPlayerProperties.h"/>
+          <FILE id="fz1CXU" name="AudioSettingsProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Audio/AudioSettingsProperties.cpp"/>
+          <FILE id="RuP5x6" name="AudioSettingsProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Audio/AudioSettingsProperties.h"/>
+        </GROUP>
+        <GROUP id="{4631F495-CCA5-6431-FC53-FD21116C6247}" name="Bank">
+          <FILE id="pwi7jW" name="BankHelpers.cpp" compile="1" resource="0" file="Source/SquidSalmple/Bank/BankHelpers.cpp"/>
+          <FILE id="HLHLE1" name="BankHelpers.h" compile="0" resource="0" file="Source/SquidSalmple/Bank/BankHelpers.h"/>
+          <FILE id="tARJQX" name="BankManagerProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Bank/BankManagerProperties.cpp"/>
+          <FILE id="aQr1Cf" name="BankManagerProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Bank/BankManagerProperties.h"/>
+          <FILE id="ostRw9" name="SquidBankLoader.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Bank/SquidBankLoader.cpp"/>
+          <FILE id="JYHNja" name="SquidBankLoader.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Bank/SquidBankLoader.h"/>
+        </GROUP>
         <GROUP id="{458A692C-DEA2-B7CD-4A7E-1884F885B2B2}" name="Data">
           <FILE id="i7e6mx" name="DefaultMetaData.xml" compile="0" resource="1"
                 file="Source/SquidSalmple/Data/DefaultMetaData.xml"/>
           <FILE id="Vl02jy" name="MaxMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MaxMetaData.xml"/>
           <FILE id="bSksYa" name="MinMetaData.xml" compile="0" resource="1" file="Source/SquidSalmple/Data/MinMetaData.xml"/>
         </GROUP>
-        <FILE id="TszEpp" name="SquidMetaDataProperties.cpp" compile="1" resource="0"
-              file="Source/SquidSalmple/SquidMetaDataProperties.cpp"/>
-        <FILE id="bgUtNF" name="SquidMetaDataProperties.h" compile="0" resource="0"
-              file="Source/SquidSalmple/SquidMetaDataProperties.h"/>
+        <GROUP id="{49F0F925-AAFF-2B49-0DA4-88063945231E}" name="EditManager">
+          <FILE id="HBL2bU" name="EditManager.cpp" compile="1" resource="0" file="Source/SquidSalmple/EditManager/EditManager.cpp"/>
+          <FILE id="McIvBB" name="EditManager.h" compile="0" resource="0" file="Source/SquidSalmple/EditManager/EditManager.h"/>
+          <FILE id="h7aRV0" name="EditManagerProperties.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/EditManager/EditManagerProperties.cpp"/>
+          <FILE id="W61nUp" name="EditManagerProperties.h" compile="0" resource="0"
+                file="Source/SquidSalmple/EditManager/EditManagerProperties.h"/>
+        </GROUP>
+        <GROUP id="{94729ED6-43F4-8580-9B52-10F44F5F9534}" name="Metadata">
+          <FILE id="GXDxMB" name="BusyChunkReader.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Metadata/BusyChunkReader.cpp"/>
+          <FILE id="oLdqR4" name="BusyChunkReader.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Metadata/BusyChunkReader.h"/>
+          <FILE id="cyD9fs" name="BusyChunkWriter.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Metadata/BusyChunkWriter.cpp"/>
+          <FILE id="P5ZLqv" name="BusyChunkWriter.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Metadata/BusyChunkWriter.h"/>
+          <FILE id="PAeiGy" name="SquidMetaDataReader.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidMetaDataReader.cpp"/>
+          <FILE id="u8ANGn" name="SquidMetaDataReader.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidMetaDataReader.h"/>
+          <FILE id="riD7BF" name="SquidMetaDataWriter.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidMetaDataWriter.cpp"/>
+          <FILE id="JPZvlh" name="SquidMetaDataWriter.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidMetaDataWriter.h"/>
+          <FILE id="u6pH1D" name="SquidSalmpleDefs.cpp" compile="1" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidSalmpleDefs.cpp"/>
+          <FILE id="Jk42CD" name="SquidSalmpleDefs.h" compile="0" resource="0"
+                file="Source/SquidSalmple/Metadata/SquidSalmpleDefs.h"/>
+        </GROUP>
+        <GROUP id="{701C61AD-84A8-7987-9439-B0FAB3FDD36C}" name="SampleManager"/>
+        <FILE id="ytGEog" name="SquidBankProperties.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/SquidBankProperties.cpp"/>
+        <FILE id="OKM5qB" name="SquidBankProperties.h" compile="0" resource="0"
+              file="Source/SquidSalmple/SquidBankProperties.h"/>
+        <FILE id="TszEpp" name="SquidChannelProperties.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/SquidChannelProperties.cpp"/>
+        <FILE id="bgUtNF" name="SquidChannelProperties.h" compile="0" resource="0"
+              file="Source/SquidSalmple/SquidChannelProperties.h"/>
       </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
@@ -32,8 +149,10 @@
               file="Source/Utility/CustomComboBox.cpp"/>
         <FILE id="lIOZBb" name="CustomComboBox.h" compile="0" resource="0"
               file="Source/Utility/CustomComboBox.h"/>
-        <FILE id="m3WWSy" name="CustomTextEditor.cpp" compile="1" resource="0"
-              file="Source/Utility/CustomTextEditor.cpp"/>
+        <FILE id="yHH07Z" name="CustomComponentMouseHandler.cpp" compile="1"
+              resource="0" file="Source/Utility/CustomComponentMouseHandler.cpp"/>
+        <FILE id="vDZYHZ" name="CustomComponentMouseHandler.h" compile="0"
+              resource="0" file="Source/Utility/CustomComponentMouseHandler.h"/>
         <FILE id="kMKyq3" name="CustomTextEditor.h" compile="0" resource="0"
               file="Source/Utility/CustomTextEditor.h"/>
         <FILE id="lgXY3V" name="DebugLog.cpp" compile="1" resource="0" file="Source/Utility/DebugLog.cpp"/>
@@ -50,6 +169,13 @@
               file="Source/Utility/DirectoryValueTree.h"/>
         <FILE id="WCPbT4" name="DumpStack.cpp" compile="1" resource="0" file="Source/Utility/DumpStack.cpp"/>
         <FILE id="ZxmPEU" name="DumpStack.h" compile="0" resource="0" file="Source/Utility/DumpStack.h"/>
+        <FILE id="b4e8so" name="ErrorHelpers.cpp" compile="1" resource="0"
+              file="Source/Utility/ErrorHelpers.cpp"/>
+        <FILE id="ors7BG" name="ErrorHelpers.h" compile="0" resource="0" file="Source/Utility/ErrorHelpers.h"/>
+        <FILE id="lxMztp" name="FileSelectLabel.cpp" compile="1" resource="0"
+              file="Source/Utility/FileSelectLabel.cpp"/>
+        <FILE id="mu0dWG" name="FileSelectLabel.h" compile="0" resource="0"
+              file="Source/Utility/FileSelectLabel.h"/>
         <FILE id="tCzDZJ" name="LambdaThread.h" compile="0" resource="0" file="Source/Utility/LambdaThread.h"/>
         <FILE id="XnRC3h" name="NoArrowComboBoxLnF.h" compile="0" resource="0"
               file="Source/Utility/NoArrowComboBoxLnF.h"/>
@@ -61,6 +187,10 @@
               file="Source/Utility/RootProperties.cpp"/>
         <FILE id="WcCZQK" name="RootProperties.h" compile="0" resource="0"
               file="Source/Utility/RootProperties.h"/>
+        <FILE id="CI5vrl" name="RoundedSlideSwitch.cpp" compile="1" resource="0"
+              file="Source/Utility/RoundedSlideSwitch.cpp"/>
+        <FILE id="PmOleE" name="RoundedSlideSwitch.h" compile="0" resource="0"
+              file="Source/Utility/RoundedSlideSwitch.h"/>
         <FILE id="LryJVV" name="RuntimeRootProperties.cpp" compile="1" resource="0"
               file="Source/Utility/RuntimeRootProperties.cpp"/>
         <FILE id="WDI9X7" name="RuntimeRootProperties.h" compile="0" resource="0"
@@ -92,6 +222,10 @@
             file="Source/AppProperties.cpp"/>
       <FILE id="BiKYSs" name="AppProperties.h" compile="0" resource="0" file="Source/AppProperties.h"/>
       <FILE id="RDU8Bz" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="CcQ4Yj" name="SystemServices.cpp" compile="1" resource="0"
+            file="Source/SystemServices.cpp"/>
+      <FILE id="ycVqtS" name="SystemServices.h" compile="0" resource="0"
+            file="Source/SystemServices.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
@@ -130,10 +264,10 @@
         <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <VS2022 targetFolder="Builds/VisualStudio2022">
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="oXG8zp" bigIcon="oXG8zp">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager" useRuntimeLibDLL="0"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager" useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
@@ -150,7 +284,7 @@
         <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="oXG8zp" bigIcon="oXG8zp">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="SquidManager"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="SquidManager"/>
