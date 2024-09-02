@@ -26,4 +26,4 @@ There is no Linux version yet, but since we are using JUCE it should be _relativ
 Big thanks to Tait and Nick for helping me with beta testing.
 
 Thanks to Ali the Architect for testing, advice, and the great icon.
-![](<Source/GUI/sqedit.png>)
+![](<Source/GUI/sqedit2_2.png>)
