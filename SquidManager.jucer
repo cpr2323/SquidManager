@@ -70,10 +70,7 @@
         <FILE id="jcdqSb" name="MainComponent.cpp" compile="1" resource="0"
               file="Source/GUI/MainComponent.cpp"/>
         <FILE id="ZPS2SJ" name="MainComponent.h" compile="0" resource="0" file="Source/GUI/MainComponent.h"/>
-        <FILE id="tD9g67" name="sqedit.png" compile="0" resource="1" file="Source/GUI/sqedit.png"/>
         <FILE id="oXG8zp" name="sqedit2_2.png" compile="0" resource="1" file="Source/GUI/sqedit2_2.png"/>
-        <FILE id="oKHGWM" name="sqedit3.png" compile="0" resource="1" file="Source/GUI/sqedit3.png"/>
-        <FILE id="GfPl6s" name="SQtip.png" compile="0" resource="1" file="Source/GUI/SQtip.png"/>
       </GROUP>
       <GROUP id="{FBA9892B-1ED1-73FC-294D-6B2869DF4A3D}" name="SquidSalmple">
         <GROUP id="{093728E3-D7D3-A91D-5A0D-8FA266A178D7}" name="Audio">
