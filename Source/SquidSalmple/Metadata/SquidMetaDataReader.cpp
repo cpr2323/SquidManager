@@ -179,12 +179,12 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         {
             LogReader ("importing markers");
             // import markers
-            for (auto sampleOffsetIndex { 0 }; sampleOffsetIndex < markerList.size (); sampleOffsetIndex += 2)
+            for (auto markerListIndex { 0 }; markerListIndex < markerList.size (); markerListIndex += 2)
             {
-                const auto startCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [sampleOffsetIndex]) };
-                const auto nextSampleOffsetIndex { sampleOffsetIndex + 1 };
-                const auto endCue { nextSampleOffsetIndex < markerList.size () ? SquidChannelProperties::sampleOffsetToByteOffset (markerList [nextSampleOffsetIndex]) : endOffset };
-                const auto cueSetIndex { sampleOffsetIndex / 2 };
+                const auto startCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [markerListIndex]) };
+                const auto nextMarkerListIndex { markerListIndex + 1 };
+                const auto endCue { nextMarkerListIndex < markerList.size () ? SquidChannelProperties::sampleOffsetToByteOffset (markerList [nextMarkerListIndex]) : endOffset };
+                const auto cueSetIndex { markerListIndex / 2 };
                 LogReader ("import - cue set " + juce::String (cueSetIndex) +
                            ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
                            "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
