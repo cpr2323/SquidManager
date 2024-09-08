@@ -80,12 +80,12 @@ SquidEditorComponent::SquidEditorComponent ()
     addAndMakeVisible (toolsButton);
 
     // CHANNEL TABS
-    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->isSupportedAudioFile (fileName); };
+    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->getFileInfo (fileName).supported; };
     channelTabs.loadFile = [this] (juce::String fileName, int channelIndex)
-        {
-            channelTabs.setCurrentTabIndex (channelIndex, true);
-            return channelEditorComponents [channelIndex].loadFile (fileName);
-        };
+    {
+        channelTabs.setCurrentTabIndex (channelIndex, true);
+        return channelEditorComponents [channelIndex].loadFile (fileName);
+    };
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
     {
         channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);

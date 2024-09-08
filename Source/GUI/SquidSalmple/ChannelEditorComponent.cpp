@@ -4,6 +4,8 @@
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
+constexpr auto kMaxSampleLength { 524287 };
+
 const auto kLargeLabelSize { 20.0f };
 const auto kMediumLabelSize { 14.0f };
 const auto kSmallLabelSize { 12.0f };
@@ -1207,9 +1209,6 @@ void ChannelEditorComponent::setupComponents ()
     // WAVEFORM DISPLAY
     waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& files)
     {
-        for (auto& file : files)
-            if (! editManager->isSupportedAudioFile (file))
-                return false;
         return true;
     };
     waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
@@ -1866,9 +1865,6 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
 
 bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
 {
-    if (files.size () != 1 || ! editManager->isSupportedAudioFile (files[0]))
-        return false;
-
     return true;
 }
 
@@ -1876,8 +1872,10 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
 {
     draggingFiles = false;
     repaint ();
+    if (! supportedFile)
+        return;
     const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
-    if (!dropBounds.contains (x, y))
+    if (! dropBounds.contains (x, y))
         return;
     if (! handleSampleAssignment (files[0]))
     {
@@ -1885,8 +1883,57 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
     }
 }
 
-void ChannelEditorComponent::fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/)
+void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
+    if (files.size () > 1)
+    {
+        dropMsg = "Only one sample can be dropped here";
+        supportedFile = false;
+    }
+    else
+    {
+        auto draggedFile { juce::File (files[0]) };
+        if (draggedFile.getFileExtension () == ".wav")
+        {
+            if (const auto fileInfo { editManager->getFileInfo (draggedFile) }; fileInfo.supported)
+            {
+                dropMsg = "Assign sample to Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1);
+                if (fileInfo.lengthInSamples > kMaxSampleLength)
+                    dropMsg += ". Sample will be truncated to 11 seconds";
+                supportedFile = true;
+            }
+            else
+            {
+                dropMsg = "Unsupported wav file.";
+                if (fileInfo.usesFloatingPointData == true)
+                {
+                    dropMsg += " Data type must be integer.";
+                }
+                if (fileInfo.bitsPerSample != 16 && fileInfo.bitsPerSample != 24)
+                {
+                    dropMsg += " Bit depth must be 16 or 24.";
+                }
+                if (fileInfo.numChannels > 2)
+                {
+                    dropMsg += " Too many channels (" + juce::String (fileInfo.numChannels) + ").";
+                }
+                if (fileInfo.sampleRate != 44100)
+                {
+                    dropMsg += " Sample rate must be 44.1k";
+                }
+
+                supportedFile = false;
+            }
+        }
+        else
+        {
+            dropMsg = "Unsupported file type. Only wav files can be loaded";
+            supportedFile = false;
+        }
+
+    }
+    // iterate over file list
+    // build appropriate message to be displayed
     draggingFiles = true;
     repaint ();
 }
@@ -2041,12 +2088,24 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
 {
     if (draggingFiles)
     {
+        constexpr auto fontHeight { 30.f };
         const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
         g.setColour (juce::Colours::white.withAlpha (0.5f));
         g.fillRect (dropBounds);
-        g.setFont (30.0f);
-        g.setColour (juce::Colours::black);
-        g.drawText ("Assign sample to Channel " + juce::String(squidChannelProperties.getChannelIndex () + 1), dropBounds, juce::Justification::centred, false);
+        g.setFont (fontHeight);
+
+        if (supportedFile)
+            g.setColour (juce::Colours::white.withAlpha (0.7f));
+        else
+            g.setColour (juce::Colours::black.withAlpha (0.7f));
+        auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f};
+        auto center { dropBounds.getCentre () };
+        g.fillRoundedRectangle ({static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f}, 10.f);
+        if (supportedFile)
+            g.setColour (juce::Colours::black);
+        else
+            g.setColour (juce::Colours::red.darker (0.5f));
+        g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
     }
 }
 

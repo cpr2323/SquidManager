@@ -142,21 +142,21 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
     secondChannelProperties.copyFrom (newSecondChannelProperties, SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
-bool EditManager::isSupportedAudioFile (juce::File file)
+FileInfo EditManager::getFileInfo (juce::File file)
 {
     // 16
     // 44.1k
     // only mono (stereo will be converted to mono)
     if (file.isDirectory () || file.getFileExtension ().toLowerCase () != ".wav")
-        return false;
+        return {};
     std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
     if (reader == nullptr)
-        return false;
+        return {};
     // check for any format settings that are unsupported
     if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels > 2) || (reader->sampleRate != 44100))
-        return false;
+        return {};
 
-    return true;
+    return { true, reader->sampleRate, reader->bitsPerSample, reader->lengthInSamples, reader->numChannels, reader->usesFloatingPointData };
 }
 
 bool EditManager::isCueRandomOn (int channelIndex)

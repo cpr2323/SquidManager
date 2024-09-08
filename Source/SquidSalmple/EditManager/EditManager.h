@@ -6,6 +6,16 @@
 #include "../../AppProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
+struct FileInfo
+{
+    bool supported { false };
+    double sampleRate { 0.f };
+    unsigned int bitsPerSample { 0 };
+    int64_t lengthInSamples { 0 };
+    unsigned int numChannels { 0 };
+    bool usesFloatingPointData { false };
+};
+
 class EditManager
 {
 public:
@@ -21,7 +31,7 @@ public:
     juce::PopupMenu createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
     bool isAltOutput (int channelIndex);
     bool isAltOutput (juce::ValueTree channelPropertiesVT);
-    bool isSupportedAudioFile (juce::File file);
+    FileInfo getFileInfo (juce::File file);
     bool isCueRandomOn (int channelIndex);
     bool isCueRandomOn (juce::ValueTree channelPropertiesVT);
     bool isCueStepOn (int channelIndex);

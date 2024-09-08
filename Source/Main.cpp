@@ -245,7 +245,7 @@ public:
 
         directoryValueTree.setFileTypeIdentifier ([this] (juce::File file)
         {
-            if (editManager.isSupportedAudioFile (file))
+            if (editManager.getFileInfo (file).supported)
                 return DirectoryDataProperties::TypeIndex::audioFile;
             return DirectoryDataProperties::TypeIndex::unknownFile;
         });

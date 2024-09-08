@@ -33,6 +33,8 @@ private:
     AppProperties appProperties;
     EditManager* editManager { nullptr };
     bool draggingFiles { false };
+    bool supportedFile { false };
+    juce::String dropMsg;
 
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
 
