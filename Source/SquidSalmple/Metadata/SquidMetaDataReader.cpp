@@ -177,21 +177,33 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setRecDest (channelIndex, false);
         if (auto markerList { busyChunkReader.getMarkerList (sampleFile) }; markerList.size () != 0)
         {
+            auto addCueSet = [&squidChannelProperties] (int cueSetIndex, int startCue, int endCue)
+            {
+                LogReader ("import - cue set " + juce::String (cueSetIndex) +
+                    ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                    "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                    "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+                squidChannelProperties.setCueSetPoints (cueSetIndex, startCue, startCue, endCue);
+            };
             LogReader ("importing markers");
             // import markers
-            for (auto markerListIndex { 0 }; markerListIndex < markerList.size (); markerListIndex += 2)
+            if (markerList [0] > 0)
+            {
+                // create first cue set from start of sample to first marker
+                addCueSet (0, 0, SquidChannelProperties::sampleOffsetToByteOffset (markerList [0]));
+            }
+            for (auto markerListIndex { 0 }; markerListIndex < markerList.size () - 1; ++markerListIndex)
             {
                 const auto startCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [markerListIndex]) };
-                const auto nextMarkerListIndex { markerListIndex + 1 };
-                const auto endCue { nextMarkerListIndex < markerList.size () ? SquidChannelProperties::sampleOffsetToByteOffset (markerList [nextMarkerListIndex]) : endOffset };
-                const auto cueSetIndex { markerListIndex / 2 };
-                LogReader ("import - cue set " + juce::String (cueSetIndex) +
-                           ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
-                           "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
-                           "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
-
+                const auto endCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [markerListIndex + 1])};
+                const auto cueSetIndex { markerListIndex + 1};
+                addCueSet (cueSetIndex, startCue, endCue);
                 jassert ((startCue <= endCue));
-                squidChannelProperties.setCueSetPoints (cueSetIndex, startCue, startCue, endCue);
+            }
+            if (const auto lastMarker { markerList [markerList.size () - 1] }; lastMarker < numSamples)
+            {
+                // create last cue set from last marker to end of sample
+                addCueSet (static_cast<int> (markerList.size ()), SquidChannelProperties::sampleOffsetToByteOffset (lastMarker), endOffset);
             }
             // set initial cue points to first cue set
             squidChannelProperties.setStartCue (squidChannelProperties.getStartCueSet (0), false);
