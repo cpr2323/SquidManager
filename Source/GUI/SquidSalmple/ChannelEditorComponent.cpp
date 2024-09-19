@@ -1211,7 +1211,7 @@ void ChannelEditorComponent::setupComponents ()
     {
         return true;
     };
-    waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
+    waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files, WaveformDisplay::DropType dropType)
     {
         if (files.size () == 1)
             handleSampleAssignment (files [0]);
@@ -1361,6 +1361,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     };
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+    waveformDisplay.init (rootPropertiesVT);
     waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
     cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
     cvAssignEditor.setEnableState (CvParameterIndex::Speed, squidChannelProperties.getChannelIndex () < 5);
