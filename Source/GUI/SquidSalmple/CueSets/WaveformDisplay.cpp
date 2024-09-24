@@ -185,11 +185,16 @@ void WaveformDisplay::paint (juce::Graphics& g)
 
 void WaveformDisplay::paintOverChildren (juce::Graphics& g)
 {
+    // dropMsg
+    // dropDetails
+    constexpr auto dropMsgFontSizeSingle { 30.f };
+    constexpr auto dropMsgFontSizeDouble { 20.f };
+    constexpr auto dropDetailsFontSize   { 15.f };
     if (draggingFilesCount > 0)
     {
         jassert (dropType != DropType::none);
         g.fillAll (juce::Colours::white.withAlpha (0.1f));
-        g.setFont (20.0f);
+        g.setFont (dropMsgFontSizeSingle);
         g.setColour (juce::Colours::black);
         if (audioBuffer == nullptr)
         {
@@ -200,6 +205,24 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
+            auto displayTextBackground = [&g, this] (juce::StringRef text, const juce::Rectangle<int>& bounds, int fontHeight)
+            {
+                // TODO - replace hardcoded 10.f with value derived from text height
+                if (supportedFile)
+                    g.setColour (juce::Colours::white.withAlpha (0.7f));
+                else
+                    g.setColour (juce::Colours::black.withAlpha (0.7f));
+                auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
+                auto center { bounds.getCentre () };
+                g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
+            };
+            auto setTextColor = [&g, this] ()
+            {
+                if (supportedFile)
+                    g.setColour (juce::Colours::black);
+                else
+                    g.setColour (juce::Colours::red.darker (0.5f));
+            };
             auto localBounds { getLocalBounds () };
             juce::Colour fillColor { juce::Colours::white };
             const float activeAlpha { 0.1f };
@@ -211,19 +234,28 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             g.fillRect (localBounds);
             const auto dropBounds { dropType == DropType::replace ? topHalfBounds : localBounds };
             juce::String dropMessage { ((dropType == DropType::replace) ? "Replace: " : "Append: ") + dropMsg };
-             if (supportedFile)
-                 g.setColour (juce::Colours::white.withAlpha (0.7f));
-             else
-                g.setColour (juce::Colours::black.withAlpha (0.7f));
-            constexpr auto fontHeight { 20.f };
-            auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMessage) + 10.f };
-            auto center { dropBounds.getCentre () };
-            g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
-             if (supportedFile)
-                 g.setColour (juce::Colours::black);
-             else
-                 g.setColour (juce::Colours::red.darker (0.5f));
-            g.drawText (dropMessage, dropBounds, juce::Justification::centred, false);
+            if (dropDetails.isEmpty ())
+            {
+                // just display dropMsg using all the space in the drop zone
+                displayTextBackground (dropMessage, dropBounds, dropMsgFontSizeSingle);
+                setTextColor ();
+                g.drawText (dropMessage, dropBounds, juce::Justification::centred, false);
+            }
+            else
+            {
+                // display dropMsg and dropDetails
+                const auto dropBoundsHalfHeight { dropBounds.getHeight () / 2 };
+                auto dropMsgBounds { juce::Rectangle<int> { 0, dropBounds.getY (), dropBounds.getWidth (), dropBoundsHalfHeight }};
+                auto dropDetailsBounds { juce::Rectangle<int> { 0, dropBounds.getY () + dropBoundsHalfHeight, dropBounds.getWidth (), dropBounds.getHeight () - dropBoundsHalfHeight } };
+                displayTextBackground (dropMessage, dropMsgBounds, dropMsgFontSizeDouble);
+                setTextColor ();
+                g.setFont (dropMsgFontSizeDouble);
+                g.drawText (dropMessage, dropMsgBounds, juce::Justification::centred, false);
+                displayTextBackground (dropDetails, dropDetailsBounds, dropDetailsFontSize);
+                setTextColor ();
+                g.setFont (dropDetailsFontSize);
+                g.drawText (dropDetails, dropDetailsBounds, juce::Justification::centred, false);
+            }
         }
     }
 }
@@ -328,6 +360,7 @@ void WaveformDisplay::setDropType (int x, int y)
         dropType = DropType::replace;
         dropAreaId = 0;
     }
+    else
     {
         // option to replace or append, present which based on hover location
         if (getLocalBounds ().removeFromTop (getLocalBounds ().getHeight () / 2).contains (x, y))
@@ -474,6 +507,19 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
             }
             else
             {
+                if (filesConcatenated == 0)
+                {
+                    // indicate no append happening
+                    // TODO - this is not an unsupported file, but we want the error colors and the drop ignored, which uses the supportedFile flag. We should change that to a generic error flag
+                    dropMsg = "No samples can be appended";
+                    dropDetails = "They do not fit in the remaining time of " + juce::String ((kMaxSampleLength - audioBuffer->getNumSamples ()) / 44100.f, 2) + " seconds";
+                    supportedFile = false;
+                }
+                else
+                {
+                    dropMsg = "Samples will be appended and new Cue Sets created for them";
+                    dropDetails = "Only " + juce::String (filesConcatenated) + " more samples will fit in 11 seconds. The remaining " + juce::String (files.size () - filesConcatenated) + " samples will be ignored";
+                }
             }
         }
     }
