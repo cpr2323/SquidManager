@@ -154,7 +154,7 @@ FileInfo EditManager::getFileInfo (juce::File file)
         return {};
     // check for any format settings that are unsupported
     if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels > 2) || (reader->sampleRate != 44100))
-        return {};
+        return { false, reader->sampleRate, reader->bitsPerSample, reader->lengthInSamples, reader->numChannels, reader->usesFloatingPointData };
 
     return { true, reader->sampleRate, reader->bitsPerSample, reader->lengthInSamples, reader->numChannels, reader->usesFloatingPointData };
 }

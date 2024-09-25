@@ -193,11 +193,11 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     if (draggingFilesCount > 0)
     {
         jassert (dropType != DropType::none);
-        g.fillAll (juce::Colours::white.withAlpha (0.1f));
-        g.setFont (dropMsgFontSizeSingle);
-        g.setColour (juce::Colours::black);
         if (audioBuffer == nullptr)
         {
+            g.fillAll (juce::Colours::white.withAlpha (0.1f));
+            g.setFont (dropMsgFontSizeSingle);
+            g.setColour (juce::Colours::black);
             if (draggingFilesCount == 1)
                 g.drawText ("Assign sample to Channel " + juce::String(channelIndex + 1), getLocalBounds(), juce::Justification::centred, false);
             else
@@ -205,8 +205,9 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
-            auto displayTextBackground = [&g, this] (juce::StringRef text, const juce::Rectangle<int>& bounds, int fontHeight)
+            auto displayTextWithBackground = [&g, this] (juce::StringRef text, int fontSize, const juce::Rectangle<int>& bounds)
             {
+                g.setFont (fontSize);
                 // TODO - replace hardcoded 10.f with value derived from text height
                 if (supportedFile)
                     g.setColour (juce::Colours::white.withAlpha (0.7f));
@@ -214,14 +215,12 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     g.setColour (juce::Colours::black.withAlpha (0.7f));
                 auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
                 auto center { bounds.getCentre () };
-                g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
-            };
-            auto setTextColor = [&g, this] ()
-            {
+                g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
                 if (supportedFile)
                     g.setColour (juce::Colours::black);
                 else
                     g.setColour (juce::Colours::red.darker (0.5f));
+                g.drawText (text, bounds, juce::Justification::centred, false);
             };
             auto localBounds { getLocalBounds () };
             juce::Colour fillColor { juce::Colours::white };
@@ -237,9 +236,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             if (dropDetails.isEmpty ())
             {
                 // just display dropMsg using all the space in the drop zone
-                displayTextBackground (dropMessage, dropBounds, dropMsgFontSizeSingle);
-                setTextColor ();
-                g.drawText (dropMessage, dropBounds, juce::Justification::centred, false);
+                displayTextWithBackground (dropMessage, dropMsgFontSizeSingle, dropBounds);
             }
             else
             {
@@ -247,14 +244,8 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 const auto dropBoundsHalfHeight { dropBounds.getHeight () / 2 };
                 auto dropMsgBounds { juce::Rectangle<int> { 0, dropBounds.getY (), dropBounds.getWidth (), dropBoundsHalfHeight }};
                 auto dropDetailsBounds { juce::Rectangle<int> { 0, dropBounds.getY () + dropBoundsHalfHeight, dropBounds.getWidth (), dropBounds.getHeight () - dropBoundsHalfHeight } };
-                displayTextBackground (dropMessage, dropMsgBounds, dropMsgFontSizeDouble);
-                setTextColor ();
-                g.setFont (dropMsgFontSizeDouble);
-                g.drawText (dropMessage, dropMsgBounds, juce::Justification::centred, false);
-                displayTextBackground (dropDetails, dropDetailsBounds, dropDetailsFontSize);
-                setTextColor ();
-                g.setFont (dropDetailsFontSize);
-                g.drawText (dropDetails, dropDetailsBounds, juce::Justification::centred, false);
+                displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
+                displayTextWithBackground (dropDetails, dropDetailsFontSize, dropDetailsBounds);
             }
         }
     }
@@ -433,9 +424,9 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                 updateDropDetails ("Unsupported wav file: " + draggedFile.getFileName () + " [");
                 juce::String formatErrors;
                 auto updateFormatError = [&formatErrors] (juce::String formatError)
-                    {
-                        formatErrors += (formatErrors.isNotEmpty () ? ", " : "") + formatError;
-                    };
+                {
+                    formatErrors += (formatErrors.isNotEmpty () ? ", " : "") + formatError;
+                };
                 if (fileInfo.usesFloatingPointData == true)
                 {
                     updateFormatError ("Data type 'float'");
