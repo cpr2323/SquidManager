@@ -523,7 +523,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     dropDetails.clear ();
     auto stringTokens { juce::StringArray::fromTokens (tempDropDetails, false) };
     juce::String tempDetails;
-    constexpr auto maxLineLength { 50 };
+    constexpr auto maxLineLength { 150 };
     for (auto tokenIndex { 0 }; tokenIndex < stringTokens.size (); ++tokenIndex)
     {
         if (tempDetails.length () + stringTokens [tokenIndex].length () + 1 > maxLineLength)
