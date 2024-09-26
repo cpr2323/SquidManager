@@ -208,11 +208,11 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             auto displayTextWithBackground = [&g, this] (juce::StringRef text, int fontSize, const juce::Rectangle<int>& bounds)
             {
                 g.setFont (fontSize);
-                // TODO - replace hardcoded 10.f with value derived from text height
                 if (supportedFile)
                     g.setColour (juce::Colours::white.withAlpha (0.7f));
                 else
                     g.setColour (juce::Colours::black.withAlpha (0.7f));
+                // TODO - replace hardcoded 10.f with value derived from text height
                 auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
                 auto center { bounds.getCentre () };
                 g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
@@ -245,7 +245,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 auto dropMsgBounds { juce::Rectangle<int> { 0, dropBounds.getY (), dropBounds.getWidth (), dropBoundsHalfHeight }};
                 auto dropDetailsBounds { juce::Rectangle<int> { 0, dropBounds.getY () + dropBoundsHalfHeight, dropBounds.getWidth (), dropBounds.getHeight () - dropBoundsHalfHeight } };
                 displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
-                displayTextWithBackground (dropDetails, dropDetailsFontSize, dropDetailsBounds);
+                displayTextWithBackground (dropDetails[0], dropDetailsFontSize, dropDetailsBounds);
             }
         }
     }
@@ -389,7 +389,7 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y
     setDropType (x, y);
     resetDropInfo ();
     repaint ();
-    if (onFilesDropped != nullptr)
+    if (onFilesDropped != nullptr && supportedFile)
         onFilesDropped (files, dropType);
 }
 
@@ -401,11 +401,11 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     auto channelCountMismatch { false };
     auto sampleRateMismatch { false };
     uint64_t totalSize { 0 };
-    dropDetails = {};
+    juce::String tempDropDetails;
     dropMsg = {};
-    auto updateDropDetails = [this] (juce::String errorMsg)
+    auto updateDropDetails = [&tempDropDetails] (juce::String errorMsg)
     {
-        dropDetails += (dropDetails.isNotEmpty () ? ", " : "") + errorMsg;
+            tempDropDetails += (tempDropDetails.isNotEmpty () ? ", " : "") + errorMsg;
     };
     supportedFile = true;
     for (auto& fileName : files)
@@ -444,10 +444,10 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                 }
                 if (fileInfo.sampleRate != 44100)
                 {
-                    updateFormatError ("Sample Rate '" + juce::String (fileInfo.sampleRate, 2) + "'");
+                    updateFormatError ("Sample Rate '" + juce::String (fileInfo.sampleRate) + "'");
                     sampleRateMismatch = true;
                 }
-                dropDetails += formatErrors + "]";
+                tempDropDetails += formatErrors + "]";
 
                 supportedFile = false;
             }
@@ -469,7 +469,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                 dropMsg = "Assign sample to Channel " + juce::String (channelIndex + 1);
                 if (totalSize > kMaxSampleLength)
                 {
-                    dropDetails = "Sample will be truncated to 11 seconds";
+                    tempDropDetails = "Sample will be truncated to 11 seconds";
                 }
             }
             else
@@ -479,7 +479,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                 {
                     // append truncation msg and some msg about how many files will be added, or which ones won't, or, etc
                     // use filesConcatenated value
-                    dropDetails = "Only " + juce::String (filesConcatenated) + " samples will fit in 11 seconds. The remaining " + juce::String (files.size () - filesConcatenated)  + " samples will be ignored";
+                    tempDropDetails = "Only " + juce::String (filesConcatenated) + " samples will fit in 11 seconds. The remaining " + juce::String (files.size () - filesConcatenated)  + " samples will be ignored";
                 }
             }
         }
@@ -503,13 +503,13 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                     // indicate no append happening
                     // TODO - this is not an unsupported file, but we want the error colors and the drop ignored, which uses the supportedFile flag. We should change that to a generic error flag
                     dropMsg = "No samples can be appended";
-                    dropDetails = "They do not fit in the remaining time of " + juce::String ((kMaxSampleLength - audioBuffer->getNumSamples ()) / 44100.f, 2) + " seconds";
+                    tempDropDetails = "They do not fit in the remaining time of " + juce::String ((kMaxSampleLength - audioBuffer->getNumSamples ()) / 44100.f, 2) + " seconds";
                     supportedFile = false;
                 }
                 else
                 {
                     dropMsg = "Samples will be appended and new Cue Sets created for them";
-                    dropDetails = "Only " + juce::String (filesConcatenated) + " more samples will fit in 11 seconds. The remaining " + juce::String (files.size () - filesConcatenated) + " samples will be ignored";
+                    tempDropDetails = "Only " + juce::String (filesConcatenated) + " more samples will fit in 11 seconds. The remaining " + juce::String (files.size () - filesConcatenated) + " samples will be ignored";
                 }
             }
         }
@@ -518,8 +518,20 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     {
         // cannot perform the drop because a file is either an unsupported wav file format, or an unsupported file type
         dropMsg = "Cannot accept files";
-        // TODO - still need to display 'dropDetails'
-        // TODO - still need to process sampleTypeMismatch, bitDepthMismatch, channelCountMismatch, sampleRateMismatch to produce a proper error msg for dropDetails
+    }
+
+    dropDetails.clear ();
+    auto stringTokens { juce::StringArray::fromTokens (tempDropDetails, false) };
+    juce::String tempDetails;
+    constexpr auto maxLineLength { 50 };
+    for (auto tokenIndex { 0 }; tokenIndex < stringTokens.size (); ++tokenIndex)
+    {
+        if (tempDetails.length () + stringTokens [tokenIndex].length () + 1 > maxLineLength)
+        {
+            dropDetails.add (tempDetails);
+            tempDetails = {};
+        }
+        tempDetails += stringTokens [tokenIndex] + " ";
     }
 }
 

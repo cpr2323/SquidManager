@@ -57,7 +57,7 @@ private:
     int draggingFilesCount { 0 };
     bool supportedFile { false };
     juce::String dropMsg;
-    juce::String dropDetails;
+    juce::StringArray dropDetails;
     DropType dropType { DropType::none };
     int dropAreaId { 0 };
 
