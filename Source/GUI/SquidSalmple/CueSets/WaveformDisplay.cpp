@@ -190,6 +190,20 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     constexpr auto dropMsgFontSizeSingle { 30.f };
     constexpr auto dropMsgFontSizeDouble { 20.f };
     constexpr auto dropDetailsFontSize   { 15.f };
+    auto setBackgroundColor = [this, &g] ()
+    {
+        if (supportedFile)
+            g.setColour (juce::Colours::white.withAlpha (0.7f));
+        else
+            g.setColour (juce::Colours::black.withAlpha (0.7f));
+    };
+    auto setTextColor = [this, &g] ()
+    {
+        if (supportedFile)
+            g.setColour (juce::Colours::black);
+        else
+            g.setColour (juce::Colours::red.darker (0.5f));
+    };
     if (draggingFilesCount > 0)
     {
         jassert (dropType != DropType::none);
@@ -205,21 +219,15 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
-            auto displayTextWithBackground = [&g, this] (juce::StringRef text, int fontSize, const juce::Rectangle<int>& bounds)
+            auto displayTextWithBackground = [&g, this, &setBackgroundColor, &setTextColor] (juce::StringRef text, int fontSize, const juce::Rectangle<int>& bounds)
             {
                 g.setFont (fontSize);
-                if (supportedFile)
-                    g.setColour (juce::Colours::white.withAlpha (0.7f));
-                else
-                    g.setColour (juce::Colours::black.withAlpha (0.7f));
+                setBackgroundColor ();
                 // TODO - replace hardcoded 10.f with value derived from text height
                 auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
                 auto center { bounds.getCentre () };
                 g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
-                if (supportedFile)
-                    g.setColour (juce::Colours::black);
-                else
-                    g.setColour (juce::Colours::red.darker (0.5f));
+                setTextColor ();
                 g.drawText (text, bounds, juce::Justification::centred, false);
             };
             auto localBounds { getLocalBounds () };
@@ -249,36 +257,38 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 // verticalSpace
                 // 
                 // display dropMsg and dropDetails
+                const auto linesToDisplay { std::min (6, dropDetails.size ()) };
+                const auto backgroundLines { linesToDisplay == dropDetails.size () ? dropDetails.size () : linesToDisplay + 1 };
                 auto totalDropBounds { dropBounds };
-                const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (dropDetails.size() * (dropDetailsFontSize + 4)))) / 3 };
+                const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (backgroundLines * (dropDetailsFontSize + 4)))) / 3 };
                 const auto dropMsgBounds { totalDropBounds.removeFromTop (sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2)) };
                 const auto dropDetailsBounds { totalDropBounds };
                 displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
                 g.setFont (dropDetailsFontSize);
-                auto maxDetailsWidthPixels = [this, &g] ()
+                auto maxDetailsWidthPixels = [this, &g, linesToDisplay] ()
                 {
                     auto maxStringPixels { 0 };
-                    for (auto curString : dropDetails)
-                        if (auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (curString) + 10.f }; stringWidthPixels > maxStringPixels)
+                    for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
+                    {
+                        const auto& detailLine { dropDetails [curDropDetailLineIndex] };
+                        if (auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (detailLine) + 10.f }; stringWidthPixels > maxStringPixels)
                             maxStringPixels = stringWidthPixels;
+                    }
                     return maxStringPixels;
                 } ();
-                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, maxDetailsWidthPixels, dropDetails.size () * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
-                if (supportedFile)
-                    g.setColour (juce::Colours::white.withAlpha (0.7f));
-                else
-                    g.setColour (juce::Colours::black.withAlpha (0.7f));
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, maxDetailsWidthPixels, backgroundLines * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
+                setBackgroundColor ();
                 g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
-                if (supportedFile)
-                    g.setColour (juce::Colours::black);
-                else
-                    g.setColour (juce::Colours::red.darker (0.5f));
+                setTextColor ();
                 dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize / 2);
-                for (auto curDetailsString : dropDetails)
+                for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
                 {
                     const auto textBounds { dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize) };
-                    g.drawText (curDetailsString, textBounds, juce::Justification::centred, false);
+                    const auto& detailLine { dropDetails [curDropDetailLineIndex] };
+                    g.drawText (detailLine, textBounds, juce::Justification::centred, false);
                 }
+                if (linesToDisplay < dropDetails.size ())
+                    g.drawText ("...", dropDetailsDisplayBounds, juce::Justification::centred, false);
             }
         }
     }
