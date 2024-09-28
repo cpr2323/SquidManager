@@ -350,28 +350,30 @@ void BankListComponent::pasteBank (int /*presetNumber*/)
     jassertfalse;
 }
 
-void BankListComponent::deleteBank (int /*presetNumber*/)
+void BankListComponent::deleteBank (int bankNumber)
 {
-#if 0
-    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE PRESET", "Are you sure you want to delete '" + FileTypeHelpers::getPresetFileName (presetNumber) + "'", "YES", "NO", nullptr,
-        juce::ModalCallbackFunction::create ([this, presetNumber, presetFile = getPresetFile (presetNumber)] (int option)
+    auto [_, __, bankName] { bankInfoList [bankNumber - 1] };
+    const auto bankDirectory { getBankDirectory (bankNumber) };
+
+    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete '" + bankName + "'", "YES", "NO", nullptr,
+        juce::ModalCallbackFunction::create ([this, bankNumber, bankDirectory] (int option)
         {
             if (option == 0) // no
                 return;
-            presetFile.deleteFile ();
+            // TODO - delete contents of folder and delete folder
+            bankDirectory.deleteRecursively (false);
             // TODO handle delete error
-            auto [lastSelectedPresetNumber, thisPresetExists, presetName] { presetInfoList [lastSelectedPresetIndex] };
-            if (presetNumber == lastSelectedPresetNumber)
+            auto [lastSelectedBankNumber, thisBankExists, bankName] { bankInfoList [lastSelectedBankIndex] };
+            if (bankNumber == lastSelectedBankNumber)
             {
-                auto defaultPreset { ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType) };
-                PresetProperties::copyTreeProperties (defaultPreset, unEditedPresetProperties.getValueTree ());
-                unEditedPresetProperties.setId (presetNumber, false);
-                PresetProperties::copyTreeProperties (defaultPreset, presetProperties.getValueTree ());
-                presetProperties.setId (presetNumber, false);
+                // TODO - clear editor
+//                 auto defaultPreset { ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType) };
+//                 PresetProperties::copyTreeProperties (defaultPreset, unEditedPresetProperties.getValueTree ());
+//                 unEditedPresetProperties.setId (presetNumber, false);
+//                 PresetProperties::copyTreeProperties (defaultPreset, presetProperties.getValueTree ());
+//                 presetProperties.setId (presetNumber, false);
             }
         }));
-#endif
-    jassertfalse;
 }
 
 juce::File BankListComponent::getBankDirectory (int bankNumber)
@@ -398,7 +400,7 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         pm.addSeparator ();
         pm.addItem ("Copy", thisBankExists, false, [this, bankNumber = bankNumber] () { /*copyPreset (presetNumber);*/ });
         pm.addItem ("Paste", false /*copyBufferBankProperties.getName ().isNotEmpty ()*/, false, [this, bankNumber = bankNumber] () { /*pastePreset (presetNumber);*/ });
-        pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { /*deletePreset (presetNumber);*/ });
+        pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { deleteBank (bankNumber); });
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
     }
     else
