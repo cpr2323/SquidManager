@@ -240,12 +240,45 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             }
             else
             {
+                // sectionSpacing = (totalSpace - (bigFontHeight + (numberLines * (smallFontHeight + spaceBetweenLines))) / 3
+                // 
+                // verticalSpace
+                // bigFont
+                // verticalSpace
+                // littleFont * numLines
+                // verticalSpace
+                // 
                 // display dropMsg and dropDetails
-                const auto dropBoundsHalfHeight { dropBounds.getHeight () / 2 };
-                auto dropMsgBounds { juce::Rectangle<int> { 0, dropBounds.getY (), dropBounds.getWidth (), dropBoundsHalfHeight }};
-                auto dropDetailsBounds { juce::Rectangle<int> { 0, dropBounds.getY () + dropBoundsHalfHeight, dropBounds.getWidth (), dropBounds.getHeight () - dropBoundsHalfHeight } };
+                auto totalDropBounds { dropBounds };
+                const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (dropDetails.size() * (dropDetailsFontSize + 4)))) / 3 };
+                const auto dropMsgBounds { totalDropBounds.removeFromTop (sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2)) };
+                const auto dropDetailsBounds { totalDropBounds };
                 displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
-                displayTextWithBackground (dropDetails[0], dropDetailsFontSize, dropDetailsBounds);
+                g.setFont (dropDetailsFontSize);
+                auto maxDetailsWidthPixels = [this, &g] ()
+                {
+                    auto maxStringPixels { 0 };
+                    for (auto curString : dropDetails)
+                        if (auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (curString) + 10.f }; stringWidthPixels > maxStringPixels)
+                            maxStringPixels = stringWidthPixels;
+                    return maxStringPixels;
+                } ();
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, maxDetailsWidthPixels, dropDetails.size () * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
+                if (supportedFile)
+                    g.setColour (juce::Colours::white.withAlpha (0.7f));
+                else
+                    g.setColour (juce::Colours::black.withAlpha (0.7f));
+                g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
+                if (supportedFile)
+                    g.setColour (juce::Colours::black);
+                else
+                    g.setColour (juce::Colours::red.darker (0.5f));
+                dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize / 2);
+                for (auto curDetailsString : dropDetails)
+                {
+                    const auto textBounds { dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize) };
+                    g.drawText (curDetailsString, textBounds, juce::Justification::centred, false);
+                }
             }
         }
     }
@@ -523,7 +556,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     dropDetails.clear ();
     auto stringTokens { juce::StringArray::fromTokens (tempDropDetails, false) };
     juce::String tempDetails;
-    constexpr auto maxLineLength { 150 };
+    constexpr auto maxLineLength { 140 };
     for (auto tokenIndex { 0 }; tokenIndex < stringTokens.size (); ++tokenIndex)
     {
         if (tempDetails.length () + stringTokens [tokenIndex].length () + 1 > maxLineLength)
@@ -533,6 +566,8 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         }
         tempDetails += stringTokens [tokenIndex] + " ";
     }
+    if (tempDetails.isNotEmpty ())
+        dropDetails.add (tempDetails);
 }
 
 void WaveformDisplay::fileDragEnter (const juce::StringArray& files, int x, int y)
