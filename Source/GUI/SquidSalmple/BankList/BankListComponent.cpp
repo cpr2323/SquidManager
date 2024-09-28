@@ -385,23 +385,21 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 {
     if (me.mods.isPopupMenu ())
     {
-#if 0
-        presetListBox.selectRow (lastSelectedPresetIndex, false, true);
-        auto [presetNumber, thisPresetExists, presetName] { presetInfoList [row] };
-        if (! thisPresetExists)
-            presetName = "(preset)";
+        bankListBox.selectRow (lastSelectedBankIndex, false, true);
+        auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+        if (! thisBankExists)
+            bankName = "(empty)";
 
         auto* popupMenuLnF { new juce::LookAndFeel_V4 };
         popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
         pm.setLookAndFeel (popupMenuLnF);
-        pm.addSectionHeader (juce::String (presetNumber) + " - " + presetName);
+        pm.addSectionHeader (juce::String (bankNumber) + " - " + bankName);
         pm.addSeparator ();
-        pm.addItem ("Copy", thisPresetExists, false, [this, presetNumber = presetNumber] () { copyPreset (presetNumber); });
-        pm.addItem ("Paste", copyBufferPresetProperties.getName ().isNotEmpty (), false, [this, presetNumber = presetNumber] () { pastePreset (presetNumber); });
-        pm.addItem ("Delete", thisPresetExists, false, [this, presetNumber = presetNumber] () { deletePreset (presetNumber); });
+        pm.addItem ("Copy", thisBankExists, false, [this, bankNumber = bankNumber] () { /*copyPreset (presetNumber);*/ });
+        pm.addItem ("Paste", false /*copyBufferBankProperties.getName ().isNotEmpty ()*/, false, [this, bankNumber = bankNumber] () { /*pastePreset (presetNumber);*/ });
+        pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { /*deletePreset (presetNumber);*/ });
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
-#endif
     }
     else
     {
