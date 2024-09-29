@@ -64,6 +64,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
         });
     };
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     uneditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     uneditedSquidBankProperties.onNameChange = [this] (juce::String newName)
     {
@@ -366,12 +367,9 @@ void BankListComponent::deleteBank (int bankNumber)
             auto [lastSelectedBankNumber, thisBankExists, bankName] { bankInfoList [lastSelectedBankIndex] };
             if (bankNumber == lastSelectedBankNumber)
             {
-                // TODO - clear editor
-//                 auto defaultPreset { ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType) };
-//                 PresetProperties::copyTreeProperties (defaultPreset, unEditedPresetProperties.getValueTree ());
-//                 unEditedPresetProperties.setId (presetNumber, false);
-//                 PresetProperties::copyTreeProperties (defaultPreset, presetProperties.getValueTree ());
-//                 presetProperties.setId (presetNumber, false);
+                // clear editor
+                editManager->setBankDefaults ();
+                uneditedSquidBankProperties.copyFrom (squidBankProperties.getValueTree ());
             }
         }));
 }

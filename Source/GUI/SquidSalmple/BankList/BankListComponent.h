@@ -23,6 +23,7 @@ private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
     BankListProperties bankListProperties;
+    SquidBankProperties squidBankProperties;
     SquidBankProperties uneditedSquidBankProperties;
     EditManager* editManager { nullptr };
 
