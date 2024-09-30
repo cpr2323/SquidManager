@@ -26,6 +26,7 @@ private:
     SquidBankProperties squidBankProperties;
     SquidBankProperties uneditedSquidBankProperties;
     EditManager* editManager { nullptr };
+    juce::File copyDirectory;
 
     juce::ToggleButton showAllBanks { "Show All" };
     juce::ListBox bankListBox { {}, this };
