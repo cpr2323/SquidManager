@@ -23,7 +23,7 @@ public:
 
     void init (juce::ValueTree rootPropertiesVT);
 
-    void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
+    void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT);
     void cleanUpTempFiles (juce::File bankFolder);
     void cloneCvAssigns (int srcChannelIndex, int srcCvAssign, int destChannelIndex, int destCvAssing);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);

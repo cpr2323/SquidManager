@@ -1207,16 +1207,48 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (cvAssignEditor);
 
     // WAVEFORM DISPLAY
-    waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& files)
+    waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& /*files*/)
     {
         return true;
     };
     waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files, WaveformDisplay::DropType dropType)
     {
-        if (files.size () == 1)
-            handleSampleAssignment (files [0]);
-        else
-            filesDroppedOnCueSetEditor (files);
+        switch (dropType)
+        {
+            case WaveformDisplay::DropType::replace:
+            {
+                if (files.size () == 1)
+                    handleSampleAssignment (files [0]);
+                else
+                    filesDroppedOnCueSetEditor (files, "new._wav", {});
+            }
+            break;
+            case WaveformDisplay::DropType::append:
+            {
+                juce::StringArray concatenateList;
+                auto cueSetListVT { squidChannelProperties.getValueTree ().getChildWithName (SquidChannelProperties::CueSetListTypeId).createCopy () };
+
+                if (auto currentSampleFile { juce::File (squidChannelProperties.getSampleFileName ()) }; currentSampleFile.getFileExtension () == "._wav")
+                {
+                    auto tempFile { currentSampleFile.getParentDirectory ().getChildFile (currentSampleFile.getFileNameWithoutExtension () + "_").withFileExtension ("_wav") };
+                    currentSampleFile.moveFileTo (tempFile);
+                    concatenateList.add (tempFile.getFullPathName ());
+                    concatenateList.addArray (files);
+                    filesDroppedOnCueSetEditor (concatenateList, currentSampleFile.getFileName (), cueSetListVT);
+                    tempFile.deleteFile ();
+                }
+                else
+                {
+                    concatenateList.add (squidChannelProperties.getSampleFileName ());
+                    concatenateList.addArray (files);
+                    filesDroppedOnCueSetEditor (concatenateList, juce::File (squidChannelProperties.getSampleFileName ()).withFileExtension ("._wav").getFileName (), cueSetListVT);
+                }
+            }
+            break;
+            default:
+                jassertfalse;
+            break;
+        }
     };
     waveformDisplay.onStartPointChange = [this] (juce::int64 startPoint)
     {
@@ -1864,7 +1896,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     return true;
 }
 
-bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
+bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& /*files*/)
 {
     return true;
 }
@@ -2110,9 +2142,10 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
     }
 }
 
-void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files)
+// TODO - needs to take in a list 
+void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files, juce::String outputFileName, juce::ValueTree cueSets)
 {
-    editManager->concatenateAndBuildCueSets (files, squidChannelProperties.getChannelIndex ());
+    editManager->concatenateAndBuildCueSets (files, squidChannelProperties.getChannelIndex (), outputFileName, cueSets);
 }
 
 void ChannelEditorComponent::initOutputComboBox ()

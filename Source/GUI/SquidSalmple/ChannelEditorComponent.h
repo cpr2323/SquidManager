@@ -149,7 +149,7 @@ private:
     int getFilterFrequencyInternalValue (int uiValue);
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
-    void filesDroppedOnCueSetEditor (const juce::StringArray& files);
+    void filesDroppedOnCueSetEditor (const juce::StringArray& files, juce::String outputFileName, juce::ValueTree cueSets);
     bool handleSampleAssignment (juce::String sampleFileName);
     void initOutputComboBox ();
     void initializeCallbacks ();

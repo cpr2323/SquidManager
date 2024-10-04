@@ -561,13 +561,13 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     }
 }
 
-void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex)
+void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT)
 {
     LogEditManager ("concatenateAndBuildCueSets");
     const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
-    const auto outputFile { channelDirectory.getChildFile ("new._wav") };
+    const auto outputFile { channelDirectory.getChildFile (outputFileName) };
     struct CueSet
     {
         uint32_t offset;
@@ -590,22 +590,31 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             for (auto& file : files)
             {
                 ++numFilesProcessed;
-                std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
-                jassert (reader != nullptr);
-                LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
-                const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength  - curSampleOffset) };
-                if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                auto inputStream { juce::File (file).createInputStream ()};
+                // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
+                if (std::unique_ptr<juce::AudioFormatReader> reader { wavAudioFormat.createReaderFor (inputStream.get (), true) }; reader != nullptr)
                 {
-                    LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                    cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                    inputStream.release ();
+                    jassert (reader != nullptr);
+                    LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
+                    const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
+                    if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                    {
+                        LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                        cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                    }
+                    else
+                    {
+                        // handle error
+                        LogEditManager ("ERROR - when writing file");
+                        hadError = true;
+                    }
+                    curSampleOffset += samplesToRead;
                 }
                 else
                 {
-                    // handle error
-                    LogEditManager ("ERROR - when writing file");
                     hadError = true;
                 }
-                curSampleOffset += samplesToRead;
                 if (curSampleOffset >= kMaxSampleLength || hadError)
                     break;
             }
@@ -627,12 +636,30 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         for (auto cueSetCount { channelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
             channelProperties.removeCueSet (cueSetCount - 1);
         channelProperties.triggerLoadComplete (false);
-        // set cue sets
+        // add original cue sets
+        auto curCueSetIndex { 0 };
+        if (cueSetListVT.isValid ())
+        {
+            ValueTreeHelpers::forEachChildOfType (cueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &channelProperties, &curCueSetIndex] (juce::ValueTree cueSetVT)
+            {
+                channelProperties.setCueSetPoints (curCueSetIndex,
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetStartPropertyId)),
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetLoopPropertyId)),
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetEndPropertyId)));
+                ++curCueSetIndex;
+                return true;
+            });
+        }
+
+        // add new cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
-            channelProperties.setCueSetPoints (cueSetIndex,
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
+        {
+            auto& cueSetListEntry { cueSetList [cueSetIndex] };
+            channelProperties.setCueSetPoints (curCueSetIndex + cueSetIndex,
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset + cueSetListEntry.length));
+        }
     }
     else
     {

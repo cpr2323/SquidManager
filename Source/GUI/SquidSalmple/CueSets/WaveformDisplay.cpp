@@ -219,7 +219,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
-            auto displayTextWithBackground = [&g, this, &setBackgroundColor, &setTextColor] (juce::StringRef text, int fontSize, const juce::Rectangle<int>& bounds)
+            auto displayTextWithBackground = [&g, this, &setBackgroundColor, &setTextColor] (juce::StringRef text, float fontSize, const juce::Rectangle<int>& bounds)
             {
                 g.setFont (fontSize);
                 setBackgroundColor ();
@@ -261,13 +261,13 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 const auto backgroundLines { linesToDisplay == dropDetails.size () ? dropDetails.size () : linesToDisplay + 1 };
                 auto totalDropBounds { dropBounds };
                 const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (backgroundLines * (dropDetailsFontSize + 4)))) / 3 };
-                const auto dropMsgBounds { totalDropBounds.removeFromTop (sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2)) };
+                const auto dropMsgBounds { totalDropBounds.removeFromTop (static_cast<int>(sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2))) };
                 const auto dropDetailsBounds { totalDropBounds };
                 displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
                 g.setFont (dropDetailsFontSize);
                 auto maxDetailsWidthPixels = [this, &g, linesToDisplay] ()
                 {
-                    auto maxStringPixels { 0 };
+                    auto maxStringPixels { 0.f };
                     for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
                     {
                         const auto& detailLine { dropDetails [curDropDetailLineIndex] };
@@ -276,14 +276,14 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     }
                     return maxStringPixels;
                 } ();
-                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, maxDetailsWidthPixels, backgroundLines * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int>(maxDetailsWidthPixels), backgroundLines * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
                 setBackgroundColor ();
                 g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
-                dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize / 2);
+                dropDetailsDisplayBounds.removeFromTop (static_cast<int>(dropDetailsFontSize / 2));
                 for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
                 {
-                    const auto textBounds { dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize) };
+                    const auto textBounds { dropDetailsDisplayBounds.removeFromTop (static_cast<int>(dropDetailsFontSize)) };
                     const auto& detailLine { dropDetails [curDropDetailLineIndex] };
                     g.drawText (detailLine, textBounds, juce::Justification::centred, false);
                 }
@@ -430,10 +430,10 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y
 {
     // TODO - do I really need setDropType here? ie. this is already called by fileDragEnter and fileDragMove
     setDropType (x, y);
-    resetDropInfo ();
-    repaint ();
     if (onFilesDropped != nullptr && supportedFile)
         onFilesDropped (files, dropType);
+    resetDropInfo ();
+    repaint ();
 }
 
 void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
@@ -448,7 +448,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     dropMsg = {};
     auto updateDropDetails = [&tempDropDetails] (juce::String errorMsg)
     {
-            tempDropDetails += (tempDropDetails.isNotEmpty () ? ", " : "") + errorMsg;
+        tempDropDetails += (tempDropDetails.isNotEmpty () ? ", " : "") + errorMsg;
     };
     supportedFile = true;
     for (auto& fileName : files)
