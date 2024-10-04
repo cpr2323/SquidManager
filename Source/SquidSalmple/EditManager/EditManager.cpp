@@ -601,7 +601,8 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                     if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                     {
                         LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                        cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                        if (! cueSetListVT.isValid() || numFilesProcessed > 1)
+                            cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
                     }
                     else
                     {
