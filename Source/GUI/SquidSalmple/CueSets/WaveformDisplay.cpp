@@ -7,7 +7,7 @@
 
 constexpr auto kMaxSampleLength { 524287 };
 
-#define LOG_WAVEFORM_DISPLAY 1
+#define LOG_WAVEFORM_DISPLAY 0
 #if LOG_WAVEFORM_DISPLAY 
 #define LogWaveformDisplay(text) DebugLog ("WaveformDisplay", text);
 #else
