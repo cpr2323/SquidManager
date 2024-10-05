@@ -25,6 +25,7 @@ public:
 
     void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT);
     void cleanUpTempFiles (juce::File bankFolder);
+    void clearChannel (int channelIndex);
     void cloneCvAssigns (int srcChannelIndex, int srcCvAssign, int destChannelIndex, int destCvAssing);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     juce::PopupMenu createChannelInteractionMenu (int channelIndex, juce::String interactionArticle, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canInteractCallback, std::function <bool (SquidChannelProperties&)> canInteractToAllCallback);

@@ -159,6 +159,10 @@ ChannelEditorComponent::ChannelEditorComponent ()
             squidChannelProperties.setEndCue (endOffset, true);
             squidChannelProperties.setCueSetPoints (0, 0, 0, SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()));
         });
+        editMenu.addItem ("Clear", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+            editManager->clearChannel (squidChannelProperties.getChannelIndex ());
+        });
         editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
             editManager->setChannelDefaults (squidChannelProperties.getChannelIndex ());

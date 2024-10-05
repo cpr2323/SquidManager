@@ -281,7 +281,15 @@ void EditManager::saveBank ()
         SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
         auto sampleFileName { squidChannelPropertiesToSave.getSampleFileName () };
         if (sampleFileName.isEmpty ())
+        {
+            for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory, false, "*", juce::File::findFiles))
+            {
+                const auto extension { entry.getFile ().getFileExtension ().toLowerCase () };
+                if (extension == ".wav" || extension == "._wav")
+                    entry.getFile ().moveToTrash ();
+            }
             continue;
+        }
         auto originalFile { juce::File (sampleFileName) };
         auto tempFile { originalFile.withFileExtension ("tmp") };
         // write out the file with the new metadata to a tmp file
@@ -339,6 +347,24 @@ void EditManager::setBankUnedited ()
 {
     cleanupChannelTempFiles ();
     squidBankProperties.copyFrom (uneditedSquidBankProperties.getValueTree ());
+}
+
+void EditManager::clearChannel (int channelIndex)
+{
+    SquidChannelProperties clearedChannelProperties (defaultSquidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+
+    auto& channelProperties { channelPropertiesList [channelIndex] };
+    clearedChannelProperties.setChannelIndex (static_cast<uint8_t> (channelIndex), false);
+    clearedChannelProperties.setChannelSource (static_cast<uint8_t> (channelIndex), false);
+    clearedChannelProperties.setChoke (channelIndex, false);
+    clearedChannelProperties.setRecDest (channelIndex, false);
+    clearedChannelProperties.setSampleDataBits (0, false);
+    clearedChannelProperties.setSampleDataSampleRate (0.0, false);
+    clearedChannelProperties.setSampleDataNumSamples (0, false);
+    clearedChannelProperties.setSampleDataNumChannels (0, false);
+    clearedChannelProperties.setSampleDataAudioBuffer ({}, false);
+
+    channelProperties.copyFrom (clearedChannelProperties.getValueTree (), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 void EditManager::setChannelDefaults (int channelIndex)
