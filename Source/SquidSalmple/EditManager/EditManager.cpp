@@ -98,7 +98,7 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
         if (srcFile == juce::File ())
             return juce::File ();
         const auto destChannelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (dstChannelIndex + 1)) };
-        if (!destChannelDirectory.exists ())
+        if (! destChannelDirectory.exists ())
             destChannelDirectory.createDirectory ();
         const auto destFile { destChannelDirectory.getChildFile (srcFile.getFileNameWithoutExtension ()).withFileExtension ("._tmp") };
         srcFile.copyFileTo (destFile);
@@ -271,7 +271,7 @@ void EditManager::saveBank ()
     jassert (bankDirectory.exists ());
     // update info.txt file in bank directory
     auto infoTxtFile { bankDirectory.getChildFile ("info.txt") };
-    infoTxtFile.replaceWithText (squidBankProperties.getName());
+    infoTxtFile.replaceWithText (squidBankProperties.getName ());
 
     // update channel folders
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
@@ -467,7 +467,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
         theSquidBankProperties.setName (firstLine.substring (0, 11), true);
     }
 
-    // iterate over the channel folders and load sample 
+    // iterate over the channel folders and load sample
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
     {
         auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
@@ -483,7 +483,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
         {
             // Channel folder does not exist, check for old style bank files "chan-00X.wav"
             auto oldStyleNamingSampleFile { bankDirectoryToLoad.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension ("wav") };
-            if (oldStyleNamingSampleFile.exists () && !oldStyleNamingSampleFile.isDirectory ())
+            if (oldStyleNamingSampleFile.exists () && ! oldStyleNamingSampleFile.isDirectory ())
             {
                 // create folder
                 if (! channelDirectory.createDirectory ())
@@ -500,7 +500,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
                 }
             }
         }
-        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), static_cast<uint8_t>(channelIndex), sampleFile);
+        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), static_cast<uint8_t> (channelIndex), sampleFile);
     }
 
     bankDirectory = bankDirectoryToLoad;
@@ -627,8 +627,8 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                     if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                     {
                         LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                        if (! cueSetListVT.isValid() || numFilesProcessed > 1)
-                            cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                        if (! cueSetListVT.isValid () || numFilesProcessed > 1)
+                            cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
                     }
                     else
                     {
@@ -719,7 +719,7 @@ void EditManager::cloneCvAssigns (int srcChannelIndex, int srcCvAssignIndex, int
         auto dstParameterVT { destChannelProperties.getCvParameterVT (destCvAssignIndex, curParameterIndex) };
         const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
         const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-        const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+        const auto attenuation { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);

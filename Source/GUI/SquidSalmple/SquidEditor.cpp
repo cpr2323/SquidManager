@@ -128,7 +128,7 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
 
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
-    unEditedSquidBankProperties.wrap (bankManagerProperties.getBank("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    unEditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
@@ -187,7 +187,7 @@ void SquidEditorComponent::bankLoseEditWarning (juce::String title, std::functio
 
 void SquidEditorComponent::resized ()
 {
-    auto localBounds { getLocalBounds() };
+    auto localBounds { getLocalBounds () };
 
     localBounds.removeFromTop (5);
     // put bank name and save button on the top line
@@ -202,7 +202,7 @@ void SquidEditorComponent::resized ()
 
     const auto channelSectionY { saveButton.getBottom () + 3 };
     const auto kWidthOfWaveformEditor { 962 };
-    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight() - channelSectionY - 5);
+    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
 }
 
 void SquidEditorComponent::paint (juce::Graphics& g)

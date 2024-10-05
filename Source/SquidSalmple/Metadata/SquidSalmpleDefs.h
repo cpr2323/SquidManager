@@ -114,7 +114,6 @@ namespace CvParameterIndex
     juce::String getParameterName (uint16_t cvAssignFlag);
 };
 
-
 // std::vector<juce::String> CvParameterNameList
 // {
 //     "bits",
@@ -210,7 +209,7 @@ namespace SquidSalmple
         const auto kCvFlagsSize { 8 * k16BitSize };
         const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
         const auto kCvParamsSize { 8 * 40 * k16BitSize };
-        const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times 
+        const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times
         const auto k_Reserved9Size { 80 * k8BitSize};
         const auto kChannelFlagsOffset { k_Reserved9Offset + k_Reserved9Size };
         const auto kChannelFlagsSize { k16BitSize };

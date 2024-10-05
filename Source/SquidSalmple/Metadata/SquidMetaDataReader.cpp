@@ -42,7 +42,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
-        jassert (!( (squidChannelProperties.getChannelFlags() & ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped)));
+        jassert (! ((squidChannelProperties.getChannelFlags () & ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped)));
 #if JUCE_DEBUG
         const auto channelFlags { squidChannelProperties.getChannelFlags () };
         juce::String channelFlagsString;
@@ -106,7 +106,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
                 const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
                 const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInputIndex)) };
                 const auto offset { getValue <2> (cvParamOffset + 0) };
-                const auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+                const auto attenuation { static_cast<int16_t> (getValue <2> (cvParamOffset + 2)) };
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
@@ -145,7 +145,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         auto readReserved = [this, &squidChannelProperties] (int reservedDataOffset, int reservedDataSize, std::function<void (juce::String)> setter)
         {
             juce::MemoryBlock tempMemory;
-            tempMemory.replaceAll (static_cast<uint8_t*>(busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
+            tempMemory.replaceAll (static_cast<uint8_t*> (busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
             auto textVersion { tempMemory.toBase64Encoding () };
             setter (textVersion);
         };
@@ -166,7 +166,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     }
     else
     {
-        LogReader (sampleFile.getFileName() + " does not contain meta-data");
+        LogReader (sampleFile.getFileName () + " does not contain meta-data");
         auto numSamples = squidChannelProperties.getSampleDataNumSamples ();
         uint32_t endOffset = numSamples * 2;
         // initialize parameters that have defaults related to specific channel or sample

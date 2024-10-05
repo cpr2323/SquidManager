@@ -24,7 +24,7 @@ bool BusyChunkWriter::write (juce::AudioBuffer<float>& audioBuffer, juce::File o
     // write metadata
     auto outputSampleStream { outputSampleFile.createOutputStream () };
     jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
-    auto positionAtEndSuccess { outputSampleStream->setPosition (outputSampleFile.getSize()) };
+    auto positionAtEndSuccess { outputSampleStream->setPosition (outputSampleFile.getSize ()) };
     jassert (positionAtEndSuccess == true);
     // write new busy chunk identifier
     auto writeSuccess = outputSampleStream->write (kBusyChunkType, 4);

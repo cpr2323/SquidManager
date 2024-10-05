@@ -27,7 +27,7 @@ void SquidChannelProperties::initValueTree ()
     setChannelIndex (0, false); // needs to be initialized to the correct value for the specific channel this represents
     setChannelSource (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setChoke (0, false); // needs to be initialized to the correct value for the specific channel this represents
-    //we need to initialize CurCueSet once the cue sets have been configured, so we will do this at the end of initValueTree 
+    //we need to initialize CurCueSet once the cue sets have been configured, so we will do this at the end of initValueTree
     //setCurCueSet (0, false);
     setDecay (0, false);
     setETrig (0, false);
@@ -130,12 +130,12 @@ void SquidChannelProperties::setChannelFlags (uint16_t channelFlags, bool includ
 
 void SquidChannelProperties::setChannelIndex (uint8_t channelIndex, bool includeSelfCallback)
 {
-    setValue (static_cast<int>(channelIndex), ChannelIndexPropertyId, includeSelfCallback);
+    setValue (static_cast<int> (channelIndex), ChannelIndexPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setChannelSource (uint8_t channelIndex, bool includeSelfCallback)
 {
-    setValue (static_cast<int>(channelIndex), ChannelSourcePropertyId, includeSelfCallback);
+    setValue (static_cast<int> (channelIndex), ChannelSourcePropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setChoke (int chokeChannel, bool includeSelfCallback)
@@ -152,7 +152,7 @@ void SquidChannelProperties::setCueSetEndPoint (int cueSetIndex, uint32_t end)
 
     auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
     jassert (requestedCueSetVT.isValid ());
-    if (!requestedCueSetVT.isValid ())
+    if (! requestedCueSetVT.isValid ())
         return;
     requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int> (end), nullptr);
 }
@@ -166,7 +166,7 @@ void SquidChannelProperties::setCueSetLoopPoint (int cueSetIndex, uint32_t loop)
 
     auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
     jassert (requestedCueSetVT.isValid ());
-    if (!requestedCueSetVT.isValid ())
+    if (! requestedCueSetVT.isValid ())
         return;
     requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int> (loop), nullptr);
 }
@@ -221,7 +221,7 @@ void SquidChannelProperties::setCueSetStartPoint (int cueSetIndex, uint32_t star
 
     auto requestedCueSetVT { getCueSetVT (cueSetIndex) };
     jassert (requestedCueSetVT.isValid ());
-    if (!requestedCueSetVT.isValid ())
+    if (! requestedCueSetVT.isValid ())
         return;
     requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int> (start), nullptr);
 }
@@ -469,7 +469,7 @@ void SquidChannelProperties::setStartCueSet (int cueSetIndex, uint32_t startCue,
     jassert (requestedCueSetVT.isValid ());
     if (! requestedCueSetVT.isValid ())
         return;
-    requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int>(startCue), nullptr);
+    requestedCueSetVT.setProperty (CueSetStartPropertyId, static_cast<int> (startCue), nullptr);
 }
 
 void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, bool /*includeSelfCallback*/)
@@ -482,7 +482,7 @@ void SquidChannelProperties::setEndCueSet (int cueSetIndex, uint32_t endCue, boo
     jassert (requestedCueSetVT.isValid ());
     if (! requestedCueSetVT.isValid ())
         return;
-    requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int>(endCue), nullptr);
+    requestedCueSetVT.setProperty (CueSetEndPropertyId, static_cast<int> (endCue), nullptr);
 }
 
 void SquidChannelProperties::setSampleFileName (juce::String fileName, bool includeSelfCallback)
@@ -501,7 +501,7 @@ void SquidChannelProperties::setLoopCueSet (int cueSetIndex, uint32_t loopCue, b
     if (! requestedCueSetVT.isValid ())
         return;
 
-    requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int>(loopCue), nullptr);
+    requestedCueSetVT.setProperty (CueSetLoopPropertyId, static_cast<int> (loopCue), nullptr);
 }
 
 void SquidChannelProperties::triggerLoadBegin (bool includeSelfCallback)
@@ -549,7 +549,7 @@ void SquidChannelProperties::setSampleDataNumSamples (uint32_t numSamples, bool 
 
 uint16_t SquidChannelProperties::getChannelFlags ()
 {
-    return static_cast<uint16_t>(getValue<int> (ChannelFlagsPropertyId));
+    return static_cast<uint16_t> (getValue<int> (ChannelFlagsPropertyId));
 }
 
 uint8_t SquidChannelProperties::getChannelIndex ()
@@ -815,7 +815,7 @@ juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int param
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
     jassert (cvInputVT.isValid ());
     jassert (cvInputVT.getType () == SquidChannelProperties::CvAssignInputTypeId);
-    jassert (static_cast<int>(cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
+    jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
     auto parameterVT { cvInputVT.getChild (parameterIndex) };
     jassert (parameterVT.isValid ());
     jassert (parameterVT.getType () == SquidChannelProperties::CvAssignInputParameterTypeId);
@@ -875,14 +875,14 @@ int SquidChannelProperties::getSampleDataNumChannels ()
 // NOTE: this is only 32bits because the sample length of the module is limited to ~11 seconds
 uint32_t SquidChannelProperties::getSampleDataNumSamples ()
 {
-    return static_cast<uint32_t>(getValue<int> (SampleDataNumSamplesPropertyId));
+    return static_cast<uint32_t> (getValue<int> (SampleDataNumSamplesPropertyId));
 }
 
 AudioBufferRefCounted::RefCountedPtr SquidChannelProperties::getSampleDataAudioBuffer ()
 {
     // NOTE: I am accessing the VT directly, because at the moment the getValue specialization for pointers ends up being called, breaking the ReferenceCountedObject handler
     //       in juce::var
-    return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*>(data.getProperty (SampleDataAudioBufferPropertyId).getObject ()));
+    return AudioBufferRefCounted::RefCountedPtr (static_cast<AudioBufferRefCounted*> (data.getProperty (SampleDataAudioBufferPropertyId).getObject ()));
 }
 
 void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyType, CheckIndex checkIndex)
@@ -900,7 +900,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
                 auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
                 const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
                 const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-                const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+                const auto attenuation { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
                 dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
                 dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
                 dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
@@ -1054,7 +1054,7 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         else if (property == ChannelFlagsPropertyId)
         {
             if (onChannelFlagsChange != nullptr)
-                onChannelFlagsChange(getChannelFlags ());
+                onChannelFlagsChange (getChannelFlags ());
         }
         else if (property == ChannelIndexPropertyId)
         {

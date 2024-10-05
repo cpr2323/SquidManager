@@ -124,7 +124,7 @@ public:
 // TEST CODE TO WRITE OUT empty SquidChannelProperties
 //         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 //         auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
-//         auto squidMetaDataXmlFile { appDirectory.getChildFile("SquidMetaDataXmlFile").withFileExtension(".xml") };
+//         auto squidMetaDataXmlFile { appDirectory.getChildFile ("SquidMetaDataXmlFile").withFileExtension (".xml") };
 //         xmlToWrite->writeTo (squidMetaDataXmlFile, {});
 
 // TEST CODE TO VERIFY PARSING OF DEFAULT, MIN, and MAX
@@ -138,11 +138,11 @@ public:
 //             jassert (xmlDoc.getLastParseError () == "");
 //             if (xmlElement == nullptr)
 //                 return juce::ValueTree ();
-// 
+//
 //             auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
 //             return parameterPreset;
 //         };
-// 
+//
 //         auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
 //         SquidChannelProperties defaultProperties { defaultMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
 //         auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
@@ -214,7 +214,7 @@ public:
                     return result;
             };
             const auto nl { juce::String ("\n") };
-            auto welcomeText { juce::String (getApplicationName () + " - " + getVersionDisplayString() + " Log File" + nl) };
+            auto welcomeText { juce::String (getApplicationName () + " - " + getVersionDisplayString () + " Log File" + nl) };
             welcomeText += " OS: " + resultOrNa (juce::SystemStats::getOperatingSystemName ()) + nl;
             welcomeText += " Device Description: " + resultOrNa (juce::SystemStats::getDeviceDescription ()) + nl;
             welcomeText += " Device Manufacturer: " + resultOrNa (juce::SystemStats::getDeviceManufacturer ()) + nl;

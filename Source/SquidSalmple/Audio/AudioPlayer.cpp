@@ -86,9 +86,9 @@ void AudioPlayer::initFromChannel (int channelIndex)
         const auto actualSampleEnd { newSampleEnd / 2 };
         juce::ScopedLock sl (dataCS);
         if (playMode == AudioPlayerProperties::PlayMode::once)
-            sampleLength = static_cast<int> ((actualSampleEnd - (channelProperties.getStartCue() / 2)) * sampleRateRatio);
-        else 
-            sampleLength = static_cast<int> ((actualSampleEnd - (channelProperties.getLoopCue() / 2)) * sampleRateRatio);
+            sampleLength = static_cast<int> ((actualSampleEnd - (channelProperties.getStartCue () / 2)) * sampleRateRatio);
+        else
+            sampleLength = static_cast<int> ((actualSampleEnd - (channelProperties.getLoopCue () / 2)) * sampleRateRatio);
         if (curSampleOffset >= sampleStart + sampleLength)
             curSampleOffset = sampleStart;
         LogAudioPlayer ("channelProperties.onEndCueChange - sampleStart: " + juce::String (sampleStart) + ", sampleLength: " + juce::String (sampleLength) + ", curSampleOffset: " + juce::String (curSampleOffset));
@@ -143,7 +143,7 @@ void AudioPlayer::prepareSampleForPlayback ()
     if (channelProperties.isValid () && channelProperties.getSampleDataAudioBuffer () != nullptr)
     {
         LogAudioPlayer ("prepareSampleForPlayback: sample is ready");
-        std::unique_ptr <juce::MemoryAudioSource> readerSource { std::make_unique<juce::MemoryAudioSource> (*channelProperties.getSampleDataAudioBuffer ()->getAudioBuffer(), false, false) };
+        std::unique_ptr <juce::MemoryAudioSource> readerSource { std::make_unique<juce::MemoryAudioSource> (*channelProperties.getSampleDataAudioBuffer ()->getAudioBuffer (), false, false) };
         std::unique_ptr<MonoToStereoAudioSource> monoToStereoAudioSource { std::make_unique<MonoToStereoAudioSource> (readerSource.get (), false) };
         std::unique_ptr<juce::ResamplingAudioSource> resamplingAudioSource { std::make_unique<juce::ResamplingAudioSource> (monoToStereoAudioSource.get (), false, 2) };
         sampleRateRatio = sampleRate / channelProperties.getSampleDataSampleRate ();

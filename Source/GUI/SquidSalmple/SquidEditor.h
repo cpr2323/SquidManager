@@ -50,7 +50,7 @@ private:
     protected:
         juce::TabBarButton* createTabButton (const juce::String& tabName, int /*tabIndex*/) override
         {
-            return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar(), isSupportedFile, loadFile);
+            return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar (), isSupportedFile, loadFile);
         }
 
     private:

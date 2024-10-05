@@ -49,8 +49,8 @@ namespace BankHelpers
         for (auto cvAssignIndex { 0 }; cvAssignIndex < 8; ++cvAssignIndex)
             for (auto cvAssignParameterIndex { 0 }; cvAssignParameterIndex < 15; ++cvAssignParameterIndex)
             {
-                if ((channelPropertiesOne.getCvAssignEnabled (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignEnabled(cvAssignIndex, cvAssignParameterIndex)) ||
-                    (channelPropertiesOne.getCvAssignAttenuate(cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignAttenuate (cvAssignIndex, cvAssignParameterIndex)) ||
+                if ((channelPropertiesOne.getCvAssignEnabled (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignEnabled (cvAssignIndex, cvAssignParameterIndex)) ||
+                    (channelPropertiesOne.getCvAssignAttenuate (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignAttenuate (cvAssignIndex, cvAssignParameterIndex)) ||
                     (channelPropertiesOne.getCvAssignOffset (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignOffset (cvAssignIndex, cvAssignParameterIndex)))
                     return false;
             }
@@ -108,7 +108,7 @@ namespace BankHelpers
                channelPropertiesOne.getReverse () == channelPropertiesTwo.getReverse () &&
                channelPropertiesOne.getSpeed () == channelPropertiesTwo.getSpeed () &&
                channelPropertiesOne.getStartCue () == channelPropertiesTwo.getStartCue () &&
-               channelPropertiesOne.getSampleFileName() == channelPropertiesTwo.getSampleFileName () &&
+               channelPropertiesOne.getSampleFileName () == channelPropertiesTwo.getSampleFileName () &&
                channelPropertiesOne.getSteps () == channelPropertiesTwo.getSteps () &&
                channelPropertiesOne.getXfade () == channelPropertiesTwo.getXfade ();
     };

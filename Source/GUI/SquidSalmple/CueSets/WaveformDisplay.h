@@ -74,7 +74,7 @@ private:
     void fileDragExit (const juce::StringArray& files) override;
 
     void mouseDrag (const juce::MouseEvent& e) override;
-    void mouseMove(const juce::MouseEvent& e) override;
+    void mouseMove (const juce::MouseEvent& e) override;
     void resized () override;
     void paint (juce::Graphics& g) override;
     void paintOverChildren (juce::Graphics& g) override;

@@ -240,7 +240,7 @@ void CvAssignParameter::paint (juce::Graphics& g)
 
 void CvAssignParameter::paintOverChildren (juce::Graphics& g)
 {
-    if (! isEnabled())
+    if (! isEnabled ())
     {
         g.setColour (juce::Colours::white.withAlpha (0.5f));
         g.fillAll ();
@@ -253,9 +253,9 @@ void CvAssignParameter::resized ()
     const auto lineHeight { localBounds.getHeight () / 4 };
     parameterLabel.setBounds (localBounds.removeFromTop (lineHeight));
     localBounds.removeFromTop (1);
-    auto assignEnableLine { localBounds.removeFromTop (lineHeight).withTrimmedBottom(1) };
+    auto assignEnableLine { localBounds.removeFromTop (lineHeight).withTrimmedBottom (1) };
     assignEnableLabel.setBounds (assignEnableLine.removeFromLeft (assignEnableLine.getWidth () / 2));
-    assignEnableButton.setBounds (assignEnableLine.withTrimmedTop(3).withTrimmedBottom(5).withTrimmedRight(3));
+    assignEnableButton.setBounds (assignEnableLine.withTrimmedTop (3).withTrimmedBottom (5).withTrimmedRight (3));
 
     localBounds.removeFromTop (1);
     auto cvAttenuateBounds { localBounds.removeFromTop (lineHeight) };

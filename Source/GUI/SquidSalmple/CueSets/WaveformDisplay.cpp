@@ -8,7 +8,7 @@
 constexpr auto kMaxSampleLength { 524287 };
 
 #define LOG_WAVEFORM_DISPLAY 0
-#if LOG_WAVEFORM_DISPLAY 
+#if LOG_WAVEFORM_DISPLAY
 #define LogWaveformDisplay(text) DebugLog ("WaveformDisplay", text);
 #else
 #define LogWaveformDisplay(text) ;
@@ -36,7 +36,7 @@ void WaveformDisplay::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
     if (audioBuffer == nullptr)
         numSamples = 0;
     else
-        numSamples = audioBuffer->getNumSamples();
+        numSamples = audioBuffer->getNumSamples ();
     resized ();
     repaint ();
 }
@@ -137,9 +137,9 @@ void WaveformDisplay::displayWaveform (juce::Graphics& g)
             curSampleValue = nextSampleValue;
 #else
             g.drawLine (static_cast<float> (pixelOffset),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int>(pixelIndex * samplesPerPixel)] * halfHeight))),
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int> (pixelIndex * samplesPerPixel)] * halfHeight))),
                         static_cast<float> (pixelOffset + 1),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int>((pixelIndex + 1) * samplesPerPixel)] * halfHeight))));
+                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int> ((pixelIndex + 1) * samplesPerPixel)] * halfHeight))));
 
 #endif
         }
@@ -154,7 +154,7 @@ void WaveformDisplay::displayMarkers (juce::Graphics& g)
 {
     LogWaveformDisplay ("displayMarkers");
     if (audioBuffer == nullptr)
-        return; 
+        return;
 
     g.setColour (juce::Colours::white);
 
@@ -213,9 +213,9 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             g.setFont (dropMsgFontSizeSingle);
             g.setColour (juce::Colours::black);
             if (draggingFilesCount == 1)
-                g.drawText ("Assign sample to Channel " + juce::String(channelIndex + 1), getLocalBounds(), juce::Justification::centred, false);
+                g.drawText ("Assign sample to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
             else
-                g.drawText ("Concatenate samples with Cue Sets and assign to Channel " + juce::String(channelIndex + 1), getLocalBounds(), juce::Justification::centred, false);
+                g.drawText ("Concatenate samples with Cue Sets and assign to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
         }
         else
         {
@@ -226,7 +226,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 // TODO - replace hardcoded 10.f with value derived from text height
                 auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
                 auto center { bounds.getCentre () };
-                g.fillRoundedRectangle ({ static_cast<float>(center.getX ()) - (stringWidthPixels / 2.f), static_cast<float>(center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
+                g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
                 setTextColor ();
                 g.drawText (text, bounds, juce::Justification::centred, false);
             };
@@ -249,19 +249,19 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
             else
             {
                 // sectionSpacing = (totalSpace - (bigFontHeight + (numberLines * (smallFontHeight + spaceBetweenLines))) / 3
-                // 
+                //
                 // verticalSpace
                 // bigFont
                 // verticalSpace
                 // littleFont * numLines
                 // verticalSpace
-                // 
+                //
                 // display dropMsg and dropDetails
                 const auto linesToDisplay { std::min (5, dropDetails.size ()) };
                 const auto backgroundLines { (linesToDisplay == dropDetails.size () ? dropDetails.size () : linesToDisplay + 1) + 1 };
                 auto totalDropBounds { dropBounds };
                 const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (backgroundLines * (dropDetailsFontSize + 4)))) / 3 };
-                const auto dropMsgBounds { totalDropBounds.removeFromTop (static_cast<int>(sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2))) };
+                const auto dropMsgBounds { totalDropBounds.removeFromTop (static_cast<int> (sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2))) };
                 const auto dropDetailsBounds { totalDropBounds };
                 displayTextWithBackground (dropMessage, dropMsgFontSizeDouble, dropMsgBounds);
                 g.setFont (dropDetailsFontSize);
@@ -276,14 +276,14 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     }
                     return maxStringPixels;
                 } ();
-                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int>(maxDetailsWidthPixels), backgroundLines * static_cast<int>(dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ())};
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (maxDetailsWidthPixels), backgroundLines * static_cast<int> (dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ())};
                 setBackgroundColor ();
                 g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
-                dropDetailsDisplayBounds.removeFromTop (static_cast<int>(dropDetailsFontSize / 2));
+                dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize / 2));
                 for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
                 {
-                    const auto textBounds { dropDetailsDisplayBounds.removeFromTop (static_cast<int>(dropDetailsFontSize)) };
+                    const auto textBounds { dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize)) };
                     const auto& detailLine { dropDetails [curDropDetailLineIndex] };
                     g.drawText (detailLine, textBounds, juce::Justification::centred, false);
                 }
@@ -374,7 +374,7 @@ void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
                 if (onLoopPointChange != nullptr)
                     onLoopPointChange (cueLoop);
             }
-            LogWaveformDisplay ("mouseDrag - moving end: " + juce::String(cueEnd));
+            LogWaveformDisplay ("mouseDrag - moving end: " + juce::String (cueEnd));
             sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
             sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
             if (onEndPointChange != nullptr)

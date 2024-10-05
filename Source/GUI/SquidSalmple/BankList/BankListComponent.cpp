@@ -158,7 +158,7 @@ void BankListComponent::checkBanks ()
                 if (infoTxtFile.exists ())
                 {
                     auto infoTxtInputStream { infoTxtFile.createInputStream () };
-                    bankName = infoTxtInputStream->readNextLine ().substring(0, 11);
+                    bankName = infoTxtInputStream->readNextLine ().substring (0, 11);
                 }
 
                 if (showAll)
@@ -194,7 +194,7 @@ void BankListComponent::checkBanks ()
     });
     previousFolder = currentFolder;
 
-    LogBankList("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
+    LogBankList ("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
 }
 
 void BankListComponent::loadFirstBank ()
