@@ -257,8 +257,8 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 // verticalSpace
                 // 
                 // display dropMsg and dropDetails
-                const auto linesToDisplay { std::min (6, dropDetails.size ()) };
-                const auto backgroundLines { linesToDisplay == dropDetails.size () ? dropDetails.size () : linesToDisplay + 1 };
+                const auto linesToDisplay { std::min (5, dropDetails.size ()) };
+                const auto backgroundLines { (linesToDisplay == dropDetails.size () ? dropDetails.size () : linesToDisplay + 1) + 1 };
                 auto totalDropBounds { dropBounds };
                 const auto sectionSpacing { (dropBounds.getHeight () - (dropMsgFontSizeDouble + (backgroundLines * (dropDetailsFontSize + 4)))) / 3 };
                 const auto dropMsgBounds { totalDropBounds.removeFromTop (static_cast<int>(sectionSpacing + dropMsgFontSizeDouble + (sectionSpacing / 2))) };
@@ -276,7 +276,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     }
                     return maxStringPixels;
                 } ();
-                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int>(maxDetailsWidthPixels), backgroundLines * static_cast<int>(dropDetailsFontSize + 4) }.withCentre (dropDetailsBounds.getCentre ())};
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int>(maxDetailsWidthPixels), backgroundLines * static_cast<int>(dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ())};
                 setBackgroundColor ();
                 g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
