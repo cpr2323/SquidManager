@@ -1,11 +1,14 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../../../SquidSalmple/EditManager/EditManager.h"
 
 class WaveformDisplay : public juce::Component,
                         public juce::FileDragAndDropTarget
 {
 public:
+    enum class DropType { none, replace, append };
+    void init (juce::ValueTree rootPropertiesVT);
     void setChannelIndex (int theChannelIndex);
     void setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer);
     void setCueEndPoint (uint32_t newCueEnd);
@@ -16,7 +19,7 @@ public:
     std::function<void (uint32_t startPoint)> onStartPointChange;
     std::function<void (uint32_t loopPoint)> onLoopPointChange;
     std::function<void (uint32_t endPoint)> onEndPointChange;
-    std::function<void (const juce::StringArray& files)> onFilesDropped;
+    std::function<void (const juce::StringArray& files, DropType dropType)> onFilesDropped;
     std::function<bool (const juce::StringArray& files)> isInterestedInFiles;
 
 private:
@@ -27,6 +30,8 @@ private:
         kLoop = 1,
         kEnd = 2,
     };
+
+    EditManager* editManager { nullptr };
 
     uint32_t cueStart { 0 };
     uint32_t cueLoop { 0 };
@@ -50,14 +55,22 @@ private:
     int sampleEndMarkerX { 0 };
     EditHandleIndex handleIndex { EditHandleIndex::kNone };
     int draggingFilesCount { 0 };
+    bool supportedFile { false };
+    juce::String dropMsg;
+    juce::StringArray dropDetails;
+    DropType dropType { DropType::none };
+    int dropAreaId { 0 };
 
-    void displayWaveform (juce::Graphics& g);
     void displayMarkers (juce::Graphics& g);
+    void displayWaveform (juce::Graphics& g);
+    void resetDropInfo ();
+    void setDropType (int x, int y);
 
     bool isInterestedInFileDrag (const juce::StringArray& files) override;
     void filesDropped (const juce::StringArray& files, int, int) override;
+    void updateDropMessage (const juce::StringArray& files);
     void fileDragEnter (const juce::StringArray& files, int, int) override;
-    //void fileDragMove (const juce::StringArray& files, int, int) override;
+    void fileDragMove (const juce::StringArray& files, int, int) override;
     void fileDragExit (const juce::StringArray& files) override;
 
     void mouseDrag (const juce::MouseEvent& e) override;

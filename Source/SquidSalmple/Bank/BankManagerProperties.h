@@ -10,7 +10,7 @@ public:
     BankManagerProperties (juce::ValueTree vt, WrapperType wrapperType, EnableCallbacks shouldEnableCallbacks) noexcept
         : ValueTreeWrapper<BankManagerProperties> (BankManagerPropertiesTypeId, vt, wrapperType, shouldEnableCallbacks) {}
 
-    void addBank(juce::String bankName, juce::ValueTree bankPropertiesVT);
+    void addBank (juce::String bankName, juce::ValueTree bankPropertiesVT);
     juce::ValueTree getBank (juce::String bankName);
 
     static inline const juce::Identifier BankManagerPropertiesTypeId { "BankManager" };

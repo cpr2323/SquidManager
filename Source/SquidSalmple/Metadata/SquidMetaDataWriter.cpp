@@ -30,7 +30,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRecDest ()), SquidSalmple::DataLayout::kRecDestOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout::kReverseOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getEndOfData ()), SquidSalmple::DataLayout::kEndOFDataOffset);
-    if (squidChannelProperties.getChannelIndex() < 5)
+    if (squidChannelProperties.getChannelIndex () < 5)
         setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout::kSpeedOffset);
     else
         setUInt16 (static_cast<uint16_t> (32750), SquidSalmple::DataLayout::kSpeedOffset);
@@ -50,8 +50,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
             const auto cvParamOffset { SquidSalmple::DataLayout::kCvParamsOffset + (curCvInputIndex * parameterRowSize) + (curParameterIndex * 4) };
             const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
             const auto enabled { static_cast<bool> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
-            const auto offset { static_cast<uint16_t>(static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId))) };
-            const auto attenuation { static_cast<uint16_t>(static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId))) };
+            const auto offset { static_cast<uint16_t> (static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId))) };
+            const auto attenuation { static_cast<uint16_t> (static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId))) };
             if (enabled)
                 cvAssignedFlags |= cvAssignedFlag;
             setUInt16 (offset, cvParamOffset + 0);
@@ -66,7 +66,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     // Cue Sets
     const auto numCues { squidChannelProperties.getNumCueSets () };
     setUInt8 (static_cast<uint8_t> (numCues), SquidSalmple::DataLayout::kCuesCountOffset);
-    setUInt8 (static_cast<uint8_t> (squidChannelProperties.getCurCueSet()), SquidSalmple::DataLayout::kCuesSelectedOffset);
+    setUInt8 (static_cast<uint8_t> (squidChannelProperties.getCurCueSet ()), SquidSalmple::DataLayout::kCuesSelectedOffset);
     for (auto curCueSet { 0 }; curCueSet < numCues; ++curCueSet)
     {
         setUInt32 (static_cast<uint32_t> (squidChannelProperties.getStartCueSet (curCueSet)), SquidSalmple::DataLayout::kCuesOffset + (curCueSet * 12) + 0);
@@ -79,7 +79,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
         auto reservedData { getter () };
         juce::MemoryBlock tempMemory;
         tempMemory.fromBase64Encoding (reservedData);
-        std::memcpy (static_cast<uint8_t*>(busyChunkData.getData ()) + reservedDataOffset, tempMemory.getData (), reservedDataSize);
+        std::memcpy (static_cast<uint8_t*> (busyChunkData.getData ()) + reservedDataOffset, tempMemory.getData (), reservedDataSize);
     };
     // write out the 'reserved' sections
     writeReserved (SquidSalmple::DataLayout::k_Reserved1Offset, SquidSalmple::DataLayout::k_Reserved1Size, [&squidChannelProperties] () { return squidChannelProperties.getReserved1Data (); });
@@ -98,7 +98,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
 
     BusyChunkWriter busyChunkWriter;
     auto audioBuffer { squidChannelProperties.getSampleDataAudioBuffer () };
-    const auto writeSuccess { busyChunkWriter.write (*(squidChannelProperties.getSampleDataAudioBuffer()->getAudioBuffer()), outputSampleFile, busyChunkData) };
+    const auto writeSuccess { busyChunkWriter.write (*(squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ()), outputSampleFile, busyChunkData) };
     jassert (writeSuccess == true);
 
     return true;
@@ -111,26 +111,26 @@ void SquidMetaDataWriter::setUInt8 (uint8_t value, int offset)
 
 void SquidMetaDataWriter::setUInt16 (uint16_t value, int offset)
 {
-    busyChunkData [offset]     = static_cast<uint8_t>(value); 
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8);
+    busyChunkData [offset]     = static_cast<uint8_t> (value);
+    busyChunkData [offset + 1] = static_cast<uint8_t> (value >> 8);
 }
 
 void SquidMetaDataWriter::setUInt32 (uint32_t value, int offset)
 {
-    busyChunkData [offset + 0] = static_cast<uint8_t>(value); 
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8);
-    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 16); 
-    busyChunkData [offset + 3] = static_cast<uint8_t>(value >> 24);
+    busyChunkData [offset + 0] = static_cast<uint8_t> (value);
+    busyChunkData [offset + 1] = static_cast<uint8_t> (value >> 8);
+    busyChunkData [offset + 2] = static_cast<uint8_t> (value >> 16);
+    busyChunkData [offset + 3] = static_cast<uint8_t> (value >> 24);
 }
 
 void SquidMetaDataWriter::setUInt64 (uint64_t value, int offset)
 {
-    busyChunkData [offset + 0] = static_cast<uint8_t>(value); 
-    busyChunkData [offset + 1] = static_cast<uint8_t>(value >> 8); 
-    busyChunkData [offset + 2] = static_cast<uint8_t>(value >> 16); 
-    busyChunkData [offset + 3] = static_cast<uint8_t>(value >> 24); 
-    busyChunkData [offset + 4] = static_cast<uint8_t>(value >> 32);
-    busyChunkData [offset + 5] = static_cast<uint8_t>(value >> 40);
-    busyChunkData [offset + 6] = static_cast<uint8_t>(value >> 48);
-    busyChunkData [offset + 7] = static_cast<uint8_t>(value >> 56);
+    busyChunkData [offset + 0] = static_cast<uint8_t> (value);
+    busyChunkData [offset + 1] = static_cast<uint8_t> (value >> 8);
+    busyChunkData [offset + 2] = static_cast<uint8_t> (value >> 16);
+    busyChunkData [offset + 3] = static_cast<uint8_t> (value >> 24);
+    busyChunkData [offset + 4] = static_cast<uint8_t> (value >> 32);
+    busyChunkData [offset + 5] = static_cast<uint8_t> (value >> 40);
+    busyChunkData [offset + 6] = static_cast<uint8_t> (value >> 48);
+    busyChunkData [offset + 7] = static_cast<uint8_t> (value >> 56);
 }

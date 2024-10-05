@@ -18,7 +18,7 @@ void LoopPointsView::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     // NOTE: Squid Salmple samples can only be 11 seconds long, so we use a uint32_t to store offsets and length
-    if (audioBuffer != nullptr && static_cast<uint32_t>(audioBuffer->getNumSamples ()) >= numSamples && numSamples > 4)
+    if (audioBuffer != nullptr && static_cast<uint32_t> (audioBuffer->getNumSamples ()) >= numSamples && numSamples > 4)
     {
         juce::dsp::AudioBlock<float> audioBlock { *audioBuffer };
         juce::dsp::AudioBlock<float> loopSamples { audioBlock.getSubBlock (sampleOffset, numSamples) };

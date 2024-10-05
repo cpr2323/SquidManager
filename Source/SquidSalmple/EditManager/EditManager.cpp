@@ -98,7 +98,7 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
         if (srcFile == juce::File ())
             return juce::File ();
         const auto destChannelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (dstChannelIndex + 1)) };
-        if (!destChannelDirectory.exists ())
+        if (! destChannelDirectory.exists ())
             destChannelDirectory.createDirectory ();
         const auto destFile { destChannelDirectory.getChildFile (srcFile.getFileNameWithoutExtension ()).withFileExtension ("._tmp") };
         srcFile.copyFileTo (destFile);
@@ -142,21 +142,21 @@ void EditManager::swapChannels (int firstChannelIndex, int secondChannelIndex)
     secondChannelProperties.copyFrom (newSecondChannelProperties, SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
-bool EditManager::isSupportedAudioFile (juce::File file)
+FileInfo EditManager::getFileInfo (juce::File file)
 {
     // 16
     // 44.1k
     // only mono (stereo will be converted to mono)
     if (file.isDirectory () || file.getFileExtension ().toLowerCase () != ".wav")
-        return false;
+        return {};
     std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
     if (reader == nullptr)
-        return false;
+        return {};
     // check for any format settings that are unsupported
     if ((reader->usesFloatingPointData == true) || (reader->bitsPerSample != 16 && reader->bitsPerSample != 24) || (reader->numChannels > 2) || (reader->sampleRate != 44100))
-        return false;
+        return { false, reader->sampleRate, reader->bitsPerSample, reader->lengthInSamples, reader->numChannels, reader->usesFloatingPointData };
 
-    return true;
+    return { true, reader->sampleRate, reader->bitsPerSample, reader->lengthInSamples, reader->numChannels, reader->usesFloatingPointData };
 }
 
 bool EditManager::isCueRandomOn (int channelIndex)
@@ -271,7 +271,7 @@ void EditManager::saveBank ()
     jassert (bankDirectory.exists ());
     // update info.txt file in bank directory
     auto infoTxtFile { bankDirectory.getChildFile ("info.txt") };
-    infoTxtFile.replaceWithText (squidBankProperties.getName());
+    infoTxtFile.replaceWithText (squidBankProperties.getName ());
 
     // update channel folders
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
@@ -281,7 +281,15 @@ void EditManager::saveBank ()
         SquidChannelProperties squidChannelPropertiesToSave (squidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
         auto sampleFileName { squidChannelPropertiesToSave.getSampleFileName () };
         if (sampleFileName.isEmpty ())
+        {
+            for (const auto& entry : juce::RangedDirectoryIterator (channelDirectory, false, "*", juce::File::findFiles))
+            {
+                const auto extension { entry.getFile ().getFileExtension ().toLowerCase () };
+                if (extension == ".wav" || extension == "._wav")
+                    entry.getFile ().moveToTrash ();
+            }
             continue;
+        }
         auto originalFile { juce::File (sampleFileName) };
         auto tempFile { originalFile.withFileExtension ("tmp") };
         // write out the file with the new metadata to a tmp file
@@ -339,6 +347,24 @@ void EditManager::setBankUnedited ()
 {
     cleanupChannelTempFiles ();
     squidBankProperties.copyFrom (uneditedSquidBankProperties.getValueTree ());
+}
+
+void EditManager::clearChannel (int channelIndex)
+{
+    SquidChannelProperties clearedChannelProperties (defaultSquidBankProperties.getChannelVT (channelIndex), SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no);
+
+    auto& channelProperties { channelPropertiesList [channelIndex] };
+    clearedChannelProperties.setChannelIndex (static_cast<uint8_t> (channelIndex), false);
+    clearedChannelProperties.setChannelSource (static_cast<uint8_t> (channelIndex), false);
+    clearedChannelProperties.setChoke (channelIndex, false);
+    clearedChannelProperties.setRecDest (channelIndex, false);
+    clearedChannelProperties.setSampleDataBits (0, false);
+    clearedChannelProperties.setSampleDataSampleRate (0.0, false);
+    clearedChannelProperties.setSampleDataNumSamples (0, false);
+    clearedChannelProperties.setSampleDataNumChannels (0, false);
+    clearedChannelProperties.setSampleDataAudioBuffer ({}, false);
+
+    channelProperties.copyFrom (clearedChannelProperties.getValueTree (), SquidChannelProperties::CopyType::all, SquidChannelProperties::CheckIndex::no);
 }
 
 void EditManager::setChannelDefaults (int channelIndex)
@@ -441,7 +467,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
         theSquidBankProperties.setName (firstLine.substring (0, 11), true);
     }
 
-    // iterate over the channel folders and load sample 
+    // iterate over the channel folders and load sample
     for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
     {
         auto channelDirectory { bankDirectoryToLoad.getChildFile (juce::String (channelIndex + 1)) };
@@ -457,7 +483,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
         {
             // Channel folder does not exist, check for old style bank files "chan-00X.wav"
             auto oldStyleNamingSampleFile { bankDirectoryToLoad.getChildFile (juce::String ("chan-00") + juce::String (channelIndex + 1)).withFileExtension ("wav") };
-            if (oldStyleNamingSampleFile.exists () && !oldStyleNamingSampleFile.isDirectory ())
+            if (oldStyleNamingSampleFile.exists () && ! oldStyleNamingSampleFile.isDirectory ())
             {
                 // create folder
                 if (! channelDirectory.createDirectory ())
@@ -474,7 +500,7 @@ void EditManager::loadBank (juce::File bankDirectoryToLoad)
                 }
             }
         }
-        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), static_cast<uint8_t>(channelIndex), sampleFile);
+        loadChannel (theSquidBankProperties.getChannelVT (channelIndex), static_cast<uint8_t> (channelIndex), sampleFile);
     }
 
     bankDirectory = bankDirectoryToLoad;
@@ -561,13 +587,13 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     }
 }
 
-void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex)
+void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT)
 {
     LogEditManager ("concatenateAndBuildCueSets");
     const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (channelIndex + 1)) };
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
-    const auto outputFile { channelDirectory.getChildFile ("new._wav") };
+    const auto outputFile { channelDirectory.getChildFile (outputFileName) };
     struct CueSet
     {
         uint32_t offset;
@@ -590,22 +616,32 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             for (auto& file : files)
             {
                 ++numFilesProcessed;
-                std::unique_ptr<juce::AudioFormatReader> reader (audioFormatManager.createReaderFor (file));
-                jassert (reader != nullptr);
-                LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
-                const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength  - curSampleOffset) };
-                if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                auto inputStream { juce::File (file).createInputStream ()};
+                // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
+                if (std::unique_ptr<juce::AudioFormatReader> reader { wavAudioFormat.createReaderFor (inputStream.get (), true) }; reader != nullptr)
                 {
-                    LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                    cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t>(samplesToRead) });
+                    inputStream.release ();
+                    jassert (reader != nullptr);
+                    LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
+                    const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
+                    if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                    {
+                        LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                        if (! cueSetListVT.isValid () || numFilesProcessed > 1)
+                            cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
+                    }
+                    else
+                    {
+                        // handle error
+                        LogEditManager ("ERROR - when writing file");
+                        hadError = true;
+                    }
+                    curSampleOffset += samplesToRead;
                 }
                 else
                 {
-                    // handle error
-                    LogEditManager ("ERROR - when writing file");
                     hadError = true;
                 }
-                curSampleOffset += samplesToRead;
                 if (curSampleOffset >= kMaxSampleLength || hadError)
                     break;
             }
@@ -627,12 +663,30 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
         for (auto cueSetCount { channelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
             channelProperties.removeCueSet (cueSetCount - 1);
         channelProperties.triggerLoadComplete (false);
-        // set cue sets
+        // add original cue sets
+        auto curCueSetIndex { 0 };
+        if (cueSetListVT.isValid ())
+        {
+            ValueTreeHelpers::forEachChildOfType (cueSetListVT, SquidChannelProperties::CueSetTypeId, [this, &channelProperties, &curCueSetIndex] (juce::ValueTree cueSetVT)
+            {
+                channelProperties.setCueSetPoints (curCueSetIndex,
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetStartPropertyId)),
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetLoopPropertyId)),
+                                                   static_cast<int> (cueSetVT.getProperty (SquidChannelProperties::CueSetEndPropertyId)));
+                ++curCueSetIndex;
+                return true;
+            });
+        }
+
+        // add new cue sets
         for (auto cueSetIndex { 0 }; cueSetIndex < cueSetList.size (); ++cueSetIndex)
-            channelProperties.setCueSetPoints (cueSetIndex,
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset),
-                                               SquidChannelProperties::sampleOffsetToByteOffset(cueSetList [cueSetIndex].offset + cueSetList [cueSetIndex].length));
+        {
+            auto& cueSetListEntry { cueSetList [cueSetIndex] };
+            channelProperties.setCueSetPoints (curCueSetIndex + cueSetIndex,
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset),
+                                               SquidChannelProperties::sampleOffsetToByteOffset (cueSetListEntry.offset + cueSetListEntry.length));
+        }
     }
     else
     {
@@ -665,7 +719,7 @@ void EditManager::cloneCvAssigns (int srcChannelIndex, int srcCvAssignIndex, int
         auto dstParameterVT { destChannelProperties.getCvParameterVT (destCvAssignIndex, curParameterIndex) };
         const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
         const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-        const auto attenuation { static_cast<int>(srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
+        const auto attenuation { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
         dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);

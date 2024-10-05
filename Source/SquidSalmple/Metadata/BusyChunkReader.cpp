@@ -36,9 +36,9 @@ BusyChunkReader::MarkerList BusyChunkReader::getMarkerList (juce::File sampleFil
     auto bytesRead { sampleInputStream->readIntoMemoryBlock (markersChunkData, markersChunkLocated.value ()) };
     if (bytesRead != markersChunkLocated.value ())
         return {};
-    uint8_t* markersChunkDataPtr { static_cast<uint8_t*>(markersChunkData.getData ()) };
+    uint8_t* markersChunkDataPtr { static_cast<uint8_t*> (markersChunkData.getData ()) };
     // first 4 bytes are number of markers (little endian)
-    uint32_t numMarkers { juce::ByteOrder::swapIfBigEndian (*reinterpret_cast<uint32_t*>(markersChunkDataPtr)) };
+    uint32_t numMarkers { juce::ByteOrder::swapIfBigEndian (*reinterpret_cast<uint32_t*> (markersChunkDataPtr)) };
     markersChunkDataPtr += sizeof (uint32_t);
     MarkerList markerList;
     for (uint32_t curMarker { 0 }; curMarker < numMarkers; ++curMarker)
@@ -57,8 +57,8 @@ BusyChunkReader::MarkerList BusyChunkReader::getMarkerList (juce::File sampleFil
         // first lets skip over the dwIndentifier field
         markersChunkDataPtr += sizeof (uint32_t);
         // put sample offset into list
-        markerList.emplace_back (juce::ByteOrder::swapIfBigEndian (*reinterpret_cast<uint32_t*>(markersChunkDataPtr)));
-        // skip over sample offset and remaining data members 
+        markerList.emplace_back (juce::ByteOrder::swapIfBigEndian (*reinterpret_cast<uint32_t*> (markersChunkDataPtr)));
+        // skip over sample offset and remaining data members
         constexpr auto kSizeOfFccChunkID { 4 };
         markersChunkDataPtr += sizeof (uint32_t) + kSizeOfFccChunkID + (sizeof (uint32_t) * 3);
     }

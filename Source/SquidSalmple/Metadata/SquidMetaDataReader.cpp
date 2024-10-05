@@ -42,7 +42,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout::kAttackSize> (SquidSalmple::DataLayout::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout::kQualitySize> (SquidSalmple::DataLayout::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout::kChannelFlagsSize> (SquidSalmple::DataLayout::kChannelFlagsOffset), false);
-        jassert (!( (squidChannelProperties.getChannelFlags() & ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped)));
+        jassert (! ((squidChannelProperties.getChannelFlags () & ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags () & ChannelFlags::kCueStepped)));
 #if JUCE_DEBUG
         const auto channelFlags { squidChannelProperties.getChannelFlags () };
         juce::String channelFlagsString;
@@ -106,7 +106,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
                 const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
                 const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout::kCvFlagsOffset + (2 * curCvInputIndex)) };
                 const auto offset { getValue <2> (cvParamOffset + 0) };
-                const auto attenuation { static_cast<int16_t>(getValue <2> (cvParamOffset + 2)) };
+                const auto attenuation { static_cast<int16_t> (getValue <2> (cvParamOffset + 2)) };
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
@@ -145,7 +145,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         auto readReserved = [this, &squidChannelProperties] (int reservedDataOffset, int reservedDataSize, std::function<void (juce::String)> setter)
         {
             juce::MemoryBlock tempMemory;
-            tempMemory.replaceAll (static_cast<uint8_t*>(busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
+            tempMemory.replaceAll (static_cast<uint8_t*> (busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
             auto textVersion { tempMemory.toBase64Encoding () };
             setter (textVersion);
         };
@@ -166,7 +166,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     }
     else
     {
-        LogReader (sampleFile.getFileName() + " does not contain meta-data");
+        LogReader (sampleFile.getFileName () + " does not contain meta-data");
         auto numSamples = squidChannelProperties.getSampleDataNumSamples ();
         uint32_t endOffset = numSamples * 2;
         // initialize parameters that have defaults related to specific channel or sample
@@ -177,21 +177,33 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setRecDest (channelIndex, false);
         if (auto markerList { busyChunkReader.getMarkerList (sampleFile) }; markerList.size () != 0)
         {
+            auto addCueSet = [&squidChannelProperties] (int cueSetIndex, int startCue, int endCue)
+            {
+                LogReader ("import - cue set " + juce::String (cueSetIndex) +
+                    ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                    "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
+                    "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
+                squidChannelProperties.setCueSetPoints (cueSetIndex, startCue, startCue, endCue);
+            };
             LogReader ("importing markers");
             // import markers
-            for (auto sampleOffsetIndex { 0 }; sampleOffsetIndex < markerList.size (); sampleOffsetIndex += 2)
+            if (markerList [0] > 0)
             {
-                const auto startCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [sampleOffsetIndex]) };
-                const auto nextSampleOffsetIndex { sampleOffsetIndex + 1 };
-                const auto endCue { nextSampleOffsetIndex < markerList.size () ? SquidChannelProperties::sampleOffsetToByteOffset (markerList [nextSampleOffsetIndex]) : endOffset };
-                const auto cueSetIndex { sampleOffsetIndex / 2 };
-                LogReader ("import - cue set " + juce::String (cueSetIndex) +
-                           ": start = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
-                           "], loop = " + juce::String (startCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (startCue).paddedLeft ('0', 6) +
-                           "], end = " + juce::String (endCue).paddedLeft ('0', 6) + " [0x" + juce::String::toHexString (endCue).paddedLeft ('0', 6) + "]");
-
+                // create first cue set from start of sample to first marker
+                addCueSet (0, 0, SquidChannelProperties::sampleOffsetToByteOffset (markerList [0]));
+            }
+            for (auto markerListIndex { 0 }; markerListIndex < markerList.size () - 1; ++markerListIndex)
+            {
+                const auto startCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [markerListIndex]) };
+                const auto endCue { SquidChannelProperties::sampleOffsetToByteOffset (markerList [markerListIndex + 1])};
+                const auto cueSetIndex { markerListIndex + 1};
+                addCueSet (cueSetIndex, startCue, endCue);
                 jassert ((startCue <= endCue));
-                squidChannelProperties.setCueSetPoints (cueSetIndex, startCue, startCue, endCue);
+            }
+            if (const auto lastMarker { markerList [markerList.size () - 1] }; lastMarker < numSamples)
+            {
+                // create last cue set from last marker to end of sample
+                addCueSet (static_cast<int> (markerList.size ()), SquidChannelProperties::sampleOffsetToByteOffset (lastMarker), endOffset);
             }
             // set initial cue points to first cue set
             squidChannelProperties.setStartCue (squidChannelProperties.getStartCueSet (0), false);

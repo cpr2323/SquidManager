@@ -40,6 +40,7 @@ SquidEditorComponent::SquidEditorComponent ()
     bankNameEditor.setTooltip ("Bank Name. Maximum of 11 characters long. Stored in the info.txt file in the bank folder");
     bankNameEditor.onFocusLost = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onReturnKey = [this] () { nameUiChanged (bankNameEditor.getText ()); };
+    bankNameEditor.onTextChange = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     // TODO - make sure I have the correct valid character set
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
 
@@ -80,12 +81,12 @@ SquidEditorComponent::SquidEditorComponent ()
     addAndMakeVisible (toolsButton);
 
     // CHANNEL TABS
-    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->isSupportedAudioFile (fileName); };
+    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->getFileInfo (fileName).supported; };
     channelTabs.loadFile = [this] (juce::String fileName, int channelIndex)
-        {
-            channelTabs.setCurrentTabIndex (channelIndex, true);
-            return channelEditorComponents [channelIndex].loadFile (fileName);
-        };
+    {
+        channelTabs.setCurrentTabIndex (channelIndex, true);
+        return channelEditorComponents [channelIndex].loadFile (fileName);
+    };
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
     {
         channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);
@@ -127,7 +128,7 @@ void SquidEditorComponent::init (juce::ValueTree rootPropertiesVT)
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
 
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
-    unEditedSquidBankProperties.wrap (bankManagerProperties.getBank("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
+    unEditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     squidBankProperties.forEachChannel ([this, &rootPropertiesVT] (juce::ValueTree channelPropertiesVT, int channelIndex)
     {
@@ -186,7 +187,7 @@ void SquidEditorComponent::bankLoseEditWarning (juce::String title, std::functio
 
 void SquidEditorComponent::resized ()
 {
-    auto localBounds { getLocalBounds() };
+    auto localBounds { getLocalBounds () };
 
     localBounds.removeFromTop (5);
     // put bank name and save button on the top line
@@ -201,7 +202,7 @@ void SquidEditorComponent::resized ()
 
     const auto channelSectionY { saveButton.getBottom () + 3 };
     const auto kWidthOfWaveformEditor { 962 };
-    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight() - channelSectionY - 5);
+    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
 }
 
 void SquidEditorComponent::paint (juce::Graphics& g)

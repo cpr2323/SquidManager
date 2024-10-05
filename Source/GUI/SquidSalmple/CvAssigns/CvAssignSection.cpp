@@ -6,7 +6,7 @@ struct ParameterEntry
     int parameterIndex { 0 };
     juce::String parameterName;
 };
-const auto kParameterList { std::vector<ParameterEntry> 
+const auto kParameterList { std::vector<ParameterEntry>
 {
     {CvParameterIndex::Level, "LEVEL"},
     {CvParameterIndex::Attack, "ATTACK"},
@@ -58,7 +58,7 @@ void CvAssignSection::setEnableState (int cvParameterIndex, bool enabled)
 
 void CvAssignSection::resized ()
 {
-    const auto assignParameterWidth { static_cast<int>(getWidth () / cvAssignParameterList.size ()) };
+    const auto assignParameterWidth { static_cast<int> (getWidth () / cvAssignParameterList.size ()) };
     for (auto curCvAssignParameter { 0 }; curCvAssignParameter < cvAssignParameterList.size (); ++curCvAssignParameter)
         cvAssignParameterList [curCvAssignParameter].setBounds (assignParameterWidth * curCvAssignParameter, 0, assignParameterWidth, getHeight ());
 }

@@ -2,7 +2,7 @@
 
 CvAssignEditor::CvAssignEditor ()
 {
-    upButton.setButtonText("/\\");
+    upButton.setButtonText ("/\\");
     upButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
     upButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
     upButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);

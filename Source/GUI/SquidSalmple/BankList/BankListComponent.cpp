@@ -64,6 +64,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
         });
     };
     BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
+    squidBankProperties.wrap (bankManagerProperties.getBank ("edit"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     uneditedSquidBankProperties.wrap (bankManagerProperties.getBank ("unedited"), SquidBankProperties::WrapperType::client, SquidBankProperties::EnableCallbacks::yes);
     uneditedSquidBankProperties.onNameChange = [this] (juce::String newName)
     {
@@ -157,7 +158,7 @@ void BankListComponent::checkBanks ()
                 if (infoTxtFile.exists ())
                 {
                     auto infoTxtInputStream { infoTxtFile.createInputStream () };
-                    bankName = infoTxtInputStream->readNextLine ().substring(0, 11);
+                    bankName = infoTxtInputStream->readNextLine ().substring (0, 11);
                 }
 
                 if (showAll)
@@ -193,7 +194,7 @@ void BankListComponent::checkBanks ()
     });
     previousFolder = currentFolder;
 
-    LogBankList("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
+    LogBankList ("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
 }
 
 void BankListComponent::loadFirstBank ()
@@ -307,38 +308,52 @@ juce::String BankListComponent::getTooltipForRow (int row)
     return "Bank " + juce::String (row + 1);
 }
 
-void BankListComponent::copyBank (int /*presetNumber*/)
+void BankListComponent::copyBank (int bankNumber)
 {
-//    loadPresetFile (getPresetFile (presetNumber), copyBufferPresetProperties.getValueTree ());
-    jassertfalse;
+    copyDirectory = getBankDirectory (bankNumber);
 }
 
-void BankListComponent::pasteBank (int /*presetNumber*/)
+void BankListComponent::pasteBank (int bankNumber)
 {
-#if 0
-    auto doPaste = [this, presetNumber] ()
+    auto doPaste = [this, bankNumber] ()
     {
-        Assimil8orPreset assimil8orPreset;
-        PresetProperties::copyTreeProperties (copyBufferPresetProperties.getValueTree (), assimil8orPreset.getPresetVT ());
-        assimil8orPreset.write (getPresetFile (presetNumber));
-        auto [lastSelectedPresetNumber, thisPresetExists, presetName] { presetInfoList [lastSelectedPresetIndex] };
-        if (presetNumber == lastSelectedPresetNumber)
+        const auto destinationBankDirectory { getBankDirectory (bankNumber) };
+        if (! destinationBankDirectory.exists ())
         {
-            PresetProperties::copyTreeProperties (copyBufferPresetProperties.getValueTree (), unEditedPresetProperties.getValueTree ());
-            unEditedPresetProperties.setId (presetNumber, false);
-            PresetProperties::copyTreeProperties (copyBufferPresetProperties.getValueTree (), presetProperties.getValueTree ());
-            presetProperties.setId (presetNumber, false);
+            destinationBankDirectory.createDirectory ();
+            // TODO - handle error
+        }
+        if (auto infoTextFile { copyDirectory.getChildFile ("info.txt") }; infoTextFile.exists ())
+        {
+            infoTextFile.copyFileTo (destinationBankDirectory.getChildFile ("info.txt"));
+            // TODO - handle error
+        }
+        for (auto channelIndex { 0 }; channelIndex < 8; ++channelIndex)
+        {
+            const auto channelFolder { juce::String (channelIndex + 1) };
+            auto sourceChannelFolder { copyDirectory.getChildFile (channelFolder) };
+            auto destinationChannelFolder { destinationBankDirectory.getChildFile (channelFolder) };
+            sourceChannelFolder.copyDirectoryTo (destinationChannelFolder);
+            // TODO - handle error
+        }
+        auto [lastSelectedBankNumber, thisBankExists, bankName] { bankInfoList [lastSelectedBankIndex] };
+        if (bankNumber == lastSelectedBankNumber)
+        {
+            editManager->loadBank (destinationBankDirectory);
         }
     };
 
-    auto [thisPresetNumber, thisPresetExists, presetName] { presetInfoList [lastSelectedPresetIndex]};
-    if (thisPresetExists)
+    auto [thisBankNumber, thisBankExists, bankName] { bankInfoList [bankNumber - 1] };
+    if (thisBankExists)
     {
-        juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "OVERWRITE PRESET", "Are you sure you want to overwrite '" + FileTypeHelpers::getPresetFileName (presetNumber) + "'", "YES", "NO", nullptr,
-            juce::ModalCallbackFunction::create ([this, doPaste] (int option)
+        juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "OVERWRITE BANK", "Are you sure you want to overwrite '" + bankName + "'", "YES", "NO", nullptr,
+            juce::ModalCallbackFunction::create ([this, doPaste, bankNumber] (int option)
             {
                 if (option == 0) // no
                     return;
+                // delete destination folder
+                const auto destinationBankDirectory { getBankDirectory (bankNumber) };
+                destinationBankDirectory.deleteRecursively (false);
                 doPaste ();
             }));
     }
@@ -346,32 +361,29 @@ void BankListComponent::pasteBank (int /*presetNumber*/)
     {
         doPaste ();
     }
-#endif
-    jassertfalse;
 }
 
-void BankListComponent::deleteBank (int /*presetNumber*/)
+void BankListComponent::deleteBank (int bankNumber)
 {
-#if 0
-    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE PRESET", "Are you sure you want to delete '" + FileTypeHelpers::getPresetFileName (presetNumber) + "'", "YES", "NO", nullptr,
-        juce::ModalCallbackFunction::create ([this, presetNumber, presetFile = getPresetFile (presetNumber)] (int option)
+    auto [_, __, bankName] { bankInfoList [bankNumber - 1] };
+    const auto bankDirectory { getBankDirectory (bankNumber) };
+
+    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete '" + bankName + "'", "YES", "NO", nullptr,
+        juce::ModalCallbackFunction::create ([this, bankNumber, bankDirectory] (int option)
         {
             if (option == 0) // no
                 return;
-            presetFile.deleteFile ();
+            // TODO - delete contents of folder and delete folder
+            bankDirectory.deleteRecursively (false);
             // TODO handle delete error
-            auto [lastSelectedPresetNumber, thisPresetExists, presetName] { presetInfoList [lastSelectedPresetIndex] };
-            if (presetNumber == lastSelectedPresetNumber)
+            auto [lastSelectedBankNumber, thisBankExists, bankName] { bankInfoList [lastSelectedBankIndex] };
+            if (bankNumber == lastSelectedBankNumber)
             {
-                auto defaultPreset { ParameterPresetsSingleton::getInstance ()->getParameterPresetListProperties ().getParameterPreset (ParameterPresetListProperties::DefaultParameterPresetType) };
-                PresetProperties::copyTreeProperties (defaultPreset, unEditedPresetProperties.getValueTree ());
-                unEditedPresetProperties.setId (presetNumber, false);
-                PresetProperties::copyTreeProperties (defaultPreset, presetProperties.getValueTree ());
-                presetProperties.setId (presetNumber, false);
+                // clear editor
+                editManager->setBankDefaults ();
+                uneditedSquidBankProperties.copyFrom (squidBankProperties.getValueTree ());
             }
         }));
-#endif
-    jassertfalse;
 }
 
 juce::File BankListComponent::getBankDirectory (int bankNumber)
@@ -385,23 +397,21 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 {
     if (me.mods.isPopupMenu ())
     {
-#if 0
-        presetListBox.selectRow (lastSelectedPresetIndex, false, true);
-        auto [presetNumber, thisPresetExists, presetName] { presetInfoList [row] };
-        if (! thisPresetExists)
-            presetName = "(preset)";
+        bankListBox.selectRow (lastSelectedBankIndex, false, true);
+        auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+        if (! thisBankExists)
+            bankName = "(empty)";
 
         auto* popupMenuLnF { new juce::LookAndFeel_V4 };
         popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
         pm.setLookAndFeel (popupMenuLnF);
-        pm.addSectionHeader (juce::String (presetNumber) + " - " + presetName);
+        pm.addSectionHeader (juce::String (bankNumber) + " - " + bankName);
         pm.addSeparator ();
-        pm.addItem ("Copy", thisPresetExists, false, [this, presetNumber = presetNumber] () { copyPreset (presetNumber); });
-        pm.addItem ("Paste", copyBufferPresetProperties.getName ().isNotEmpty (), false, [this, presetNumber = presetNumber] () { pastePreset (presetNumber); });
-        pm.addItem ("Delete", thisPresetExists, false, [this, presetNumber = presetNumber] () { deletePreset (presetNumber); });
+        pm.addItem ("Copy", thisBankExists, false, [this, bankNumber = bankNumber] () { copyBank (bankNumber); });
+        pm.addItem ("Paste", copyDirectory != juce::File (), false, [this, bankNumber = bankNumber] () { pasteBank (bankNumber); });
+        pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { deleteBank (bankNumber); });
         pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
-#endif
     }
     else
     {

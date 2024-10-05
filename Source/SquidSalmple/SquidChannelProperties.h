@@ -11,7 +11,7 @@ public:
     AudioBufferRefCounted ()
     {
         //juce::Logger::outputDebugString ("AudioBufferReferenceCounted ctor");
-        audioBuffer = std::make_unique<juce::AudioBuffer<float>>();
+        audioBuffer = std::make_unique<juce::AudioBuffer<float>> ();
     }
 
     ~AudioBufferRefCounted ()
@@ -20,7 +20,7 @@ public:
     }
     using RefCountedPtr = juce::ReferenceCountedObjectPtr<AudioBufferRefCounted>;
 
-    AudioBufferType* getAudioBuffer () { return audioBuffer.get(); }
+    AudioBufferType* getAudioBuffer () { return audioBuffer.get (); }
 
 private:
     std::unique_ptr<AudioBufferType> audioBuffer;

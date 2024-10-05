@@ -6,6 +6,16 @@
 #include "../../AppProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
+struct FileInfo
+{
+    bool supported { false };
+    double sampleRate { 0.f };
+    unsigned int bitsPerSample { 0 };
+    int64_t lengthInSamples { 0 };
+    unsigned int numChannels { 0 };
+    bool usesFloatingPointData { false };
+};
+
 class EditManager
 {
 public:
@@ -13,15 +23,16 @@ public:
 
     void init (juce::ValueTree rootPropertiesVT);
 
-    void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex);
+    void concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT);
     void cleanUpTempFiles (juce::File bankFolder);
+    void clearChannel (int channelIndex);
     void cloneCvAssigns (int srcChannelIndex, int srcCvAssign, int destChannelIndex, int destCvAssing);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     juce::PopupMenu createChannelInteractionMenu (int channelIndex, juce::String interactionArticle, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canInteractCallback, std::function <bool (SquidChannelProperties&)> canInteractToAllCallback);
     juce::PopupMenu createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
     bool isAltOutput (int channelIndex);
     bool isAltOutput (juce::ValueTree channelPropertiesVT);
-    bool isSupportedAudioFile (juce::File file);
+    FileInfo getFileInfo (juce::File file);
     bool isCueRandomOn (int channelIndex);
     bool isCueRandomOn (juce::ValueTree channelPropertiesVT);
     bool isCueStepOn (int channelIndex);

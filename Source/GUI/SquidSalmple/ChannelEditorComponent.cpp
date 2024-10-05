@@ -4,6 +4,8 @@
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../Utility/RuntimeRootProperties.h"
 
+constexpr auto kMaxSampleLength { 524287 };
+
 const auto kLargeLabelSize { 20.0f };
 const auto kMediumLabelSize { 14.0f };
 const auto kSmallLabelSize { 12.0f };
@@ -40,7 +42,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
                 auto cloneSettingsMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "To",
                     [this] (SquidChannelProperties& destChannelProperties)
                     {
-                        destChannelProperties.copyFrom (squidChannelProperties.getValueTree(), SquidChannelProperties::mainSettings, SquidChannelProperties::CheckIndex::yes);
+                        destChannelProperties.copyFrom (squidChannelProperties.getValueTree (), SquidChannelProperties::mainSettings, SquidChannelProperties::CheckIndex::yes);
                     },
                     [this] (SquidChannelProperties&) { return true; },
                     [this] (SquidChannelProperties&) { return true; }
@@ -54,7 +56,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
                         destChannelProperties.copyFrom (squidChannelProperties.getValueTree (), SquidChannelProperties::all, SquidChannelProperties::CheckIndex::yes);
                         if (auto currentSrcFile { juce::File (squidChannelProperties.getSampleFileName ()) }; currentSrcFile != juce::File ())
                         {
-                            auto destFile { juce::File (destChannelProperties.getSampleFileName()).withFileExtension ("._wav") };
+                            auto destFile { juce::File (destChannelProperties.getSampleFileName ()).withFileExtension ("._wav") };
                             auto destChannelDirectory { destFile.getParentDirectory () };
                             if (! destChannelDirectory.exists ())
                                 destChannelDirectory.createDirectory ();
@@ -110,16 +112,16 @@ ChannelEditorComponent::ChannelEditorComponent ()
             editMenu.addSubMenu ("Clone", cloneMenu);
         }
         {
-            auto swapMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "With", 
+            auto swapMenu { editManager->createChannelInteractionMenu (squidChannelProperties.getChannelIndex (), "With",
                 [this] (SquidChannelProperties& destChannelProperties)
                 {
                     editManager->swapChannels (squidChannelProperties.getChannelIndex (), destChannelProperties.getChannelIndex ());
                 },
                 [this] (SquidChannelProperties&) { return true; },
-                [this] (SquidChannelProperties&) { return false; } 
+                [this] (SquidChannelProperties&) { return false; }
             )};
 
-            editMenu.addSubMenu("Swap", swapMenu);
+            editMenu.addSubMenu ("Swap", swapMenu);
         }
         editMenu.addItem ("Rename Sample", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
@@ -156,6 +158,10 @@ ChannelEditorComponent::ChannelEditorComponent ()
             squidChannelProperties.setLoopCue (0, true);
             squidChannelProperties.setEndCue (endOffset, true);
             squidChannelProperties.setCueSetPoints (0, 0, 0, SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()));
+        });
+        editMenu.addItem ("Clear", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
+        {
+            editManager->clearChannel (squidChannelProperties.getChannelIndex ());
         });
         editMenu.addItem ("Default", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
@@ -261,11 +267,11 @@ void ChannelEditorComponent::setupComponents ()
     channelSourceComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setChannelSource (static_cast<uint8_t>(std::clamp (channelSourceComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
+        squidChannelProperties.setChannelSource (static_cast<uint8_t> (std::clamp (channelSourceComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
     };
     channelSourceComboBox.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex(),
+        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setChannelSource (squidChannelProperties.getChannelSource (), false);
@@ -284,7 +290,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t>(channelSourceComboBox.getSelectedItemIndex ())); });
+    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t> (channelSourceComboBox.getSelectedItemIndex ())); });
 
     // BITS
     setupLabel (bitsLabel, "BITS", kMediumLabelSize, juce::Justification::centred);
@@ -517,7 +523,7 @@ void ChannelEditorComponent::setupComponents ()
             else
                 return 25;
         } ();
-        const auto newValue { filterFrequencyTextEditor.getText().getIntValue() + (multiplier * direction) };
+        const auto newValue { filterFrequencyTextEditor.getText ().getIntValue () + (multiplier * direction) };
         filterFrequencyTextEditor.setValue (newValue);
     };
     filterFrequencyTextEditor.onPopupMenuCallback = [this] ()
@@ -537,7 +543,7 @@ void ChannelEditorComponent::setupComponents ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                   SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                squidChannelProperties.setFilterFrequency (uneditedChannelProperties.getFilterFrequency(), true);
+                squidChannelProperties.setFilterFrequency (uneditedChannelProperties.getFilterFrequency (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -730,7 +736,7 @@ void ChannelEditorComponent::setupComponents ()
     loopModeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setLoopMode (static_cast<uint8_t>(std::clamp (loopModeComboBox.getSelectedItemIndex () + scrollAmount, 0, loopModeComboBox.getNumItems () - 1)), true);
+        squidChannelProperties.setLoopMode (static_cast<uint8_t> (std::clamp (loopModeComboBox.getSelectedItemIndex () + scrollAmount, 0, loopModeComboBox.getNumItems () - 1)), true);
     };
     loopModeComboBox.onPopupMenuCallback = [this] ()
     {
@@ -916,7 +922,7 @@ void ChannelEditorComponent::setupComponents ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                   SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                squidChannelProperties.setLoopCue(uneditedChannelProperties.getLoopCue (), true);
+                squidChannelProperties.setLoopCue (uneditedChannelProperties.getLoopCue (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -978,7 +984,7 @@ void ChannelEditorComponent::setupComponents ()
     chokeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        const auto newItemIndex { static_cast<uint8_t>(std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)) };
+        const auto newItemIndex { static_cast<uint8_t> (std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)) };
         squidChannelProperties.setChoke (chokeComboBox.getItemId (newItemIndex) - 1, true);
     };
     chokeComboBox.onPopupMenuCallback = [this] ()
@@ -1014,7 +1020,7 @@ void ChannelEditorComponent::setupComponents ()
     eTrigComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setETrig (static_cast<uint8_t>(std::clamp (eTrigComboBox.getSelectedItemIndex () + scrollAmount, 0, eTrigComboBox.getNumItems () - 1)), true);
+        squidChannelProperties.setETrig (static_cast<uint8_t> (std::clamp (eTrigComboBox.getSelectedItemIndex () + scrollAmount, 0, eTrigComboBox.getNumItems () - 1)), true);
     };
     eTrigComboBox.onPopupMenuCallback = [this] ()
     {
@@ -1038,7 +1044,7 @@ void ChannelEditorComponent::setupComponents ()
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
-    // Steps 
+    // Steps
     setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
     stepsComboBox.setTooltip ("Steps. Cycles incoming triggers across specified adjacent channels in a stepped round robin fashion. This allows for polyphonic type triggering of samples.");
     stepsComboBox.addItem ("Off", 1);
@@ -1048,7 +1054,7 @@ void ChannelEditorComponent::setupComponents ()
     stepsComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
-        squidChannelProperties.setSteps (static_cast<uint8_t>(std::clamp (stepsComboBox.getSelectedItemIndex () + scrollAmount, 0, stepsComboBox.getNumItems () - 1)), true);
+        squidChannelProperties.setSteps (static_cast<uint8_t> (std::clamp (stepsComboBox.getSelectedItemIndex () + scrollAmount, 0, stepsComboBox.getNumItems () - 1)), true);
     };
     stepsComboBox.onPopupMenuCallback = [this] ()
     {
@@ -1079,7 +1085,7 @@ void ChannelEditorComponent::setupComponents ()
     outputComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * (-1 * direction) };
-        const auto selectedIndex { static_cast<uint8_t>(std::clamp (outputComboBox.getSelectedItemIndex () + scrollAmount, 0, outputComboBox.getNumItems () - 1)) };
+        const auto selectedIndex { static_cast<uint8_t> (std::clamp (outputComboBox.getSelectedItemIndex () + scrollAmount, 0, outputComboBox.getNumItems () - 1)) };
         outputComboBox.setSelectedItemIndex (selectedIndex);
         outputUiChanged (selectedIndex);
     };
@@ -1205,35 +1211,64 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (cvAssignEditor);
 
     // WAVEFORM DISPLAY
-    waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& files)
+    waveformDisplay.isInterestedInFiles = [this] (const juce::StringArray& /*files*/)
     {
-        for (auto& file : files)
-            if (! editManager->isSupportedAudioFile (file))
-                return false;
         return true;
     };
-    waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files)
+    waveformDisplay.onFilesDropped = [this] (const juce::StringArray& files, WaveformDisplay::DropType dropType)
     {
-        if (files.size () == 1)
-            handleSampleAssignment (files [0]);
-        else
-            filesDroppedOnCueSetEditor (files);
+        switch (dropType)
+        {
+            case WaveformDisplay::DropType::replace:
+            {
+                if (files.size () == 1)
+                    handleSampleAssignment (files [0]);
+                else
+                    filesDroppedOnCueSetEditor (files, "new._wav", {});
+            }
+            break;
+            case WaveformDisplay::DropType::append:
+            {
+                juce::StringArray concatenateList;
+                auto cueSetListVT { squidChannelProperties.getValueTree ().getChildWithName (SquidChannelProperties::CueSetListTypeId).createCopy () };
+
+                if (auto currentSampleFile { juce::File (squidChannelProperties.getSampleFileName ()) }; currentSampleFile.getFileExtension () == "._wav")
+                {
+                    auto tempFile { currentSampleFile.getParentDirectory ().getChildFile (currentSampleFile.getFileNameWithoutExtension () + "_").withFileExtension ("_wav") };
+                    currentSampleFile.moveFileTo (tempFile);
+                    concatenateList.add (tempFile.getFullPathName ());
+                    concatenateList.addArray (files);
+                    filesDroppedOnCueSetEditor (concatenateList, currentSampleFile.getFileName (), cueSetListVT);
+                    tempFile.deleteFile ();
+                }
+                else
+                {
+                    concatenateList.add (squidChannelProperties.getSampleFileName ());
+                    concatenateList.addArray (files);
+                    filesDroppedOnCueSetEditor (concatenateList, juce::File (squidChannelProperties.getSampleFileName ()).withFileExtension ("._wav").getFileName (), cueSetListVT);
+                }
+            }
+            break;
+            default:
+                jassertfalse;
+            break;
+        }
     };
     waveformDisplay.onStartPointChange = [this] (juce::int64 startPoint)
     {
-        const auto startCueByteOffset { static_cast<int>(startPoint * 2) };
+        const auto startCueByteOffset { static_cast<int> (startPoint * 2) };
         squidChannelProperties.setCueSetStartPoint (curCueSetIndex, startCueByteOffset);
         squidChannelProperties.setStartCue (startCueByteOffset, true);
     };
     waveformDisplay.onLoopPointChange = [this] (juce::int64 loopPoint)
     {
-        const auto loopCueByteOffset { static_cast<int>(loopPoint * 2) };
+        const auto loopCueByteOffset { static_cast<int> (loopPoint * 2) };
         squidChannelProperties.setCueSetLoopPoint (curCueSetIndex, loopCueByteOffset);
         squidChannelProperties.setLoopCue (loopCueByteOffset, true);
     };
     waveformDisplay.onEndPointChange = [this] (juce::int64 endPoint)
     {
-        const auto endCueByteOffset { static_cast<int>(endPoint * 2) };
+        const auto endCueByteOffset { static_cast<int> (endPoint * 2) };
         squidChannelProperties.setCueSetEndPoint (curCueSetIndex, endCueByteOffset);
         squidChannelProperties.setEndCue (endCueByteOffset, true);
     };
@@ -1338,7 +1373,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
         }
         else if (playState == AudioPlayerProperties::PlayState::play)
         {
-            if (audioPlayerProperties.getPlayMode() == AudioPlayerProperties::PlayMode::once)
+            if (audioPlayerProperties.getPlayMode () == AudioPlayerProperties::PlayMode::once)
             {
                 juce::MessageManager::callAsync ([this] ()
                 {
@@ -1362,6 +1397,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     };
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+    waveformDisplay.init (rootPropertiesVT);
     waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
     cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
     cvAssignEditor.setEnableState (CvParameterIndex::Speed, squidChannelProperties.getChannelIndex () < 5);
@@ -1508,7 +1544,7 @@ void ChannelEditorComponent::updateLoopPointsView ()
     {
         startSample = squidChannelProperties.getLoopCue ();
         numBytes = squidChannelProperties.getEndCue () - startSample;
-        loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer());
+        loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
         waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
     }
     else
@@ -1618,7 +1654,7 @@ void ChannelEditorComponent::decayDataChanged (int decay)
 
 void ChannelEditorComponent::endCueDataChanged (juce::int32 endCueByteOffset)
 {
-    const auto endCueSampleOffset { SquidChannelProperties::byteOffsetToSampleOffset(endCueByteOffset) };
+    const auto endCueSampleOffset { SquidChannelProperties::byteOffsetToSampleOffset (endCueByteOffset) };
     endCueTextEditor.setText (juce::String (endCueSampleOffset), juce::NotificationType::dontSendNotification);
     waveformDisplay.setCueEndPoint (endCueSampleOffset);
     updateLoopPointsView ();
@@ -1631,7 +1667,7 @@ void ChannelEditorComponent::eTrigDataChanged (int eTrig)
 
 void ChannelEditorComponent::sampleFileNameDataChanged (juce::String sampleFileName)
 {
-    const auto justTheFileName { juce::File (sampleFileName).getFileNameWithoutExtension() };
+    const auto justTheFileName { juce::File (sampleFileName).getFileNameWithoutExtension () };
     sampleFileNameSelectLabel.setText (justTheFileName, juce::NotificationType::dontSendNotification);
 }
 
@@ -1839,7 +1875,7 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
 {
     DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + sampleFileName);
     auto srcFile { juce::File (sampleFileName) };
-    const auto channelDirectory { juce::File(appProperties.getRecentlyUsedFile (0)).getChildFile(juce::String(squidChannelProperties.getChannelIndex () + 1)) };
+    const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (squidChannelProperties.getChannelIndex () + 1)) };
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
     auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
@@ -1864,11 +1900,8 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
     return true;
 }
 
-bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& files)
+bool ChannelEditorComponent::isInterestedInFileDrag (const juce::StringArray& /*files*/)
 {
-    if (files.size () != 1 || ! editManager->isSupportedAudioFile (files[0]))
-        return false;
-
     return true;
 }
 
@@ -1876,8 +1909,10 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
 {
     draggingFiles = false;
     repaint ();
+    if (! supportedFile)
+        return;
     const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
-    if (!dropBounds.contains (x, y))
+    if (! dropBounds.contains (x, y))
         return;
     if (! handleSampleAssignment (files[0]))
     {
@@ -1885,8 +1920,57 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
     }
 }
 
-void ChannelEditorComponent::fileDragEnter (const juce::StringArray& /*files*/, int /*x*/, int /*y*/)
+void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
+    if (files.size () > 1)
+    {
+        dropMsg = "Only one sample can be dropped here";
+        supportedFile = false;
+    }
+    else
+    {
+        auto draggedFile { juce::File (files[0]) };
+        if (draggedFile.getFileExtension () == ".wav")
+        {
+            if (const auto fileInfo { editManager->getFileInfo (draggedFile) }; fileInfo.supported)
+            {
+                dropMsg = "Assign sample to Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1);
+                if (fileInfo.lengthInSamples > kMaxSampleLength)
+                    dropMsg += ". Sample will be truncated to 11 seconds";
+                supportedFile = true;
+            }
+            else
+            {
+                dropMsg = "Unsupported wav file.";
+                if (fileInfo.usesFloatingPointData == true)
+                {
+                    dropMsg += " Data type must be integer.";
+                }
+                if (fileInfo.bitsPerSample != 16 && fileInfo.bitsPerSample != 24)
+                {
+                    dropMsg += " Bit depth must be 16 or 24.";
+                }
+                if (fileInfo.numChannels > 2)
+                {
+                    dropMsg += " Too many channels (" + juce::String (fileInfo.numChannels) + ").";
+                }
+                if (fileInfo.sampleRate != 44100)
+                {
+                    dropMsg += " Sample rate must be 44.1k";
+                }
+
+                supportedFile = false;
+            }
+        }
+        else
+        {
+            dropMsg = "Unsupported file type. Only wav files can be loaded";
+            supportedFile = false;
+        }
+
+    }
+    // iterate over file list
+    // build appropriate message to be displayed
     draggingFiles = true;
     repaint ();
 }
@@ -2008,7 +2092,7 @@ void ChannelEditorComponent::resized ()
 
     // CV ASSIGNS EDITOR AT BOTTOM
     constexpr auto kCvAssignHeight { 100 };
-    cvAssignEditor.setBounds (xInitialOffSet, getHeight() - 5 - kCvAssignHeight, kWidthOfWaveformEditor, kCvAssignHeight);
+    cvAssignEditor.setBounds (xInitialOffSet, getHeight () - 5 - kCvAssignHeight, kWidthOfWaveformEditor, kCvAssignHeight);
 
     // CUE SETS STUFF BETWEEN CHANNEL PARAMETERS AND CV ASSIGNS EDITOR
     // CUE SET BUTTONS
@@ -2041,18 +2125,30 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
 {
     if (draggingFiles)
     {
+        constexpr auto fontHeight { 30.f };
         const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
         g.setColour (juce::Colours::white.withAlpha (0.5f));
         g.fillRect (dropBounds);
-        g.setFont (30.0f);
-        g.setColour (juce::Colours::black);
-        g.drawText ("Assign sample to Channel " + juce::String(squidChannelProperties.getChannelIndex () + 1), dropBounds, juce::Justification::centred, false);
+        g.setFont (fontHeight);
+
+        if (supportedFile)
+            g.setColour (juce::Colours::white.withAlpha (0.7f));
+        else
+            g.setColour (juce::Colours::black.withAlpha (0.7f));
+        auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f};
+        auto center { dropBounds.getCentre () };
+        g.fillRoundedRectangle ({static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f}, 10.f);
+        if (supportedFile)
+            g.setColour (juce::Colours::black);
+        else
+            g.setColour (juce::Colours::red.darker (0.5f));
+        g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
     }
 }
 
-void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files)
+void ChannelEditorComponent::filesDroppedOnCueSetEditor (const juce::StringArray& files, juce::String outputFileName, juce::ValueTree cueSets)
 {
-    editManager->concatenateAndBuildCueSets (files, squidChannelProperties.getChannelIndex ());
+    editManager->concatenateAndBuildCueSets (files, squidChannelProperties.getChannelIndex (), outputFileName, cueSets);
 }
 
 void ChannelEditorComponent::initOutputComboBox ()
@@ -2072,7 +2168,7 @@ void ChannelEditorComponent::initOutputComboBox ()
 
 void ChannelEditorComponent::outputUiChanged (int selectedIndex)
 {
-    //           alt out 
+    //           alt out
     // chan | false | true
     // -----+-------+------
     //  1   |  1-2  | 3-4
@@ -2088,7 +2184,7 @@ void ChannelEditorComponent::outputUiChanged (int selectedIndex)
     if (channelIndex < 2) // 1-2
     {
         if (selectedIndex == 0)
-            editManager->setAltOutput(channelIndex, false);
+            editManager->setAltOutput (channelIndex, false);
         else
             editManager->setAltOutput (channelIndex, true);
     }

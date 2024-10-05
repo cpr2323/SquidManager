@@ -37,7 +37,7 @@ private:
 
         static type process (uint8_t* data, int offset)
         {
-            const auto rawValue { *(reinterpret_cast<uint16_t*>(data + offset)) };
+            const auto rawValue { *(reinterpret_cast<uint16_t*> (data + offset)) };
             return juce::ByteOrder::swapIfBigEndian (rawValue);
         }
     };
@@ -50,7 +50,7 @@ private:
 
         static type process (uint8_t* data, int offset)
         {
-            const auto rawValue { *(reinterpret_cast<uint32_t*>(data + offset)) };
+            const auto rawValue { *(reinterpret_cast<uint32_t*> (data + offset)) };
             return juce::ByteOrder::swapIfBigEndian (rawValue);
         }
     };
@@ -63,7 +63,7 @@ private:
 
         static type process (uint8_t* data, int offset)
         {
-            const auto rawValue { *(reinterpret_cast<uint64_t*>(data + offset)) };
+            const auto rawValue { *(reinterpret_cast<uint64_t*> (data + offset)) };
             return juce::ByteOrder::swapIfBigEndian (rawValue);
         }
     };
@@ -71,6 +71,6 @@ private:
     // Function template using the ReturnType type
     template <int N>
     typename ReturnType<N>::type getValue (int value) {
-        return ReturnType<N>::process (static_cast<uint8_t*>(busyChunkData.getData()), value);
+        return ReturnType<N>::process (static_cast<uint8_t*> (busyChunkData.getData ()), value);
     }
 };
