@@ -30,6 +30,8 @@ public:
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     juce::PopupMenu createChannelInteractionMenu (int channelIndex, juce::String interactionArticle, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canInteractCallback, std::function <bool (SquidChannelProperties&)> canInteractToAllCallback);
     juce::PopupMenu createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
+    std::unique_ptr<juce::AudioFormatReader> getReaderFor (const juce::File file);
+    juce::String getFileTypesList ();
     bool isAltOutput (int channelIndex);
     bool isAltOutput (juce::ValueTree channelPropertiesVT);
     FileInfo getFileInfo (juce::File file);
@@ -37,6 +39,8 @@ public:
     bool isCueRandomOn (juce::ValueTree channelPropertiesVT);
     bool isCueStepOn (int channelIndex);
     bool isCueStepOn (juce::ValueTree channelPropertiesVT);
+    bool isSquidManagerSupportedAudioFile (const juce::File file);
+    bool isSquidSalmpleSupportedAudioFile (const juce::File file);
     void loadBank (juce::File bankDirectory);
     void loadBankDefaults (uint8_t bankIndex);
     void loadChannel (juce::ValueTree squidChannelPropertiesVT, uint8_t channelIndex, juce::File sampleFile);
@@ -67,6 +71,7 @@ private:
     std::array<SquidChannelProperties, 8> channelPropertiesList;
 
     juce::AudioFormatManager audioFormatManager;
+    juce::StringArray audioFileExtensions;
 
     void addSampleToChannelProperties (juce::ValueTree channelProperties, juce::File sampleFile);
     void cleanupChannelTempFiles ();

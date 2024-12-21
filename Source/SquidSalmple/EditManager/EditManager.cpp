@@ -20,6 +20,15 @@ constexpr auto kMaxSampleLength { 524287 };
 EditManager::EditManager ()
 {
     audioFormatManager.registerBasicFormats ();
+    for (auto formatIndex { 0 }; formatIndex < audioFormatManager.getNumKnownFormats (); ++formatIndex)
+    {
+        const auto* format { audioFormatManager.getKnownFormat (formatIndex) };
+        DebugLog ("Assimil8orValidator", "Format Name: " + format->getFormatName ());
+        DebugLog ("Assimil8orValidator", "Format Extensions: " + format->getFileExtensions ().joinIntoString (", "));
+        audioFileExtensions.addArray (format->getFileExtensions ());
+    }
+
+
     defaultSquidBankProperties.wrap ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
     defaultSquidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, [[maybe_unused]]int channelIndex)
     {
@@ -807,3 +816,35 @@ juce::PopupMenu EditManager::createChannelEditMenu (int channelIndex, std::funct
 
     return editMenu;
 };
+
+std::unique_ptr<juce::AudioFormatReader> EditManager::getReaderFor (const juce::File file)
+{
+    return std::unique_ptr<juce::AudioFormatReader> (audioFormatManager.createReaderFor (file));
+}
+
+juce::String EditManager::getFileTypesList ()
+{
+    juce::String fileTypesList;
+    for (auto fileExtension : audioFileExtensions)
+        fileTypesList += juce::String (fileTypesList.length () == 0 ? "" : ";") + "*" + fileExtension;
+    return fileTypesList;
+}
+
+bool EditManager::isSquidSalmpleSupportedAudioFile (const juce::File file)
+{
+    if (file.getFileExtension ().toLowerCase () != ".wav")
+        return false;
+    if (auto reader (getReaderFor (file)); reader != nullptr)
+    {
+        return reader->usesFloatingPointData == false &&
+               (reader->bitsPerSample >= 16 && reader->bitsPerSample <= 24) &&
+               (reader->numChannels >= 1 && reader->numChannels <= 2) &&
+               reader->sampleRate == 44100;
+    }
+    return false;
+}
+
+bool EditManager::isSquidManagerSupportedAudioFile (const juce::File file)
+{
+    return audioFileExtensions.contains (file.getFileExtension (), true);
+}
