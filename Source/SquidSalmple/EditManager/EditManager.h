@@ -27,6 +27,7 @@ public:
     void cleanUpTempFiles (juce::File bankFolder);
     void clearChannel (int channelIndex);
     void cloneCvAssigns (int srcChannelIndex, int srcCvAssign, int destChannelIndex, int destCvAssing);
+    bool copySampleToChannel (juce::File srcFile, juce::File destFile);
     void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     juce::PopupMenu createChannelInteractionMenu (int channelIndex, juce::String interactionArticle, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canInteractCallback, std::function <bool (SquidChannelProperties&)> canInteractToAllCallback);
     juce::PopupMenu createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);

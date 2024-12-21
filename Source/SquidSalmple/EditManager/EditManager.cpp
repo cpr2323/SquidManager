@@ -848,3 +848,81 @@ bool EditManager::isSquidManagerSupportedAudioFile (const juce::File file)
 {
     return audioFileExtensions.contains (file.getFileExtension (), true);
 }
+
+bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
+{
+    if (isSquidSalmpleSupportedAudioFile (srcFile))
+    {
+        // TODO handle case where file of same name already exists
+        // TODO should copy be moved to a thread?
+        // since we are copying the file from elsewhere, we will save it to a file with a "magic" extension
+        // this is so we can undo things if the Bank is not saved, and we don't use the normal 'wav' extension
+        // in case the app crashes, or something, and the extra file would confuse the module
+        srcFile.copyFileTo (destFile);
+        // TODO handle failure
+    }
+    else
+    {
+        // convert file from current location to channel directory
+        auto destinationFileStream { std::make_unique<juce::FileOutputStream> (destFile) };
+        destinationFileStream->setPosition (0);
+        destinationFileStream->truncate ();
+
+        if (auto reader { getReaderFor (srcFile) }; reader != nullptr)
+        {
+            auto sampleRate { reader->sampleRate };
+            auto numChannels { reader->numChannels };
+            auto bitsPerSample { reader->bitsPerSample };
+
+            if (bitsPerSample < 16)
+                bitsPerSample = 16;
+            else if (bitsPerSample > 24)
+                bitsPerSample = 24;
+            jassert (numChannels != 0);
+            numChannels = 1;
+            // TODO - integrate Secret Rabbit Code for sample rate conversion
+            jassert (sampleRate == 44100);
+            sampleRate = 44100;
+
+            // TODO - if the srcFile is a wav file, we should check to see if we need to copy the markers, and then add those to the destination file
+            juce::WavAudioFormat wavAudioFormat;
+            if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (destinationFileStream.get (),
+                                                                  sampleRate, numChannels, bitsPerSample, {}, 0) }; writer != nullptr)
+            {
+                // audioFormatWriter will delete the file stream when done
+                destinationFileStream.release ();
+
+                // copy the whole thing
+                // TODO - two things
+                //   a) this needs to be done in a thread
+                //   b) we should locally read into a buffer and then write that, so we can display progress if needed
+                if (writer->writeFromAudioReader (*reader.get (), 0, -1) == true)
+                {
+                    // close the writer and reader, so that we can manipulate the files
+                    writer.reset ();
+                    reader.reset ();
+                }
+                else
+                {
+                    // failure to convert
+                    jassertfalse;
+                    return false;
+                }
+            }
+            else
+            {
+                //failure to create writer
+                jassertfalse;
+                return false;
+            }
+        }
+        else
+        {
+            // failure to create reader
+            jassertfalse;
+            return false;
+        }
+    }
+
+    return true;
+}

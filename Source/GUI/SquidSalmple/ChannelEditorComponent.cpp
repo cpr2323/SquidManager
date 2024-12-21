@@ -1885,94 +1885,10 @@ bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName
         currentSampleFile.deleteFile ();
     if (srcFile.getParentDirectory () != channelDirectory)
     {
-        const auto fileInfo { editManager->getFileInfo (srcFile) };
-        if (fileInfo.supported)
+        if (! editManager->copySampleToChannel (srcFile, destFile))
         {
-            // TODO handle case where file of same name already exists
-            // TODO should copy be moved to a thread?
-            // since we are copying the file from elsewhere, we will save it to a file with a "magic" extension
-            // this is so we can undo things if the Bank is not saved, and we don't use the normal 'wav' extension
-            // in case the app crashes, or something, and the extra file would confuse the module
-            srcFile.copyFileTo (destFile);
-            // TODO handle failure
-        }
-        else
-        {
-            // convert file from current location to channel directory
-            auto destinationFileStream { std::make_unique<juce::FileOutputStream> (destFile) };
-            destinationFileStream->setPosition (0);
-            destinationFileStream->truncate ();
-
-                dropMsg = "Unsupported wav file.";
-                if (fileInfo.usesFloatingPointData == true)
-                {
-                    dropMsg += " Data type must be integer.";
-                }
-                if (fileInfo.bitsPerSample != 16 && fileInfo.bitsPerSample != 24)
-                {
-                    dropMsg += " Bit depth must be 16 or 24.";
-                }
-                if (fileInfo.numChannels > 2)
-                {
-                    dropMsg += " Too many channels (" + juce::String (fileInfo.numChannels) + ").";
-                }
-                if (fileInfo.sampleRate != 44100)
-                {
-                    dropMsg += " Sample rate must be 44.1k";
-                }
-
-                supportedFile = false;
-
-            if (auto reader { editManager->getReaderFor (srcFile) }; reader != nullptr)
-            {
-                auto sampleRate { reader->sampleRate };
-                auto numChannels { reader->numChannels };
-                auto bitsPerSample { reader->bitsPerSample };
-
-                if (fileInfo.bitsPerSample < 16)
-                    bitsPerSample = 16;
-                else if (bitsPerSample > 24)
-                    bitsPerSample = 24;
-                jassert (numChannels != 0);
-                numChannels = 1;
-                // TODO - integrate Secret Rabbit Code for sample rate conversion
-                jassert (sampleRate == 44100);
-                sampleRate = 44100;
-
-                juce::WavAudioFormat wavAudioFormat;
-                if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (destinationFileStream.get (),
-                                                                      sampleRate, numChannels, bitsPerSample, {}, 0) }; writer != nullptr)
-                {
-                    // audioFormatWriter will delete the file stream when done
-                    destinationFileStream.release ();
-
-                    // copy the whole thing
-                    // TODO - two things
-                    //   a) this needs to be done in a thread
-                    //   b) we should locally read into a buffer and then write that, so we can display progress if needed
-                    if (writer->writeFromAudioReader (*reader.get (), 0, -1) == true)
-                    {
-                        // close the writer and reader, so that we can manipulate the files
-                        writer.reset ();
-                        reader.reset ();
-                    }
-                    else
-                    {
-                        // failure to convert
-                        jassertfalse;
-                    }
-                }
-                else
-                {
-                    //failure to create writer
-                    jassertfalse;
-                }
-            }
-            else
-            {
-                // failure to create reader
-                jassertfalse;
-            }
+            // TODO - indicate an error?
+            return false;
         }
     }
     // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
