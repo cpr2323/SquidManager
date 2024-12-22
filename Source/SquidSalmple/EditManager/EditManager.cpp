@@ -627,12 +627,12 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             {
                 ++numFilesProcessed;
                 auto inputFile { juce::File (inputFileName) };
-                auto inputStream { inputFile.createInputStream ()};
                 std::unique_ptr<juce::AudioFormatReader> reader;
                 if (inputFile.getFileExtension () == "._wav")
                 {
                     // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
-                    reader.reset (wavAudioFormat.createReaderFor (inputStream.get (), true));
+                    auto inputStream { inputFile.createInputStream () };
+                    reader.reset (wavAudioFormat.createReaderFor (inputStream.release (), true));
                 }
                 else
                 {
@@ -640,7 +640,6 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                 }
                 if (reader != nullptr)
                 {
-                    inputStream.release ();
                     jassert (reader != nullptr);
                     LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + inputFileName);
                     const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
@@ -667,7 +666,6 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                         const auto numSamples { reader->lengthInSamples };
                         inputBuffer.setSize (numChannels, static_cast<int>(numSamples), false, true, false);
                         reader->read (&inputBuffer, 0, static_cast<int>(numSamples), 0, true, true);
-                        inputStream.reset (nullptr);
 
                         juce::AudioBuffer<float> outputBuffer;
                         const double ratio = 44100. / reader->sampleRate;
