@@ -604,6 +604,8 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     if (! channelDirectory.exists ())
         channelDirectory.createDirectory ();
     const auto outputFile { channelDirectory.getChildFile (outputFileName) };
+    if (outputFile.exists ())
+        outputFile.deleteFile ();
     struct CueSet
     {
         uint32_t offset;
@@ -642,9 +644,9 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                 {
                     jassert (reader != nullptr);
                     LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + inputFileName);
-                    const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
                     if (reader->bitsPerSample == 44100)
                     {
+                        const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
                         if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
                         {
                             LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
