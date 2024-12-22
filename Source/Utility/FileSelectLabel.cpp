@@ -27,6 +27,11 @@ void FileSelectLabel::setOutline (juce::Colour colour)
     outlineColor = colour;
 }
 
+void FileSelectLabel::setFileFilter (juce::String newFileFilterString)
+{
+    fileFilterString = newFileFilterString;
+}
+
 void FileSelectLabel::canMultiSelect (bool canDoMultiSelect)
 {
     fileChooserOptions = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles | (canDoMultiSelect ? juce::FileBrowserComponent::canSelectMultipleItems : 0);
@@ -34,7 +39,7 @@ void FileSelectLabel::canMultiSelect (bool canDoMultiSelect)
 
 void FileSelectLabel::browseForSample ()
 {
-    fileChooser.reset (new juce::FileChooser ("Please select the Squid Salmple file you want to load...", {}, "*.wav"));
+    fileChooser.reset (new juce::FileChooser ("Please select the Squid Salmple file you want to load...", {}, fileFilterString));
     fileChooser->launchAsync (fileChooserOptions, [this] (const juce::FileChooser& fc) mutable
     {
         if (fc.getURLResults ().size () > 0 && fc.getURLResults () [0].isLocalFile () && onFilesSelected != nullptr)

@@ -597,6 +597,42 @@ void EditManager::addSampleToChannelProperties (juce::ValueTree channelPropertie
     }
 }
 
+void EditManager::sampleConvert (juce::AudioFormatReader* reader, juce::AudioBuffer<float>& outputBuffer)
+{
+    juce::AudioBuffer<float> inputBuffer;
+    const auto numChannels { reader->numChannels };
+    const auto numSamples { reader->lengthInSamples };
+    inputBuffer.setSize (numChannels, static_cast<int>(numSamples), false, true, false);
+    reader->read (&inputBuffer, 0, static_cast<int>(numSamples), 0, true, true);
+
+    const double ratio = 44100. / reader->sampleRate;
+    const int outputNumSamples = static_cast<int>(numSamples * ratio);
+    outputBuffer.setSize (numChannels, outputNumSamples, false, true, false);
+    SRC_STATE* srcState = src_new (SRC_SINC_BEST_QUALITY, numChannels, nullptr);
+    if (srcState == nullptr)
+    {
+        // TODO - handle error
+        jassertfalse;
+    }
+
+    SRC_DATA srcData;
+    srcData.data_in = inputBuffer.getReadPointer (0);
+    srcData.input_frames = static_cast<int>(numSamples);
+    srcData.data_out = outputBuffer.getWritePointer (0);
+    srcData.output_frames = outputNumSamples;
+    srcData.src_ratio = ratio;
+    srcData.end_of_input = 0;
+
+    int error = src_process (srcState, &srcData);
+    src_delete (srcState);
+
+    if (error != 0)
+    {
+        // TODO - handle error
+        jassertfalse;
+    }
+}
+
 void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, int channelIndex, juce::String outputFileName, juce::ValueTree cueSetListVT)
 {
     LogEditManager ("concatenateAndBuildCueSets");
@@ -634,7 +670,9 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                 {
                     // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
                     auto inputStream { inputFile.createInputStream () };
-                    reader.reset (wavAudioFormat.createReaderFor (inputStream.release (), true));
+                    reader.reset (wavAudioFormat.createReaderFor (inputStream.get (), true));
+                    if (reader != nullptr)
+                        inputStream.release ();
                 }
                 else
                 {
@@ -663,44 +701,13 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                     }
                     else // needs to be sample rate converted
                     {
-                        juce::AudioBuffer<float> inputBuffer;
-                        const auto numChannels { reader->numChannels };
-                        const auto numSamples { reader->lengthInSamples };
-                        inputBuffer.setSize (numChannels, static_cast<int>(numSamples), false, true, false);
-                        reader->read (&inputBuffer, 0, static_cast<int>(numSamples), 0, true, true);
-
                         juce::AudioBuffer<float> outputBuffer;
-                        const double ratio = 44100. / reader->sampleRate;
-                        const int outputNumSamples = static_cast<int>(numSamples * ratio);
-                        outputBuffer.setSize (numChannels, outputNumSamples, false, true, false);
-                        SRC_STATE* srcState = src_new (SRC_SINC_BEST_QUALITY, numChannels, nullptr);
-                        if (srcState == nullptr)
+                        sampleConvert (reader.get (), outputBuffer);
+                        if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputBuffer.getNumSamples ()) == true)
                         {
-                            // TODO - handle error
-                            jassertfalse;
-                        }
-
-                        SRC_DATA srcData;
-                        srcData.data_in = inputBuffer.getReadPointer (0);
-                        srcData.input_frames = static_cast<int>(numSamples);
-                        srcData.data_out = outputBuffer.getWritePointer (0);
-                        srcData.output_frames = outputNumSamples;
-                        srcData.src_ratio = ratio;
-                        srcData.end_of_input = 0;
-
-                        int error = src_process (srcState, &srcData);
-                        src_delete (srcState);
-
-                        if (error != 0)
-                        {
-                            // TODO - handle error
-                            jassertfalse;
-                        }
-                        if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputNumSamples) == true)
-                        {
-                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (outputNumSamples));
+                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (outputBuffer.getNumSamples ()));
                             if (!cueSetListVT.isValid () || numFilesProcessed > 1)
-                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (outputNumSamples) });
+                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (outputBuffer.getNumSamples ()) });
                         }
                         else
                         {
@@ -708,7 +715,7 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                             LogEditManager ("ERROR - when writing file");
                             hadError = true;
                         }
-                        curSampleOffset += outputNumSamples;
+                        curSampleOffset += outputBuffer.getNumSamples ();
                     }
                 }
                 else
@@ -934,7 +941,6 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
 
         if (auto reader { getReaderFor (srcFile) }; reader != nullptr)
         {
-            auto sampleRate { reader->sampleRate };
             auto numChannels { reader->numChannels };
             auto bitsPerSample { reader->bitsPerSample };
 
@@ -944,33 +950,50 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
                 bitsPerSample = 24;
             jassert (numChannels != 0);
             numChannels = 1;
-            // TODO - integrate Secret Rabbit Code for sample rate conversion
-            jassert (sampleRate == 44100);
-            sampleRate = 44100;
 
             // TODO - if the srcFile is a wav file, we should check to see if we need to copy the markers, and then add those to the destination file
             juce::WavAudioFormat wavAudioFormat;
             if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (destinationFileStream.get (),
-                                                                  sampleRate, numChannels, bitsPerSample, {}, 0) }; writer != nullptr)
+                                                                  44100, numChannels, bitsPerSample, {}, 0) }; writer != nullptr)
             {
                 // audioFormatWriter will delete the file stream when done
                 destinationFileStream.release ();
 
-                // copy the whole thing
-                // TODO - two things
-                //   a) this needs to be done in a thread
-                //   b) we should locally read into a buffer and then write that, so we can display progress if needed
-                if (writer->writeFromAudioReader (*reader.get (), 0, -1) == true)
+                if (reader->bitsPerSample == 44100)
                 {
-                    // close the writer and reader, so that we can manipulate the files
-                    writer.reset ();
-                    reader.reset ();
+                    // copy the whole thing
+                    // TODO - two things
+                    //   a) this needs to be done in a thread
+                    //   b) we should locally read into a buffer and then write that, so we can display progress if needed
+                    if (writer->writeFromAudioReader (*reader.get (), 0, -1) == true)
+                    {
+                        // close the writer and reader, so that we can manipulate the files
+                        writer.reset ();
+                        reader.reset ();
+                    }
+                    else
+                    {
+                        // failure to convert
+                        jassertfalse;
+                        return false;
+                    }
                 }
                 else
                 {
-                    // failure to convert
-                    jassertfalse;
-                    return false;
+                    juce::AudioBuffer<float> outputBuffer;
+                    sampleConvert (reader.get (), outputBuffer);
+                    if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputBuffer.getNumSamples ()) == true)
+                    {
+                        // close the writer and reader, so that we can manipulate the files
+                        writer.reset ();
+                        reader.reset ();
+                    }
+                    else
+                    {
+                        // failure to convert
+                        jassertfalse;
+                        return false;
+                    }
                 }
             }
             else

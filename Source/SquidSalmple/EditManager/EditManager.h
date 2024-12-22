@@ -80,5 +80,6 @@ private:
     bool isAltOutput (SquidChannelProperties& channelProperties);
     bool isCueRandomOn (SquidChannelProperties& channelProperties);
     bool isCueStepOn (SquidChannelProperties& channelProperties);
+    void sampleConvert (juce::AudioFormatReader* reader, juce::AudioBuffer<float>& outputBuffer);
     void setAltOutput (SquidChannelProperties& channelProperties, bool useAltOutput);
 };

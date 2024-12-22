@@ -1360,6 +1360,8 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
 
+    sampleFileNameSelectLabel.setFileFilter (editManager->getFileTypesList ());
+
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
     audioPlayerProperties.onPlayStateChange = [this] (AudioPlayerProperties::PlayState playState)
     {
