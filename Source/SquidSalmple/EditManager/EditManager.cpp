@@ -5,10 +5,11 @@
 #include "../Metadata/SquidMetaDataWriter.h"
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/PersistentRootProperties.h"
+#include "../../SRC//libsamplerate-0.1.9/src/samplerate.h"
 
-#define LOG_EDIT_MANAGER 0
+#define LOG_EDIT_MANAGER 1
 #if LOG_EDIT_MANAGER
-#define LogEditManager(text) DebugLog ("BankListComponent", text);
+#define LogEditManager(text) DebugLog ("EditManager", text);
 #else
 #define LogEditManager(text) ;
 #endif
@@ -622,30 +623,93 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
             // concatenate files into one file
             uint32_t curSampleOffset { 0 };
             int numFilesProcessed { 0 };
-            for (auto& file : files)
+            for (auto& inputFileName : files)
             {
                 ++numFilesProcessed;
-                auto inputStream { juce::File (file).createInputStream ()};
-                // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
-                if (std::unique_ptr<juce::AudioFormatReader> reader { wavAudioFormat.createReaderFor (inputStream.get (), true) }; reader != nullptr)
+                auto inputFile { juce::File (inputFileName) };
+                auto inputStream { inputFile.createInputStream ()};
+                std::unique_ptr<juce::AudioFormatReader> reader;
+                if (inputFile.getFileExtension () == "._wav")
+                {
+                    // we have to use the WavAudioFormat::createReaderFor interface here, since the file may be our renamed ._wav type, which the AudioFormatManager will reject based on extension
+                    reader.reset (wavAudioFormat.createReaderFor (inputStream.get (), true));
+                }
+                else
+                {
+                    reader.reset (audioFormatManager.createReaderFor (inputFile));
+                }
+                if (reader != nullptr)
                 {
                     inputStream.release ();
                     jassert (reader != nullptr);
-                    LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + file);
+                    LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + inputFileName);
                     const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
-                    if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                    if (reader->bitsPerSample == 44100)
                     {
-                        LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                        if (! cueSetListVT.isValid () || numFilesProcessed > 1)
-                            cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
+                        if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                        {
+                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                            if (!cueSetListVT.isValid () || numFilesProcessed > 1)
+                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
+                        }
+                        else
+                        {
+                            // handle error
+                            LogEditManager ("ERROR - when writing file");
+                            hadError = true;
+                        }
+                        curSampleOffset += samplesToRead;
                     }
-                    else
+                    else // needs to be sample rate converted
                     {
-                        // handle error
-                        LogEditManager ("ERROR - when writing file");
-                        hadError = true;
+                        juce::AudioBuffer<float> inputBuffer;
+                        const auto numChannels { reader->numChannels };
+                        const auto numSamples { reader->lengthInSamples };
+                        inputBuffer.setSize (numChannels, static_cast<int>(numSamples), false, true, false);
+                        reader->read (&inputBuffer, 0, static_cast<int>(numSamples), 0, true, true);
+                        inputStream.reset (nullptr);
+
+                        juce::AudioBuffer<float> outputBuffer;
+                        const double ratio = 44100. / reader->sampleRate;
+                        const int outputNumSamples = static_cast<int>(numSamples * ratio);
+                        outputBuffer.setSize (numChannels, outputNumSamples, false, true, false);
+                        SRC_STATE* srcState = src_new (SRC_SINC_BEST_QUALITY, numChannels, nullptr);
+                        if (srcState == nullptr)
+                        {
+                            // TODO - handle error
+                            jassertfalse;
+                        }
+
+                        SRC_DATA srcData;
+                        srcData.data_in = inputBuffer.getReadPointer (0);
+                        srcData.input_frames = static_cast<int>(numSamples);
+                        srcData.data_out = outputBuffer.getWritePointer (0);
+                        srcData.output_frames = outputNumSamples;
+                        srcData.src_ratio = ratio;
+                        srcData.end_of_input = 0;
+
+                        int error = src_process (srcState, &srcData);
+                        src_delete (srcState);
+
+                        if (error != 0)
+                        {
+                            // TODO - handle error
+                            jassertfalse;
+                        }
+                        if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputNumSamples) == true)
+                        {
+                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (outputNumSamples));
+                            if (!cueSetListVT.isValid () || numFilesProcessed > 1)
+                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (outputNumSamples) });
+                        }
+                        else
+                        {
+                            // handle error
+                            LogEditManager ("ERROR - when writing file");
+                            hadError = true;
+                        }
+                        curSampleOffset += outputNumSamples;
                     }
-                    curSampleOffset += samplesToRead;
                 }
                 else
                 {
