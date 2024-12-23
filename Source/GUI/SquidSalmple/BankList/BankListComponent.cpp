@@ -305,7 +305,8 @@ void BankListComponent::timerCallback ()
 
 juce::String BankListComponent::getTooltipForRow (int row)
 {
-    return "Bank " + juce::String (row + 1);
+    auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+    return "Bank " + juce::String (bankNumber);
 }
 
 void BankListComponent::copyBank (int bankNumber)
