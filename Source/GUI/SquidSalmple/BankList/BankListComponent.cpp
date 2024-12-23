@@ -398,7 +398,9 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 {
     if (me.mods.isPopupMenu ())
     {
-        bankListBox.selectRow (lastSelectedBankIndex, false, true);
+        if (row != lastSelectedBankIndex)
+            bankListBox.selectRow (lastSelectedBankIndex, true, true);
+
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
         if (! thisBankExists)
             bankName = "(empty)";
