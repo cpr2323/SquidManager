@@ -1934,7 +1934,9 @@ void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int 
         {
             auto reader { editManager->getReaderFor (draggedFile) };
             dropMsg = "Assign sample to Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1);
-            if (reader->lengthInSamples > kMaxSampleLength)
+            const double ratio = 44100. / reader->sampleRate;
+            const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
+            if (actualNumSamples > kMaxSampleLength)
                 dropMsg += ". Sample will be truncated to 11 seconds";
             supportedFile = true;
         }

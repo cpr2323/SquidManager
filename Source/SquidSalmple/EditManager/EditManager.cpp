@@ -24,8 +24,8 @@ EditManager::EditManager ()
     for (auto formatIndex { 0 }; formatIndex < audioFormatManager.getNumKnownFormats (); ++formatIndex)
     {
         const auto* format { audioFormatManager.getKnownFormat (formatIndex) };
-        DebugLog ("Assimil8orValidator", "Format Name: " + format->getFormatName ());
-        DebugLog ("Assimil8orValidator", "Format Extensions: " + format->getFileExtensions ().joinIntoString (", "));
+        DebugLog ("EditManager", "Format Name: " + format->getFormatName ());
+        DebugLog ("EditManager", "Format Extensions: " + format->getFileExtensions ().joinIntoString (", "));
         audioFileExtensions.addArray (format->getFileExtensions ());
     }
 
@@ -684,38 +684,54 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
                     LogEditManager ("opened input file [" + juce::String (numFilesProcessed) + "]: " + inputFileName);
                     if (reader->bitsPerSample == 44100)
                     {
-                        const auto samplesToRead { static_cast<uint32_t> (curSampleOffset + reader->lengthInSamples < kMaxSampleLength ? reader->lengthInSamples : kMaxSampleLength - curSampleOffset) };
-                        if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                        if (curSampleOffset + reader->lengthInSamples < kMaxSampleLength)
                         {
-                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
-                            if (!cueSetListVT.isValid () || numFilesProcessed > 1)
-                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
+                            const auto samplesToRead { static_cast<uint32_t> (reader->lengthInSamples) };
+                            if (writer->writeFromAudioReader (*reader.get (), 0, samplesToRead) == true)
+                            {
+                                LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (samplesToRead));
+                                if (!cueSetListVT.isValid () || numFilesProcessed > 1)
+                                    cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (samplesToRead) });
+                            }
+                            else
+                            {
+                                // handle error
+                                LogEditManager ("ERROR - when writing file");
+                                hadError = true;
+                            }
+                            curSampleOffset += samplesToRead;
                         }
                         else
                         {
-                            // handle error
-                            LogEditManager ("ERROR - when writing file");
-                            hadError = true;
+                            LogEditManager ("ERROR - file too long");
                         }
-                        curSampleOffset += samplesToRead;
                     }
                     else // needs to be sample rate converted
                     {
-                        juce::AudioBuffer<float> outputBuffer;
-                        sampleConvert (reader.get (), outputBuffer);
-                        if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputBuffer.getNumSamples ()) == true)
+                        const double ratio = 44100. / reader->sampleRate;
+                        const int samplesToRead= static_cast<int>(reader->lengthInSamples * ratio);
+                        if (curSampleOffset + samplesToRead < kMaxSampleLength)
                         {
-                            LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (outputBuffer.getNumSamples ()));
-                            if (!cueSetListVT.isValid () || numFilesProcessed > 1)
-                                cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (outputBuffer.getNumSamples ()) });
+                            juce::AudioBuffer<float> outputBuffer;
+                            sampleConvert (reader.get (), outputBuffer);
+                            if (writer->writeFromAudioSampleBuffer (outputBuffer, 0, outputBuffer.getNumSamples ()) == true)
+                            {
+                                LogEditManager ("successful file write [" + juce::String (numFilesProcessed) + "]: offset: " + juce::String (curSampleOffset) + ", numSamples: " + juce::String (outputBuffer.getNumSamples ()));
+                                if (!cueSetListVT.isValid () || numFilesProcessed > 1)
+                                    cueSetList.emplace_back (CueSet { curSampleOffset, static_cast<uint32_t> (outputBuffer.getNumSamples ()) });
+                            }
+                            else
+                            {
+                                // handle error
+                                LogEditManager ("ERROR - when writing file");
+                                hadError = true;
+                            }
+                            curSampleOffset += outputBuffer.getNumSamples ();
                         }
                         else
                         {
-                            // handle error
-                            LogEditManager ("ERROR - when writing file");
-                            hadError = true;
+                            LogEditManager ("ERROR - file too long");
                         }
-                        curSampleOffset += outputBuffer.getNumSamples ();
                     }
                 }
                 else

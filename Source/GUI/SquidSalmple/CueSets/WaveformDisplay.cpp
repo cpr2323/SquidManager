@@ -456,8 +456,11 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
             auto reader { editManager->getReaderFor (draggedFile) };
-            totalSize += reader->lengthInSamples;
-            if (totalSize + reader->lengthInSamples < kMaxSampleLength)
+            const double ratio = 44100. / reader->sampleRate;
+            const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
+
+            totalSize += actualNumSamples;
+            if (totalSize < kMaxSampleLength)
                 ++filesConcatenated;
         }
         else
