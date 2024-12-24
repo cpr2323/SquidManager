@@ -148,17 +148,46 @@ ChannelEditorComponent::ChannelEditorComponent ()
                 renameAlertWindow.reset ();
             }));
         });
-        editMenu.addItem ("Clear Cue Sets", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
-            squidChannelProperties.setCurCueSet (0, false);
-            for (auto cueSetCount { squidChannelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
-                squidChannelProperties.removeCueSet (cueSetCount - 1);
-            const auto endOffset { SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()) };
-            squidChannelProperties.setStartCue (0, true);
-            squidChannelProperties.setLoopCue (0, true);
-            squidChannelProperties.setEndCue (endOffset, true);
-            squidChannelProperties.setCueSetPoints (0, 0, 0, SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()));
-        });
+            auto clearCueSets = [this] ()
+            {
+                squidChannelProperties.setCurCueSet (0, false);
+                for (auto cueSetCount { squidChannelProperties.getNumCueSets () }; cueSetCount > 1; --cueSetCount)
+                    squidChannelProperties.removeCueSet (cueSetCount - 1);
+                const auto endOffset { SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()) };
+                squidChannelProperties.setStartCue (0, true);
+                squidChannelProperties.setLoopCue (0, true);
+                squidChannelProperties.setEndCue (endOffset, true);
+                squidChannelProperties.setCueSetPoints (0, 0, 0, SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples ()));
+            };
+            juce::PopupMenu cueSetsMenu;
+            cueSetsMenu.addItem ("Clear Cue Sets", true, false, [this, clearCueSets] () { clearCueSets (); });
+            {
+                juce::PopupMenu chopMenu;
+                for (auto numberOfPieces { 2 }; numberOfPieces < 17; ++numberOfPieces)
+                {
+                    chopMenu.addItem (juce::String (numberOfPieces), true, false, [this, clearCueSets, numberOfPieces] ()
+                    {
+                        clearCueSets ();
+                        for (auto curCueSetIndex { 0 }; curCueSetIndex < numberOfPieces; ++curCueSetIndex)
+                        {
+                            const auto startOffset { SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples () / numberOfPieces * curCueSetIndex) };
+                            const auto endOffset { SquidChannelProperties::sampleOffsetToByteOffset (squidChannelProperties.getSampleDataNumSamples () / numberOfPieces * (curCueSetIndex + 1)) };
+                            squidChannelProperties.setCueSetPoints (curCueSetIndex, startOffset, startOffset, endOffset);
+                        }
+                        squidChannelProperties.setCurCueSet (0, true);
+                        startCueDataChanged (0);
+                        loopCueDataChanged (0);
+                        endCueDataChanged (squidChannelProperties.getEndCue());
+                        waveformDisplay.setCuePoints (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCueSet (0)),
+                                                      SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCueSet (0)),
+                                                      SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCueSet (0)));
+                                      });
+                }
+                cueSetsMenu.addSubMenu ("Chop", chopMenu);
+            }
+            editMenu.addSubMenu ("Cue Sets", cueSetsMenu);
+        }
         editMenu.addItem ("Clear", true, false, [this, channelIndex = squidChannelProperties.getChannelIndex ()] ()
         {
             editManager->clearChannel (squidChannelProperties.getChannelIndex ());
