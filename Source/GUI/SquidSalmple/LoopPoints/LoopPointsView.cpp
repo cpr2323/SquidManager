@@ -24,6 +24,11 @@ void LoopPointsView::paint (juce::Graphics& g)
         juce::dsp::AudioBlock<float> loopSamples { audioBlock.getSubBlock (sampleOffset, numSamples) };
         const auto samplesToDisplay { static_cast<int> (std::min<juce::int64> (numSamples, halfWidth)) };
 
+        g.setColour (juce::Colours::lightgrey);
+        const auto dashSize { getHeight () / 11.f };
+        std::array<float, 2> dashedSpec { dashSize, dashSize };
+        g.drawDashedLine (juce::Line<int>{ 0, halfHeight, getWidth (), halfHeight }.toFloat (), dashedSpec.data (), 2);
+
         g.setColour (juce::Colours::white);
         auto readPtr { loopSamples.getChannelPointer (0) };
         for (auto sampleCount { 0 }; sampleCount < samplesToDisplay - 1; ++sampleCount)
