@@ -15,7 +15,7 @@ CvAssignParameter::CvAssignParameter ()
     assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
     assignEnableButton.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, squidChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
@@ -60,7 +60,7 @@ CvAssignParameter::CvAssignParameter ()
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
@@ -105,7 +105,7 @@ CvAssignParameter::CvAssignParameter ()
     };
     cvOffsetEditor.onPopupMenuCallback = [this] ()
     {
-        auto editMenu { editManager->createChannelEditMenu (squidChannelProperties.getChannelIndex (),
+            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);

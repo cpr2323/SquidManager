@@ -14,6 +14,8 @@
 #define LogEditManager(text) ;
 #endif
 
+constexpr float epsilon = 1e-6f;
+
 constexpr auto kMaxSeconds { 11 };
 constexpr auto kSupportedSampleRate { 44100 };
 constexpr auto kMaxSampleLength { 524287 };
@@ -892,9 +894,9 @@ juce::PopupMenu EditManager::createChannelInteractionMenu (int channelIndex, juc
     return cloneMenu;
 }
 
-juce::PopupMenu EditManager::createChannelEditMenu (int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
+juce::PopupMenu EditManager::createChannelEditMenu (juce::PopupMenu existingPopupMenu, int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter)
 {
-    juce::PopupMenu editMenu;
+    juce::PopupMenu editMenu (existingPopupMenu);
     editMenu.addSubMenu ("Clone", createChannelInteractionMenu (channelIndex, "To", setter, [this] (SquidChannelProperties&) { return true; }, [this] (SquidChannelProperties&) { return true; }), true);
     if (resetter != nullptr)
         editMenu.addItem ("Default", true, false, [this, resetter] () { resetter (); });
@@ -1028,4 +1030,36 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
     }
 
     return true;
+}
+
+juce::int64 EditManager::findNextZeroCrossing (juce::int64 startSampleOffset, juce::int64 maxSampleOffset, juce::AudioBuffer<float>& buffer)
+{
+    if (startSampleOffset < 0 || startSampleOffset >= maxSampleOffset - 1)
+        return -1; // Invalid start position
+
+    auto readPtr { buffer.getReadPointer (0) };
+    for (juce::int64 i = startSampleOffset + 1; i < maxSampleOffset - 1; ++i)
+    {
+        if ((readPtr [i] > epsilon && readPtr [i + 1] <= epsilon) || (readPtr [i] < epsilon && readPtr [i + 1] >= epsilon))
+        {
+            return i; // Return the index of the zero crossing
+        }
+    }
+    return -1; // No zero crossing found
+}
+
+juce::int64 EditManager::findPreviousZeroCrossing (juce::int64 startSampleOffset, juce::int64 minSampleOffset, juce::AudioBuffer<float>& buffer)
+{
+    if (startSampleOffset <= minSampleOffset || startSampleOffset > buffer.getNumSamples ())
+        return -1; // Invalid start position
+
+    auto readPtr { buffer.getReadPointer (0) };
+    for (juce::int64 i = startSampleOffset - 1; i > minSampleOffset; --i)
+    {
+        if ((readPtr [i] > epsilon && readPtr [i - 1] <= epsilon) || (readPtr [i] < epsilon && readPtr [i - 1] >= epsilon))
+        {
+            return i - 1; // Return the index of the zero crossing
+        }
+    }
+    return -1; // No zero crossing found
 }
