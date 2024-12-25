@@ -438,10 +438,6 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y
 void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
 {
     auto filesConcatenated { 0 };
-    auto sampleTypeMismatch { false };
-    auto bitDepthMismatch { false };
-    auto channelCountMismatch { false };
-    auto sampleRateMismatch { false };
     uint64_t totalSize { 0 };
     juce::String tempDropDetails;
     dropMsg = {};

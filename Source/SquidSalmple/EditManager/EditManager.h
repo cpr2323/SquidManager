@@ -28,11 +28,12 @@ public:
     void clearChannel (int channelIndex);
     void cloneCvAssigns (int srcChannelIndex, int srcCvAssign, int destChannelIndex, int destCvAssing);
     bool copySampleToChannel (juce::File srcFile, juce::File destFile);
-    juce::int64 findNextZeroCrossing (juce::int64 startSampleOffset, juce::int64 maxSampleOffset, juce::AudioBuffer<float>& buffer);
-    juce::int64 findPreviousZeroCrossing (juce::int64 startSampleOffset, juce::int64 minSampleOffset, juce::AudioBuffer<float>& buffer);
-    void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
     juce::PopupMenu createChannelInteractionMenu (int channelIndex, juce::String interactionArticle, std::function <void (SquidChannelProperties&)> setter, std::function <bool (SquidChannelProperties&)> canInteractCallback, std::function <bool (SquidChannelProperties&)> canInteractToAllCallback);
     juce::PopupMenu createChannelEditMenu (juce::PopupMenu existingPopupMenu, int channelIndex, std::function <void (SquidChannelProperties&)> setter, std::function <void ()> resetter, std::function <void ()> reverter);
+    int findNextZeroCrossing (int startSampleOffset, int maxSampleOffset, juce::AudioBuffer<float>& buffer);
+    int findPreviousZeroCrossing (int startSampleOffset, int minSampleOffset, juce::AudioBuffer<float>& buffer);
+    void forChannels (std::vector<int> channelIndexList, std::function<void (juce::ValueTree)> channelCallback);
+    juce::ValueTree getChannelPropertiesVT (int channelIndex);
     std::unique_ptr<juce::AudioFormatReader> getReaderFor (const juce::File file);
     juce::String getFileTypesList ();
     bool isAltOutput (int channelIndex);

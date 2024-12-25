@@ -366,10 +366,10 @@ void BankListComponent::pasteBank (int bankNumber)
 
 void BankListComponent::deleteBank (int bankNumber)
 {
-    auto [_, __, bankName] { bankInfoList [bankNumber - 1] };
+    auto [actualBankNumber, __, bankName] { bankInfoList [bankNumber - 1] };
     const auto bankDirectory { getBankDirectory (bankNumber) };
 
-    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete '" + bankName + "'", "YES", "NO", nullptr,
+    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete Bank " + juce::String (actualBankNumber) + ": '" + bankName + "'", "YES", "NO", nullptr,
         juce::ModalCallbackFunction::create ([this, bankNumber, bankDirectory] (int option)
         {
             if (option == 0) // no

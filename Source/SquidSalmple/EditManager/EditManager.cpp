@@ -834,6 +834,12 @@ void EditManager::forChannels (std::vector<int> channelIndexList, std::function<
     }
 }
 
+juce::ValueTree EditManager::getChannelPropertiesVT (int channelIndex)
+{
+    jassert (channelIndex >= 0 && channelIndex < 8);
+    return channelPropertiesList [channelIndex].getValueTree ();
+}
+
 juce::PopupMenu EditManager::createChannelInteractionMenu (int channelIndex, juce::String interactionArticle,
                                                            std::function <void (SquidChannelProperties&)> setter,
                                                            std::function <bool (SquidChannelProperties&)> canCloneCallback,
@@ -1032,13 +1038,13 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
     return true;
 }
 
-juce::int64 EditManager::findNextZeroCrossing (juce::int64 startSampleOffset, juce::int64 maxSampleOffset, juce::AudioBuffer<float>& buffer)
+int EditManager::findNextZeroCrossing (int startSampleOffset, int maxSampleOffset, juce::AudioBuffer<float>& buffer)
 {
     if (startSampleOffset < 0 || startSampleOffset >= maxSampleOffset - 1)
         return -1; // Invalid start position
 
     auto readPtr { buffer.getReadPointer (0) };
-    for (juce::int64 i = startSampleOffset + 1; i < maxSampleOffset - 1; ++i)
+    for (auto i = startSampleOffset + 1; i < maxSampleOffset - 1; ++i)
     {
         if ((readPtr [i] > epsilon && readPtr [i + 1] <= epsilon) || (readPtr [i] < epsilon && readPtr [i + 1] >= epsilon))
         {
@@ -1048,13 +1054,13 @@ juce::int64 EditManager::findNextZeroCrossing (juce::int64 startSampleOffset, ju
     return -1; // No zero crossing found
 }
 
-juce::int64 EditManager::findPreviousZeroCrossing (juce::int64 startSampleOffset, juce::int64 minSampleOffset, juce::AudioBuffer<float>& buffer)
+int EditManager::findPreviousZeroCrossing (int startSampleOffset, int minSampleOffset, juce::AudioBuffer<float>& buffer)
 {
     if (startSampleOffset <= minSampleOffset || startSampleOffset > buffer.getNumSamples ())
         return -1; // Invalid start position
 
     auto readPtr { buffer.getReadPointer (0) };
-    for (juce::int64 i = startSampleOffset - 1; i > minSampleOffset; --i)
+    for (auto i = startSampleOffset - 1; i > minSampleOffset; --i)
     {
         if ((readPtr [i] > epsilon && readPtr [i - 1] <= epsilon) || (readPtr [i] < epsilon && readPtr [i - 1] >= epsilon))
         {

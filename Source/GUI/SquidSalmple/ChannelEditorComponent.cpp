@@ -1973,30 +1973,36 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
     squidChannelProperties.setXfade (xfade, false);
 }
 
-bool ChannelEditorComponent::handleSampleAssignment (juce::String sampleFileName)
+bool ChannelEditorComponent::handleSampleAssignment (const juce::StringArray& fileNames)
 {
-    DebugLog ("ChannelEditorComponent", "handleSampleAssignment - sample to load: " + sampleFileName);
-    auto srcFile { juce::File (sampleFileName) };
-    const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (squidChannelProperties.getChannelIndex () + 1)) };
-    if (! channelDirectory.exists ())
-        channelDirectory.createDirectory ();
-    auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
-    auto currentSampleFile { juce::File (squidChannelProperties.getSampleFileName ()) };
-    // if the currently assigned sample is a "temp" file, we will delete it
-    if (currentSampleFile.getFileExtension () == "._wav")
-        currentSampleFile.deleteFile ();
-    if (srcFile.getParentDirectory () != channelDirectory)
+    const auto baseChannelIndex { squidChannelProperties.getChannelIndex () };
+    for (auto channelOffset {0}; channelOffset < std::min (fileNames.size (), 8); ++channelOffset)
     {
-        if (! editManager->copySampleToChannel (srcFile, destFile))
+        const auto currentChannelIndex { baseChannelIndex + channelOffset };
+        DebugLog ("ChannelEditorComponent", "handleSampleAssignment - channel " + juce::String(currentChannelIndex) + " sample to load: " + fileNames[channelOffset]);
+        auto srcFile { juce::File (fileNames [channelOffset]) };
+        const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (currentChannelIndex + 1)) };
+        if (!channelDirectory.exists ())
+            channelDirectory.createDirectory ();
+        auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
+        SquidChannelProperties destChannelProperties { editManager->getChannelPropertiesVT (currentChannelIndex), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
+        auto currentSampleFile { juce::File (destChannelProperties.getSampleFileName ()) };
+        // if the currently assigned sample is a "temp" file, we will delete it
+        if (currentSampleFile.getFileExtension () == "._wav")
+            currentSampleFile.deleteFile ();
+        if (srcFile.getParentDirectory () != channelDirectory)
         {
-            // TODO - indicate an error?
-            return false;
+            if (! editManager->copySampleToChannel (srcFile, destFile))
+            {
+                // TODO - indicate an error?
+                return false;
+            }
         }
+        // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
+        //        but it's possible that the file gets deleted somehow after selection
+        jassert (destFile.exists ());
+        editManager->loadChannel (destChannelProperties.getValueTree (), static_cast<uint8_t> (currentChannelIndex), destFile);
     }
-    // TODO - we should probably handle the case of the file missing. it shouldn't happen, as the file was selected through the file manager or a drag/drop
-    //        but it's possible that the file gets deleted somehow after selection
-    jassert (destFile.exists ());
-    editManager->loadChannel (squidChannelProperties.getValueTree (), squidChannelProperties.getChannelIndex (), destFile);
     return true;
 }
 
@@ -2014,7 +2020,7 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
     const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
     if (! dropBounds.contains (x, y))
         return;
-    if (! handleSampleAssignment (files[0]))
+    if (! handleSampleAssignment (files))
     {
         // TODO - indicate an error?
     }
@@ -2022,30 +2028,36 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
 
 void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int /*x*/, int /*y*/)
 {
-    if (files.size () > 1)
+    dropDetails = {};
+    supportedFile = true;
+    const auto baseChannelIndex { squidChannelProperties.getChannelIndex () };
+    const auto numberOfAssignments { std::min (files.size (), 8) };
+    for (auto channelOffset { 0 }; channelOffset < numberOfAssignments; ++channelOffset)
     {
-        dropMsg = "Only one sample can be dropped here";
-        supportedFile = false;
-    }
-    else
-    {
-        auto draggedFile { juce::File (files[0]) };
+        const auto currentChannelIndex { baseChannelIndex + channelOffset };
+        auto draggedFile { juce::File (files [channelOffset]) };
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
             auto reader { editManager->getReaderFor (draggedFile) };
-            dropMsg = "Assign sample to Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1);
             const double ratio = 44100. / reader->sampleRate;
             const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
             if (actualNumSamples > kMaxSampleLength)
-                dropMsg += ". Sample will be truncated to 11 seconds";
-            supportedFile = true;
+                dropDetails += juce::String (dropDetails.length () > 0 ? ". " : "") + "Channel " + juce::String (currentChannelIndex + 1) + " will be truncated to 11 seconds";
         }
         else
         {
-            dropMsg = "Unsupported file type";
+            dropMsg = "Unsupported file type(s)";
             supportedFile = false;
         }
     }
+    if (supportedFile)
+    {
+        if (files.size() == 1)
+            dropMsg = "Assign sample to Channel " + juce::String (baseChannelIndex + 1);
+        else
+            dropMsg = "Assign samples to Channels " + juce::String (baseChannelIndex + 1) + " - " + juce::String (baseChannelIndex + numberOfAssignments);
+    }
+
     draggingFiles = true;
     repaint ();
 }

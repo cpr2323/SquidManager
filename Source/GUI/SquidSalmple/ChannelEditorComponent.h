@@ -35,6 +35,7 @@ private:
     bool draggingFiles { false };
     bool supportedFile { false };
     juce::String dropMsg;
+    juce::String dropDetails;
 
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
 
@@ -150,7 +151,7 @@ private:
     int getUiValue (int internalValue);
     int getInternalValue (int uiValue);
     void filesDroppedOnCueSetEditor (const juce::StringArray& files, juce::String outputFileName, juce::ValueTree cueSets);
-    bool handleSampleAssignment (juce::String sampleFileName);
+    bool handleSampleAssignment (const juce::StringArray& fileNames);
     void initOutputComboBox ();
     void initializeCallbacks ();
     void setCueEditButtonsEnableState ();
