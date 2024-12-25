@@ -2251,15 +2251,29 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
                         lines.add (word);
                 }
             }
-            auto longestLine = [lines] ()
+            auto longestLine = [&g, lines] ()
             {
-                auto lineLength { 0 };
+                auto lineLength { 0.f };
+                auto maxLineLength { 0.f };
                 for (auto line : lines)
-                    lineLength = std::max (lineLength, line.length ());
-                return lineLength;
+                {
+                    lineLength = std::max (lineLength, g.getCurrentFont ().getStringWidthFloat (line) + 10.f);
+                    if (lineLength > maxLineLength)
+                        maxLineLength = lineLength;
+                }
+                return maxLineLength;
             } ();
+            constexpr auto dropDetailsFontSize { 15.f };
+            const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+            g.setColour (juce::Colours::white.withAlpha (0.5f));
+            g.fillRect (dropBounds);
             // calculate background rectangle size from longest line and number of lines, using ellipsis if necessary
+            auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (longestLine), lines.size () * static_cast<int> (dropDetailsFontSize) }.withCentre (dropBounds.getCentre ()) };
+            g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
+            g.setColour (juce::Colours::black.withAlpha (0.7f));
             // calculate position of dropMsg and dropDetails
+            g.setColour (juce::Colours::black);
+            g.setFont (dropDetailsFontSize);
             // display dropMsg and dropDetails
         }
     }
