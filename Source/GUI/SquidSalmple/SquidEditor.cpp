@@ -81,7 +81,7 @@ SquidEditorComponent::SquidEditorComponent ()
     addAndMakeVisible (toolsButton);
 
     // CHANNEL TABS
-    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->getFileInfo (fileName).supported; };
+    channelTabs.isSupportedFile = [this] (juce::String fileName) { return editManager->isSquidManagerSupportedAudioFile (fileName); };
     channelTabs.loadFile = [this] (juce::String fileName, int channelIndex)
     {
         channelTabs.setCurrentTabIndex (channelIndex, true);

@@ -2212,24 +2212,56 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
 {
     if (draggingFiles)
     {
-        constexpr auto fontHeight { 30.f };
-        const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
-        g.setColour (juce::Colours::white.withAlpha (0.5f));
-        g.fillRect (dropBounds);
-        g.setFont (fontHeight);
+        if (dropDetails.isEmpty ())
+        {
+            constexpr auto fontHeight { 30.f };
+            const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+            g.setColour (juce::Colours::white.withAlpha (0.5f));
+            g.fillRect (dropBounds);
+            g.setFont (fontHeight);
 
-        if (supportedFile)
-            g.setColour (juce::Colours::white.withAlpha (0.7f));
+            if (supportedFile)
+                g.setColour (juce::Colours::white.withAlpha (0.7f));
+            else
+                g.setColour (juce::Colours::black.withAlpha (0.7f));
+            auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f };
+            auto center { dropBounds.getCentre () };
+            g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
+            if (supportedFile)
+                g.setColour (juce::Colours::black);
+            else
+                g.setColour (juce::Colours::red.darker (0.5f));
+            g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
+        }
         else
-            g.setColour (juce::Colours::black.withAlpha (0.7f));
-        auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f};
-        auto center { dropBounds.getCentre () };
-        g.fillRoundedRectangle ({static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f}, 10.f);
-        if (supportedFile)
-            g.setColour (juce::Colours::black);
-        else
-            g.setColour (juce::Colours::red.darker (0.5f));
-        g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
+        {
+            juce::StringArray words;
+            words.addTokens (dropDetails, false);
+            juce::StringArray lines;
+            for (auto word : words)
+            {
+                if (lines.isEmpty ())
+                    lines.add (word);
+                else
+                {
+                    auto lastLine { lines [lines.size () - 1] };
+                    if (g.getCurrentFont ().getStringWidthFloat (lastLine + " " + word) < getWidth () - 20)
+                        lines.set (lines.size () - 1, lastLine + " " + word);
+                    else
+                        lines.add (word);
+                }
+            }
+            auto longestLine = [lines] ()
+            {
+                auto lineLength { 0 };
+                for (auto line : lines)
+                    lineLength = std::max (lineLength, line.length ());
+                return lineLength;
+            } ();
+            // calculate background rectangle size from longest line and number of lines, using ellipsis if necessary
+            // calculate position of dropMsg and dropDetails
+            // display dropMsg and dropDetails
+        }
     }
 }
 
