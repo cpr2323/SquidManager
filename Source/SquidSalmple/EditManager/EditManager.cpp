@@ -7,7 +7,7 @@
 #include "../../Utility/PersistentRootProperties.h"
 #include "../../SRC//libsamplerate-0.1.9/src/samplerate.h"
 
-#define LOG_EDIT_MANAGER 1
+#define LOG_EDIT_MANAGER 0
 #if LOG_EDIT_MANAGER
 #define LogEditManager(text) DebugLog ("EditManager", text);
 #else
@@ -26,8 +26,8 @@ EditManager::EditManager ()
     for (auto formatIndex { 0 }; formatIndex < audioFormatManager.getNumKnownFormats (); ++formatIndex)
     {
         const auto* format { audioFormatManager.getKnownFormat (formatIndex) };
-        DebugLog ("EditManager", "Format Name: " + format->getFormatName ());
-        DebugLog ("EditManager", "Format Extensions: " + format->getFileExtensions ().joinIntoString (", "));
+        //DebugLog ("EditManager", "Format Name: " + format->getFormatName ());
+        //DebugLog ("EditManager", "Format Extensions: " + format->getFileExtensions ().joinIntoString (", "));
         audioFileExtensions.addArray (format->getFileExtensions ());
     }
 
