@@ -2276,8 +2276,8 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             auto dropAreaBounds { dropBounds };
 
             const auto detailsHeight { std::max (5, lines.size ()) * dropDetailsFontSize + (sectionSpacing * 2) };
-            const auto detailsBounds { dropAreaBounds.removeFromBottom (detailsHeight).reduced (0, sectionSpacing) };
-            const auto dropMsgBounds { juce::Rectangle<int> (0.f, 0.f, static_cast<float> (dropAreaBounds.getWidth ()), dropMsgFontSizeDouble).withCentre (dropAreaBounds.getCentre ()) };
+            const auto detailsBounds { dropAreaBounds.removeFromBottom (static_cast<int> (detailsHeight)).reduced (0, static_cast<int> (sectionSpacing)) };
+            const auto dropMsgBounds { juce::Rectangle<int> (0, 0, dropAreaBounds.getWidth (), static_cast<int> (dropMsgFontSizeDouble)).withCentre (dropAreaBounds.getCentre ()) };
             
             // fill entire drop area with transparent
             g.setColour (juce::Colours::white.withAlpha (0.5f));
@@ -2300,7 +2300,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             g.setColour (juce::Colours::black);
             for (auto lineIndex { 0 }; lineIndex < lines.size(); ++lineIndex)
             {
-                g.drawText (lines [lineIndex], dropDetailsDisplayBounds.removeFromTop (dropDetailsFontSize), juce::Justification::centred, false);
+                g.drawText (lines [lineIndex], dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize)), juce::Justification::centred, false);
             }
         }
     }

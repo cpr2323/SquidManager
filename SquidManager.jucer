@@ -144,11 +144,8 @@
               file="Source/SquidSalmple/SquidChannelProperties.h"/>
       </GROUP>
       <GROUP id="{6BA79CBF-A335-60D7-F589-D490BB1B6EAA}" name="SRC">
-        <FILE id="G0bp8h" name="samplerate.c" compile="1" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/samplerate.c"/>
+        <FILE id="bXtK87" name="libsamplerate.c" compile="1" resource="0" file="Source/SRC/libsamplerate.c"/>
         <FILE id="Ua9cDQ" name="samplerate.h" compile="0" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/samplerate.h"/>
-        <FILE id="I3FXta" name="src_linear.c" compile="1" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/src_linear.c"/>
-        <FILE id="PFax5Z" name="src_sinc.c" compile="1" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/src_sinc.c"/>
-        <FILE id="pFMCgs" name="src_zoh.c" compile="1" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/src_zoh.c"/>
       </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
