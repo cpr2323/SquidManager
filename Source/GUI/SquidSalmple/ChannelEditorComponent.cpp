@@ -1979,7 +1979,7 @@ bool ChannelEditorComponent::handleSampleAssignment (const juce::StringArray& fi
     for (auto channelOffset {0}; channelOffset < std::min (fileNames.size (), 8); ++channelOffset)
     {
         const auto currentChannelIndex { baseChannelIndex + channelOffset };
-        DebugLog ("ChannelEditorComponent", "handleSampleAssignment - channel " + juce::String(currentChannelIndex) + " sample to load: " + fileNames[channelOffset]);
+        //DebugLog ("ChannelEditorComponent", "handleSampleAssignment - channel " + juce::String(currentChannelIndex) + " sample to load: " + fileNames[channelOffset]);
         auto srcFile { juce::File (fileNames [channelOffset]) };
         const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (currentChannelIndex + 1)) };
         if (!channelDirectory.exists ())
