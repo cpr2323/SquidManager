@@ -275,7 +275,6 @@ public:
         void resized () override
         {
             guiProperties.setSize (getBounds ().getWidth (), getBounds ().getHeight (), false);
-            juce::Logger::outputDebugString ("width: " + juce::String (getBounds ().getWidth ()) + ", height: " + juce::String (getBounds ().getHeight ()));
             DocumentWindow::resized ();
         }
 #endif // ! JUCE_IOS && ! JUCE_ANDROID
