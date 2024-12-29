@@ -87,7 +87,7 @@ private:
             }
             void filesDropped (const juce::StringArray& files, int /*x*/, int /*y*/) override
             {
-                DebugLog ("TabbedComponentWithDropTabs", "tab drop index: " + juce::String (getIndex ()));
+                //DebugLog ("TabbedComponentWithDropTabs", "tab drop index: " + juce::String (getIndex ()));
                 draggingFile = false;
                 repaint ();
                 if (! loadFile (files [0], getIndex ()))

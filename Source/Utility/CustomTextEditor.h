@@ -18,6 +18,7 @@ class CustomTextEditor : public juce::TextEditor
 public:
     CustomTextEditor ()
     {
+        setSelectAllWhenFocused (true);
         onTextChange = [this] () { checkValue (); };
         textColor = juce::Colours::white;
         applyColourToAllText (textColor, true);
@@ -76,6 +77,11 @@ private:
         setText (toStringCallback (newValue));
     }
 
+    void focusLost (FocusChangeType) override
+    {
+        setHighlightedRegion ({});
+    }
+
     void enablementChanged () override
     {
         auto getNewTextColour = [this] ()
@@ -93,49 +99,63 @@ private:
     {
         if (! isEnabled ())
             return;
-        else if (! customComponentMouseHandler.mouseDown (mouseEvent, onPopupMenuCallback, [this] () { jassert (onFocusLost != nullptr); onFocusLost (); }))
+        if (! customComponentMouseHandler.mouseDown (mouseEvent, onPopupMenuCallback, [this] () { jassert (onFocusLost != nullptr); onFocusLost (); }))
             juce::TextEditor::mouseDown (mouseEvent);
     }
 
     void mouseUp (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseUp (mouseEvent))
             juce::TextEditor::mouseUp (mouseEvent);
     }
 
     void mouseMove (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseMove (mouseEvent))
             juce::TextEditor::mouseMove (mouseEvent);
     }
 
     void mouseEnter (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseEnter (mouseEvent))
             juce::TextEditor::mouseEnter (mouseEvent);
     }
 
     void mouseExit (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseExit (mouseEvent))
             juce::TextEditor::mouseExit (mouseEvent);
     }
 
     void mouseDrag (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseDrag (mouseEvent, onDragCallback))
             juce::TextEditor::mouseDrag (mouseEvent);
     }
 
     void mouseDoubleClick (const juce::MouseEvent& mouseEvent) override
     {
+        if (! isEnabled ())
+            return;
         if (! customComponentMouseHandler.mouseDoubleClick (mouseEvent))
             juce::TextEditor::mouseDoubleClick (mouseEvent);
     }
 
     void mouseWheelMove (const juce::MouseEvent& mouseEvent, const juce::MouseWheelDetails& wheel) override
     {
-        if (! customComponentMouseHandler.mouseWheelMove (mouseEvent, wheel))
+        if (! isEnabled ())
+            return;
+        if (! customComponentMouseHandler.mouseWheelMove (mouseEvent, wheel, onDragCallback))
             juce::TextEditor::mouseWheelMove (mouseEvent, wheel);
     }
 };

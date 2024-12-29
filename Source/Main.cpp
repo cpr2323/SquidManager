@@ -120,35 +120,6 @@ public:
             directoryDataProperties.setRootFolder (folderName, false);
             directoryDataProperties.triggerStartScan (false);
         };
-
-// TEST CODE TO WRITE OUT empty SquidChannelProperties
-//         SquidChannelProperties squidChannelProperties { {}, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
-//         auto xmlToWrite { squidChannelProperties.getValueTree ().createXml () };
-//         auto squidMetaDataXmlFile { appDirectory.getChildFile ("SquidMetaDataXmlFile").withFileExtension (".xml") };
-//         xmlToWrite->writeTo (squidMetaDataXmlFile, {});
-
-// TEST CODE TO VERIFY PARSING OF DEFAULT, MIN, and MAX
-//         auto getMetaDataProperties = [] (const char* parameterPresetXml)
-//         {
-//             juce::XmlDocument xmlDoc { parameterPresetXml };
-//             auto xmlElement { xmlDoc.getDocumentElement (false) };
-//             //             if (auto parseError { xmlDoc.getLastParseError () }; parseError != "")
-//             //                 juce::Logger::outputDebugString ("XML Parsing Error for ParameterPreset type '" + parameterPresetType + "': " + parseError);
-//                         // NOTE: this is a hard failure, which indicates there is a problem in the file the parameterPresetXml passed in
-//             jassert (xmlDoc.getLastParseError () == "");
-//             if (xmlElement == nullptr)
-//                 return juce::ValueTree ();
-//
-//             auto parameterPreset { juce::ValueTree::fromXml (*xmlElement) };
-//             return parameterPreset;
-//         };
-//
-//         auto defaultMetaDataVT { getMetaDataProperties (BinaryData::DefaultMetaData_xml) };
-//         SquidChannelProperties defaultProperties { defaultMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
-//         auto minMetaDataVT { getMetaDataProperties (BinaryData::MinMetaData_xml) };
-//         SquidChannelProperties minProperties { minMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
-//         auto maxMetaDataVT { getMetaDataProperties (BinaryData::MaxMetaData_xml) };
-//         SquidChannelProperties maxProperties { maxMetaDataVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     }
 
     void initUi ()
@@ -281,6 +252,7 @@ public:
             guiProperties.wrap (prp.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
             auto [width, height] { guiProperties.getSize () };
             auto [x, y] { guiProperties.getPosition () };
+            setResizeLimits (120, 523, 1355, 65000);
             if (x == -1 || y == -1)
                 centreWithSize (width, height);
             else

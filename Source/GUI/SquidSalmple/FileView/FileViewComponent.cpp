@@ -266,7 +266,12 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
             return;
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
         auto folder { juce::File (directoryEntryVT.getProperty ("name").toString ()) };
+        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
+        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
+        pm.setLookAndFeel (popupMenuLnF);
+        pm.addSectionHeader (folder.getFileName ());
+        pm.addSeparator ();
         pm.addItem ("Rename", true, false, [this, folder] ()
         {
             renameAlertWindow = std::make_unique<juce::AlertWindow> ("RENAME FOLDER", "Enter the new name for '" + folder.getFileName ()  + "'", juce::MessageBoxIconType::NoIcon);
@@ -306,7 +311,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
                 }
             }));
         });
-        pm.showMenuAsync ({}, [this] (int) {});
+        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
     }
     else
     {

@@ -305,7 +305,8 @@ void BankListComponent::timerCallback ()
 
 juce::String BankListComponent::getTooltipForRow (int row)
 {
-    return "Bank " + juce::String (row + 1);
+    auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+    return "Bank " + juce::String (bankNumber);
 }
 
 void BankListComponent::copyBank (int bankNumber)
@@ -365,10 +366,10 @@ void BankListComponent::pasteBank (int bankNumber)
 
 void BankListComponent::deleteBank (int bankNumber)
 {
-    auto [_, __, bankName] { bankInfoList [bankNumber - 1] };
+    auto [actualBankNumber, __, bankName] { bankInfoList [bankNumber - 1] };
     const auto bankDirectory { getBankDirectory (bankNumber) };
 
-    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete '" + bankName + "'", "YES", "NO", nullptr,
+    juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "DELETE BANK", "Are you sure you want to delete Bank " + juce::String (actualBankNumber) + ": '" + bankName + "'", "YES", "NO", nullptr,
         juce::ModalCallbackFunction::create ([this, bankNumber, bankDirectory] (int option)
         {
             if (option == 0) // no
@@ -397,7 +398,9 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 {
     if (me.mods.isPopupMenu ())
     {
-        bankListBox.selectRow (lastSelectedBankIndex, false, true);
+        if (row != lastSelectedBankIndex)
+            bankListBox.selectRow (lastSelectedBankIndex, true, true);
+
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
         if (! thisBankExists)
             bankName = "(empty)";

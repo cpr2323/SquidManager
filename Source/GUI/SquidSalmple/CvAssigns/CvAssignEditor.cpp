@@ -2,7 +2,6 @@
 
 CvAssignEditor::CvAssignEditor ()
 {
-    upButton.setButtonText ("/\\");
     upButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
     upButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
     upButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
@@ -15,7 +14,6 @@ CvAssignEditor::CvAssignEditor ()
     };
     addAndMakeVisible (upButton);
 
-    downButton.setButtonText ("\\/");
     downButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
     downButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
     downButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
@@ -67,8 +65,9 @@ void CvAssignEditor::resized ()
     auto cvAssignSelectSection {localBounds.removeFromLeft (15)};
     cvAssignSelectSection.removeFromLeft (1);
     cvAssignSelectSection.removeFromTop (1);
-    upButton.setBounds (cvAssignSelectSection.removeFromTop (14));
-    downButton.setBounds (cvAssignSelectSection.removeFromBottom (14));
+    upButton.setBounds (cvAssignSelectSection.removeFromTop (14).withTrimmedLeft (2));
+    auto downButtonBounds { cvAssignSelectSection.removeFromBottom (14).withTrimmedLeft (2) };
+    downButton.setBounds (downButtonBounds.withY (downButtonBounds.getY () + 1));
     curCvAssignIndexLabel.setBounds (cvAssignSelectSection.withX (3));
 
     for (auto curCvAssignSection { 0 }; curCvAssignSection < cvAssignSectionList.size (); ++curCvAssignSection)

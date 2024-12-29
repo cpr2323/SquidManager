@@ -21,7 +21,6 @@ void WaveformDisplay::init (juce::ValueTree rootPropertiesVT)
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
-
 }
 
 void WaveformDisplay::setChannelIndex (int theChannelIndex)
@@ -439,10 +438,6 @@ void WaveformDisplay::filesDropped (const juce::StringArray& files, int x, int y
 void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
 {
     auto filesConcatenated { 0 };
-    auto sampleTypeMismatch { false };
-    auto bitDepthMismatch { false };
-    auto channelCountMismatch { false };
-    auto sampleRateMismatch { false };
     uint64_t totalSize { 0 };
     juce::String tempDropDetails;
     dropMsg = {};
@@ -454,46 +449,15 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
     for (auto& fileName : files)
     {
         auto draggedFile { juce::File (fileName) };
-        if (draggedFile.getFileExtension () == ".wav")
+        if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
-            if (const auto fileInfo { editManager->getFileInfo (draggedFile) }; fileInfo.supported)
-            {
-                totalSize += fileInfo.lengthInSamples;
-                if (totalSize + fileInfo.lengthInSamples < kMaxSampleLength)
-                    ++filesConcatenated;
-            }
-            else
-            {
-                updateDropDetails ("Unsupported wav file: " + draggedFile.getFileName () + " [");
-                juce::String formatErrors;
-                auto updateFormatError = [&formatErrors] (juce::String formatError)
-                {
-                    formatErrors += (formatErrors.isNotEmpty () ? ", " : "") + formatError;
-                };
-                if (fileInfo.usesFloatingPointData == true)
-                {
-                    updateFormatError ("Data type 'float'");
-                    sampleTypeMismatch = true;
-                }
-                if (fileInfo.bitsPerSample != 16 && fileInfo.bitsPerSample != 24)
-                {
-                    updateFormatError ("Bit Depth '" + juce::String (fileInfo.bitsPerSample) + "'");
-                    bitDepthMismatch = true;
-                }
-                if (fileInfo.numChannels > 2)
-                {
-                    updateFormatError ("Channel '" + juce::String (fileInfo.numChannels) + "'");
-                    channelCountMismatch = true;
-                }
-                if (fileInfo.sampleRate != 44100)
-                {
-                    updateFormatError ("Sample Rate '" + juce::String (fileInfo.sampleRate) + "'");
-                    sampleRateMismatch = true;
-                }
-                tempDropDetails += formatErrors + "]";
+            auto reader { editManager->getReaderFor (draggedFile) };
+            const double ratio = 44100. / reader->sampleRate;
+            const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
 
-                supportedFile = false;
-            }
+            totalSize += actualNumSamples;
+            if (totalSize < kMaxSampleLength)
+                ++filesConcatenated;
         }
         else
         {

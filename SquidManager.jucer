@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="fI98C5" name="SquidManager" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
-              version="1.1" companyName="OmOhmProductions">
+              version="1.2" companyName="OmOhmProductions">
   <MAINGROUP id="GjwloP" name="SquidManager">
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
@@ -142,6 +142,10 @@
               file="Source/SquidSalmple/SquidChannelProperties.cpp"/>
         <FILE id="bgUtNF" name="SquidChannelProperties.h" compile="0" resource="0"
               file="Source/SquidSalmple/SquidChannelProperties.h"/>
+      </GROUP>
+      <GROUP id="{6BA79CBF-A335-60D7-F589-D490BB1B6EAA}" name="SRC">
+        <FILE id="bXtK87" name="libsamplerate.c" compile="1" resource="0" file="Source/SRC/libsamplerate.c"/>
+        <FILE id="Ua9cDQ" name="samplerate.h" compile="0" resource="0" file="Source/SRC/libsamplerate-0.1.9/src/samplerate.h"/>
       </GROUP>
       <GROUP id="{C6974426-D776-3BDA-727D-705167207141}" name="Utility">
         <FILE id="aHqHrj" name="Crc.h" compile="0" resource="0" file="Source/Utility/Crc.h"/>
