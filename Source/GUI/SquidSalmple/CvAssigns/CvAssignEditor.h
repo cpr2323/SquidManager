@@ -11,8 +11,8 @@ public:
 
 private:
     juce::Label curCvAssignIndexLabel;
-    juce::TextButton upButton;
-    juce::TextButton downButton;
+    juce::ArrowButton upButton { juce::String ("up"), 0.75, juce::Colours::white };
+    juce::ArrowButton downButton { juce::String ("down"), 0.25f, juce::Colours::white };
     std::array<CvAssignSection, 7> cvAssignSectionList;
     int curCvAssignIndex { 0 };
 
