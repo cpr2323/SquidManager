@@ -75,6 +75,8 @@ private:
     CustomComboBox outputComboBox; // chan 1-4 = 1-2,3-4 / chan 5-8 = 5-6,7-8
     juce::Label quantLabel;
     CustomComboBox quantComboBox; // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
+    juce::Label pitchShiftLabel;
+    CustomTextEditorInt pitchShiftTextEditor; // 0-4000?
     juce::Label rateLabel;
     CustomComboBox rateComboBox; // 4, 6, 7, 9, 11, 14, 22, 44
     juce::Label reverseLabel;
@@ -175,6 +177,7 @@ private:
     void loopCueDataChanged (juce::int32 loopCue);
     void loopModeDataChanged (int loopMode);
     void quantDataChanged (int quant);
+    void pitchShiftDataChanged (int pitch);
     void rateDataChanged (int rate);
     void reverseDataChanged (int reverse);
     void sampleFileNameDataChanged (juce::String sampleFileName);
@@ -200,6 +203,7 @@ private:
     void loopModeUiChanged (int loopMode);
     void outputUiChanged (int selectedIndex);
     void quantUiChanged (int quant);
+    void pitchShiftUiChanged (int pitchShift);
     void rateUiChanged (int rate);
     void reverseUiChanged (int reverse);
     void speedUiChanged (int speed);

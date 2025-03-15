@@ -68,6 +68,7 @@ public:
     void setLoopMode (int loopMode, bool includeSelfCallback);
     void setNumCueSets (int numCues, bool includeSelfCallback);
     void setQuant (int quant, bool includeSelfCallback);
+    void setPitchShift (int pitch, bool includeSelfCallback);
     void setRate (int rate, bool includeSelfCallback);
     void setRecDest (int channelIndex, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
@@ -123,6 +124,7 @@ public:
     int getLoopMode ();
     int getNumCueSets ();
     int getQuant ();
+    int getPitchShift ();
     int getRate ();
     int getRecDest ();
     int getReverse ();
@@ -180,6 +182,7 @@ public:
     std::function<void (int loopMode)> onLoopModeChange;
     std::function<void (int numCueSets)> onNumCueSetsChange;
     std::function<void (int quant)> onQuantChange;
+    std::function<void (int pitchShift)> onPitchShiftChange;
     std::function<void (int rate)> onRateChange;
     std::function<void (int channelIndex)> onRecDestChange;
     std::function<void (int reverse)> onReverseChange;
@@ -224,6 +227,7 @@ public:
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
     static inline const juce::Identifier NumCueSetsPropertyId       { "numCueSets" };
     static inline const juce::Identifier QuantPropertyId            { "quant" };
+    static inline const juce::Identifier PitchShiftPropertyId            { "pitch" };
     static inline const juce::Identifier RatePropertyId             { "rate" };
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };

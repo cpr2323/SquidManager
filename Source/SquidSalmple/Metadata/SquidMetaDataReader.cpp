@@ -19,6 +19,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
     auto validMetaData { false };
+    auto metaDataVersion { 0x77 }; // 119
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
         LogReader (sampleFile.getFileName () + " contains meta-data");
@@ -29,9 +30,10 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         }
         else
         {
-            if ((busyChunkVersion & 0x000000FF) != (kSignatureAndVersionCurrent & 0x000000FF))
-                juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (busyChunkVersion & 0x000000FF) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
-            if ((busyChunkVersion & 0x000000FF) < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
+            metaDataVersion = busyChunkVersion & 0x000000FF;
+            if (metaDataVersion != (kSignatureAndVersionCurrent & 0x000000FF))
+                juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (metaDataVersion) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
+            if (metaDataVersion < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
                 juce::Logger::outputDebugString ("Unsupported version. Reverting to default meta-data");
             else
                 validMetaData = true;
@@ -86,6 +88,14 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setLoopCue (getValue <SquidSalmple::DataLayout::kLoopPositionSize> (SquidSalmple::DataLayout::kLoopPositionOffset), false);
         squidChannelProperties.setLoopMode (getValue <SquidSalmple::DataLayout::kLoopSize> (SquidSalmple::DataLayout::kLoopOffset), false);
         squidChannelProperties.setQuant (getValue <SquidSalmple::DataLayout::kQuantizeModeSize> (SquidSalmple::DataLayout::kQuantizeModeOffset), false);
+        const auto getPitchShiftValue = [this, metaDataVersion] () -> unsigned short
+        {
+            if (metaDataVersion > 0x76)
+                return getValue<SquidSalmple::DataLayout::kPitchShiftSize> (SquidSalmple::DataLayout::kPitchShiftOffset);
+            else
+                return 2000;
+        };
+        squidChannelProperties.setPitchShift (getPitchShiftValue (), false);
         squidChannelProperties.setRate (getValue <SquidSalmple::DataLayout::kRateSize> (SquidSalmple::DataLayout::kRateOffset), false);
         squidChannelProperties.setRecDest (getValue <SquidSalmple::DataLayout::kRecDestSize> (SquidSalmple::DataLayout::kRecDestOffset), false);
         squidChannelProperties.setReverse (getValue <SquidSalmple::DataLayout::kReverseSize> (SquidSalmple::DataLayout::kReverseOffset), false);

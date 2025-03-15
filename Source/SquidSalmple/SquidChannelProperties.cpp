@@ -39,6 +39,7 @@ void SquidChannelProperties::initValueTree ()
     setLevel (static_cast<int> (30 * kScaleStep), false);
     setNumCueSets (0, false);
     setQuant (0, false);
+    setPitchShift (2000, false);
     setRate (0, false);
     setRecDest (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setReverse (0, false);
@@ -341,6 +342,11 @@ void SquidChannelProperties::setQuant (int quant, bool includeSelfCallback)
     setValue (quant, QuantPropertyId, includeSelfCallback);
 }
 
+void SquidChannelProperties::setPitchShift (int pitchShift, bool includeSelfCallback)
+{
+    setValue (pitchShift, PitchShiftPropertyId, includeSelfCallback);
+}
+
 void SquidChannelProperties::setLoopMode (int loopMode, bool includeSelfCallback)
 {
     setValue (loopMode, LoopModePropertyId, includeSelfCallback);
@@ -629,6 +635,11 @@ int SquidChannelProperties::getSpeed ()
 int SquidChannelProperties::getQuant ()
 {
     return getValue<int> (QuantPropertyId);
+}
+
+int SquidChannelProperties::getPitchShift ()
+{
+    return getValue<int> (PitchShiftPropertyId);
 }
 
 int SquidChannelProperties::getLoopMode ()
@@ -964,6 +975,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setLoopMode (sourceChannelProperties.getLoopMode (), false);
     setLevel (sourceChannelProperties.getLevel (), false);
     setQuant (sourceChannelProperties.getQuant (), false);
+    setPitchShift (sourceChannelProperties.getPitchShift (), false);
     setRate (sourceChannelProperties.getRate (), false);
     if (! shouldCheckIndex || sourceChannelProperties.getRecDest () != srcIndex)
         setRecDest (sourceChannelProperties.getRecDest (), false);
@@ -1155,6 +1167,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onQuantChange != nullptr)
                 onQuantChange (getQuant ());
+        }
+        else if (property == PitchShiftPropertyId)
+        {
+            if (onPitchShiftChange != nullptr)
+                onPitchShiftChange (getPitchShift ());
         }
         else if (property == RatePropertyId)
         {

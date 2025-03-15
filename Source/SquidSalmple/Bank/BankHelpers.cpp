@@ -103,6 +103,7 @@ namespace BankHelpers
                channelPropertiesOne.getLoopCue () == channelPropertiesTwo.getLoopCue () &&
                channelPropertiesOne.getLoopMode () == channelPropertiesTwo.getLoopMode () &&
                channelPropertiesOne.getQuant () == channelPropertiesTwo.getQuant () &&
+               channelPropertiesOne.getPitchShift () == channelPropertiesTwo.getPitchShift () &&
                channelPropertiesOne.getRate () == channelPropertiesTwo.getRate () &&
                channelPropertiesOne.getRecDest () == channelPropertiesTwo.getRecDest () &&
                channelPropertiesOne.getReverse () == channelPropertiesTwo.getReverse () &&

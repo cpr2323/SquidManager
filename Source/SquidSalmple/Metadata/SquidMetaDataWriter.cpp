@@ -26,6 +26,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getLoopCue ()), SquidSalmple::DataLayout::kLoopPositionOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getLoopMode ()), SquidSalmple::DataLayout::kLoopOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getQuant ()), SquidSalmple::DataLayout::kQuantizeModeOffset);
+    setUInt16 (static_cast<uint16_t> (squidChannelProperties.getPitchShift ()), SquidSalmple::DataLayout::kPitchShiftOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRate ()), SquidSalmple::DataLayout::kRateOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRecDest ()), SquidSalmple::DataLayout::kRecDestOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout::kReverseOffset);

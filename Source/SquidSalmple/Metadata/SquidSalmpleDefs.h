@@ -13,7 +13,7 @@ const auto kCvInputsExtra { 5 };
 const auto kCvParamsCount { 16 };
 const auto kCvParamsExtra { 4 };
 
-const uint32_t kSignatureAndVersionCurrent { 0x12345676 };
+const uint32_t kSignatureAndVersionCurrent { 0x12345677 }; // 119
 
 enum class FilterType
 {
@@ -237,8 +237,10 @@ namespace SquidSalmple
         const auto kCuesQueuedSize { k8BitSize };
         const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
         const auto kCuesSelectedSize { k8BitSize };
-        const auto k_Reserved13Offset { kCuesSelectedOffset + kCuesSelectedSize };
-        const auto k_Reserved13Size { 253 * k8BitSize };
+        const auto kPitchShiftOffset { kCuesSelectedOffset + kCuesSelectedSize };
+        const auto kPitchShiftSize { k16BitSize };
+        const auto k_Reserved13Offset { kPitchShiftOffset + kPitchShiftSize };
+        const auto k_Reserved13Size { 251 * k8BitSize };
         const auto kEndOfData { k_Reserved13Offset + k_Reserved13Size };
     };
 };

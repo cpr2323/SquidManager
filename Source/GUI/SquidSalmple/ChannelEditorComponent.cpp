@@ -495,6 +495,51 @@ void ChannelEditorComponent::setupComponents ()
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
+
+    // PITCH SHIFT
+    setupLabel (pitchShiftLabel, "PITCH", kMediumLabelSize, juce::Justification::centred);
+    pitchShiftTextEditor.setTooltip ("Pitch Shift. Adjusts how much the audio is shifted in pitch.");
+    pitchShiftTextEditor.getMinValueCallback = [this] () { return -2000; };
+    pitchShiftTextEditor.getMaxValueCallback = [this] () { return 2000; };
+    pitchShiftTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
+    pitchShiftTextEditor.updateDataCallback = [this] (int value) { pitchShiftUiChanged (value); };
+    pitchShiftTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    {
+        const auto multiplier = [this, dragSpeed] ()
+        {
+            if (dragSpeed == DragSpeed::slow)
+                return 1;
+            else if (dragSpeed == DragSpeed::medium)
+                return 10;
+            else
+                return 25;
+        } ();
+        const auto newValue { pitchShiftTextEditor.getText ().getIntValue () + (multiplier * direction) };
+        pitchShiftTextEditor.setValue (newValue);
+    };
+    pitchShiftTextEditor.onPopupMenuCallback = [this] ()
+    {
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        [this] (SquidChannelProperties& destChannelProperties)
+        {
+            destChannelProperties.setPitchShift (squidChannelProperties.getPitchShift (), false);
+        },
+        [this] ()
+        {
+            SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+            squidChannelProperties.setPitchShift (defaultChannelProperties.getPitchShift (), true);
+        },
+        [this] ()
+        {
+            SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+            squidChannelProperties.setPitchShift (uneditedChannelProperties.getPitchShift (), true);
+        }) };
+        editMenu.showMenuAsync ({}, [this] (int) {});
+    };
+    setupTextEditor (pitchShiftTextEditor, juce::Justification::centred, 0, "+-0123456789", "Pitch");
+
     // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
     filterTypeComboBox.setTooltip ("Filer Type. Enables the resonant multimode filter and the corresponding Frequency and Resonance parameters. Filer Types: Off, Low Pass, Band Pass, Notch, and High Pass.");
@@ -1538,6 +1583,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     loopCueDataChanged (squidChannelProperties.getLoopCue ());
     loopModeDataChanged (squidChannelProperties.getLoopMode ());
     quantDataChanged (squidChannelProperties.getQuant ());
+    pitchShiftDataChanged (squidChannelProperties.getPitchShift ());
     rateDataChanged (squidChannelProperties.getRate ());
     reverseDataChanged (squidChannelProperties.getReverse ());
     sampleFileNameDataChanged (squidChannelProperties.getSampleFileName ());
@@ -1607,6 +1653,7 @@ void ChannelEditorComponent::initializeCallbacks ()
         setCueEditButtonsEnableState ();
     };
     squidChannelProperties.onQuantChange = [this] (int quant) { quantDataChanged (quant); };
+    squidChannelProperties.onPitchShiftChange = [this] (int pitchShift) { pitchShiftDataChanged (pitchShift); };
     squidChannelProperties.onRateChange = [this] (int rate) { rateDataChanged (rate); };
     squidChannelProperties.onReverseChange = [this] (int reverse) { reverseDataChanged (reverse); };
     squidChannelProperties.onSpeedChange = [this] (int speed) { speedDataChanged (speed); };
@@ -1812,6 +1859,11 @@ void ChannelEditorComponent::quantDataChanged (int quant)
     quantComboBox.setSelectedItemIndex (quant, juce::NotificationType::dontSendNotification);
 }
 
+void ChannelEditorComponent::pitchShiftDataChanged (int pitchShift)
+{
+    pitchShiftTextEditor.setText (juce::String (pitchShift - 2000), juce::NotificationType::dontSendNotification);
+}
+
 void ChannelEditorComponent::rateDataChanged (int rate)
 {
     rateComboBox.setSelectedId (rate + 1, juce::NotificationType::dontSendNotification);
@@ -1935,6 +1987,11 @@ void ChannelEditorComponent::loopModeUiChanged (int loopMode)
 void ChannelEditorComponent::quantUiChanged (int quant)
 {
     squidChannelProperties.setQuant (quant, false);
+}
+
+void ChannelEditorComponent::pitchShiftUiChanged (int pitchShift)
+{
+    squidChannelProperties.setPitchShift (2000 + pitchShift, false);
 }
 
 void ChannelEditorComponent::rateUiChanged (int rate)
@@ -2138,9 +2195,15 @@ void ChannelEditorComponent::resized ()
     quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = quantComboBox.getBottom () + 3;
+    // Pitch Shift
+    pitchShiftLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    pitchShiftTextEditor.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = pitchShiftTextEditor.getBottom () + 3;
+    // Bits
     bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = bitsTextEditor.getBottom () + 3;
+    // Rate
     rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = rateComboBox.getBottom () + 3;
