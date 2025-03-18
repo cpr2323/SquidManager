@@ -499,22 +499,22 @@ void ChannelEditorComponent::setupComponents ()
     // PITCH SHIFT
     setupLabel (pitchShiftLabel, "PITCH", kMediumLabelSize, juce::Justification::centred);
     pitchShiftTextEditor.setTooltip ("Pitch Shift. Adjusts how much the audio is shifted in pitch.");
-    pitchShiftTextEditor.getMinValueCallback = [this] () { return -2000; };
-    pitchShiftTextEditor.getMaxValueCallback = [this] () { return 2000; };
-    pitchShiftTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
-    pitchShiftTextEditor.updateDataCallback = [this] (int value) { pitchShiftUiChanged (value); };
+    pitchShiftTextEditor.getMinValueCallback = [this] () { return 0.f; };
+    pitchShiftTextEditor.getMaxValueCallback = [this] () { return 4.0f; };
+    pitchShiftTextEditor.toStringCallback = [this] (double value) { return juce::String (static_cast<float> (value), 2); };
+    pitchShiftTextEditor.updateDataCallback = [this] (double value) { pitchShiftUiChanged (static_cast<float> (value)); };
     pitchShiftTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
         const auto multiplier = [this, dragSpeed] ()
         {
             if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
                 return 10;
+            else if (dragSpeed == DragSpeed::medium)
+                return 100;
             else
-                return 25;
+                return 1000;
         } ();
-        const auto newValue { pitchShiftTextEditor.getText ().getIntValue () + (multiplier * direction) };
+        const auto newValue { (squidChannelProperties.getPitchShift () + (multiplier * direction)) / 1000. };
         pitchShiftTextEditor.setValue (newValue);
     };
     pitchShiftTextEditor.onPopupMenuCallback = [this] ()
@@ -527,18 +527,18 @@ void ChannelEditorComponent::setupComponents ()
         [this] ()
         {
             SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                             SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
             squidChannelProperties.setPitchShift (defaultChannelProperties.getPitchShift (), true);
         },
         [this] ()
         {
             SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                              SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
             squidChannelProperties.setPitchShift (uneditedChannelProperties.getPitchShift (), true);
         }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (pitchShiftTextEditor, juce::Justification::centred, 0, "+-0123456789", "Pitch");
+    setupTextEditor (pitchShiftTextEditor, juce::Justification::centred, 0, "0123456789.", "Pitch");
 
     // FILTER TYPE
     setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
@@ -1861,7 +1861,7 @@ void ChannelEditorComponent::quantDataChanged (int quant)
 
 void ChannelEditorComponent::pitchShiftDataChanged (int pitchShift)
 {
-    pitchShiftTextEditor.setText (juce::String (pitchShift - 2000), juce::NotificationType::dontSendNotification);
+    pitchShiftTextEditor.setText (juce::String (static_cast<float>(pitchShift) / 1000.0, 2), juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::rateDataChanged (int rate)
@@ -1989,9 +1989,9 @@ void ChannelEditorComponent::quantUiChanged (int quant)
     squidChannelProperties.setQuant (quant, false);
 }
 
-void ChannelEditorComponent::pitchShiftUiChanged (int pitchShift)
+void ChannelEditorComponent::pitchShiftUiChanged (float pitchShift)
 {
-    squidChannelProperties.setPitchShift (2000 + pitchShift, false);
+    squidChannelProperties.setPitchShift (static_cast<int>(pitchShift * 1000.f), false);
 }
 
 void ChannelEditorComponent::rateUiChanged (int rate)

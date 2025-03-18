@@ -39,7 +39,7 @@ void SquidChannelProperties::initValueTree ()
     setLevel (static_cast<int> (30 * kScaleStep), false);
     setNumCueSets (0, false);
     setQuant (0, false);
-    setPitchShift (2000, false);
+    setPitchShift (1000, false);
     setRate (0, false);
     setRecDest (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setReverse (0, false);

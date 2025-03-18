@@ -76,7 +76,7 @@ private:
     juce::Label quantLabel;
     CustomComboBox quantComboBox; // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
     juce::Label pitchShiftLabel;
-    CustomTextEditorInt pitchShiftTextEditor; // 0-4000?
+    CustomTextEditorDouble pitchShiftTextEditor; // 0-4000 displayed as 0.00 to 4.00
     juce::Label rateLabel;
     CustomComboBox rateComboBox; // 4, 6, 7, 9, 11, 14, 22, 44
     juce::Label reverseLabel;
@@ -203,7 +203,7 @@ private:
     void loopModeUiChanged (int loopMode);
     void outputUiChanged (int selectedIndex);
     void quantUiChanged (int quant);
-    void pitchShiftUiChanged (int pitchShift);
+    void pitchShiftUiChanged (float pitchShift);
     void rateUiChanged (int rate);
     void reverseUiChanged (int reverse);
     void speedUiChanged (int speed);

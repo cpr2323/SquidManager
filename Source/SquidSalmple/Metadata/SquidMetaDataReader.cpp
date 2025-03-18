@@ -93,7 +93,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
             if (metaDataVersion > 0x76)
                 return getValue<SquidSalmple::DataLayout::kPitchShiftSize> (SquidSalmple::DataLayout::kPitchShiftOffset);
             else
-                return 2000;
+                return 1000;
         };
         squidChannelProperties.setPitchShift (getPitchShiftValue (), false);
         squidChannelProperties.setRate (getValue <SquidSalmple::DataLayout::kRateSize> (SquidSalmple::DataLayout::kRateOffset), false);
