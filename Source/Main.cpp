@@ -104,7 +104,7 @@ public:
         bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());
         bankManagerProperties.addBank ("unedited", squidBankProperties.getValueTree ().createCopy ());
 
-        // add the Preset Manager to the Runtime Root
+        // add the Bank Manager to the Runtime Root
         runtimeRootProperties.getValueTree ().addChild (bankManagerProperties.getValueTree (), -1, nullptr);
 
         // setup the directory scanner

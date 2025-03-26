@@ -91,6 +91,8 @@ public:
     void setReserved11Data (juce::String reservedData);
     void setReserved12Data (juce::String reservedData);
     void setReserved13Data (juce::String reservedData);
+    void setReserved14Data (juce::String reservedData);
+    void setReserved15Data (juce::String reservedData);
     void triggerLoadBegin (bool includeSelfCallback);
     void triggerLoadComplete (bool includeSelfCallback);
 
@@ -147,6 +149,8 @@ public:
     juce::String getReserved11Data ();
     juce::String getReserved12Data ();
     juce::String getReserved13Data ();
+    juce::String getReserved14Data ();
+    juce::String getReserved15Data ();
 
     int getSampleDataBits ();
     double getSampleDataSampleRate ();
@@ -269,6 +273,8 @@ public:
     static inline const juce::Identifier Reserved11DataPropertyId   { "reserved11Data" };
     static inline const juce::Identifier Reserved12DataPropertyId   { "reserved12Data" };
     static inline const juce::Identifier Reserved13DataPropertyId   { "reserved13Data" };
+    static inline const juce::Identifier Reserved14DataPropertyId   { "reserved14Data" };
+    static inline const juce::Identifier Reserved15DataPropertyId   { "reserved15Data" };
 
     // SAMPLE DATA
     static inline const juce::Identifier SampleDataBitDepthPropertyId    { "_sampleDataBitDepth" };

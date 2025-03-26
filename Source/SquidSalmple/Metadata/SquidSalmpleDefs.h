@@ -151,7 +151,7 @@ constexpr auto k64BitSize { static_cast<int> (sizeof (uint64_t)) };
 // Field offsets and size
 namespace SquidSalmple
 {
-    namespace DataLayout
+    namespace DataLayout_186
     {
         const auto kBusyChunkSignatureAndVersionOffset { 0 };
         const auto kBusyChunkSignatureAndVersionSize { k32BitSize };
@@ -237,10 +237,107 @@ namespace SquidSalmple
         const auto kCuesQueuedSize { k8BitSize };
         const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
         const auto kCuesSelectedSize { k8BitSize };
-        const auto kPitchShiftOffset { kCuesSelectedOffset + kCuesSelectedSize };
+        const auto k_Reserved13Offset { kCuesSelectedOffset + kCuesSelectedSize }; // alignment padding
+        const auto k_Reserved13Size { k8BitSize };
+        const auto k_Reserved14Offset { kCuesSelectedOffset + kCuesSelectedSize };
+        const auto k_Reserved14Size { 63 * k32BitSize };
+        const auto kEndOfData { k_Reserved14Offset + k_Reserved14Size };
+    };
+
+    namespace DataLayout_190
+    {
+        const auto kBusyChunkSignatureAndVersionOffset { 0 };
+        const auto kBusyChunkSignatureAndVersionSize { k32BitSize };
+        const auto k_Reserved1Offset { kBusyChunkSignatureAndVersionOffset + kBusyChunkSignatureAndVersionSize };
+        const auto k_Reserved1Size { 4 * k8BitSize };
+        const auto kSampleStartOffset { k_Reserved1Offset + k_Reserved1Size };
+        const auto kSampleStartSize { k32BitSize };
+        const auto k_Reserved2Offset { kSampleStartOffset + kSampleStartSize };
+        const auto k_Reserved2Size { 4 * k8BitSize };
+        const auto kSampleEndOffset { k_Reserved2Offset + k_Reserved2Size };
+        const auto kSampleEndSize { k32BitSize };
+        const auto kEndOFDataOffset { kSampleEndOffset + kSampleEndSize };
+        const auto kEndOfDataSize { k32BitSize };
+        const auto kQualityOffset { kEndOFDataOffset + kEndOfDataSize };
+        const auto kQualitySize { k8BitSize };
+        const auto kLoopOffset { kQualityOffset + kQualitySize };   // NONE, NORMAL, ZIGZAG, GATE, ZIGZAG_GATE,
+        const auto kLoopSize { k8BitSize };
+        const auto k_Reserved3Offset { kLoopOffset + kLoopSize };
+        const auto k_Reserved3Size { 2 * k8BitSize };
+        const auto kLoopPositionOffset { k_Reserved3Offset + k_Reserved3Size };
+        const auto kLoopPositionSize { k32BitSize };
+        const auto k_Reserved4Offset { kLoopPositionOffset + kLoopPositionSize };
+        const auto k_Reserved4Size { 5 * k8BitSize };
+        const auto kXfadeOffset { k_Reserved4Offset + k_Reserved4Size };
+        const auto kXfadeSize { k8BitSize };
+        const auto kReverseOffset { kXfadeOffset + kXfadeSize };
+        const auto kReverseSize { k8BitSize };
+        const auto k_Reserved5Offset { kReverseOffset + kReverseSize };
+        const auto k_Reserved5Size { 5 * k8BitSize };
+        const auto kDecayOffset { k_Reserved5Offset + k_Reserved5Size };
+        const auto kDecaySize { k16BitSize };
+        const auto kAttackOffset { kDecayOffset + kDecaySize };
+        const auto kAttackSize { k16BitSize };
+        const auto k_Reserved6Offset { kAttackOffset + kAttackSize };
+        const auto k_Reserved6Size { 2 * k8BitSize };
+        const auto kCutoffFrequencyOffset { k_Reserved6Offset + k_Reserved6Size };
+        const auto kCutoffFrequencySize { k16BitSize };
+        const auto kResonanceOffset { kCutoffFrequencyOffset + kCutoffFrequencySize };
+        const auto kResonanceSize { k16BitSize };
+        const auto kRateOffset { kResonanceOffset + kResonanceSize };
+        const auto kRateSize { k8BitSize };
+        const auto k_Reserved7Offset { kRateOffset + kRateSize };
+        const auto k_Reserved7Size { 3 * k8BitSize };
+        const auto kSpeedOffset { k_Reserved7Offset + k_Reserved7Size };
+        const auto kSpeedSize { k16BitSize };
+        const auto kLevelOffset { kSpeedOffset + kSpeedSize };
+        const auto kLevelSize { k16BitSize };
+        const auto kChannelSourceOffset { kLevelOffset + kLevelSize };
+        const auto kChannelSourceSize { k8BitSize };
+        const auto kRecDestOffset { kChannelSourceOffset + kChannelSourceSize };
+        const auto kRecDestSize { k8BitSize };
+        const auto k_Reserved8Offset { kRecDestOffset + kRecDestSize };
+        const auto k_Reserved8Size { 12 * k8BitSize };
+        const auto kCvFlagsOffset { k_Reserved8Offset + k_Reserved8Size }; // cvflags
+        const auto kCvFlagsSize { 8 * k32BitSize };
+        const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
+        const auto kCvParamsSize { 8 * 40 * k16BitSize };
+        const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times
+        const auto k_Reserved9Size { 80 * k8BitSize };
+        const auto kChannelFlagsOffset { k_Reserved9Offset + k_Reserved9Size };
+        const auto kChannelFlagsSize { k16BitSize };
+        const auto kStepTrigCurOffset { kChannelFlagsOffset + kChannelFlagsSize };
+        const auto kStepTrigCurSize { k8BitSize };
+        const auto kStepTrigNumOffset { kStepTrigCurOffset + kStepTrigCurSize }; // Off, 2, 3, 4, 5, 6, 7 ,8
+        const auto kStepTrigNumSize { k8BitSize };
+        const auto k_Reserved10Offset { kStepTrigNumOffset + kStepTrigNumSize };
+        const auto k_Reserved10Size { 2 * k8BitSize };
+        const auto kExternalTriggerOffset { k_Reserved10Offset + k_Reserved10Size }; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
+        const auto kExternalTriggerSize { k8BitSize };
+        const auto kQuantizeModeOffset { kExternalTriggerOffset + kExternalTriggerSize }; // none, chromatic, octave, major, minor, harmonicMinor, pentatonicMajor, pentatonicMinor, lydian, phrygian, japanese, rootAndFifth, oneChord, fourChord, fiveChord
+        const auto kQuantizeModeSize { k8BitSize };
+        const auto k_Reserved11Offset { kQuantizeModeOffset + kQuantizeModeSize };
+        const auto k_Reserved11Size { k8BitSize };
+        const auto kChokeOffset { k_Reserved11Offset + k_Reserved11Size }; // C1, C2, C3, C4, C5, C6, C7, C8
+        const auto kChokeSize { k8BitSize };
+        const auto k_Reserved12Offset { kChokeOffset + kChokeSize };
+        const auto k_Reserved12Size { 2 * k8BitSize };
+        const auto kCuesOffset { k_Reserved12Offset + k_Reserved12Size };
+        const auto kCuesSize { (kCueNumSets * 3) * k32BitSize };
+        const auto kCuesCountOffset { kCuesOffset + kCuesSize };
+        const auto kCuesCountSize { k8BitSize };
+        const auto kCuesQueuedOffset { kCuesCountOffset + kCuesCountSize };
+        const auto kCuesQueuedSize { k8BitSize };
+        const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
+        const auto kCuesSelectedSize { k8BitSize };
+        const auto k_Reserved13Offset { kCuesSelectedOffset + kCuesSelectedSize }; // alignment padding
+        const auto k_Reserved13Size { k8BitSize };
+        const auto kPitchShiftOffset { k_Reserved13Offset + k_Reserved13Size };
         const auto kPitchShiftSize { k16BitSize };
-        const auto k_Reserved13Offset { kPitchShiftOffset + kPitchShiftSize };
-        const auto k_Reserved13Size { 251 * k8BitSize };
-        const auto kEndOfData { k_Reserved13Offset + k_Reserved13Size };
+        const auto k_Reserved14Offset { kPitchShiftOffset + kPitchShiftSize}; // padding
+        const auto k_Reserved14Size { k16BitSize };
+        const auto k_Reserved15Offset { k_Reserved14Offset + k_Reserved14Size };
+        const auto k_Reserved15Size { 62 * k32BitSize };
+        const auto kEndOfData { k_Reserved15Offset + k_Reserved15Size };
     };
 };

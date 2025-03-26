@@ -17,7 +17,10 @@ const constexpr char* kReserved9DataDefault { "80...............................
 const constexpr char* kReserved10DatDefault { "2.D.." };
 const constexpr char* kReserved11DatDefault { "1.B." };
 const constexpr char* kReserved12DatDefault { "2...." };
+// TODO - update these to the correct values
 const constexpr char* kReserved13DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
+const constexpr char* kReserved14DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
+const constexpr char* kReserved15DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
 
 void SquidChannelProperties::initValueTree ()
 {
@@ -60,6 +63,8 @@ void SquidChannelProperties::initValueTree ()
     setReserved11Data (kReserved11DatDefault);
     setReserved12Data (kReserved12DatDefault);
     setReserved13Data (kReserved13DatDefault);
+    setReserved14Data (kReserved14DatDefault);
+    setReserved15Data (kReserved15DatDefault);
 
     // TODO - I can probably remove this, as it is just test code validating that getCvEnabledFlag works
     jassert (CvAssignedFlag::bits == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Bits));
@@ -410,9 +415,20 @@ void SquidChannelProperties::setReserved12Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved12DataPropertyId, false);
 }
+
 void SquidChannelProperties::setReserved13Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved13DataPropertyId, false);
+}
+
+void SquidChannelProperties::setReserved14Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved14DataPropertyId, false);
+}
+
+void SquidChannelProperties::setReserved15Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved15DataPropertyId, false);
 }
 
 void SquidChannelProperties::setReverse (int reverse, bool includeSelfCallback)
@@ -705,9 +721,20 @@ juce::String SquidChannelProperties::getReserved12Data ()
 {
     return getValue<juce::String> (Reserved12DataPropertyId);
 }
+
 juce::String SquidChannelProperties::getReserved13Data ()
 {
     return getValue<juce::String> (Reserved13DataPropertyId);
+}
+
+juce::String SquidChannelProperties::getReserved14Data ()
+{
+    return getValue<juce::String> (Reserved14DataPropertyId);
+}
+
+juce::String SquidChannelProperties::getReserved15Data ()
+{
+    return getValue<juce::String> (Reserved15DataPropertyId);
 }
 
 int SquidChannelProperties::getReverse ()
@@ -1004,6 +1031,8 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setReserved11Data (sourceChannelProperties.getReserved11Data ());
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
+    setReserved14Data (sourceChannelProperties.getReserved14Data ());
+    setReserved15Data (sourceChannelProperties.getReserved15Data ());
 
     if (copyType == CopyType::all)
     {
