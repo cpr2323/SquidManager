@@ -117,7 +117,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
 
         ////////////////////////////////////
         // cv assign
-        const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+        const auto rowSize { (kCvParamsCount_190 + kCvParamsExtra) * 4 };
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
             for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
@@ -249,7 +249,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
 
         ////////////////////////////////////
         // cv assign
-        const auto rowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+        const auto rowSize { (kCvParamsCount_186 + kCvParamsExtra) * 4 };
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
             for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)

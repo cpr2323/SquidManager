@@ -40,7 +40,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getXfade ()), SquidSalmple::DataLayout_190::kXfadeOffset);
 
     // CV Assigns
-    const auto parameterRowSize { (kCvParamsCount + kCvParamsExtra) * 4 };
+    const auto parameterRowSize { (kCvParamsCount_190 + kCvParamsExtra) * 4 };
     for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
     {
         // we set bits in cvAssignedFlags for each parameter that has cv enabled
