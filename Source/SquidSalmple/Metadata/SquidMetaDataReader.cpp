@@ -49,10 +49,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
                 metaDataStatus = MetaDataStatus::latest;
         }
     }
-    // process metadata
-    //   skip if unsupported
-    //   import if previous version
-    //   load if expected version
+
     if (metaDataStatus == MetaDataStatus::latest)
     {
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_190::kAttackSize> (SquidSalmple::DataLayout_190::kAttackOffset), false);
@@ -192,6 +189,9 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     }
     else if (metaDataStatus == MetaDataStatus::fw186)
     {
+        // should we alert the user with something like
+        // You are opening a bank created for a earlier firmware version. If you save this bank it will be written with the new firmware version format, and will no be usable with
+        // the earlier firmware
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_186::kAttackSize> (SquidSalmple::DataLayout_186::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout_186::kQualitySize> (SquidSalmple::DataLayout_186::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout_186::kChannelFlagsSize> (SquidSalmple::DataLayout_186::kChannelFlagsOffset), false);

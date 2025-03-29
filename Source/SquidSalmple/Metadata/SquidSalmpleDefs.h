@@ -10,7 +10,7 @@ const auto kCueNumSets  { 64 };
 const auto kCvInputsCount { 3 };
 const auto kCvInputsExtra { 5 };
 
-const auto kCvParamsCount { 16 };
+const auto kCvParamsCount { 18 };
 const auto kCvParamsExtra { 4 };
 
 const uint32_t kSignatureAndVersionCurrent { 0x12345677 }; // 119
@@ -206,9 +206,9 @@ namespace SquidSalmple
         const auto k_Reserved8Offset { kRecDestOffset + kRecDestSize };
         const auto k_Reserved8Size { 12 * k8BitSize };
         const auto kCvFlagsOffset  { k_Reserved8Offset + k_Reserved8Size }; // cvflags
-        const auto kCvFlagsSize { 8 * k16BitSize };
+        const auto kCvFlagsSize { (kCvInputsCount + kCvInputsExtra) * k16BitSize };
         const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
-        const auto kCvParamsSize { 8 * 40 * k16BitSize };
+        const auto kCvParamsSize { (kCvInputsCount + kCvInputsExtra) * 40 * k16BitSize };
         const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times
         const auto k_Reserved9Size { 80 * k8BitSize};
         const auto kChannelFlagsOffset { k_Reserved9Offset + k_Reserved9Size };
@@ -299,11 +299,11 @@ namespace SquidSalmple
         const auto k_Reserved8Offset { kRecDestOffset + kRecDestSize };
         const auto k_Reserved8Size { 12 * k8BitSize };
         const auto kCvFlagsOffset { k_Reserved8Offset + k_Reserved8Size }; // cvflags
-        const auto kCvFlagsSize { 8 * k32BitSize };
+        const auto kCvFlagsSize { (kCvInputsCount + kCvInputsExtra) * k32BitSize };
         const auto kCvParamsOffset { kCvFlagsOffset + kCvFlagsSize }; // cvparams
-        const auto kCvParamsSize { 8 * 40 * k16BitSize };
+        const auto kCvParamsSize { (kCvInputsCount + kCvInputsExtra) * (kCvParamsCount + kCvParamsExtra) * 2 * k16BitSize };  // numCvs * numDestinations * dataSize
         const auto k_Reserved9Offset { kCvParamsOffset + kCvParamsSize }; // 4 times
-        const auto k_Reserved9Size { 80 * k8BitSize };
+        const auto k_Reserved9Size { (kCvParamsCount + kCvParamsExtra) * k32BitSize };
         const auto kChannelFlagsOffset { k_Reserved9Offset + k_Reserved9Size };
         const auto kChannelFlagsSize { k16BitSize };
         const auto kStepTrigCurOffset { kChannelFlagsOffset + kChannelFlagsSize };
