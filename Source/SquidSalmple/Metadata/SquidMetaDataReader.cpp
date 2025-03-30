@@ -3,8 +3,9 @@
 #include "SquidSalmpleDefs.h"
 #include "../SquidChannelProperties.h"
 #include "../../Utility/DebugLog.h"
+#include "../../Utility/DumpStack.h"
 
-#define LOG_READER 0
+#define LOG_READER 1
 #if LOG_READER
 #define LogReader(text) DebugLog ("SquidMetaDataReader", text);
 #else
@@ -17,15 +18,15 @@ enum class MetaDataStatus
     fw186,
     latest
 };
-MetaDataStatus metaDataStatus { MetaDataStatus::invalid };
 
 void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File sampleFile, uint8_t channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
-
+    dumpStacktrace (30, [] (juce::String line) { LogReader (line); });
     SquidChannelProperties squidChannelProperties { channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
+    auto metaDataStatus { MetaDataStatus::invalid };
     auto metaDataVersion { 0x77 }; // 119
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
@@ -374,4 +375,5 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     }
 
     squidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
+    LogReader ("---------------------------------------");
 }
