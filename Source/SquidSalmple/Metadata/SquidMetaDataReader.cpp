@@ -5,7 +5,7 @@
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/DumpStack.h"
 
-#define LOG_READER 1
+#define LOG_READER 0
 #if LOG_READER
 #define LogReader(text) DebugLog ("SquidMetaDataReader", text);
 #else
@@ -22,7 +22,6 @@ enum class MetaDataStatus
 void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File sampleFile, uint8_t channelIndex)
 {
     LogReader ("read - reading: " + juce::String (sampleFile.getFullPathName ()));
-    dumpStacktrace (30, [] (juce::String line) { LogReader (line); });
     SquidChannelProperties squidChannelProperties { channelPropertiesVT, SquidChannelProperties::WrapperType::owner, SquidChannelProperties::EnableCallbacks::no };
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
@@ -375,5 +374,4 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     }
 
     squidChannelProperties.setSampleFileName (sampleFile.getFullPathName (), false);
-    LogReader ("---------------------------------------");
 }
