@@ -89,7 +89,7 @@ void SquidChannelProperties::initValueTree ()
     {
         juce::ValueTree cvInputVT { CvAssignInputTypeId };
         cvInputVT.setProperty (CvAssignInputIdPropertyId, curCvInput + 1, nullptr);
-        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+        for (auto curParameterIndex { 0 }; curParameterIndex < 17; ++curParameterIndex)
         {
             juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
             parameterVT.setProperty (CvAssignInputParameterIdPropertyId, curParameterIndex + 1, nullptr);
@@ -276,7 +276,7 @@ void SquidChannelProperties::setCurCueSet (int cueSetIndex, bool includeSelfCall
 void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 16);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -289,7 +289,7 @@ void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterInd
 void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 16);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -302,7 +302,7 @@ void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex
 void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool /*includeSelfCallback*/)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 16);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -597,7 +597,7 @@ int SquidChannelProperties::getCurCueSet ()
 int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 17);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -610,7 +610,7 @@ int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterInde
 bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 17);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -623,7 +623,7 @@ bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterIndex
 int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
 {
     jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
+    jassert (parameterIndex < 17);
     auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
@@ -932,7 +932,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
         // Copy CV Assigns
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
-            for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+            for (auto curParameterIndex { 0 }; curParameterIndex < 16; ++curParameterIndex)
             {
                 auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
                 auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };

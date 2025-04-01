@@ -69,70 +69,55 @@ enum class ExternalTrigger {
 // THIS IS JUST FOR TEST PURPOSES
 namespace CvAssignedFlag
 {
-    constexpr uint16_t none     { 0x0000 };
-    constexpr uint16_t unused   { 0x0001 }; // unused
-    constexpr uint16_t bits     { 0x0002 };
-    constexpr uint16_t rate     { 0x0004 };
-    constexpr uint16_t level    { 0x0008 };
-    constexpr uint16_t decay    { 0x0010 };
-    constexpr uint16_t speed    { 0x0020 };
-    constexpr uint16_t loopMode { 0x0040 };
-    constexpr uint16_t reverse  { 0x0080 };
-    constexpr uint16_t startCue { 0x0100 };
-    constexpr uint16_t endCue   { 0x0200 };
-    constexpr uint16_t loopCue  { 0x0400 };
-    constexpr uint16_t attack   { 0x0800 };
-    constexpr uint16_t cueSet   { 0x1000 };
-    constexpr uint16_t eTrig    { 0x2000 };
-    constexpr uint16_t filtFreq { 0x4000 };
-    constexpr uint16_t filtRes  { 0x8000 };
+    constexpr uint32_t none       { 0x00000000 };
+    constexpr uint32_t unused     { 0x00000001 }; // unused
+    constexpr uint32_t bits       { 0x00000002 };
+    constexpr uint32_t rate       { 0x00000004 };
+    constexpr uint32_t level      { 0x00000008 };
+    constexpr uint32_t decay      { 0x00000010 };
+    constexpr uint32_t speed      { 0x00000020 };
+    constexpr uint32_t loopMode   { 0x00000040 };
+    constexpr uint32_t reverse    { 0x00000080 };
+    constexpr uint32_t startCue   { 0x00000100 };
+    constexpr uint32_t endCue     { 0x00000200 };
+    constexpr uint32_t loopCue    { 0x00000400 };
+    constexpr uint32_t attack     { 0x00000800 };
+    constexpr uint32_t cueSet     { 0x00001000 };
+    constexpr uint32_t eTrig      { 0x00002000 };
+    constexpr uint32_t filtFreq   { 0x00004000 };
+    constexpr uint32_t filtRes    { 0x00008000 };
+    constexpr uint32_t unused2    { 0x00010000 };
+    constexpr uint32_t pitchShift { 0x00020000 };
 }
 
 namespace CvParameterIndex
 {
-    constexpr int Bits     { 0 };
-    constexpr int Rate     { 1 };
-    constexpr int Level    { 2 };
-    constexpr int Decay    { 3 };
-    constexpr int Speed    { 4 };
-    constexpr int LoopMode { 5 };
-    constexpr int Reverse  { 6 };
-    constexpr int StartCue { 7 };
-    constexpr int EndCue   { 8 };
-    constexpr int LoopCue  { 9 };
-    constexpr int Attack   { 10 };
-    constexpr int CueSet   { 11 };
-    constexpr int ETrig    { 12 };
-    constexpr int FiltFreq { 13 };
-    constexpr int FiltRes  { 14 };
+    constexpr int Bits       { 0 };
+    constexpr int Rate       { 1 };
+    constexpr int Level      { 2 };
+    constexpr int Decay      { 3 };
+    constexpr int Speed      { 4 };
+    constexpr int LoopMode   { 5 };
+    constexpr int Reverse    { 6 };
+    constexpr int StartCue   { 7 };
+    constexpr int EndCue     { 8 };
+    constexpr int LoopCue    { 9 };
+    constexpr int Attack     { 10 };
+    constexpr int CueSet     { 11 };
+    constexpr int ETrig      { 12 };
+    constexpr int FiltFreq   { 13 };
+    constexpr int FiltRes    { 14 };
+    constexpr int none2      { 15 };
+    constexpr int PitchShift { 16 };
 
-    constexpr uint16_t getCvEnabledFlag (int parameterIndex)
+    constexpr uint32_t getCvEnabledFlag (int parameterIndex)
     {
         return 1 << (parameterIndex + 1);
     }
 
     // TODO - this should be the parameter index
-    juce::String getParameterName (uint16_t cvAssignFlag);
+    juce::String getParameterName (uint32_t cvAssignFlag);
 };
-
-// std::vector<juce::String> CvParameterNameList
-// {
-//     "bits",
-//     "rate",
-//     "level",
-//     "decay",
-//     "speed",
-//     "loopMode",
-//     "reverse",
-//     "startCue",
-//     "endCue",
-//     "loopCue",
-//     "attack",
-//     "cue Set",
-//     "eTrig",
-//     "filterFrequency",
-//     "filterResonance"
-// };
 
 namespace ChannelFlags
 {

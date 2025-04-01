@@ -18,6 +18,7 @@ const auto kParameterList { std::vector<ParameterEntry>
     {CvParameterIndex::FiltRes, "RES"},
     {CvParameterIndex::Reverse, "REVERSE"},
     {CvParameterIndex::Speed, "SPEED"},
+    {CvParameterIndex::PitchShift, "PITCH"},
     {CvParameterIndex::Bits, "BITS"},
     {CvParameterIndex::Rate, "RATE"},
     {CvParameterIndex::LoopMode, "LPMODE"},

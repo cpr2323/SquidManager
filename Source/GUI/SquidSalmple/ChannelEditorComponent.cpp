@@ -2238,7 +2238,7 @@ void ChannelEditorComponent::resized ()
     cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
 
-    const auto kWidthOfWaveformEditor { 962 };
+    const auto kWidthOfWaveformEditor { 1022 };
 
     // CV ASSIGNS EDITOR AT BOTTOM
     constexpr auto kCvAssignHeight { 100 };

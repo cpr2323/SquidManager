@@ -5,7 +5,7 @@
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/DumpStack.h"
 
-#define LOG_READER 0
+#define LOG_READER 1
 #if LOG_READER
 #define LogReader(text) DebugLog ("SquidMetaDataReader", text);
 #else
@@ -26,7 +26,6 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     BusyChunkReader busyChunkReader;
     busyChunkData.reset ();
     auto metaDataStatus { MetaDataStatus::invalid };
-    auto metaDataVersion { 0x77 }; // 119
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
         LogReader (sampleFile.getFileName () + " contains meta-data");
@@ -37,7 +36,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         }
         else
         {
-            metaDataVersion = busyChunkVersion & 0x000000FF;
+            const auto metaDataVersion { busyChunkVersion & 0x000000FF };
             if (metaDataVersion != (kSignatureAndVersionCurrent & 0x000000FF))
                 juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (metaDataVersion) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
 
@@ -99,14 +98,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         squidChannelProperties.setLoopCue (getValue <SquidSalmple::DataLayout_190::kLoopPositionSize> (SquidSalmple::DataLayout_190::kLoopPositionOffset), false);
         squidChannelProperties.setLoopMode (getValue <SquidSalmple::DataLayout_190::kLoopSize> (SquidSalmple::DataLayout_190::kLoopOffset), false);
         squidChannelProperties.setQuant (getValue <SquidSalmple::DataLayout_190::kQuantizeModeSize> (SquidSalmple::DataLayout_190::kQuantizeModeOffset), false);
-        const auto getPitchShiftValue = [this, metaDataVersion] () -> unsigned short
-        {
-            if (metaDataVersion > 0x76)
-                return getValue<SquidSalmple::DataLayout_190::kPitchShiftSize> (SquidSalmple::DataLayout_190::kPitchShiftOffset);
-            else
-                return 1000;
-        };
-        squidChannelProperties.setPitchShift (getPitchShiftValue (), false);
+        squidChannelProperties.setPitchShift (getValue<SquidSalmple::DataLayout_190::kPitchShiftSize> (SquidSalmple::DataLayout_190::kPitchShiftOffset), false);
         squidChannelProperties.setRate (getValue <SquidSalmple::DataLayout_190::kRateSize> (SquidSalmple::DataLayout_190::kRateOffset), false);
         squidChannelProperties.setRecDest (getValue <SquidSalmple::DataLayout_190::kRecDestSize> (SquidSalmple::DataLayout_190::kRecDestOffset), false);
         squidChannelProperties.setReverse (getValue <SquidSalmple::DataLayout_190::kReverseSize> (SquidSalmple::DataLayout_190::kReverseOffset), false);
@@ -120,15 +112,20 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         const auto rowSize { (kCvParamsCount_190 + kCvParamsExtra) * 4 };
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
-            for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+            for (auto curParameterIndex { 0 }; curParameterIndex < 17; ++curParameterIndex)
             {
                 juce::ValueTree parameterVT { squidChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
                 const auto cvParamOffset { SquidSalmple::DataLayout_190::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
-                const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
-                const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout_190::kCvFlagsOffset + (2 * curCvInputIndex)) };
+                const auto cvAssignedFlagMask { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
+                const auto cvAssignFlags { getValue <4> (SquidSalmple::DataLayout_190::kCvFlagsOffset + (4 * curCvInputIndex)) };
+                const auto isEnabled { cvAssignFlags & cvAssignedFlagMask };
                 const auto offset { getValue <2> (cvParamOffset + 0) };
-                const auto attenuation { static_cast<int16_t> (getValue <2> (cvParamOffset + 2)) };
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);
+                const auto attenuation { static_cast<int32_t> (getValue <2> (cvParamOffset + 2)) };
+                LogReader (juce::String ("cv: ") + juce::String (curCvInputIndex) +", param: (" + CvParameterIndex::getParameterName (cvAssignedFlagMask) + ")" + juce::String (curParameterIndex) +
+                           ", raw enabled data: " + juce::String(cvAssignFlags) +
+                           ", enabled: " + (isEnabled ? "true" : "false") +
+                           ", atten: " + juce::String(attenuation) + ", offset: " + juce::String (offset)) ;
+                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, isEnabled ? "true" : "false", nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
                 parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
             }
