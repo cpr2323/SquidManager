@@ -112,9 +112,11 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         const auto rowSize { (kCvParamsCount_190 + kCvParamsExtra) * 4 };
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
+            // TODO - this loop needs to be able to skip unused parameter indecies (currently the two before Pitch Shift are not used)
             for (auto curParameterIndex { 0 }; curParameterIndex < 17; ++curParameterIndex)
             {
                 juce::ValueTree parameterVT { squidChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+
                 const auto cvParamOffset { SquidSalmple::DataLayout_190::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
                 const auto cvAssignedFlagMask { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
                 const auto cvAssignFlags { getValue <4> (SquidSalmple::DataLayout_190::kCvFlagsOffset + (4 * curCvInputIndex)) };

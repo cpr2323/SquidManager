@@ -201,7 +201,7 @@ void SquidEditorComponent::resized ()
     toolsButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
 
     const auto channelSectionY { saveButton.getBottom () + 3 };
-    const auto kWidthOfWaveformEditor { 1022 };
+    const auto kWidthOfWaveformEditor { 1082 };
     channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
 }
 

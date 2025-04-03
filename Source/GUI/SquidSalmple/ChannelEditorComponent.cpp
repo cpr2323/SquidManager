@@ -2238,7 +2238,7 @@ void ChannelEditorComponent::resized ()
     cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
 
-    const auto kWidthOfWaveformEditor { 1022 };
+    const auto kWidthOfWaveformEditor { 1082 };
 
     // CV ASSIGNS EDITOR AT BOTTOM
     constexpr auto kCvAssignHeight { 100 };
@@ -2247,7 +2247,7 @@ void ChannelEditorComponent::resized ()
     // CUE SETS STUFF BETWEEN CHANNEL PARAMETERS AND CV ASSIGNS EDITOR
     // CUE SET BUTTONS
     const auto kHeightOfCueSetButton { 20 };
-    const auto kWidthOfCueSetButton { 30 };
+    const auto kWidthOfCueSetButton { kWidthOfWaveformEditor / 32 };
     xOffset = xInitialOffSet;
     yOffset = endCueTextEditor.getBottom () + 5 + kHeightOfCueSetButton;
     const auto kHeightOfWaveformDisplay { cvAssignEditor.getY () - yOffset - 5 - kHeightOfCueSetButton };
@@ -2255,12 +2255,12 @@ void ChannelEditorComponent::resized ()
     addCueSetButton.setBounds (xInitialOffSet, yOffset, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
     deleteCueSetButton.setBounds (xInitialOffSet, yOffset + (kHeightOfWaveformDisplay / 2) + 2, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
     // WAVEFORM
-    const auto kWaveformXOffset { kWidthOfCueEditButtons + 2};
+    const auto kWaveformXOffset { kWidthOfCueEditButtons + 2 };
     waveformDisplay.setBounds (xOffset + kWaveformXOffset, yOffset, kWidthOfWaveformEditor - kWaveformXOffset, kHeightOfWaveformDisplay);
     // CUE SET TABS
     for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
     {
-        const auto buttonX { xOffset + cueSetIndex * kWidthOfCueSetButton };
+        const auto buttonX { xOffset + kWaveformXOffset + (cueSetIndex * kWidthOfCueSetButton) };
         cueSetButtons [cueSetIndex].setBounds (buttonX, waveformDisplay.getY () - kHeightOfCueSetButton, kWidthOfCueSetButton, kHeightOfCueSetButton);
         cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
     }

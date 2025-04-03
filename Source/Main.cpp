@@ -252,7 +252,7 @@ public:
             guiProperties.wrap (prp.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
             auto [width, height] { guiProperties.getSize () };
             auto [x, y] { guiProperties.getPosition () };
-            setResizeLimits (120, 523, 1415, 65000);
+            setResizeLimits (120, 523, 1475, 65000);
             if (x == -1 || y == -1)
                 centreWithSize (width, height);
             else

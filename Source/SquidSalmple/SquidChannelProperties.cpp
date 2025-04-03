@@ -848,6 +848,9 @@ uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
 
 juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
 {
+//    if (parameterIndex is not valid)
+//        return {};
+
     auto cvAssignsVT { data.getChildWithName (SquidChannelProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };

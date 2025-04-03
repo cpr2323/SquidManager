@@ -11,7 +11,8 @@ public:
 
 private:
     juce::Label cvAssignLabel;
-    std::array<CvAssignParameter, 15>  cvAssignParameterList;
+    // TODO - the following array might be configured differently because hardcoding the size means we need to change it 
+    std::array<CvAssignParameter, 16>  cvAssignParameterList;
 
     void resized () override;
 };
