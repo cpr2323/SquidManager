@@ -6,13 +6,13 @@ class CvAssignSection : public juce::Component
 {
 public:
     CvAssignSection ();
+    ~CvAssignSection ();
     void init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex);
     void setEnableState (int cvParameterIndex, bool enabled);
 
 private:
     juce::Label cvAssignLabel;
-    // TODO - the following array might be configured differently because hardcoding the size means we need to change it 
-    std::array<CvAssignParameter, 16>  cvAssignParameterList;
+    //std::vector<CvAssignParameter> cvAssignParameterList;
 
     void resized () override;
 };

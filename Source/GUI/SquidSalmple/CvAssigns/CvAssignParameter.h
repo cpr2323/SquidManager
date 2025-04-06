@@ -10,13 +10,13 @@ class CvAssignParameter : public juce::Component
 public:
     CvAssignParameter ();
     ~CvAssignParameter ();
-    void init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex);
+    void init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterId);
     void setParameterLabel (juce::String parameterText);
-    int getParameterIndex ();
+    int getParameterId ();
 
 private:
     int cvIndex { -1 };
-    int parameterIndex { -1 };
+    int parameterId { -1 };
     SquidChannelProperties squidChannelProperties;
     EditManager* editManager { nullptr };
 

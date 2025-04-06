@@ -82,6 +82,33 @@ void SquidChannelProperties::initValueTree ()
     jassert (CvAssignedFlag::eTrig == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::ETrig));
     jassert (CvAssignedFlag::filtFreq == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltFreq));
     jassert (CvAssignedFlag::filtRes == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltRes));
+    jassert (CvAssignedFlag::pitchShift== CvParameterIndex::getCvEnabledFlag (CvParameterIndex::PitchShift));
+
+    struct ParameterEntry
+    {
+        int parameterId { 0 };
+        juce::String parameterName;
+    };
+    const auto kParameterList { std::vector<ParameterEntry>
+    {
+        {CvParameterIndex::Bits, "BITS"},        // 0
+        {CvParameterIndex::Rate, "RATE"},        // 1
+        {CvParameterIndex::Level, "LEVEL"},      // 2
+        {CvParameterIndex::Decay, "DECAY"},      // 3
+        {CvParameterIndex::Speed, "SPEED"},      // 4
+        {CvParameterIndex::LoopMode, "LPMODE"},  // 5
+        {CvParameterIndex::Reverse, "REVERSE"},  // 6
+        {CvParameterIndex::StartCue, "STARTQ"},  // 7
+        {CvParameterIndex::EndCue, "ENDQ"},      // 8
+        {CvParameterIndex::LoopCue, "LOOPQ"},    // 9
+        {CvParameterIndex::CueSet, "CUE SET"},   // 10
+        {CvParameterIndex::Attack, "ATTACK"},    // 11
+        {CvParameterIndex::ETrig, "ETRIG"},      // 12
+        {CvParameterIndex::FiltFreq, "FREQ"},    // 13
+        {CvParameterIndex::FiltRes, "RES"},      // 14
+        // not used
+        {CvParameterIndex::PitchShift, "PITCH"}, // 16
+    } };
 
     // CV ASSIGNS
     juce::ValueTree cvAssignsVT { SquidChannelProperties::CvAssignsTypeId };
@@ -89,10 +116,11 @@ void SquidChannelProperties::initValueTree ()
     {
         juce::ValueTree cvInputVT { CvAssignInputTypeId };
         cvInputVT.setProperty (CvAssignInputIdPropertyId, curCvInput + 1, nullptr);
-        for (auto curParameterIndex { 0 }; curParameterIndex < 17; ++curParameterIndex)
+        for (auto curParameterListIndex { 0 }; curParameterListIndex < kParameterList.size (); ++curParameterListIndex)
         {
             juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
-            parameterVT.setProperty (CvAssignInputParameterIdPropertyId, curParameterIndex + 1, nullptr);
+            parameterVT.setProperty (CvAssignInputParameterIdPropertyId, kParameterList[curParameterListIndex].parameterId, nullptr);
+            parameterVT.setProperty (CvAssignInputParameterIdName, kParameterList [curParameterListIndex].parameterName, nullptr);
             parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, "false", nullptr);
             parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, 99, nullptr);
             parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, 0, nullptr);
@@ -846,17 +874,20 @@ uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
-juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
+juce::ValueTree SquidChannelProperties::getCvAssignVT (int cvIndex)
 {
-//    if (parameterIndex is not valid)
-//        return {};
-
     auto cvAssignsVT { data.getChildWithName (SquidChannelProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
     jassert (cvInputVT.isValid ());
     jassert (cvInputVT.getType () == SquidChannelProperties::CvAssignInputTypeId);
     jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
+    return cvInputVT;
+}
+
+juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
+{
+    auto cvInputVT { getCvAssignVT (cvIndex) };
     auto parameterVT { cvInputVT.getChild (parameterIndex) };
     jassert (parameterVT.isValid ());
     jassert (parameterVT.getType () == SquidChannelProperties::CvAssignInputParameterTypeId);
@@ -872,6 +903,17 @@ uint32_t SquidChannelProperties::byteOffsetToSampleOffset (uint32_t byteOffset)
 uint32_t SquidChannelProperties::sampleOffsetToByteOffset (uint32_t sampleOffset)
 {
     return sampleOffset * 2;
+}
+
+void SquidChannelProperties::forEachCvParameter (int cvAssignIndex, std::function<bool (juce::ValueTree)> cvParamarterCallback)
+{
+    jassert (cvParamarterCallback != nullptr);
+
+    auto cvInputVT { getCvAssignVT (cvAssignIndex) };
+    ValueTreeHelpers::forEachChildOfType (cvInputVT, CvAssignInputParameterTypeId, [this, cvParamarterCallback] (juce::ValueTree cvParameterVT)
+    {
+        return cvParamarterCallback (cvParameterVT);
+    });
 }
 
 juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)

@@ -45,10 +45,10 @@ void CvAssignEditor::init (juce::ValueTree rootPropertiesVT, juce::ValueTree cha
     }
 }
 
-void CvAssignEditor::setEnableState (int cvParameterIndex, bool enabled)
+void CvAssignEditor::setEnableState (int cvParameterId, bool enabled)
 {
     for (auto& cvAssignSection : cvAssignSectionList)
-        cvAssignSection.setEnableState (cvParameterIndex, enabled);
+        cvAssignSection.setEnableState (cvParameterId, enabled);
 }
 
 void CvAssignEditor::paint (juce::Graphics& g)

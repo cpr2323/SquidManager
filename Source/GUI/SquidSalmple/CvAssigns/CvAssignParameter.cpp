@@ -18,19 +18,19 @@ CvAssignParameter::CvAssignParameter ()
             auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
-                destChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, squidChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
+                destChannelProperties.setCvAssignEnabled (cvIndex, parameterId, squidChannelProperties.getCvAssignEnabled (cvIndex, parameterId), false);
             },
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
+                squidChannelProperties.setCvAssignEnabled (cvIndex, parameterId, defaultChannelProperties.getCvAssignEnabled (cvIndex, parameterId), false);
             },
             [this] ()
             {
                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-               squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex), false);
+               squidChannelProperties.setCvAssignEnabled (cvIndex, parameterId, uneditedChannelProperties.getCvAssignEnabled (cvIndex, parameterId), false);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -55,7 +55,7 @@ CvAssignParameter::CvAssignParameter ()
             else
                 return 25;
         } ();
-        const auto newValue { getCvAttenuatonUiValue (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex)) + (multiplier * direction) };
+        const auto newValue { getCvAttenuatonUiValue (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId)) + (multiplier * direction) };
         cvAttenuateEditor.setValue (newValue);
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
@@ -63,19 +63,19 @@ CvAssignParameter::CvAssignParameter ()
             auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
-                destChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+                destChannelProperties.setCvAssignAttenuate (cvIndex, parameterId, squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId), false);
             },
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+                squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterId, defaultChannelProperties.getCvAssignAttenuate (cvIndex, parameterId), false);
             },
             [this] ()
             {
                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-               squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex), false);
+               squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterId, uneditedChannelProperties.getCvAssignAttenuate (cvIndex, parameterId), false);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -100,7 +100,7 @@ CvAssignParameter::CvAssignParameter ()
             else
                 return 25;
         } ();
-        const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex) + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterId) + (multiplier * direction) };
         cvOffsetEditor.setValue (newValue);
     };
     cvOffsetEditor.onPopupMenuCallback = [this] ()
@@ -108,19 +108,19 @@ CvAssignParameter::CvAssignParameter ()
             auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
-                destChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+                destChannelProperties.setCvAssignOffset (cvIndex, parameterId, squidChannelProperties.getCvAssignOffset (cvIndex, parameterId), false);
             },
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-                squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, defaultChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+                squidChannelProperties.setCvAssignOffset (cvIndex, parameterId, defaultChannelProperties.getCvAssignOffset (cvIndex, parameterId), false);
             },
             [this] ()
             {
                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-               squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, uneditedChannelProperties.getCvAssignOffset (cvIndex, parameterIndex), false);
+               squidChannelProperties.setCvAssignOffset (cvIndex, parameterId, uneditedChannelProperties.getCvAssignOffset (cvIndex, parameterId), false);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
@@ -132,10 +132,10 @@ CvAssignParameter::~CvAssignParameter ()
     assignEnableButton.setLookAndFeel (nullptr);
 }
 
-void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterIndex)
+void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree squidChannelPropertiesVT, int theCvIndex, int theParameterId)
 {
     cvIndex = theCvIndex;
-    parameterIndex = theParameterIndex;
+    parameterId = theParameterId;
 
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
@@ -145,23 +145,23 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree 
 
     squidChannelProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
             cvAssignEnableDataChanged (isEnabled);
     };
     squidChannelProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterIndex, int attenuation)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
             cvAssignAttenuateDataChanged (attenuation);
     };
     squidChannelProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterIndex, int offset)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterIndex)
+        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
             cvAssignOffsetDataChanged (offset);
     };
 
-    cvAssignEnableDataChanged (squidChannelProperties.getCvAssignEnabled (cvIndex, parameterIndex));
-    cvAssignAttenuateDataChanged (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterIndex));
-    cvAssignOffsetDataChanged (squidChannelProperties.getCvAssignOffset (cvIndex, parameterIndex));
+    cvAssignEnableDataChanged (squidChannelProperties.getCvAssignEnabled (cvIndex, parameterId));
+    cvAssignAttenuateDataChanged (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId));
+    cvAssignOffsetDataChanged (squidChannelProperties.getCvAssignOffset (cvIndex, parameterId));
 }
 
 void CvAssignParameter::setParameterLabel (juce::String parameterText)
@@ -169,9 +169,9 @@ void CvAssignParameter::setParameterLabel (juce::String parameterText)
     parameterLabel.setText (parameterText, juce::NotificationType::dontSendNotification);
 }
 
-int CvAssignParameter::getParameterIndex ()
+int CvAssignParameter::getParameterId ()
 {
-    return parameterIndex;
+    return parameterId;
 }
 
 int CvAssignParameter::getCvAttenuatonUiValue (int internalValue)
@@ -197,7 +197,7 @@ void CvAssignParameter::cvAssignEnableDataChanged (bool enabled)
 
 void CvAssignParameter::cvAssignEnableUiChanged (bool enabled)
 {
-    squidChannelProperties.setCvAssignEnabled (cvIndex, parameterIndex, enabled, false);
+    squidChannelProperties.setCvAssignEnabled (cvIndex, parameterId, enabled, false);
 }
 
 void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
@@ -207,7 +207,7 @@ void CvAssignParameter::cvAssignAttenuateDataChanged (int attenuation)
 
 void CvAssignParameter::cvAssignAttenuateUiChanged (int attenuation)
 {
-    squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterIndex, getCvAttenuatonInternalValue (attenuation), false);
+    squidChannelProperties.setCvAssignAttenuate (cvIndex, parameterId, getCvAttenuatonInternalValue (attenuation), false);
 }
 
 void CvAssignParameter::cvAssignOffsetDataChanged (int offset)
@@ -217,7 +217,7 @@ void CvAssignParameter::cvAssignOffsetDataChanged (int offset)
 
 void CvAssignParameter::cvAssignOffsetUiChanged (int offset)
 {
-    squidChannelProperties.setCvAssignOffset (cvIndex, parameterIndex, offset, false);
+    squidChannelProperties.setCvAssignOffset (cvIndex, parameterId, offset, false);
 }
 
 void CvAssignParameter::enablementChanged ()
