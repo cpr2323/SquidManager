@@ -143,19 +143,19 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree 
 
     squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
 
-    squidChannelProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterIndex, bool isEnabled)
+    squidChannelProperties.onCvAssignEnabledChange = [this] (int inCvIndex, int inParameterId, bool isEnabled)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
+        if (inCvIndex == cvIndex && inParameterId == parameterId)
             cvAssignEnableDataChanged (isEnabled);
     };
-    squidChannelProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterIndex, int attenuation)
+    squidChannelProperties.onCvAssignAttenuateChange = [this] (int inCvIndex, int inParameterId, int attenuation)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
+        if (inCvIndex == cvIndex && inParameterId == parameterId)
             cvAssignAttenuateDataChanged (attenuation);
     };
-    squidChannelProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterIndex, int offset)
+    squidChannelProperties.onCvAssignOffsetChange = [this] (int inCvIndex, int inParameterId, int offset)
     {
-        if (inCvIndex == cvIndex && inParameterIndex == parameterId)
+        if (inCvIndex == cvIndex && inParameterId == parameterId)
             cvAssignOffsetDataChanged (offset);
     };
 

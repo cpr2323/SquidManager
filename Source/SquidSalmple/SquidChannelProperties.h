@@ -246,14 +246,8 @@ public:
 
     // CV ASSIGNS
     static inline const juce::Identifier CvAssignsTypeId { "CvAssigns" };
-    static inline const juce::Identifier CvAssignInputTypeId { "CvInput" };
-    static inline const juce::Identifier CvAssignInputIdPropertyId { "id" };
-    static inline const juce::Identifier CvAssignInputParameterTypeId { "Parameter" };
-    static inline const juce::Identifier CvAssignInputParameterIdPropertyId        { "_id" };
-    static inline const juce::Identifier CvAssignInputParameterIdName              { "_name" };
-    static inline const juce::Identifier CvAssignInputParameterEnabledPropertyId   { "enabled" };
-    static inline const juce::Identifier CvAssignInputParameterAttenuatePropertyId { "attenuation" };
-    static inline const juce::Identifier CvAssignInputParameterOffsetPropertyId    { "offset" };
+    static inline const juce::Identifier CvInputTypeId { "CvInput" };
+    static inline const juce::Identifier CvInputIdPropertyId { "id" };
 
     // CUE SETS
     static inline const juce::Identifier CueSetListTypeId { "CueSetList" };

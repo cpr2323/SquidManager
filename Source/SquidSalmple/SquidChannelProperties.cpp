@@ -1,4 +1,5 @@
 #include "SquidChannelProperties.h"
+#include "CvParameterProperties.h"
 #include "Metadata/SquidSalmpleDefs.h"
 #include "../Utility/ValueTreeHelpers.h"
 
@@ -114,17 +115,14 @@ void SquidChannelProperties::initValueTree ()
     juce::ValueTree cvAssignsVT { SquidChannelProperties::CvAssignsTypeId };
     for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
     {
-        juce::ValueTree cvInputVT { CvAssignInputTypeId };
-        cvInputVT.setProperty (CvAssignInputIdPropertyId, curCvInput + 1, nullptr);
+        juce::ValueTree cvInputVT { CvInputTypeId };
+        cvInputVT.setProperty (CvInputIdPropertyId, curCvInput + 1, nullptr);
         for (auto curParameterListIndex { 0 }; curParameterListIndex < kParameterList.size (); ++curParameterListIndex)
         {
-            juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
-            parameterVT.setProperty (CvAssignInputParameterIdPropertyId, kParameterList[curParameterListIndex].parameterId, nullptr);
-            parameterVT.setProperty (CvAssignInputParameterIdName, kParameterList [curParameterListIndex].parameterName, nullptr);
-            parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, "false", nullptr);
-            parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, 99, nullptr);
-            parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, 0, nullptr);
-            cvInputVT.addChild (parameterVT, -1, nullptr);
+            CvParameterProperties cvParameterProperties { {}, CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+            cvParameterProperties.setId (kParameterList [curParameterListIndex].parameterId, false);
+            cvParameterProperties.setName (kParameterList [curParameterListIndex].parameterName, false);
+            cvInputVT.addChild (cvParameterProperties.getValueTree (), -1, nullptr);
         }
         cvAssignsVT.addChild (cvInputVT, -1, nullptr);
     }
@@ -301,43 +299,22 @@ void SquidChannelProperties::setCurCueSet (int cueSetIndex, bool includeSelfCall
     setLoopCue (getLoopCueSet (cueSetIndex), true);
 }
 
-void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterId, int attenuation, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 16);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties.setAttenuation (attenuation, false);
 }
 
-void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterId, bool isEnabled, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 16);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, isEnabled, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties .setEnabled (isEnabled, false);
 }
 
-void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterId, int offset, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 16);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties .setOffset (offset, false);
 }
 
 void SquidChannelProperties::setRate (int rate, bool includeSelfCallback)
@@ -622,43 +599,22 @@ int SquidChannelProperties::getCurCueSet ()
     return getValue<int> (CurCueSetPropertyId);
 }
 
-int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 17);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterAttenuatePropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getAttenuation ();
 }
 
-bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
+bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 17);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterEnabledPropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getEnabled ();
 }
 
-int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 17);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterOffsetPropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getOffset ();;
 }
 
 int SquidChannelProperties::getRate ()
@@ -880,19 +836,26 @@ juce::ValueTree SquidChannelProperties::getCvAssignVT (int cvIndex)
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
     jassert (cvInputVT.isValid ());
-    jassert (cvInputVT.getType () == SquidChannelProperties::CvAssignInputTypeId);
-    jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
+    jassert (cvInputVT.getType () == SquidChannelProperties::CvInputTypeId);
+    jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvInputIdPropertyId)) == cvIndex + 1);
     return cvInputVT;
 }
 
-juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
+juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterId)
 {
-    auto cvInputVT { getCvAssignVT (cvIndex) };
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    jassert (parameterVT.getType () == SquidChannelProperties::CvAssignInputParameterTypeId);
-    jassert (static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterIdPropertyId)) == parameterIndex + 1);
-    return parameterVT;
+    juce::ValueTree cvParameterVT;
+    forEachCvParameter (cvIndex, [this, &cvParameterVT, parameterId] (juce::ValueTree curCvParameterVT)
+    {
+        CvParameterProperties cvParameterProperties { curCvParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+        if (cvParameterProperties.getId () == parameterId)
+        {
+            cvParameterVT = curCvParameterVT;
+            return false;
+        }
+        return true;
+    });
+
+    return cvParameterVT;
 }
 
 uint32_t SquidChannelProperties::byteOffsetToSampleOffset (uint32_t byteOffset)
@@ -910,7 +873,7 @@ void SquidChannelProperties::forEachCvParameter (int cvAssignIndex, std::functio
     jassert (cvParamarterCallback != nullptr);
 
     auto cvInputVT { getCvAssignVT (cvAssignIndex) };
-    ValueTreeHelpers::forEachChildOfType (cvInputVT, CvAssignInputParameterTypeId, [this, cvParamarterCallback] (juce::ValueTree cvParameterVT)
+    ValueTreeHelpers::forEachChildOfType (cvInputVT, CvParameterProperties::CvParameterTypeId, [this, cvParamarterCallback] (juce::ValueTree cvParameterVT)
     {
         return cvParamarterCallback (cvParameterVT);
     });
@@ -974,20 +937,21 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
 
     if (copyType == CopyType::all)
     {
+        // TODO - this is the same code I just updated in the EditManager. I need to abstract and reuse
         // Copy CV Assigns
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
-            for (auto curParameterIndex { 0 }; curParameterIndex < 16; ++curParameterIndex)
+            SquidChannelProperties srcChannelProperties { sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
+            srcChannelProperties.forEachCvParameter (curCvInputIndex, [this, curCvInputIndex] (juce::ValueTree srcParameterVT)
             {
-                auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
-                auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
-                const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
-                const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-                const auto attenuation { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
-            }
+                CvParameterProperties srcCvParameterProperties { srcParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                const auto cvParameterId { srcCvParameterProperties.getId () };
+                CvParameterProperties dstCvParameterProperties { getCvParameterVT (curCvInputIndex, cvParameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                dstCvParameterProperties.setEnabled (srcCvParameterProperties.getEnabled (), false);
+                dstCvParameterProperties.setAttenuation (srcCvParameterProperties.getAttenuation (), false);
+                dstCvParameterProperties.setOffset (srcCvParameterProperties.getOffset (), false);
+                return true;
+            });
         }
 
         // Clear old Cue Sets
@@ -1099,29 +1063,29 @@ juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
 
 void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
 {
-    if (vt.getType () == CvAssignInputParameterTypeId)
+    if (vt.getType () == CvParameterProperties::CvParameterTypeId)
     {
-        // figure out cvInputIndex and cvParameterIndex
         auto parentCvInputVT { vt.getParent () };
         jassert (parentCvInputVT.isValid ());
-        jassert (parentCvInputVT.getType () == CvAssignInputTypeId);
-        const auto cvInputIndex { static_cast<int> (parentCvInputVT.getProperty (CvAssignInputIdPropertyId)) - 1 };
-        const auto parameterIndex { parentCvInputVT.indexOf (vt) };
+        jassert (parentCvInputVT.getType () == CvInputTypeId);
+        CvParameterProperties cvParameterProperties { vt, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+        const auto cvInputIndex { static_cast<int> (parentCvInputVT.getProperty (CvInputIdPropertyId)) - 1 };
+        const auto parameterId { cvParameterProperties.getId () };
         // make appropriate callback
-        if (property == CvAssignInputParameterEnabledPropertyId)
+        if (property == CvParameterProperties::CvParameterEnabledPropertyId)
         {
             if (onCvAssignEnabledChange != nullptr)
-                onCvAssignEnabledChange (cvInputIndex, parameterIndex, getCvAssignEnabled (cvInputIndex, parameterIndex));
+                onCvAssignEnabledChange (cvInputIndex, parameterId, cvParameterProperties.getEnabled ());
         }
-        else if (property == CvAssignInputParameterAttenuatePropertyId)
+        else if (property == CvParameterProperties::CvParameterAttenuatePropertyId)
         {
             if (onCvAssignAttenuateChange != nullptr)
-                onCvAssignAttenuateChange (cvInputIndex, parameterIndex, getCvAssignAttenuate (cvInputIndex, parameterIndex));
+                onCvAssignAttenuateChange (cvInputIndex, parameterId, cvParameterProperties.getAttenuation ());
         }
-        else if (property == CvAssignInputParameterOffsetPropertyId)
+        else if (property == CvParameterProperties::CvParameterOffsetPropertyId)
         {
             if (onCvAssignOffsetChange != nullptr)
-                onCvAssignOffsetChange (cvInputIndex, parameterIndex, getCvAssignOffset (cvInputIndex, parameterIndex));
+                onCvAssignOffsetChange (cvInputIndex, parameterId, cvParameterProperties.getOffset ());
         }
     }
 

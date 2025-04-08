@@ -43,18 +43,18 @@ CvAssignSection::~CvAssignSection ()
 
 void CvAssignSection::init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex)
 {
-    for (auto curParameterIndex { 0 }; curParameterIndex < getNumChildComponents (); ++curParameterIndex)
+    for (auto curParameterComponentIndex { 0 }; curParameterComponentIndex < getNumChildComponents (); ++curParameterComponentIndex)
     {
-        auto curParameterComponent { dynamic_cast<CvAssignParameter*> ( getChildComponent (curParameterIndex)) };
-        curParameterComponent->init (rootPropertiesVT, channelPropertiesVT, theCvIndex, kParameterDisplayOrderList [curParameterIndex]);
+        auto curParameterComponent { dynamic_cast<CvAssignParameter*> ( getChildComponent (curParameterComponentIndex)) };
+        curParameterComponent->init (rootPropertiesVT, channelPropertiesVT, theCvIndex, kParameterDisplayOrderList [curParameterComponentIndex]);
     }
 }
 
 void CvAssignSection::setEnableState (int cvParameterId, bool enabled)
 {
-    for (auto curParameterIndex { 0 }; curParameterIndex < getNumChildComponents (); ++curParameterIndex)
+    for (auto curParameterComponentIndex { 0 }; curParameterComponentIndex < getNumChildComponents (); ++curParameterComponentIndex)
     {
-        auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curParameterIndex)) };
+        auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curParameterComponentIndex)) };
         if (curParameterComponent->getParameterId () == cvParameterId)
         {
             curParameterComponent->setEnabled (enabled);

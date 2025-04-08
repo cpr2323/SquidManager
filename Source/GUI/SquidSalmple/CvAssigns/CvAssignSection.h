@@ -8,7 +8,7 @@ public:
     CvAssignSection ();
     ~CvAssignSection ();
     void init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex);
-    void setEnableState (int cvParameterIndex, bool enabled);
+    void setEnableState (int cvParameterId, bool enabled);
 
 private:
     juce::Label cvAssignLabel;
