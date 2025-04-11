@@ -24,7 +24,7 @@ const auto kParameterDisplayOrderList { std::vector<int>
 CvAssignSection::CvAssignSection ()
 {
     // create and add CvAssignParameter components for each parameters listed
-    for (auto curParameterId : kParameterDisplayOrderList)
+    for ([[maybe_unused]] auto curParameterId : kParameterDisplayOrderList)
     {
         auto cvAssignParameter { std::make_unique<CvAssignParameter> () };
         addAndMakeVisible (cvAssignParameter.release ());

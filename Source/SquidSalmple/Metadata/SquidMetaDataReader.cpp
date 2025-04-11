@@ -1,6 +1,7 @@
 #include "SquidMetaDataReader.h"
 #include "BusyChunkReader.h"
 #include "SquidSalmpleDefs.h"
+#include "../CvParameterProperties.h"
 #include "../SquidChannelProperties.h"
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/DumpStack.h"
@@ -49,6 +50,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         }
     }
 
+    // META-DATA IS THE LATEST
     if (metaDataStatus == MetaDataStatus::latest)
     {
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_190::kAttackSize> (SquidSalmple::DataLayout_190::kAttackOffset), false);
@@ -114,43 +116,26 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         {
             squidChannelProperties.forEachCvParameter (curCvInputIndex, [this, curCvInputIndex, rowSize] (juce::ValueTree cvParameterVT)
             {
-                const auto parameterId { static_cast<int> (cvParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterIdPropertyId)) };
-                const auto cvParamOffset { SquidSalmple::DataLayout_190::kCvParamsOffset + (curCvInputIndex * rowSize) + (parameterId * 4) };
+                CvParameterProperties cvParameterProperties { cvParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                const auto parameterId { cvParameterProperties.getId () };
+
                 const auto cvAssignedFlagMask { CvParameterIndex::getCvEnabledFlag (parameterId) };
                 const auto cvAssignFlags { getValue <4> (SquidSalmple::DataLayout_190::kCvFlagsOffset + (4 * curCvInputIndex)) };
                 const auto isEnabled { cvAssignFlags & cvAssignedFlagMask };
+
+                const auto cvParamOffset { SquidSalmple::DataLayout_190::kCvParamsOffset + (curCvInputIndex * rowSize) + (parameterId * 4) };
                 const auto offset { getValue <2> (cvParamOffset + 0) };
                 const auto attenuation { static_cast<int32_t> (getValue <2> (cvParamOffset + 2)) };
+
                 LogReader (juce::String ("cv: ") + juce::String (curCvInputIndex) + ", param: (" + CvParameterIndex::getParameterName (cvAssignedFlagMask) + ")" + juce::String (parameterId) +
                            ", raw enabled data: " + juce::String (cvAssignFlags) +
                            ", enabled: " + (isEnabled ? "true" : "false") +
                            ", atten: " + juce::String (attenuation) + ", offset: " + juce::String (offset));
-                cvParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, isEnabled ? "true" : "false", nullptr);
-                cvParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                cvParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+                cvParameterProperties.setEnabled (isEnabled, false);
+                cvParameterProperties.setAttenuation (attenuation, false);
+                cvParameterProperties.setOffset (offset, false);
                 return true;
             });
-#if 0
-            // TODO - this loop needs to be able to skip unused parameter indecies (currently the two before Pitch Shift are not used)
-            for (auto curParameterIndex { 0 }; curParameterIndex < 17; ++curParameterIndex)
-            {
-                juce::ValueTree parameterVT { squidChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
-
-                const auto cvParamOffset { SquidSalmple::DataLayout_190::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
-                const auto cvAssignedFlagMask { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
-                const auto cvAssignFlags { getValue <4> (SquidSalmple::DataLayout_190::kCvFlagsOffset + (4 * curCvInputIndex)) };
-                const auto isEnabled { cvAssignFlags & cvAssignedFlagMask };
-                const auto offset { getValue <2> (cvParamOffset + 0) };
-                const auto attenuation { static_cast<int32_t> (getValue <2> (cvParamOffset + 2)) };
-                LogReader (juce::String ("cv: ") + juce::String (curCvInputIndex) +", param: (" + CvParameterIndex::getParameterName (cvAssignedFlagMask) + ")" + juce::String (curParameterIndex) +
-                           ", raw enabled data: " + juce::String(cvAssignFlags) +
-                           ", enabled: " + (isEnabled ? "true" : "false") +
-                           ", atten: " + juce::String(attenuation) + ", offset: " + juce::String (offset)) ;
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, isEnabled ? "true" : "false", nullptr);
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
-            }
-#endif
         }
 
         ////////////////////////////////////
@@ -206,6 +191,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         readReserved (SquidSalmple::DataLayout_190::k_Reserved14Offset, SquidSalmple::DataLayout_190::k_Reserved14Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved14Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_190::k_Reserved15Offset, SquidSalmple::DataLayout_190::k_Reserved15Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved15Data (reservedData); });
     }
+    // META-DATA IS BEFORE PITCH SHIFT WAS ADDED
     else if (metaDataStatus == MetaDataStatus::fw186)
     {
         // should we alert the user with something like
@@ -273,15 +259,16 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         {
             for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
             {
-                juce::ValueTree parameterVT { squidChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
+                CvParameterProperties cvParameterProperties { squidChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+
                 const auto cvParamOffset { SquidSalmple::DataLayout_186::kCvParamsOffset + (curCvInputIndex * rowSize) + (curParameterIndex * 4) };
                 const auto cvAssignedFlag { CvParameterIndex::getCvEnabledFlag (curParameterIndex) };
                 const auto cvAssignFlags { getValue <2> (SquidSalmple::DataLayout_186::kCvFlagsOffset + (2 * curCvInputIndex)) };
                 const auto offset { getValue <2> (cvParamOffset + 0) };
                 const auto attenuation { static_cast<int16_t> (getValue <2> (cvParamOffset + 2)) };
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, cvAssignFlags & cvAssignedFlag ? "true" : "false", nullptr);
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                parameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+                cvParameterProperties.setEnabled (cvAssignFlags& cvAssignedFlag, false);
+                cvParameterProperties.setAttenuation (attenuation, false);
+                cvParameterProperties.setOffset (offset, false);
             }
         }
 
@@ -321,7 +308,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
                 auto textVersion { tempMemory.toBase64Encoding () };
                 setter (textVersion);
             };
-            // read and store the 'reserved' sections
+        // read and store the 'reserved' sections
         readReserved (SquidSalmple::DataLayout_186::k_Reserved1Offset, SquidSalmple::DataLayout_186::k_Reserved1Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved1Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_186::k_Reserved2Offset, SquidSalmple::DataLayout_186::k_Reserved2Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved2Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_186::k_Reserved3Offset, SquidSalmple::DataLayout_186::k_Reserved3Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved3Data (reservedData); });
@@ -337,6 +324,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         readReserved (SquidSalmple::DataLayout_186::k_Reserved13Offset, SquidSalmple::DataLayout_186::k_Reserved13Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved13Data (reservedData); });
 
     }
+    // NO METADATA
     else // metaDataStatus == MetaDataStatus::invalid
     {
         LogReader (sampleFile.getFileName () + " does not contain meta-data");
