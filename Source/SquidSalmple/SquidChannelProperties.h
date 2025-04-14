@@ -63,6 +63,7 @@ public:
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
     void setLevel (int level, bool includeSelfCallback);
+    void setLoadedVersion (uint8_t version, bool includeSelfCallback);
     void setLoopCue (uint32_t loopCue, bool includeSelfCallback);
     void setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback);
     void setLoopMode (int loopMode, bool includeSelfCallback);
@@ -123,6 +124,7 @@ public:
     int getLevel ();
     uint32_t getLoopCue ();
     uint32_t getLoopCueSet (int cueSetIndex);
+    uint8_t getLoadedVersion ();
     int getLoopMode ();
     int getNumCueSets ();
     int getQuant ();
@@ -181,6 +183,7 @@ public:
     std::function<void (int level)> onLevelChange;
     std::function<void ()> onLoadBegin;
     std::function<void ()> onLoadComplete;
+    std::function<void (uint8_t version)> onLoadedVersionChange;
     std::function<void (uint32_t loopCue)> onLoopCueChange;
     std::function<void (int cueSetIndex, uint32_t loopCue)> onLoopCueSetChange;
     std::function<void (int loopMode)> onLoopModeChange;
@@ -230,6 +233,7 @@ public:
     static inline const juce::Identifier LevelPropertyId            { "level" };
     static inline const juce::Identifier LoadBeginPropertyId        { "_loadBegin" };
     static inline const juce::Identifier LoadCompletePropertyId     { "_loadComplete" };
+    static inline const juce::Identifier LoadedVersionPropertyId    { "_loadedVersion" };
     static inline const juce::Identifier LoopCuePropertyId          { "loopCue" };
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
     static inline const juce::Identifier NumCueSetsPropertyId       { "numCueSets" };

@@ -11,6 +11,9 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     busyChunkData.setSize (SquidSalmple::DataLayout_190::kEndOfData, true);
 
     SquidChannelProperties squidChannelProperties { squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
+    // NOTE: the 'loaded version' value is used to inform the user if they are going to overwrite an older version of metadata with a new version, and give them an opportunity to not do that
+    //       If we are in this function, they have already chosen to overwrite the data, so we set it to the current version, so they won't be queried again
+    squidChannelProperties.setLoadedVersion (static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF), false);
     setUInt32 (static_cast<uint32_t> (kSignatureAndVersionCurrent), SquidSalmple::DataLayout_190::kBusyChunkSignatureAndVersionOffset);
     setUInt16 (static_cast<uint16_t> (squidChannelProperties.getAttack ()), SquidSalmple::DataLayout_190::kAttackOffset);
     setUInt16 (static_cast<uint16_t> (squidChannelProperties.getChannelFlags ()), SquidSalmple::DataLayout_190::kChannelFlagsOffset);
@@ -32,6 +35,8 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getRecDest ()), SquidSalmple::DataLayout_190::kRecDestOffset);
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout_190::kReverseOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getEndOfData ()), SquidSalmple::DataLayout_190::kEndOFDataOffset);
+    // NOTE: the speed is set to 32750 for channels 5-8, which is a special case for the Squid. The speed is not used in this case, but the channel does not work without an appropriate value.
+    //       This value of 32750 is the one that I found to work, there may be others. 
     if (squidChannelProperties.getChannelIndex () < 5)
         setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout_190::kSpeedOffset);
     else

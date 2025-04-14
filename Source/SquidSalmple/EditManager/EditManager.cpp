@@ -253,7 +253,7 @@ void EditManager::saveChannel (juce::ValueTree /*squidChannelPropertiesVT*/, uin
 {
     // create temp file
     // write the audio data
-    // add the meta-data
+    // add the metadata
 #if 0
     auto tempFile { sampleFile.withFileExtension ("tmp") };
     SquidMetaDataWriter squidMetaDataWriter;

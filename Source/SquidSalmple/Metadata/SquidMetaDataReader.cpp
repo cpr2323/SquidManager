@@ -29,7 +29,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     auto metaDataStatus { MetaDataStatus::invalid };
     if (busyChunkReader.readMetaData (sampleFile, busyChunkData))
     {
-        LogReader (sampleFile.getFileName () + " contains meta-data");
+        LogReader (sampleFile.getFileName () + " contains metadata");
         const auto busyChunkVersion { getValue <SquidSalmple::DataLayout_186::kBusyChunkSignatureAndVersionSize> (SquidSalmple::DataLayout_186::kBusyChunkSignatureAndVersionOffset) };
         if ((busyChunkVersion & 0xFFFFFF00) != (kSignatureAndVersionCurrent & 0xFFFFFF00))
         {
@@ -37,22 +37,21 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         }
         else
         {
-            const auto metaDataVersion { busyChunkVersion & 0x000000FF };
-            if (metaDataVersion != (kSignatureAndVersionCurrent & 0x000000FF))
-                juce::Logger::outputDebugString ("Version mismatch. version read in: " + juce::String (metaDataVersion) + ". expected version: " + juce::String (kSignatureAndVersionCurrent & 0x000000FF));
-
+            const auto metaDataVersion { static_cast<uint8_t> (busyChunkVersion & 0x000000FF) };
+            squidChannelProperties.setLoadedVersion (metaDataVersion, false);
             if (metaDataVersion < 115) // I know I can't read in 114, so I am assuming I can read in anything after that
-                juce::Logger::outputDebugString ("Unsupported version. Reverting to default meta-data");
-            else if (metaDataVersion < 119)
+                juce::Logger::outputDebugString ("Unsupported version. Reverting to default metadata");
+            else if (metaDataVersion < static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF)) // currently 119
                 metaDataStatus = MetaDataStatus::fw186;
             else
                 metaDataStatus = MetaDataStatus::latest;
         }
     }
 
-    // META-DATA IS THE LATEST
+    // METADATA IS THE LATEST
     if (metaDataStatus == MetaDataStatus::latest)
     {
+        LogReader (sampleFile.getFileName () + " has metadata version 119 or newer");
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_190::kAttackSize> (SquidSalmple::DataLayout_190::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout_190::kQualitySize> (SquidSalmple::DataLayout_190::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout_190::kChannelFlagsSize> (SquidSalmple::DataLayout_190::kChannelFlagsOffset), false);
@@ -191,12 +190,10 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         readReserved (SquidSalmple::DataLayout_190::k_Reserved14Offset, SquidSalmple::DataLayout_190::k_Reserved14Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved14Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_190::k_Reserved15Offset, SquidSalmple::DataLayout_190::k_Reserved15Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved15Data (reservedData); });
     }
-    // META-DATA IS BEFORE PITCH SHIFT WAS ADDED
+    // METADATA IS BEFORE PITCH SHIFT WAS ADDED
     else if (metaDataStatus == MetaDataStatus::fw186)
     {
-        // should we alert the user with something like
-        // You are opening a bank created for a earlier firmware version. If you save this bank it will be written with the new firmware version format, and will no be usable with
-        // the earlier firmware
+        LogReader (sampleFile.getFileName () + " has metadata version 118 or earlier");
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_186::kAttackSize> (SquidSalmple::DataLayout_186::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout_186::kQualitySize> (SquidSalmple::DataLayout_186::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout_186::kChannelFlagsSize> (SquidSalmple::DataLayout_186::kChannelFlagsOffset), false);
@@ -327,7 +324,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     // NO METADATA
     else // metaDataStatus == MetaDataStatus::invalid
     {
-        LogReader (sampleFile.getFileName () + " does not contain meta-data");
+        LogReader (sampleFile.getFileName () + " does not contain metadata");
         auto numSamples = squidChannelProperties.getSampleDataNumSamples ();
         uint32_t endOffset = numSamples * 2;
         // initialize parameters that have defaults related to specific channel or sample

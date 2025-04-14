@@ -108,7 +108,7 @@ namespace CvParameterIndex
     constexpr int FiltFreq   { 13 };
     constexpr int FiltRes    { 14 };
     constexpr int none2      { 15 };
-    constexpr int PitchShift { 17 };
+    constexpr int PitchShift { 16 };
 
     constexpr uint32_t getCvEnabledFlag (int parameterIndex)
     {

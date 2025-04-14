@@ -41,6 +41,7 @@ void SquidChannelProperties::initValueTree ()
     setFilterType (0, false);
     setLoopMode (0, false);
     setLevel (static_cast<int> (30 * kScaleStep), false);
+    setLoadedVersion (static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF), false);
     setNumCueSets (0, false);
     setQuant (0, false);
     setPitchShift (1000, false);
@@ -451,6 +452,11 @@ void SquidChannelProperties::setLevel (int level, bool includeSelfCallback)
     setValue (level, LevelPropertyId, includeSelfCallback);
 }
 
+void SquidChannelProperties::setLoadedVersion (uint8_t version, bool includeSelfCallback)
+{
+    setValue (static_cast<int> (version), LoadedVersionPropertyId, includeSelfCallback);
+}
+
 void SquidChannelProperties::setAttack (int attack, bool includeSelfCallback)
 {
     setValue (attack, AttackPropertyId, includeSelfCallback);
@@ -830,6 +836,11 @@ uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
+uint8_t SquidChannelProperties::getLoadedVersion ()
+{
+    return static_cast<uint8_t> (getValue<int> (LoadedVersionPropertyId));
+}
+
 juce::ValueTree SquidChannelProperties::getCvAssignVT (int cvIndex)
 {
     auto cvAssignsVT { data.getChildWithName (SquidChannelProperties::CvAssignsTypeId) };
@@ -1006,6 +1017,7 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
     setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
     setFilterType (sourceChannelProperties.getFilterType (), false);
+    setLoadedVersion (sourceChannelProperties.getLoadedVersion (), false);
     if (copyType == CopyType::all)
         setLoopCue (sourceChannelProperties.getLoopCue (), false);
     setLoopMode (sourceChannelProperties.getLoopMode (), false);
@@ -1180,6 +1192,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onLoadComplete != nullptr)
                 onLoadComplete ();
+        }
+        else if (property == LoadedVersionPropertyId)
+        {
+            if (onLoadedVersionChange != nullptr)
+                onLoadedVersionChange (getLoadedVersion ());
         }
         else if (property == LoopCuePropertyId)
         {
