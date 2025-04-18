@@ -1,5 +1,6 @@
 #include "CvAssignParameter.h"
 #include "../../../SystemServices.h"
+#include "../../../SquidSalmple/CvParameterProperties.h"
 #include "../../../Utility/RuntimeRootProperties.h"
 
 CvAssignParameter::CvAssignParameter ()
@@ -162,6 +163,9 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree 
     cvAssignEnableDataChanged (squidChannelProperties.getCvAssignEnabled (cvIndex, parameterId));
     cvAssignAttenuateDataChanged (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId));
     cvAssignOffsetDataChanged (squidChannelProperties.getCvAssignOffset (cvIndex, parameterId));
+
+    CvParameterProperties cvParameterProperties { squidChannelProperties.getCvParameterVT(cvIndex, parameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no }; 
+    parameterLabel.setText (cvParameterProperties.getName (), juce::NotificationType::dontSendNotification);
 }
 
 void CvAssignParameter::setParameterLabel (juce::String parameterText)

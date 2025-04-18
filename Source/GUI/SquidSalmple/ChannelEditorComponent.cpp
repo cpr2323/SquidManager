@@ -1548,6 +1548,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     waveformDisplay.setChannelIndex (squidChannelProperties.getChannelIndex ());
     cvAssignEditor.init (rootPropertiesVT, squidChannelPropertiesVT);
     cvAssignEditor.setEnableState (CvParameterIndex::Speed, squidChannelProperties.getChannelIndex () < 5);
+    cvAssignEditor.setEnableState (CvParameterIndex::PitchShift, squidChannelProperties.getChannelIndex () < 5);
 
     chokeComboBox.addItem ("Off", squidChannelProperties.getChannelIndex () + 1);
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
