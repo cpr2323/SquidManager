@@ -1599,6 +1599,8 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     {
         speedLabel.setVisible (false);
         speedTextEditor.setVisible (false);
+        pitchShiftLabel.setVisible (false);
+        pitchShiftTextEditor.setVisible (false);
     }
     else
     {
@@ -2195,10 +2197,6 @@ void ChannelEditorComponent::resized ()
     quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = quantComboBox.getBottom () + 3;
-    // Pitch Shift
-    pitchShiftLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    pitchShiftTextEditor.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = pitchShiftTextEditor.getBottom () + 3;
     // Bits
     bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
@@ -2207,6 +2205,10 @@ void ChannelEditorComponent::resized ()
     rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
     rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
     yOffset = rateComboBox.getBottom () + 3;
+    // Pitch Shift
+    pitchShiftLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
+    pitchShiftTextEditor.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
+    yOffset = pitchShiftTextEditor.getBottom () + 3;
 
     // column four
     xOffset += columnWidth + spaceBetweenColumns;
