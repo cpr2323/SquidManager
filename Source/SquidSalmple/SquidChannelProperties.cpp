@@ -6,6 +6,23 @@
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
+/*
+1. encoded: 4.......
+2. encoded: 4.......
+3. encoded: 2....
+4. encoded: 5........
+5. encoded: 5.....rh.
+6. encoded: 2....
+7. encoded: 3.....
+8. encoded: 12...........v+++++
+9. encoded: 88.......................................................................................................................
+10. encoded: 2.D..
+11. encoded: 1.B.
+12. encoded: 2....
+13. encoded: 1...
+14. encoded: 2....
+15. encoded: 248............................................................................................................................................................................................................................................................................................................................................
+*/
 const constexpr char* kReserved1DataDefault { "4......." };
 const constexpr char* kReserved2DataDefault { "4......." };
 const constexpr char* kReserved3DataDefault { "2...." };
@@ -14,14 +31,13 @@ const constexpr char* kReserved5DataDefault { "5......P." };
 const constexpr char* kReserved6DataDefault { "2...." };
 const constexpr char* kReserved7DataDefault { "3....." };
 const constexpr char* kReserved8DataDefault { "12...........v+++++" };
-const constexpr char* kReserved9DataDefault { "80............................................................................................................" };
+const constexpr char* kReserved9DataDefault { "88......................................................................................................................." };
 const constexpr char* kReserved10DatDefault { "2.D.." };
 const constexpr char* kReserved11DatDefault { "1.B." };
 const constexpr char* kReserved12DatDefault { "2...." };
-// TODO - update these to the correct values
-const constexpr char* kReserved13DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
-const constexpr char* kReserved14DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
-const constexpr char* kReserved15DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
+const constexpr char* kReserved13DatDefault { "1..." };
+const constexpr char* kReserved14DatDefault { "2...." };
+const constexpr char* kReserved15DatDefault { "248............................................................................................................................................................................................................................................................................................................................................" };
 
 void SquidChannelProperties::initValueTree ()
 {
@@ -142,6 +158,7 @@ void SquidChannelProperties::initValueTree ()
     setLoopCue (0, false);
     setStartCue (0, false);
     setNumCueSets (1, false);
+    //we need to initialize CurCueSet once the cue sets have been configured, so we do this at the end of initValueTree
     setCurCueSet (0, false);
 
     setSampleDataBits (0, false);

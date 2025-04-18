@@ -55,7 +55,6 @@ SquidEditorComponent::SquidEditorComponent ()
         squidBankProperties.forEachChannel ([this, &needToWarnAboutVersionOverwrite] (juce::ValueTree channelPropertiesVT, [[maybe_unused]] int channelIndex)
         {
             SquidChannelProperties squidChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            const auto metaDataVersion { squidChannelProperties.getLoadedVersion () };
             if (squidChannelProperties.getLoadedVersion () < static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF))
             {
                 needToWarnAboutVersionOverwrite = true;

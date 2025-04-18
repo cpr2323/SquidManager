@@ -171,6 +171,7 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
             juce::MemoryBlock tempMemory;
             tempMemory.replaceAll (static_cast<uint8_t*> (busyChunkData.getData ()) + reservedDataOffset, reservedDataSize);
             auto textVersion { tempMemory.toBase64Encoding () };
+            //juce::Logger::outputDebugString ("encoded: " + textVersion);
             setter (textVersion);
         };
         // read and store the 'reserved' sections
@@ -318,7 +319,8 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
         readReserved (SquidSalmple::DataLayout_186::k_Reserved10Offset, SquidSalmple::DataLayout_186::k_Reserved10Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved10Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_186::k_Reserved11Offset, SquidSalmple::DataLayout_186::k_Reserved11Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved11Data (reservedData); });
         readReserved (SquidSalmple::DataLayout_186::k_Reserved12Offset, SquidSalmple::DataLayout_186::k_Reserved12Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved12Data (reservedData); });
-        readReserved (SquidSalmple::DataLayout_186::k_Reserved13Offset, SquidSalmple::DataLayout_186::k_Reserved13Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved13Data (reservedData); });
+        // NOTE: this is the old padding data at the end, but it has been reduced in size in the new metadata layout, so we can't really read it in, and we don't need to because it was reserved for future use
+        //readReserved (SquidSalmple::DataLayout_186::k_Reserved13Offset, SquidSalmple::DataLayout_186::k_Reserved13Size, [&squidChannelProperties] (juce::String reservedData) { squidChannelProperties.setReserved13Data (reservedData); });
 
     }
     // NO METADATA

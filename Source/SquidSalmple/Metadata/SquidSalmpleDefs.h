@@ -223,11 +223,9 @@ namespace SquidSalmple
         const auto kCuesQueuedSize { k8BitSize };
         const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
         const auto kCuesSelectedSize { k8BitSize };
-        const auto k_Reserved13Offset { kCuesSelectedOffset + kCuesSelectedSize }; // alignment padding
-        const auto k_Reserved13Size { k8BitSize };
-        const auto k_Reserved14Offset { kCuesSelectedOffset + kCuesSelectedSize };
-        const auto k_Reserved14Size { 63 * k32BitSize };
-        const auto kEndOfData { k_Reserved14Offset + k_Reserved14Size };
+        const auto k_Reserved13Offset { kCuesSelectedOffset + kCuesSelectedSize };
+        const auto k_Reserved13Size { 253 * k8BitSize };
+        const auto kEndOfData { k_Reserved13Offset + k_Reserved13Size };
     };
 
     namespace DataLayout_190
