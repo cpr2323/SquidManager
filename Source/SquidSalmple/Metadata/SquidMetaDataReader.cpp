@@ -6,7 +6,7 @@
 #include "../../Utility/DebugLog.h"
 #include "../../Utility/DumpStack.h"
 
-#define LOG_READER 1
+#define LOG_READER 0
 #if LOG_READER
 #define LogReader(text) DebugLog ("SquidMetaDataReader", text);
 #else
