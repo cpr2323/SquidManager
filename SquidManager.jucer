@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="fI98C5" name="SquidManager" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
-              version="1.2.1" companyName="OmOhmProductions">
+              version="1.3" companyName="OmOhmProductions">
   <MAINGROUP id="GjwloP" name="SquidManager">
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
