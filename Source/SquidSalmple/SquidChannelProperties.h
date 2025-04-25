@@ -207,7 +207,7 @@ public:
     std::function<void (AudioBufferRefCounted::RefCountedPtr audioBufferRefCountedObj)> onSampleDataAudioBufferChange;
 
     void copyFrom (juce::ValueTree sourceVT, CopyType copyType, CheckIndex checkIndex);
-    juce::ValueTree SquidChannelProperties::getCvAssignVT (int cvIndex);
+    juce::ValueTree getCvAssignVT (int cvIndex);
     juce::ValueTree getCvParameterVT (int cvIndex, int paramterId);
     void forEachCvParameter (int cvAssignIndex, std::function<bool (juce::ValueTree)> cvParamarterCallback);
 
