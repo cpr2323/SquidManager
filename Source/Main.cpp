@@ -49,7 +49,7 @@ public:
 
         initUi ();
 
-        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) {DebugLog ("main", text); });
+        //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) { DebugLog ("main", text); });
 
         // async quit timer
         startTimer (125);
@@ -104,7 +104,7 @@ public:
         bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());
         bankManagerProperties.addBank ("unedited", squidBankProperties.getValueTree ().createCopy ());
 
-        // add the Preset Manager to the Runtime Root
+        // add the Bank Manager to the Runtime Root
         runtimeRootProperties.getValueTree ().addChild (bankManagerProperties.getValueTree (), -1, nullptr);
 
         // setup the directory scanner
@@ -252,7 +252,7 @@ public:
             guiProperties.wrap (prp.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
             auto [width, height] { guiProperties.getSize () };
             auto [x, y] { guiProperties.getPosition () };
-            setResizeLimits (120, 523, 1355, 65000);
+            setResizeLimits (120, 523, 1475, 65000);
             if (x == -1 || y == -1)
                 centreWithSize (width, height);
             else

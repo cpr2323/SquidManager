@@ -148,7 +148,7 @@ void FileViewComponent::newFolder ()
     newAlertWindow->addButton ("CREATE", 1, juce::KeyPress (juce::KeyPress::returnKey, 0, 0));
     newAlertWindow->addButton ("CANCEL", 0, juce::KeyPress (juce::KeyPress::escapeKey, 0, 0));
     auto* textEdtitor { newAlertWindow->getTextEditor (kDialogTextEditorName) };
-    auto* createButton {newAlertWindow->getButton ("CREATE")};
+    auto* createButton { newAlertWindow->getButton ("CREATE") };
     auto* cancelButton { newAlertWindow->getButton ("CANCEL") };
     textEdtitor->setExplicitFocusOrder (1);
     createButton->setExplicitFocusOrder (2);
@@ -290,7 +290,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
                 renameAlertWindow->setVisible (false);
                 if (option == 1) // ok
                 {
-                    auto newFolderName { renameAlertWindow->getTextEditorContents (kDialogTextEditorName)};
+                    auto newFolderName { renameAlertWindow->getTextEditorContents (kDialogTextEditorName) };
                     folder.moveFileTo (folder.getParentDirectory ().getChildFile (newFolderName));
                     // TODO handle error
                 }

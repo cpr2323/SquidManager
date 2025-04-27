@@ -1,10 +1,28 @@
 #include "SquidChannelProperties.h"
+#include "CvParameterProperties.h"
 #include "Metadata/SquidSalmpleDefs.h"
 #include "../Utility/ValueTreeHelpers.h"
 
 static const auto kScaleMax { 65535. };
 static const auto kScaleStep { kScaleMax / 100 };
 
+/*
+1. encoded: 4.......
+2. encoded: 4.......
+3. encoded: 2....
+4. encoded: 5........
+5. encoded: 5.....rh.
+6. encoded: 2....
+7. encoded: 3.....
+8. encoded: 12...........v+++++
+9. encoded: 88.......................................................................................................................
+10. encoded: 2.D..
+11. encoded: 1.B.
+12. encoded: 2....
+13. encoded: 1...
+14. encoded: 2....
+15. encoded: 248............................................................................................................................................................................................................................................................................................................................................
+*/
 const constexpr char* kReserved1DataDefault { "4......." };
 const constexpr char* kReserved2DataDefault { "4......." };
 const constexpr char* kReserved3DataDefault { "2...." };
@@ -13,11 +31,13 @@ const constexpr char* kReserved5DataDefault { "5......P." };
 const constexpr char* kReserved6DataDefault { "2...." };
 const constexpr char* kReserved7DataDefault { "3....." };
 const constexpr char* kReserved8DataDefault { "12...........v+++++" };
-const constexpr char* kReserved9DataDefault { "80............................................................................................................" };
+const constexpr char* kReserved9DataDefault { "88......................................................................................................................." };
 const constexpr char* kReserved10DatDefault { "2.D.." };
 const constexpr char* kReserved11DatDefault { "1.B." };
 const constexpr char* kReserved12DatDefault { "2...." };
-const constexpr char* kReserved13DatDefault { "253..................................................................................................................................................................................................................................................................................................................................................." };
+const constexpr char* kReserved13DatDefault { "1..." };
+const constexpr char* kReserved14DatDefault { "2...." };
+const constexpr char* kReserved15DatDefault { "248............................................................................................................................................................................................................................................................................................................................................" };
 
 void SquidChannelProperties::initValueTree ()
 {
@@ -37,8 +57,10 @@ void SquidChannelProperties::initValueTree ()
     setFilterType (0, false);
     setLoopMode (0, false);
     setLevel (static_cast<int> (30 * kScaleStep), false);
+    setLoadedVersion (static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF), false);
     setNumCueSets (0, false);
     setQuant (0, false);
+    setPitchShift (1000, false);
     setRate (0, false);
     setRecDest (0, false);  // needs to be initialized to the correct value for the specific channel this represents
     setReverse (0, false);
@@ -59,6 +81,8 @@ void SquidChannelProperties::initValueTree ()
     setReserved11Data (kReserved11DatDefault);
     setReserved12Data (kReserved12DatDefault);
     setReserved13Data (kReserved13DatDefault);
+    setReserved14Data (kReserved14DatDefault);
+    setReserved15Data (kReserved15DatDefault);
 
     // TODO - I can probably remove this, as it is just test code validating that getCvEnabledFlag works
     jassert (CvAssignedFlag::bits == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::Bits));
@@ -76,21 +100,46 @@ void SquidChannelProperties::initValueTree ()
     jassert (CvAssignedFlag::eTrig == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::ETrig));
     jassert (CvAssignedFlag::filtFreq == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltFreq));
     jassert (CvAssignedFlag::filtRes == CvParameterIndex::getCvEnabledFlag (CvParameterIndex::FiltRes));
+    jassert (CvAssignedFlag::pitchShift== CvParameterIndex::getCvEnabledFlag (CvParameterIndex::PitchShift));
+
+    struct ParameterEntry
+    {
+        int parameterId { 0 };
+        juce::String parameterName;
+    };
+    const auto kParameterList { std::vector<ParameterEntry>
+    {
+        { CvParameterIndex::Bits, "BITS" },        // 0
+        { CvParameterIndex::Rate, "RATE" },        // 1
+        { CvParameterIndex::Level, "LEVEL" },      // 2
+        { CvParameterIndex::Decay, "DECAY" },      // 3
+        { CvParameterIndex::Speed, "SPEED" },      // 4
+        { CvParameterIndex::LoopMode, "LPMODE" },  // 5
+        { CvParameterIndex::Reverse, "REVERSE" },  // 6
+        { CvParameterIndex::StartCue, "STARTQ" },  // 7
+        { CvParameterIndex::EndCue, "ENDQ" },      // 8
+        { CvParameterIndex::LoopCue, "LOOPQ" },    // 9
+        { CvParameterIndex::CueSet, "CUE SET" },   // 10
+        { CvParameterIndex::Attack, "ATTACK" },    // 11
+        { CvParameterIndex::ETrig, "ETRIG" },      // 12
+        { CvParameterIndex::FiltFreq, "FREQ" },    // 13
+        { CvParameterIndex::FiltRes, "RES" },      // 14
+        // not used
+        { CvParameterIndex::PitchShift, "PITCH" }, // 16
+    } };
 
     // CV ASSIGNS
     juce::ValueTree cvAssignsVT { SquidChannelProperties::CvAssignsTypeId };
     for (auto curCvInput { 0 }; curCvInput < kCvInputsCount + kCvInputsExtra; ++curCvInput)
     {
-        juce::ValueTree cvInputVT { CvAssignInputTypeId };
-        cvInputVT.setProperty (CvAssignInputIdPropertyId, curCvInput + 1, nullptr);
-        for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+        juce::ValueTree cvInputVT { CvInputTypeId };
+        cvInputVT.setProperty (CvInputIdPropertyId, curCvInput + 1, nullptr);
+        for (auto curParameterListIndex { 0 }; curParameterListIndex < kParameterList.size (); ++curParameterListIndex)
         {
-            juce::ValueTree parameterVT { CvAssignInputParameterTypeId };
-            parameterVT.setProperty (CvAssignInputParameterIdPropertyId, curParameterIndex + 1, nullptr);
-            parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, "false", nullptr);
-            parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, 99, nullptr);
-            parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, 0, nullptr);
-            cvInputVT.addChild (parameterVT, -1, nullptr);
+            CvParameterProperties cvParameterProperties { {}, CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+            cvParameterProperties.setId (kParameterList [curParameterListIndex].parameterId, false);
+            cvParameterProperties.setName (kParameterList [curParameterListIndex].parameterName, false);
+            cvInputVT.addChild (cvParameterProperties.getValueTree (), -1, nullptr);
         }
         cvAssignsVT.addChild (cvInputVT, -1, nullptr);
     }
@@ -109,6 +158,7 @@ void SquidChannelProperties::initValueTree ()
     setLoopCue (0, false);
     setStartCue (0, false);
     setNumCueSets (1, false);
+    //we need to initialize CurCueSet once the cue sets have been configured, so we do this at the end of initValueTree
     setCurCueSet (0, false);
 
     setSampleDataBits (0, false);
@@ -267,43 +317,22 @@ void SquidChannelProperties::setCurCueSet (int cueSetIndex, bool includeSelfCall
     setLoopCue (getLoopCueSet (cueSetIndex), true);
 }
 
-void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignAttenuate (int cvIndex, int parameterId, int attenuation, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties.setAttenuation (attenuation, false);
 }
 
-void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignEnabled (int cvIndex, int parameterId, bool isEnabled, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterEnabledPropertyId, isEnabled, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties .setEnabled (isEnabled, false);
 }
 
-void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool /*includeSelfCallback*/)
+void SquidChannelProperties::setCvAssignOffset (int cvIndex, int parameterId, int offset, bool /*includeSelfCallback*/)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    parameterVT.setProperty (CvAssignInputParameterOffsetPropertyId, offset, nullptr);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    cvParameterProperties .setOffset (offset, false);
 }
 
 void SquidChannelProperties::setRate (int rate, bool includeSelfCallback)
@@ -339,6 +368,11 @@ void SquidChannelProperties::setFilterType (int filter, bool includeSelfCallback
 void SquidChannelProperties::setQuant (int quant, bool includeSelfCallback)
 {
     setValue (quant, QuantPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setPitchShift (int pitchShift, bool includeSelfCallback)
+{
+    setValue (pitchShift, PitchShiftPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setLoopMode (int loopMode, bool includeSelfCallback)
@@ -404,9 +438,20 @@ void SquidChannelProperties::setReserved12Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved12DataPropertyId, false);
 }
+
 void SquidChannelProperties::setReserved13Data (juce::String reservedData)
 {
     setValue (reservedData, Reserved13DataPropertyId, false);
+}
+
+void SquidChannelProperties::setReserved14Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved14DataPropertyId, false);
+}
+
+void SquidChannelProperties::setReserved15Data (juce::String reservedData)
+{
+    setValue (reservedData, Reserved15DataPropertyId, false);
 }
 
 void SquidChannelProperties::setReverse (int reverse, bool includeSelfCallback)
@@ -422,6 +467,11 @@ void SquidChannelProperties::setEndOfData (uint32_t endOfData, bool includeSelfC
 void SquidChannelProperties::setLevel (int level, bool includeSelfCallback)
 {
     setValue (level, LevelPropertyId, includeSelfCallback);
+}
+
+void SquidChannelProperties::setLoadedVersion (uint8_t version, bool includeSelfCallback)
+{
+    setValue (static_cast<int> (version), LoadedVersionPropertyId, includeSelfCallback);
 }
 
 void SquidChannelProperties::setAttack (int attack, bool includeSelfCallback)
@@ -572,43 +622,22 @@ int SquidChannelProperties::getCurCueSet ()
     return getValue<int> (CurCueSetPropertyId);
 }
 
-int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignAttenuate (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterAttenuatePropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getAttenuation ();
 }
 
-bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterIndex)
+bool SquidChannelProperties::getCvAssignEnabled (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterEnabledPropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getEnabled ();
 }
 
-int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterIndex)
+int SquidChannelProperties::getCvAssignOffset (int cvIndex, int parameterId)
 {
-    jassert (cvIndex < 8);
-    jassert (parameterIndex < 15);
-    auto cvAssignsVT { data.getChildWithName (CvAssignsTypeId) };
-    jassert (cvAssignsVT.isValid ());
-    auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
-    jassert (cvInputVT.isValid ());
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    return parameterVT.getProperty (CvAssignInputParameterOffsetPropertyId);
+    CvParameterProperties cvParameterProperties { getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::owner, CvParameterProperties::EnableCallbacks::no };
+    return cvParameterProperties.getOffset ();;
 }
 
 int SquidChannelProperties::getRate ()
@@ -629,6 +658,11 @@ int SquidChannelProperties::getSpeed ()
 int SquidChannelProperties::getQuant ()
 {
     return getValue<int> (QuantPropertyId);
+}
+
+int SquidChannelProperties::getPitchShift ()
+{
+    return getValue<int> (PitchShiftPropertyId);
 }
 
 int SquidChannelProperties::getLoopMode ()
@@ -694,9 +728,20 @@ juce::String SquidChannelProperties::getReserved12Data ()
 {
     return getValue<juce::String> (Reserved12DataPropertyId);
 }
+
 juce::String SquidChannelProperties::getReserved13Data ()
 {
     return getValue<juce::String> (Reserved13DataPropertyId);
+}
+
+juce::String SquidChannelProperties::getReserved14Data ()
+{
+    return getValue<juce::String> (Reserved14DataPropertyId);
+}
+
+juce::String SquidChannelProperties::getReserved15Data ()
+{
+    return getValue<juce::String> (Reserved15DataPropertyId);
 }
 
 int SquidChannelProperties::getReverse ()
@@ -808,19 +853,37 @@ uint32_t SquidChannelProperties::getLoopCueSet (int cueSetIndex)
     return static_cast<int> (requestedCueSetVT.getProperty (CueSetLoopPropertyId));
 }
 
-juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterIndex)
+uint8_t SquidChannelProperties::getLoadedVersion ()
+{
+    return static_cast<uint8_t> (getValue<int> (LoadedVersionPropertyId));
+}
+
+juce::ValueTree SquidChannelProperties::getCvAssignVT (int cvIndex)
 {
     auto cvAssignsVT { data.getChildWithName (SquidChannelProperties::CvAssignsTypeId) };
     jassert (cvAssignsVT.isValid ());
     auto cvInputVT { cvAssignsVT.getChild (cvIndex) };
     jassert (cvInputVT.isValid ());
-    jassert (cvInputVT.getType () == SquidChannelProperties::CvAssignInputTypeId);
-    jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvAssignInputIdPropertyId)) == cvIndex + 1);
-    auto parameterVT { cvInputVT.getChild (parameterIndex) };
-    jassert (parameterVT.isValid ());
-    jassert (parameterVT.getType () == SquidChannelProperties::CvAssignInputParameterTypeId);
-    jassert (static_cast<int> (parameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterIdPropertyId)) == parameterIndex + 1);
-    return parameterVT;
+    jassert (cvInputVT.getType () == SquidChannelProperties::CvInputTypeId);
+    jassert (static_cast<int> (cvInputVT.getProperty (SquidChannelProperties::CvInputIdPropertyId)) == cvIndex + 1);
+    return cvInputVT;
+}
+
+juce::ValueTree SquidChannelProperties::getCvParameterVT (int cvIndex, int parameterId)
+{
+    juce::ValueTree cvParameterVT;
+    forEachCvParameter (cvIndex, [this, &cvParameterVT, parameterId] (juce::ValueTree curCvParameterVT)
+    {
+        CvParameterProperties cvParameterProperties { curCvParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+        if (cvParameterProperties.getId () == parameterId)
+        {
+            cvParameterVT = curCvParameterVT;
+            return false;
+        }
+        return true;
+    });
+
+    return cvParameterVT;
 }
 
 uint32_t SquidChannelProperties::byteOffsetToSampleOffset (uint32_t byteOffset)
@@ -831,6 +894,17 @@ uint32_t SquidChannelProperties::byteOffsetToSampleOffset (uint32_t byteOffset)
 uint32_t SquidChannelProperties::sampleOffsetToByteOffset (uint32_t sampleOffset)
 {
     return sampleOffset * 2;
+}
+
+void SquidChannelProperties::forEachCvParameter (int cvAssignIndex, std::function<bool (juce::ValueTree)> cvParamarterCallback)
+{
+    jassert (cvParamarterCallback != nullptr);
+
+    auto cvInputVT { getCvAssignVT (cvAssignIndex) };
+    ValueTreeHelpers::forEachChildOfType (cvInputVT, CvParameterProperties::CvParameterTypeId, [this, cvParamarterCallback] (juce::ValueTree cvParameterVT)
+    {
+        return cvParamarterCallback (cvParameterVT);
+    });
 }
 
 juce::ValueTree SquidChannelProperties::getCueSetVT (int cueSetIndex)
@@ -891,20 +965,21 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
 
     if (copyType == CopyType::all)
     {
+        // TODO - this is the same code I just updated in the EditManager. I need to abstract and reuse
         // Copy CV Assigns
         for (auto curCvInputIndex { 0 }; curCvInputIndex < kCvInputsCount + kCvInputsExtra; ++curCvInputIndex)
         {
-            for (auto curParameterIndex { 0 }; curParameterIndex < 15; ++curParameterIndex)
+            SquidChannelProperties srcChannelProperties { sourceVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
+            srcChannelProperties.forEachCvParameter (curCvInputIndex, [this, curCvInputIndex] (juce::ValueTree srcParameterVT)
             {
-                auto srcParameterVT { sourceChannelProperties.getCvParameterVT (curCvInputIndex, curParameterIndex) };
-                auto dstParameterVT { getCvParameterVT (curCvInputIndex, curParameterIndex) };
-                const auto enabled { static_cast<bool> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId)) };
-                const auto offset { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId)) };
-                const auto attenuation { static_cast<int> (srcParameterVT.getProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId)) };
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterEnabledPropertyId, enabled, nullptr);
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterAttenuatePropertyId, attenuation, nullptr);
-                dstParameterVT.setProperty (SquidChannelProperties::CvAssignInputParameterOffsetPropertyId, offset, nullptr);
-            }
+                CvParameterProperties srcCvParameterProperties { srcParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                const auto cvParameterId { srcCvParameterProperties.getId () };
+                CvParameterProperties dstCvParameterProperties { getCvParameterVT (curCvInputIndex, cvParameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                dstCvParameterProperties.setEnabled (srcCvParameterProperties.getEnabled (), false);
+                dstCvParameterProperties.setAttenuation (srcCvParameterProperties.getAttenuation (), false);
+                dstCvParameterProperties.setOffset (srcCvParameterProperties.getOffset (), false);
+                return true;
+            });
         }
 
         // Clear old Cue Sets
@@ -959,11 +1034,13 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setFilterFrequency (sourceChannelProperties.getFilterFrequency (), false);
     setFilterResonance (sourceChannelProperties.getFilterResonance (), false);
     setFilterType (sourceChannelProperties.getFilterType (), false);
+    setLoadedVersion (sourceChannelProperties.getLoadedVersion (), false);
     if (copyType == CopyType::all)
         setLoopCue (sourceChannelProperties.getLoopCue (), false);
     setLoopMode (sourceChannelProperties.getLoopMode (), false);
     setLevel (sourceChannelProperties.getLevel (), false);
     setQuant (sourceChannelProperties.getQuant (), false);
+    setPitchShift (sourceChannelProperties.getPitchShift (), false);
     setRate (sourceChannelProperties.getRate (), false);
     if (! shouldCheckIndex || sourceChannelProperties.getRecDest () != srcIndex)
         setRecDest (sourceChannelProperties.getRecDest (), false);
@@ -992,6 +1069,8 @@ void SquidChannelProperties::copyFrom (juce::ValueTree sourceVT, CopyType copyTy
     setReserved11Data (sourceChannelProperties.getReserved11Data ());
     setReserved12Data (sourceChannelProperties.getReserved12Data ());
     setReserved13Data (sourceChannelProperties.getReserved13Data ());
+    setReserved14Data (sourceChannelProperties.getReserved14Data ());
+    setReserved15Data (sourceChannelProperties.getReserved15Data ());
 
     if (copyType == CopyType::all)
     {
@@ -1013,29 +1092,29 @@ juce::ValueTree SquidChannelProperties::create (uint8_t channelIndex)
 
 void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, const juce::Identifier& property)
 {
-    if (vt.getType () == CvAssignInputParameterTypeId)
+    if (vt.getType () == CvParameterProperties::CvParameterTypeId)
     {
-        // figure out cvInputIndex and cvParameterIndex
         auto parentCvInputVT { vt.getParent () };
         jassert (parentCvInputVT.isValid ());
-        jassert (parentCvInputVT.getType () == CvAssignInputTypeId);
-        const auto cvInputIndex { static_cast<int> (parentCvInputVT.getProperty (CvAssignInputIdPropertyId)) - 1 };
-        const auto parameterIndex { parentCvInputVT.indexOf (vt) };
+        jassert (parentCvInputVT.getType () == CvInputTypeId);
+        CvParameterProperties cvParameterProperties { vt, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+        const auto cvInputIndex { static_cast<int> (parentCvInputVT.getProperty (CvInputIdPropertyId)) - 1 };
+        const auto parameterId { cvParameterProperties.getId () };
         // make appropriate callback
-        if (property == CvAssignInputParameterEnabledPropertyId)
+        if (property == CvParameterProperties::CvParameterEnabledPropertyId)
         {
             if (onCvAssignEnabledChange != nullptr)
-                onCvAssignEnabledChange (cvInputIndex, parameterIndex, getCvAssignEnabled (cvInputIndex, parameterIndex));
+                onCvAssignEnabledChange (cvInputIndex, parameterId, cvParameterProperties.getEnabled ());
         }
-        else if (property == CvAssignInputParameterAttenuatePropertyId)
+        else if (property == CvParameterProperties::CvParameterAttenuatePropertyId)
         {
             if (onCvAssignAttenuateChange != nullptr)
-                onCvAssignAttenuateChange (cvInputIndex, parameterIndex, getCvAssignAttenuate (cvInputIndex, parameterIndex));
+                onCvAssignAttenuateChange (cvInputIndex, parameterId, cvParameterProperties.getAttenuation ());
         }
-        else if (property == CvAssignInputParameterOffsetPropertyId)
+        else if (property == CvParameterProperties::CvParameterOffsetPropertyId)
         {
             if (onCvAssignOffsetChange != nullptr)
-                onCvAssignOffsetChange (cvInputIndex, parameterIndex, getCvAssignOffset (cvInputIndex, parameterIndex));
+                onCvAssignOffsetChange (cvInputIndex, parameterId, cvParameterProperties.getOffset ());
         }
     }
 
@@ -1131,6 +1210,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
             if (onLoadComplete != nullptr)
                 onLoadComplete ();
         }
+        else if (property == LoadedVersionPropertyId)
+        {
+            if (onLoadedVersionChange != nullptr)
+                onLoadedVersionChange (getLoadedVersion ());
+        }
         else if (property == LoopCuePropertyId)
         {
             if (onLoopCueChange != nullptr)
@@ -1155,6 +1239,11 @@ void SquidChannelProperties::valueTreePropertyChanged (juce::ValueTree& vt, cons
         {
             if (onQuantChange != nullptr)
                 onQuantChange (getQuant ());
+        }
+        else if (property == PitchShiftPropertyId)
+        {
+            if (onPitchShiftChange != nullptr)
+                onPitchShiftChange (getPitchShift ());
         }
         else if (property == RatePropertyId)
         {

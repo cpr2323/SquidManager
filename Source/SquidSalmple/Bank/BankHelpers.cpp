@@ -1,4 +1,5 @@
 #include "BankHelpers.h"
+#include "../CvParameterProperties.h"
 #include "../SquidBankProperties.h"
 #include "../SquidChannelProperties.h"
 
@@ -46,15 +47,23 @@ namespace BankHelpers
     {
         SquidChannelProperties channelPropertiesOne (channelOneVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
         SquidChannelProperties channelPropertiesTwo (channelTwoVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+        bool doesMatch { true };
         for (auto cvAssignIndex { 0 }; cvAssignIndex < 8; ++cvAssignIndex)
-            for (auto cvAssignParameterIndex { 0 }; cvAssignParameterIndex < 15; ++cvAssignParameterIndex)
+        {
+            channelPropertiesOne.forEachCvParameter (cvAssignIndex, [&doesMatch, cvAssignIndex, &channelPropertiesTwo] (juce::ValueTree srcParameterVT)
             {
-                if ((channelPropertiesOne.getCvAssignEnabled (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignEnabled (cvAssignIndex, cvAssignParameterIndex)) ||
-                    (channelPropertiesOne.getCvAssignAttenuate (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignAttenuate (cvAssignIndex, cvAssignParameterIndex)) ||
-                    (channelPropertiesOne.getCvAssignOffset (cvAssignIndex, cvAssignParameterIndex) != channelPropertiesTwo.getCvAssignOffset (cvAssignIndex, cvAssignParameterIndex)))
-                    return false;
-            }
-        return true;
+                CvParameterProperties channelCvParameterPropertiesOne { srcParameterVT, CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                const auto cvParameterId { channelCvParameterPropertiesOne.getId () };
+                CvParameterProperties channelCvParameterPropertiesTwo { channelPropertiesTwo.getCvParameterVT (cvAssignIndex, cvParameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
+                if ((channelCvParameterPropertiesOne.getEnabled () != channelCvParameterPropertiesTwo.getEnabled ()) ||
+                    (channelCvParameterPropertiesOne.getAttenuation () != channelCvParameterPropertiesTwo.getAttenuation ()) ||
+                    (channelCvParameterPropertiesOne.getOffset () != channelCvParameterPropertiesTwo.getOffset ()))
+                    doesMatch = false;
+                return doesMatch;
+            });
+
+        }
+        return doesMatch;
     }
 
     bool areCueSetsEqual (juce::ValueTree channelOneVT, juce::ValueTree channelTwoVT)
@@ -103,6 +112,7 @@ namespace BankHelpers
                channelPropertiesOne.getLoopCue () == channelPropertiesTwo.getLoopCue () &&
                channelPropertiesOne.getLoopMode () == channelPropertiesTwo.getLoopMode () &&
                channelPropertiesOne.getQuant () == channelPropertiesTwo.getQuant () &&
+               channelPropertiesOne.getPitchShift () == channelPropertiesTwo.getPitchShift () &&
                channelPropertiesOne.getRate () == channelPropertiesTwo.getRate () &&
                channelPropertiesOne.getRecDest () == channelPropertiesTwo.getRecDest () &&
                channelPropertiesOne.getReverse () == channelPropertiesTwo.getReverse () &&

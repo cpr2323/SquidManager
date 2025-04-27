@@ -1,6 +1,7 @@
 #include "SquidEditor.h"
 #include "../../SquidSalmple/Bank/BankHelpers.h"
 #include "../../SquidSalmple/Bank/BankManagerProperties.h"
+#include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "../../SystemServices.h"
 #include "../../Utility/PersistentRootProperties.h"
 
@@ -49,8 +50,37 @@ SquidEditorComponent::SquidEditorComponent ()
     saveButton.setEnabled (false);
     saveButton.onClick = [this] ()
     {
-        // TODO - if there is no sample loaded, we need to emulate what the module does, which is to create and empty wav file before saving the metadata
-        editManager->saveBank ();
+        // determine if any of the channels have metadata that is older than the current version, so we can warn the user
+        auto needToWarnAboutVersionOverwrite { false };
+        squidBankProperties.forEachChannel ([this, &needToWarnAboutVersionOverwrite] (juce::ValueTree channelPropertiesVT, [[maybe_unused]] int channelIndex)
+        {
+            SquidChannelProperties squidChannelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+            if (squidChannelProperties.getLoadedVersion () < static_cast<uint8_t> (kSignatureAndVersionCurrent & 0xFF))
+            {
+                needToWarnAboutVersionOverwrite = true;
+                return false;
+            }
+            return true;
+        });
+        auto doSave = [this] ()
+        {
+            // TODO - if there is no sample loaded, we need to emulate what the module does, which is to create and empty wav file before saving the metadata
+            editManager->saveBank ();
+        };
+        if (needToWarnAboutVersionOverwrite)
+        {
+            juce::AlertWindow::showOkCancelBox (juce::AlertWindow::WarningIcon, "OVERWRITE PREVIOUS METADATA VERSION", "One of more of the sample files contain Squid Salmple metadata that is a different format than the latest firmware. Saving will overwrite that with the newest format.\n\r Are you sure you want to do this?", "YES", "NO", nullptr,
+                juce::ModalCallbackFunction::create ([this, doSave] (int option)
+                {
+                    if (option == 0) // no
+                        return;
+                    doSave ();
+                }));
+        }
+        else
+        {
+            doSave ();
+        }
     };
     addAndMakeVisible (saveButton);
 
@@ -191,7 +221,7 @@ void SquidEditorComponent::resized ()
 
     localBounds.removeFromTop (5);
     // put bank name and save button on the top line
-    auto topRowBounds {localBounds.removeFromTop (kParameterLineHeight) };
+    auto topRowBounds { localBounds.removeFromTop (kParameterLineHeight) };
     topRowBounds.removeFromLeft (5);
     bankNameLabel.setBounds (topRowBounds.removeFromLeft (45));
     topRowBounds.removeFromLeft (3);
@@ -201,7 +231,7 @@ void SquidEditorComponent::resized ()
     toolsButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
 
     const auto channelSectionY { saveButton.getBottom () + 3 };
-    const auto kWidthOfWaveformEditor { 962 };
+    const auto kWidthOfWaveformEditor { 1082 };
     channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
 }
 

@@ -2,7 +2,7 @@
 
 namespace CvParameterIndex
 {
-    juce::String getParameterName (uint16_t cvAssignFlag)
+    juce::String getParameterName (uint32_t cvAssignFlag)
     {
         if (cvAssignFlag & CvAssignedFlag::bits)
             return "bits";
@@ -34,6 +34,10 @@ namespace CvParameterIndex
             return "filterFrequency";
         if (cvAssignFlag & CvAssignedFlag::filtRes)
             return "filterResonance";
+        if (cvAssignFlag & CvAssignedFlag::pitchShift)
+            return "pitchShift";
+        if (cvAssignFlag & CvAssignedFlag::unused2)
+            return "unused2";
         if (cvAssignFlag & CvAssignedFlag::unused)
         {
             // this value is not yet mapped

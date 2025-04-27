@@ -1,56 +1,63 @@
 #include "CvAssignSection.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 
-struct ParameterEntry
+const auto kParameterDisplayOrderList { std::vector<int>
 {
-    int parameterIndex { 0 };
-    juce::String parameterName;
-};
-const auto kParameterList { std::vector<ParameterEntry>
-{
-    {CvParameterIndex::Level, "LEVEL"},
-    {CvParameterIndex::Attack, "ATTACK"},
-    {CvParameterIndex::Decay, "DECAY"},
-    {CvParameterIndex::StartCue, "STARTQ"},
-    {CvParameterIndex::LoopCue, "LOOPQ"},
-    {CvParameterIndex::EndCue, "ENDQ"},
-    {CvParameterIndex::FiltFreq, "FREQ"},
-    {CvParameterIndex::FiltRes, "RES"},
-    {CvParameterIndex::Reverse, "REVERSE"},
-    {CvParameterIndex::Speed, "SPEED"},
-    {CvParameterIndex::Bits, "BITS"},
-    {CvParameterIndex::Rate, "RATE"},
-    {CvParameterIndex::LoopMode, "LPMODE"},
-    {CvParameterIndex::ETrig, "ETRIG"},
-    {CvParameterIndex::CueSet, "CUE SET"},
+    CvParameterIndex::Level,
+    CvParameterIndex::Attack,
+    CvParameterIndex::Decay,
+    CvParameterIndex::StartCue,
+    CvParameterIndex::LoopCue,
+    CvParameterIndex::EndCue,
+    CvParameterIndex::FiltFreq,
+    CvParameterIndex::FiltRes,
+    CvParameterIndex::Reverse,
+    CvParameterIndex::Speed,
+    CvParameterIndex::PitchShift,
+    CvParameterIndex::Bits,
+    CvParameterIndex::Rate,
+    CvParameterIndex::LoopMode,
+    CvParameterIndex::ETrig,
+    CvParameterIndex::CueSet,
 } };
 
 CvAssignSection::CvAssignSection ()
 {
-    for (auto curParameterIndex { 0 }; curParameterIndex < cvAssignParameterList.size (); ++curParameterIndex)
+    // create and add CvAssignParameter components for each parameters listed
+    for ([[maybe_unused]] auto curParameterId : kParameterDisplayOrderList)
     {
-        auto& curParameter { cvAssignParameterList [curParameterIndex] };
-        curParameter.setParameterLabel (kParameterList [curParameterIndex].parameterName);
-        addAndMakeVisible (curParameter);
+        auto cvAssignParameter { std::make_unique<CvAssignParameter> () };
+        addAndMakeVisible (cvAssignParameter.release ());
+    }
+}
+
+CvAssignSection::~CvAssignSection ()
+{
+    for (auto curComponentIndex { getNumChildComponents () - 1 }; curComponentIndex >= 0; --curComponentIndex)
+    {
+        auto curParameterComponent { getChildComponent (curComponentIndex) };
+        removeChildComponent (curParameterComponent);
+        delete curParameterComponent;
     }
 }
 
 void CvAssignSection::init (juce::ValueTree rootPropertiesVT, juce::ValueTree channelPropertiesVT, int theCvIndex)
 {
-    for (auto curParameterIndex { 0 }; curParameterIndex < cvAssignParameterList.size (); ++curParameterIndex)
+    for (auto curParameterComponentIndex { 0 }; curParameterComponentIndex < getNumChildComponents (); ++curParameterComponentIndex)
     {
-        auto& curParameter { cvAssignParameterList [curParameterIndex] };
-        curParameter.init (rootPropertiesVT, channelPropertiesVT, theCvIndex, kParameterList [curParameterIndex].parameterIndex);
+        auto curParameterComponent { dynamic_cast<CvAssignParameter*> ( getChildComponent (curParameterComponentIndex)) };
+        curParameterComponent->init (rootPropertiesVT, channelPropertiesVT, theCvIndex, kParameterDisplayOrderList [curParameterComponentIndex]);
     }
 }
 
-void CvAssignSection::setEnableState (int cvParameterIndex, bool enabled)
+void CvAssignSection::setEnableState (int cvParameterId, bool enabled)
 {
-    for (auto& cvAssignParameter : cvAssignParameterList)
+    for (auto curParameterComponentIndex { 0 }; curParameterComponentIndex < getNumChildComponents (); ++curParameterComponentIndex)
     {
-        if (cvAssignParameter.getParameterIndex () == cvParameterIndex)
+        auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curParameterComponentIndex)) };
+        if (curParameterComponent->getParameterId () == cvParameterId)
         {
-            cvAssignParameter.setEnabled (enabled);
+            curParameterComponent->setEnabled (enabled);
             break;
         }
     }
@@ -58,7 +65,10 @@ void CvAssignSection::setEnableState (int cvParameterIndex, bool enabled)
 
 void CvAssignSection::resized ()
 {
-    const auto assignParameterWidth { static_cast<int> (getWidth () / cvAssignParameterList.size ()) };
-    for (auto curCvAssignParameter { 0 }; curCvAssignParameter < cvAssignParameterList.size (); ++curCvAssignParameter)
-        cvAssignParameterList [curCvAssignParameter].setBounds (assignParameterWidth * curCvAssignParameter, 0, assignParameterWidth, getHeight ());
+    const auto assignParameterWidth { static_cast<int> (getWidth () / getNumChildComponents ()) };
+    for (auto curCvAssignParameter { 0 }; curCvAssignParameter < getNumChildComponents (); ++curCvAssignParameter)
+    {
+        auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curCvAssignParameter)) };
+        curParameterComponent->setBounds (assignParameterWidth * curCvAssignParameter, 0, assignParameterWidth, getHeight ());
+    }
 }

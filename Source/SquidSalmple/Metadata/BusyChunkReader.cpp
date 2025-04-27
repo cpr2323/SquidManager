@@ -77,7 +77,7 @@ std::optional<uint32_t> BusyChunkReader::findChunk (juce::InputStream* is, char*
         const auto chunkInfo { chunk.value () };
         if (std::memcmp (chunkType, chunkInfo.chunkType, 4) != 0)
         {
-            const auto bytesToSkip { (chunkInfo.chunkLength & 1) == 0 ? chunkInfo.chunkLength : chunkInfo.chunkLength + 1};
+            const auto bytesToSkip { (chunkInfo.chunkLength & 1) == 0 ? chunkInfo.chunkLength : chunkInfo.chunkLength + 1 };
             const auto seekSuccess { is->setPosition (is->getPosition () + bytesToSkip) };
             jassert (seekSuccess);
             continue;

@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="fI98C5" name="SquidManager" projectType="guiapp" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="0" jucerFormatVersion="1"
-              version="1.2" companyName="OmOhmProductions">
+              version="1.3" companyName="OmOhmProductions">
   <MAINGROUP id="GjwloP" name="SquidManager">
     <GROUP id="{E3724285-6757-5296-1C65-80D03CB87E69}" name="Source">
       <GROUP id="{D30DF9FD-D9B7-579C-9FC3-3E53CDBE1752}" name="GUI">
@@ -134,6 +134,10 @@
                 file="Source/SquidSalmple/Metadata/SquidSalmpleDefs.h"/>
         </GROUP>
         <GROUP id="{701C61AD-84A8-7987-9439-B0FAB3FDD36C}" name="SampleManager"/>
+        <FILE id="Oki0s5" name="CvParameterProperties.cpp" compile="1" resource="0"
+              file="Source/SquidSalmple/CvParameterProperties.cpp"/>
+        <FILE id="KP4Kze" name="CvParameterProperties.h" compile="0" resource="0"
+              file="Source/SquidSalmple/CvParameterProperties.h"/>
         <FILE id="ytGEog" name="SquidBankProperties.cpp" compile="1" resource="0"
               file="Source/SquidSalmple/SquidBankProperties.cpp"/>
         <FILE id="OKM5qB" name="SquidBankProperties.h" compile="0" resource="0"

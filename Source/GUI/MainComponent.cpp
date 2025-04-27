@@ -50,7 +50,7 @@ void MainComponent::restoreLayout ()
 {
     // TODO - I would like to abstract this so it is easier to customize what gets saved per app
     //        something like key/value pairs
-    const auto [pane1Size, pane2Size, pane3Size] {guiProperties.getPaneSizes ()};
+    const auto [pane1Size, pane2Size, pane3Size] { guiProperties.getPaneSizes () };
     bankListEditorSplitter.setSplitOffset (pane1Size);
     folderBrowserEditorSplitter.setSplitOffset (pane2Size);
 }

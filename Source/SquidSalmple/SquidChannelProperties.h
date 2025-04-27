@@ -51,9 +51,9 @@ public:
     void setCueSetPoints (int cueSetIndex, uint32_t start, uint32_t loop, uint32_t end);
     void setCueSetStartPoint (int cueSetIndex, uint32_t start);
     void setCurCueSet (int cueSetIndex, bool includeSelfCallback);
-    void setCvAssignAttenuate (int cvIndex, int parameterIndex, int attenuation, bool includeSelfCallback);
-    void setCvAssignEnabled (int cvIndex, int parameterIndex, bool isEnabled, bool includeSelfCallback);
-    void setCvAssignOffset (int cvIndex, int parameterIndex, int offset, bool includeSelfCallback);
+    void setCvAssignAttenuate (int cvIndex, int parameterId, int attenuation, bool includeSelfCallback);
+    void setCvAssignEnabled (int cvIndex, int parameterId, bool isEnabled, bool includeSelfCallback);
+    void setCvAssignOffset (int cvIndex, int parameterId, int offset, bool includeSelfCallback);
     void setDecay (int decay, bool includeSelfCallback);
     void setEndCue (uint32_t endCue, bool includeSelfCallback);
     void setEndCueSet (int cueSetIndex, uint32_t endCue, bool includeSelfCallback);
@@ -63,11 +63,13 @@ public:
     void setFilterResonance (int filterResonance, bool includeSelfCallback);
     void setFilterType (int filterType, bool includeSelfCallback);
     void setLevel (int level, bool includeSelfCallback);
+    void setLoadedVersion (uint8_t version, bool includeSelfCallback);
     void setLoopCue (uint32_t loopCue, bool includeSelfCallback);
     void setLoopCueSet (int cueSetIndex, uint32_t loopCue, bool includeSelfCallback);
     void setLoopMode (int loopMode, bool includeSelfCallback);
     void setNumCueSets (int numCues, bool includeSelfCallback);
     void setQuant (int quant, bool includeSelfCallback);
+    void setPitchShift (int pitch, bool includeSelfCallback);
     void setRate (int rate, bool includeSelfCallback);
     void setRecDest (int channelIndex, bool includeSelfCallback);
     void setReverse (int reverse, bool includeSelfCallback);
@@ -90,6 +92,8 @@ public:
     void setReserved11Data (juce::String reservedData);
     void setReserved12Data (juce::String reservedData);
     void setReserved13Data (juce::String reservedData);
+    void setReserved14Data (juce::String reservedData);
+    void setReserved15Data (juce::String reservedData);
     void triggerLoadBegin (bool includeSelfCallback);
     void triggerLoadComplete (bool includeSelfCallback);
 
@@ -106,9 +110,9 @@ public:
     uint8_t getChannelSource ();
     int getChoke ();
     int getCurCueSet ();
-    int getCvAssignAttenuate (int cvIndex, int parameterIndex);
-    bool getCvAssignEnabled (int cvIndex, int parameterIndex);
-    int getCvAssignOffset (int cvIndex, int parameterIndex);
+    int getCvAssignAttenuate (int cvIndex, int parameterId);
+    bool getCvAssignEnabled (int cvIndex, int parameterId);
+    int getCvAssignOffset (int cvIndex, int parameterId);
     int getDecay ();
     uint32_t getEndCue ();
     uint32_t getEndCueSet (int cueSetIndex);
@@ -120,9 +124,11 @@ public:
     int getLevel ();
     uint32_t getLoopCue ();
     uint32_t getLoopCueSet (int cueSetIndex);
+    uint8_t getLoadedVersion ();
     int getLoopMode ();
     int getNumCueSets ();
     int getQuant ();
+    int getPitchShift ();
     int getRate ();
     int getRecDest ();
     int getReverse ();
@@ -145,6 +151,8 @@ public:
     juce::String getReserved11Data ();
     juce::String getReserved12Data ();
     juce::String getReserved13Data ();
+    juce::String getReserved14Data ();
+    juce::String getReserved15Data ();
 
     int getSampleDataBits ();
     double getSampleDataSampleRate ();
@@ -161,9 +169,9 @@ public:
     std::function<void (uint8_t channelSourceIndex)> onChannelSourceChange;
     std::function<void (int chokeChannel)> onChokeChange;
     std::function<void (int cueSetIndex)> onCurCueSetChange;
-    std::function<void (int cvIndex, int parameterIndex, int attenuation)> onCvAssignAttenuateChange;
-    std::function<void (int cvIndex, int parameterIndex, bool isEnabled)> onCvAssignEnabledChange;
-    std::function<void (int cvIndex, int parameterIndex, int offset)> onCvAssignOffsetChange;
+    std::function<void (int cvIndex, int parameterId, int attenuation)> onCvAssignAttenuateChange;
+    std::function<void (int cvIndex, int parameterId, bool isEnabled)> onCvAssignEnabledChange;
+    std::function<void (int cvIndex, int parameterId, int offset)> onCvAssignOffsetChange;
     std::function<void (int decay)> onDecayChange;
     std::function<void (uint32_t endCue)> onEndCueChange;
     std::function<void (int cueSetIndex, uint32_t endCue)> onEndCueSetChange;
@@ -175,11 +183,13 @@ public:
     std::function<void (int level)> onLevelChange;
     std::function<void ()> onLoadBegin;
     std::function<void ()> onLoadComplete;
+    std::function<void (uint8_t version)> onLoadedVersionChange;
     std::function<void (uint32_t loopCue)> onLoopCueChange;
     std::function<void (int cueSetIndex, uint32_t loopCue)> onLoopCueSetChange;
     std::function<void (int loopMode)> onLoopModeChange;
     std::function<void (int numCueSets)> onNumCueSetsChange;
     std::function<void (int quant)> onQuantChange;
+    std::function<void (int pitchShift)> onPitchShiftChange;
     std::function<void (int rate)> onRateChange;
     std::function<void (int channelIndex)> onRecDestChange;
     std::function<void (int reverse)> onReverseChange;
@@ -197,8 +207,11 @@ public:
     std::function<void (AudioBufferRefCounted::RefCountedPtr audioBufferRefCountedObj)> onSampleDataAudioBufferChange;
 
     void copyFrom (juce::ValueTree sourceVT, CopyType copyType, CheckIndex checkIndex);
+    juce::ValueTree getCvAssignVT (int cvIndex);
+    juce::ValueTree getCvParameterVT (int cvIndex, int paramterId);
+    void forEachCvParameter (int cvAssignIndex, std::function<bool (juce::ValueTree)> cvParamarterCallback);
+
     static juce::ValueTree create (uint8_t channelIndex);
-    juce::ValueTree getCvParameterVT (int cvIndex, int paramterIndex);
     static uint32_t byteOffsetToSampleOffset (uint32_t byteOffset);
     static uint32_t sampleOffsetToByteOffset (uint32_t sampleOffset);
 
@@ -207,8 +220,6 @@ public:
     static inline const juce::Identifier BitsPropertyId             { "bits" };
     static inline const juce::Identifier ChannelFlagsPropertyId     { "channelFlags" };
     static inline const juce::Identifier ChannelIndexPropertyId     { "_index" };
-    static inline const juce::Identifier LoadBeginPropertyId        { "_loadBegin" };
-    static inline const juce::Identifier LoadCompletePropertyId     { "_loadComplete" };
     static inline const juce::Identifier ChannelSourcePropertyId    { "channelSource" };
     static inline const juce::Identifier ChokePropertyId            { "choke" };
     static inline const juce::Identifier CurCueSetPropertyId        { "curCueSet" };
@@ -220,10 +231,14 @@ public:
     static inline const juce::Identifier FilterResonancePropertyId  { "filterResonance" };
     static inline const juce::Identifier FilterTypePropertyId       { "filterType" };
     static inline const juce::Identifier LevelPropertyId            { "level" };
+    static inline const juce::Identifier LoadBeginPropertyId        { "_loadBegin" };
+    static inline const juce::Identifier LoadCompletePropertyId     { "_loadComplete" };
+    static inline const juce::Identifier LoadedVersionPropertyId    { "_loadedVersion" };
     static inline const juce::Identifier LoopCuePropertyId          { "loopCue" };
     static inline const juce::Identifier LoopModePropertyId         { "loopMode" };
     static inline const juce::Identifier NumCueSetsPropertyId       { "numCueSets" };
     static inline const juce::Identifier QuantPropertyId            { "quant" };
+    static inline const juce::Identifier PitchShiftPropertyId       { "pitch" };
     static inline const juce::Identifier RatePropertyId             { "rate" };
     static inline const juce::Identifier RecDestPropertyId          { "recDest" };
     static inline const juce::Identifier ReversePropertyId          { "reverse" };
@@ -235,36 +250,33 @@ public:
 
     // CV ASSIGNS
     static inline const juce::Identifier CvAssignsTypeId { "CvAssigns" };
-    static inline const juce::Identifier CvAssignInputTypeId { "CvInput" };
-    static inline const juce::Identifier CvAssignInputIdPropertyId { "id" };
-    static inline const juce::Identifier CvAssignInputParameterTypeId { "Parameter" };
-    static inline const juce::Identifier CvAssignInputParameterIdPropertyId        { "id" };
-    static inline const juce::Identifier CvAssignInputParameterEnabledPropertyId   { "enabled" };
-    static inline const juce::Identifier CvAssignInputParameterAttenuatePropertyId { "attenuation" };
-    static inline const juce::Identifier CvAssignInputParameterOffsetPropertyId    { "offset" };
+    static inline const juce::Identifier CvInputTypeId { "CvInput" };
+    static inline const juce::Identifier CvInputIdPropertyId { "id" };
 
     // CUE SETS
     static inline const juce::Identifier CueSetListTypeId { "CueSetList" };
     static inline const juce::Identifier CueSetTypeId { "CueSet" };
-    static inline const juce::Identifier CueSetIdPropertyId    { "id" };
+    static inline const juce::Identifier CueSetIdPropertyId    { "_id" };
     static inline const juce::Identifier CueSetStartPropertyId { "start" };
     static inline const juce::Identifier CueSetLoopPropertyId  { "loop" };
     static inline const juce::Identifier CueSetEndPropertyId   { "end" };
 
     // RESERVED DATA
-    static inline const juce::Identifier Reserved1DataPropertyId    { "reserved1Data" };
-    static inline const juce::Identifier Reserved2DataPropertyId    { "reserved2Data" };
-    static inline const juce::Identifier Reserved3DataPropertyId    { "reserved3Data" };
-    static inline const juce::Identifier Reserved4DataPropertyId    { "reserved4Data" };
-    static inline const juce::Identifier Reserved5DataPropertyId    { "reserved5Data" };
-    static inline const juce::Identifier Reserved6DataPropertyId    { "reserved6Data" };
-    static inline const juce::Identifier Reserved7DataPropertyId    { "reserved7Data" };
-    static inline const juce::Identifier Reserved8DataPropertyId    { "reserved8Data" };
-    static inline const juce::Identifier Reserved9DataPropertyId    { "reserved9Data" };
-    static inline const juce::Identifier Reserved10DataPropertyId   { "reserved10Data" };
-    static inline const juce::Identifier Reserved11DataPropertyId   { "reserved11Data" };
-    static inline const juce::Identifier Reserved12DataPropertyId   { "reserved12Data" };
-    static inline const juce::Identifier Reserved13DataPropertyId   { "reserved13Data" };
+    static inline const juce::Identifier Reserved1DataPropertyId    { "_reserved1Data" };
+    static inline const juce::Identifier Reserved2DataPropertyId    { "_reserved2Data" };
+    static inline const juce::Identifier Reserved3DataPropertyId    { "_reserved3Data" };
+    static inline const juce::Identifier Reserved4DataPropertyId    { "_reserved4Data" };
+    static inline const juce::Identifier Reserved5DataPropertyId    { "_reserved5Data" };
+    static inline const juce::Identifier Reserved6DataPropertyId    { "_reserved6Data" };
+    static inline const juce::Identifier Reserved7DataPropertyId    { "_reserved7Data" };
+    static inline const juce::Identifier Reserved8DataPropertyId    { "_reserved8Data" };
+    static inline const juce::Identifier Reserved9DataPropertyId    { "_reserved9Data" };
+    static inline const juce::Identifier Reserved10DataPropertyId   { "_reserved10Data" };
+    static inline const juce::Identifier Reserved11DataPropertyId   { "_reserved11Data" };
+    static inline const juce::Identifier Reserved12DataPropertyId   { "_reserved12Data" };
+    static inline const juce::Identifier Reserved13DataPropertyId   { "_reserved13Data" };
+    static inline const juce::Identifier Reserved14DataPropertyId   { "_reserved14Data" };
+    static inline const juce::Identifier Reserved15DataPropertyId   { "_reserved15Data" };
 
     // SAMPLE DATA
     static inline const juce::Identifier SampleDataBitDepthPropertyId    { "_sampleDataBitDepth" };
