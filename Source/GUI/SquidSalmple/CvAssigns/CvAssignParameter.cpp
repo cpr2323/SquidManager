@@ -164,7 +164,7 @@ void CvAssignParameter::init (juce::ValueTree rootPropertiesVT, juce::ValueTree 
     cvAssignAttenuateDataChanged (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId));
     cvAssignOffsetDataChanged (squidChannelProperties.getCvAssignOffset (cvIndex, parameterId));
 
-    CvParameterProperties cvParameterProperties { squidChannelProperties.getCvParameterVT(cvIndex, parameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no }; 
+    CvParameterProperties cvParameterProperties { squidChannelProperties.getCvParameterVT (cvIndex, parameterId), CvParameterProperties::WrapperType::client, CvParameterProperties::EnableCallbacks::no };
     parameterLabel.setText (cvParameterProperties.getName (), juce::NotificationType::dontSendNotification);
 }
 

@@ -36,7 +36,7 @@ bool SquidMetaDataWriter::write (juce::ValueTree squidChannelPropertiesVT, juce:
     setUInt8 (static_cast<uint8_t> (squidChannelProperties.getReverse ()), SquidSalmple::DataLayout_190::kReverseOffset);
     setUInt32 (static_cast<uint32_t> (squidChannelProperties.getEndOfData ()), SquidSalmple::DataLayout_190::kEndOFDataOffset);
     // NOTE: the speed is set to 32750 for channels 5-8, which is a special case for the Squid. The speed is not used in this case, but the channel does not work without an appropriate value.
-    //       This value of 32750 is the one that I found to work, there may be others. 
+    //       This value of 32750 is the one that I found to work, there may be others.
     if (squidChannelProperties.getChannelIndex () < 5)
         setUInt16 (static_cast<uint16_t> (squidChannelProperties.getSpeed ()), SquidSalmple::DataLayout_190::kSpeedOffset);
     else

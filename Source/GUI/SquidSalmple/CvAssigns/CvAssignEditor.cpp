@@ -62,7 +62,7 @@ void CvAssignEditor::paint (juce::Graphics& g)
 void CvAssignEditor::resized ()
 {
     auto localBounds { getLocalBounds () };
-    auto cvAssignSelectSection {localBounds.removeFromLeft (15)};
+    auto cvAssignSelectSection { localBounds.removeFromLeft (15) };
     cvAssignSelectSection.removeFromLeft (1);
     cvAssignSelectSection.removeFromTop (1);
     upButton.setBounds (cvAssignSelectSection.removeFromTop (14).withTrimmedLeft (2));

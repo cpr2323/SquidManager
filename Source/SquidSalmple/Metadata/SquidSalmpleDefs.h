@@ -219,7 +219,7 @@ namespace SquidSalmple
         const auto kCuesSize { (kCueNumSets * 3) * k32BitSize };
         const auto kCuesCountOffset { kCuesOffset + kCuesSize };
         const auto kCuesCountSize { k8BitSize };
-        const auto kCuesQueuedOffset { kCuesCountOffset + kCuesCountSize};
+        const auto kCuesQueuedOffset { kCuesCountOffset + kCuesCountSize };
         const auto kCuesQueuedSize { k8BitSize };
         const auto kCuesSelectedOffset { kCuesQueuedOffset + kCuesQueuedSize };
         const auto kCuesSelectedSize { k8BitSize };
@@ -318,7 +318,7 @@ namespace SquidSalmple
         const auto k_Reserved13Size { k8BitSize };
         const auto kPitchShiftOffset { k_Reserved13Offset + k_Reserved13Size };
         const auto kPitchShiftSize { k16BitSize };
-        const auto k_Reserved14Offset { kPitchShiftOffset + kPitchShiftSize}; // padding
+        const auto k_Reserved14Offset { kPitchShiftOffset + kPitchShiftSize }; // padding
         const auto k_Reserved14Size { k16BitSize };
         const auto k_Reserved15Offset { k_Reserved14Offset + k_Reserved14Size };
         const auto k_Reserved15Size { 62 * k32BitSize };

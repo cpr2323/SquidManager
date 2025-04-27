@@ -109,23 +109,23 @@ void SquidChannelProperties::initValueTree ()
     };
     const auto kParameterList { std::vector<ParameterEntry>
     {
-        {CvParameterIndex::Bits, "BITS"},        // 0
-        {CvParameterIndex::Rate, "RATE"},        // 1
-        {CvParameterIndex::Level, "LEVEL"},      // 2
-        {CvParameterIndex::Decay, "DECAY"},      // 3
-        {CvParameterIndex::Speed, "SPEED"},      // 4
-        {CvParameterIndex::LoopMode, "LPMODE"},  // 5
-        {CvParameterIndex::Reverse, "REVERSE"},  // 6
-        {CvParameterIndex::StartCue, "STARTQ"},  // 7
-        {CvParameterIndex::EndCue, "ENDQ"},      // 8
-        {CvParameterIndex::LoopCue, "LOOPQ"},    // 9
-        {CvParameterIndex::CueSet, "CUE SET"},   // 10
-        {CvParameterIndex::Attack, "ATTACK"},    // 11
-        {CvParameterIndex::ETrig, "ETRIG"},      // 12
-        {CvParameterIndex::FiltFreq, "FREQ"},    // 13
-        {CvParameterIndex::FiltRes, "RES"},      // 14
+        { CvParameterIndex::Bits, "BITS" },        // 0
+        { CvParameterIndex::Rate, "RATE" },        // 1
+        { CvParameterIndex::Level, "LEVEL" },      // 2
+        { CvParameterIndex::Decay, "DECAY" },      // 3
+        { CvParameterIndex::Speed, "SPEED" },      // 4
+        { CvParameterIndex::LoopMode, "LPMODE" },  // 5
+        { CvParameterIndex::Reverse, "REVERSE" },  // 6
+        { CvParameterIndex::StartCue, "STARTQ" },  // 7
+        { CvParameterIndex::EndCue, "ENDQ" },      // 8
+        { CvParameterIndex::LoopCue, "LOOPQ" },    // 9
+        { CvParameterIndex::CueSet, "CUE SET" },   // 10
+        { CvParameterIndex::Attack, "ATTACK" },    // 11
+        { CvParameterIndex::ETrig, "ETRIG" },      // 12
+        { CvParameterIndex::FiltFreq, "FREQ" },    // 13
+        { CvParameterIndex::FiltRes, "RES" },      // 14
         // not used
-        {CvParameterIndex::PitchShift, "PITCH"}, // 16
+        { CvParameterIndex::PitchShift, "PITCH" }, // 16
     } };
 
     // CV ASSIGNS

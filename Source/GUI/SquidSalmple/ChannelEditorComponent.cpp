@@ -119,7 +119,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
                 },
                 [this] (SquidChannelProperties&) { return true; },
                 [this] (SquidChannelProperties&) { return false; }
-            )};
+            ) };
 
             editMenu.addSubMenu ("Swap", swapMenu);
         }
@@ -178,7 +178,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
                         squidChannelProperties.setCurCueSet (0, true);
                         startCueDataChanged (0);
                         loopCueDataChanged (0);
-                        endCueDataChanged (squidChannelProperties.getEndCue());
+                        endCueDataChanged (squidChannelProperties.getEndCue ());
                         waveformDisplay.setCuePoints (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCueSet (0)),
                                                       SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCueSet (0)),
                                                       SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCueSet (0)));
@@ -378,7 +378,7 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction};
+        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
         squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)) - 1, true);
     };
     rateComboBox.onPopupMenuCallback = [this] ()
@@ -940,7 +940,7 @@ void ChannelEditorComponent::setupComponents ()
             {
                 auto newStartCue { editManager->findPreviousZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()),
                                                                           0,
-                                                                          *squidChannelProperties.getSampleDataAudioBuffer ().get()->getAudioBuffer ()) };
+                                                                          *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
                 if (newStartCue != -1)
                     startCueTextEditor.setValue (newStartCue);
             });
@@ -1013,7 +1013,7 @@ void ChannelEditorComponent::setupComponents ()
             {
                 auto newLoopCue { editManager->findPreviousZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()),
                                                                          SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()),
-                                                                         *squidChannelProperties.getSampleDataAudioBuffer ().get()->getAudioBuffer ()) };
+                                                                         *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
                 if (newLoopCue != -1)
                     loopCueTextEditor.setValue (newLoopCue);
             });
@@ -1084,7 +1084,7 @@ void ChannelEditorComponent::setupComponents ()
             {
                 auto newEndCue { editManager->findPreviousZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()),
                                                                         SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()),
-                                                                        *squidChannelProperties.getSampleDataAudioBuffer ().get()->getAudioBuffer ()) };
+                                                                        *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
                 if (newEndCue != -1)
                 {
                     if (newEndCue < static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
@@ -1222,7 +1222,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (stepsComboBox, "Steps", [this] () {stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
+    setupComboBox (stepsComboBox, "Steps", [this] () { stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     // Output
     setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
     outputComboBox.setTooltip ("Neighbour Output. Select with the original channel output, or assign it to it's neighbor. Chans 1-4 to the 1+2 output or 3+4 output and channels 5-8 to the 5+6 output or 7+8 output.");
@@ -1864,7 +1864,7 @@ void ChannelEditorComponent::quantDataChanged (int quant)
 
 void ChannelEditorComponent::pitchShiftDataChanged (int pitchShift)
 {
-    pitchShiftTextEditor.setText (juce::String (static_cast<float>(pitchShift) / 1000.0, 2), juce::NotificationType::dontSendNotification);
+    pitchShiftTextEditor.setText (juce::String (static_cast<float> (pitchShift) / 1000.0, 2), juce::NotificationType::dontSendNotification);
 }
 
 void ChannelEditorComponent::rateDataChanged (int rate)
@@ -1994,7 +1994,7 @@ void ChannelEditorComponent::quantUiChanged (int quant)
 
 void ChannelEditorComponent::pitchShiftUiChanged (float pitchShift)
 {
-    squidChannelProperties.setPitchShift (static_cast<int>(pitchShift * 1000.f), false);
+    squidChannelProperties.setPitchShift (static_cast<int> (pitchShift * 1000.f), false);
 }
 
 void ChannelEditorComponent::rateUiChanged (int rate)
@@ -2036,13 +2036,13 @@ void ChannelEditorComponent::xfadeUiChanged (int xfade)
 bool ChannelEditorComponent::handleSampleAssignment (const juce::StringArray& fileNames)
 {
     const auto baseChannelIndex { squidChannelProperties.getChannelIndex () };
-    for (auto channelOffset {0}; channelOffset < std::min (fileNames.size (), 8); ++channelOffset)
+    for (auto channelOffset { 0 }; channelOffset < std::min (fileNames.size (), 8); ++channelOffset)
     {
         const auto currentChannelIndex { baseChannelIndex + channelOffset };
-        //DebugLog ("ChannelEditorComponent", "handleSampleAssignment - channel " + juce::String(currentChannelIndex) + " sample to load: " + fileNames[channelOffset]);
+        //DebugLog ("ChannelEditorComponent", "handleSampleAssignment - channel " + juce::String (currentChannelIndex) + " sample to load: " + fileNames[channelOffset]);
         auto srcFile { juce::File (fileNames [channelOffset]) };
         const auto channelDirectory { juce::File (appProperties.getRecentlyUsedFile (0)).getChildFile (juce::String (currentChannelIndex + 1)) };
-        if (!channelDirectory.exists ())
+        if (! channelDirectory.exists ())
             channelDirectory.createDirectory ();
         auto destFile { channelDirectory.getChildFile (srcFile.withFileExtension ("_wav").getFileName ()) };
         SquidChannelProperties destChannelProperties { editManager->getChannelPropertiesVT (currentChannelIndex), SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no };
@@ -2077,7 +2077,7 @@ void ChannelEditorComponent::filesDropped (const juce::StringArray& files, int x
     repaint ();
     if (! supportedFile)
         return;
-    const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+    const auto dropBounds { juce::Rectangle<int> { 0, 0, getWidth (), cueSetButtons [0].getY () } };
     if (! dropBounds.contains (x, y))
         return;
     if (! handleSampleAssignment (files))
@@ -2099,8 +2099,8 @@ void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int 
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
             auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio = 44100. / reader->sampleRate;
-            const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
+            const double ratio { 44100. / reader->sampleRate };
+            const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
             if (actualNumSamples > kMaxSampleLength)
                 dropDetails += juce::String (dropDetails.length () > 0 ? ". " : "") + "Channel " + juce::String (currentChannelIndex + 1) + " will be truncated to 11 seconds";
         }
@@ -2112,7 +2112,7 @@ void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int 
     }
     if (supportedFile)
     {
-        if (files.size() == 1)
+        if (files.size () == 1)
             dropMsg = "Assign sample to Channel " + juce::String (baseChannelIndex + 1);
         else
             dropMsg = "Assign samples to Channels " + juce::String (baseChannelIndex + 1) + " - " + juce::String (baseChannelIndex + numberOfAssignments);
@@ -2284,7 +2284,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
         if (dropDetails.isEmpty ())
         {
             constexpr auto fontHeight { 30.f };
-            const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+            const auto dropBounds { juce::Rectangle<int> { 0, 0, getWidth (), cueSetButtons [0].getY () } };
             g.setColour (juce::Colours::white.withAlpha (0.5f));
             g.fillRect (dropBounds);
             g.setFont (fontHeight);
@@ -2338,13 +2338,13 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             //
             // dropDetails * numLines
             //
-            const auto dropBounds { juce::Rectangle<int>{0, 0, getWidth (), cueSetButtons [0].getY ()} };
+            const auto dropBounds { juce::Rectangle<int> { 0, 0, getWidth (), cueSetButtons [0].getY () } };
             auto dropAreaBounds { dropBounds };
 
             const auto detailsHeight { std::max (5, lines.size ()) * dropDetailsFontSize + (sectionSpacing * 2) };
             const auto detailsBounds { dropAreaBounds.removeFromBottom (static_cast<int> (detailsHeight)).reduced (0, static_cast<int> (sectionSpacing)) };
             const auto dropMsgBounds { juce::Rectangle<int> (0, 0, dropAreaBounds.getWidth (), static_cast<int> (dropMsgFontSizeDouble)).withCentre (dropAreaBounds.getCentre ()) };
-            
+
             // fill entire drop area with transparent
             g.setColour (juce::Colours::white.withAlpha (0.5f));
             g.fillRect (dropBounds);
@@ -2353,7 +2353,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             // draw main drop message
             g.setFont (dropMsgFontSizeDouble);
             g.setColour (juce::Colours::white.withAlpha (0.7f));
-            g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY() + 2.f), 10.f);
+            g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
             g.setColour (juce::Colours::black);
             g.drawText (dropMsg, dropMsgBounds, juce::Justification::centred, false);
 
@@ -2364,7 +2364,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             g.setColour (juce::Colours::white.withAlpha (0.7f));
             g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
             g.setColour (juce::Colours::black);
-            for (auto lineIndex { 0 }; lineIndex < lines.size(); ++lineIndex)
+            for (auto lineIndex { 0 }; lineIndex < lines.size (); ++lineIndex)
             {
                 g.drawText (lines [lineIndex], dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize)), juce::Justification::centred, false);
             }

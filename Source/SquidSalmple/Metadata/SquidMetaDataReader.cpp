@@ -196,11 +196,11 @@ void SquidMetaDataReader::read (juce::ValueTree channelPropertiesVT, juce::File 
     {
         // NOTE: since importing an old version of metadata is a new feature (v1.3), I'm going to write this to the log file so we can track when this happens
         // assuming there are no issues I will remove this in a subsequent release
-        DebugLog ("SquidMetaDataReader", "importing metadata version " + juce::String(squidChannelProperties.getLoadedVersion()) + " from " +sampleFile.getFileName ());
+        DebugLog ("SquidMetaDataReader", "importing metadata version " + juce::String (squidChannelProperties.getLoadedVersion ()) + " from " +sampleFile.getFileName ());
         squidChannelProperties.setAttack (getValue <SquidSalmple::DataLayout_186::kAttackSize> (SquidSalmple::DataLayout_186::kAttackOffset), false);
         squidChannelProperties.setBits (getValue <SquidSalmple::DataLayout_186::kQualitySize> (SquidSalmple::DataLayout_186::kQualityOffset), false);
         squidChannelProperties.setChannelFlags (getValue <SquidSalmple::DataLayout_186::kChannelFlagsSize> (SquidSalmple::DataLayout_186::kChannelFlagsOffset), false);
-        jassert ( !((squidChannelProperties.getChannelFlags ()& ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags ()& ChannelFlags::kCueStepped)));
+        jassert (! ((squidChannelProperties.getChannelFlags ()& ChannelFlags::kCueRandom) && (squidChannelProperties.getChannelFlags ()& ChannelFlags::kCueStepped)));
 #if JUCE_DEBUG
         const auto channelFlags { squidChannelProperties.getChannelFlags () };
         juce::String channelFlagsString;

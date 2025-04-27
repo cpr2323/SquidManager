@@ -33,7 +33,7 @@ CvAssignSection::CvAssignSection ()
 
 CvAssignSection::~CvAssignSection ()
 {
-    for (auto curComponentIndex { getNumChildComponents() - 1}; curComponentIndex >= 0; --curComponentIndex)
+    for (auto curComponentIndex { getNumChildComponents () - 1 }; curComponentIndex >= 0; --curComponentIndex)
     {
         auto curParameterComponent { getChildComponent (curComponentIndex) };
         removeChildComponent (curParameterComponent);
@@ -65,7 +65,7 @@ void CvAssignSection::setEnableState (int cvParameterId, bool enabled)
 
 void CvAssignSection::resized ()
 {
-    const auto assignParameterWidth { static_cast<int> (getWidth () / getNumChildComponents()) };
+    const auto assignParameterWidth { static_cast<int> (getWidth () / getNumChildComponents ()) };
     for (auto curCvAssignParameter { 0 }; curCvAssignParameter < getNumChildComponents (); ++curCvAssignParameter)
     {
         auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curCvAssignParameter)) };

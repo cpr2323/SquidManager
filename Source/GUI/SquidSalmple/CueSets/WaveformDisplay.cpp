@@ -159,7 +159,7 @@ void WaveformDisplay::displayMarkers (juce::Graphics& g)
 
     // draw sample start marker
     g.fillRect (sampleStartHandle);
-    g.drawLine (juce::Line<int> {sampleStartMarkerX, markerStartY, sampleStartMarkerX, markerEndY}.toFloat ());
+    g.drawLine (juce::Line<int> { sampleStartMarkerX, markerStartY, sampleStartMarkerX, markerEndY }.toFloat ());
 
     // draw loop start marker
     g.fillRect (sampleLoopHandle);
@@ -167,7 +167,7 @@ void WaveformDisplay::displayMarkers (juce::Graphics& g)
 
     // draw sample end marker
     g.fillRect (sampleEndHandle);
-    g.drawLine (juce::Line<int> {sampleEndMarkerX, markerStartY, sampleEndMarkerX, markerEndY}.toFloat ());
+    g.drawLine (juce::Line<int> { sampleEndMarkerX, markerStartY, sampleEndMarkerX, markerEndY }.toFloat ());
 }
 
 void WaveformDisplay::paint (juce::Graphics& g)
@@ -275,7 +275,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     }
                     return maxStringPixels;
                 } ();
-                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (maxDetailsWidthPixels), backgroundLines * static_cast<int> (dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ())};
+                auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (maxDetailsWidthPixels), backgroundLines * static_cast<int> (dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ()) };
                 setBackgroundColor ();
                 g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
@@ -452,8 +452,8 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
             auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio = 44100. / reader->sampleRate;
-            const int actualNumSamples = static_cast<int>(reader->lengthInSamples * ratio);
+            const double ratio { 44100. / reader->sampleRate };
+            const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
 
             totalSize += actualNumSamples;
             if (totalSize < kMaxSampleLength)

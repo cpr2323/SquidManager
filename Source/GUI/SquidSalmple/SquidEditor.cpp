@@ -221,7 +221,7 @@ void SquidEditorComponent::resized ()
 
     localBounds.removeFromTop (5);
     // put bank name and save button on the top line
-    auto topRowBounds {localBounds.removeFromTop (kParameterLineHeight) };
+    auto topRowBounds { localBounds.removeFromTop (kParameterLineHeight) };
     topRowBounds.removeFromLeft (5);
     bankNameLabel.setBounds (topRowBounds.removeFromLeft (45));
     topRowBounds.removeFromLeft (3);
