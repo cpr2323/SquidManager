@@ -5,7 +5,7 @@ void CvParameterProperties::initValueTree ()
     setId (0, false);
     setName ("", false);
     setEnabled (false, false);
-    setAttenuation (0, false);
+    setAttenuation (99, false);
     setOffset (0, false);
 }
 

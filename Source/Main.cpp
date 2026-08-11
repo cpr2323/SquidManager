@@ -98,7 +98,6 @@ public:
     void initSquidSalmple ()
     {
         SquidBankProperties squidBankProperties ({}, SquidBankProperties::WrapperType::owner, SquidBankProperties::EnableCallbacks::no);
-        //runtimeRootProperties.getValueTree ().addChild (squidBankProperties.getValueTree (), -1, nullptr);
 
         BankManagerProperties bankManagerProperties (runtimeRootProperties.getValueTree (), BankManagerProperties::WrapperType::owner, BankManagerProperties::EnableCallbacks::no);
         bankManagerProperties.addBank ("edit", squidBankProperties.getValueTree ());
