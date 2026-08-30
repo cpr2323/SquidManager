@@ -4,8 +4,6 @@ A tool to manage Presets and Sample files for the ALM/Busy Circuits Squid Salmpl
 
 Windows and macOS builds available at: https://cpr2323.github.io/squidmanager/index.html
 
-Currently requires JUCE version 7. The revision from 1/10/2024: 31dfb05ea3299176a416bf9258e030d04a099798
-
 # Windows
 
 There are no special steps to installing on Windows.
