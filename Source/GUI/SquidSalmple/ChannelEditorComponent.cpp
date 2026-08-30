@@ -2293,7 +2293,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
                 g.setColour (juce::Colours::white.withAlpha (0.7f));
             else
                 g.setColour (juce::Colours::black.withAlpha (0.7f));
-            auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f };
+            auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f };
             auto center { dropBounds.getCentre () };
             g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
             if (supportedFile)
@@ -2315,7 +2315,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
                 else
                 {
                     auto lastLine { lines [lines.size () - 1] };
-                    if (g.getCurrentFont ().getStringWidthFloat (lastLine + " " + word) < getWidth () - 40)
+                    if (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), lastLine + " " + word) < getWidth () - 40)
                         lines.set (lines.size () - 1, lastLine + " " + word);
                     else
                         lines.add (word);
@@ -2327,7 +2327,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
                 auto maxLineLength { 0.f };
                 for (auto& line : lines)
                 {
-                    lineLength = std::max (lineLength, g.getCurrentFont ().getStringWidthFloat (line));
+                    lineLength = std::max (lineLength, juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), line));
                     if (lineLength > maxLineLength)
                         maxLineLength = lineLength;
                 }
@@ -2353,7 +2353,7 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             // draw main drop message
             g.setFont (dropMsgFontSizeDouble);
             g.setColour (juce::Colours::white.withAlpha (0.7f));
-            g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (g.getCurrentFont ().getStringWidthFloat (dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
+            g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
             g.setColour (juce::Colours::black);
             g.drawText (dropMsg, dropMsgBounds, juce::Justification::centred, false);
 

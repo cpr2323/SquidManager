@@ -19,7 +19,7 @@ BankListComponent::BankListComponent ()
     showAllBanks.setToggleState (true, juce::NotificationType::dontSendNotification);
     showAllBanks.setButtonText ("Show All");
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
-    showAllBanks.onClick = [this] () { checkBanksThread.start (); };
+    showAllBanks.onClick = [this] () { startCheckBanksThread (); };
     addAndMakeVisible (showAllBanks);
     bankListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
     addAndMakeVisible (bankListBox);
@@ -54,7 +54,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
             {
                 checkForFolderChange ();
                 LogBankList ("init - directoryDataProperties.onRootScanComplete - starting thread");
-                checkBanksThread.startThread ();
+                startCheckBanksThread ();
             }
             else
             {
@@ -75,7 +75,58 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
             bankListBox.repaintRow (lastSelectedBankIndex);
         }
     };
-    checkBanksThread.startThread ();
+    startCheckBanksThread ();
+}
+
+// the directory ValueTree is shared, so it is walked here, on the message thread, and handed to
+// checkBanksThread as a plain list of folders
+void BankListComponent::snapshotBankDirectories ()
+{
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
+    FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+    const auto rootFolderFile { juce::File (rootFolder.getName ()) };
+
+    std::vector<BankDirectoryEntry> snapshot;
+    auto inBankList { false };
+    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [&snapshot, &inBankList] (juce::ValueTree child)
+    {
+        if (FolderProperties::isFolderVT (child))
+        {
+            FolderProperties folderProperties (child, FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+            const auto folderName { juce::File (folderProperties.getName ()).getFileName () };
+            const auto bankId { folderName.substring (5).getIntValue () };
+            if (folderName.substring (0, 5) == "Bank " && bankId > 0 && bankId < 100)
+            {
+                inBankList = true;
+                snapshot.emplace_back (BankDirectoryEntry { bankId, juce::File (folderProperties.getName ()) });
+            }
+            else if (inBankList)
+            {
+                // the entries are sorted by type, so once we are past the bank folders we are done
+                return false;
+            }
+        }
+        return true;
+    });
+
+    juce::ScopedLock sl (bankDirectorySnapshotCS);
+    bankDirectorySnapshot = std::move (snapshot);
+    snapshotRootFolder = rootFolderFile;
+    snapshotShowAllBanks = showAllBanks.getToggleState ();
+}
+
+void BankListComponent::startCheckBanksThread ()
+{
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
+    snapshotBankDirectories ();
+    checkBanksThread.start ();
+}
+
+// setStatus writes to a shared ValueTree, so it is bounced to the message thread when called from
+// checkBanksThread
+void BankListComponent::sendStatusUpdate (juce::String status)
+{
+    juce::MessageManager::callAsync ([this, status] () { bankListProperties.setStatus (status, false); });
 }
 
 void BankListComponent::checkForFolderChange ()
@@ -88,6 +139,7 @@ void BankListComponent::checkForFolderChange ()
     if (isNewFolder)
     {
         LogBankList ("clearing bank list");
+        firstBankLoadPending = true;
         numBanks = 0;
         bankListBox.updateContent ();
         bankListBox.scrollToEnsureRowIsOnscreen (0);
@@ -98,6 +150,8 @@ void BankListComponent::checkForFolderChange ()
 void BankListComponent::forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback)
 {
     jassert (bankDirectoryCallback != nullptr);
+    // reads the shared directory ValueTree, so this must stay on the message thread
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
 
     ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, bankDirectoryCallback] (juce::ValueTree child)
     {
@@ -125,74 +179,68 @@ void BankListComponent::checkBanks ()
     WatchdogTimer timer;
     timer.start (100000);
 
-    FolderProperties rootFolder (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
-    currentFolder = juce::File (rootFolder.getName ());
-
-    const auto showAll { showAllBanks.getToggleState () };
-
-    // clear bank info list
-     for (auto curBankInfoIndex { 0 }; curBankInfoIndex < bankInfoList.size (); ++curBankInfoIndex)
-         bankInfoList [curBankInfoIndex] = { curBankInfoIndex + 1, false, "" };
-
-    if (showAll)
-        numBanks = kMaxBanks;
-    else
-        numBanks = 0;
-    auto inBankList { false };
-    ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this, &inBankList, showAll] (juce::ValueTree child)
+    // work from the snapshot taken on the message thread, rather than reading the shared ValueTree
+    auto bankDirectories { std::vector<BankDirectoryEntry> () };
+    auto scannedFolder { juce::File () };
+    auto showAll { true };
     {
-        if (FolderProperties::isFolderVT (child))
+        juce::ScopedLock sl (bankDirectorySnapshotCS);
+        bankDirectories = bankDirectorySnapshot;
+        scannedFolder = snapshotRootFolder;
+        showAll = snapshotShowAllBanks;
+    }
+
+    // the results are built up locally, and applied on the message thread, so that the bank list
+    // the UI paints from is never written to from this thread
+    auto newBankInfoList { std::array<std::tuple <int, bool, juce::String>, kMaxBanks> () };
+    for (auto curBankInfoIndex { 0 }; curBankInfoIndex < static_cast<int> (newBankInfoList.size ()); ++curBankInfoIndex)
+        newBankInfoList [curBankInfoIndex] = { curBankInfoIndex + 1, false, "" };
+    auto newNumBanks { showAll ? kMaxBanks : 0 };
+
+    for (const auto& bankDirectory : bankDirectories)
+    {
+        if (checkBanksThread.shouldExit ())
+            return;
+
+        sendStatusUpdate ("Scanning Bank Folder: " + bankDirectory.directory.getFileName ());
+
+        auto infoTxtFile { bankDirectory.directory.getChildFile ("info.txt") };
+        auto bankName { juce::String () };
+        // read bank name if file exists
+        if (infoTxtFile.exists ())
         {
-            FolderProperties folderProperties (child, FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
-            const auto folderName { juce::File (folderProperties.getName ()).getFileName () };
-            const auto bankId { folderName.substring (5).getIntValue () };
-            if (folderName.substring (0, 5) == "Bank " && bankId > 0 && bankId < 100)
-            {
-                bankListProperties.setStatus ("Scanning Bank Folder: " + folderName, false);
-                inBankList = true;
-                const auto fileToCheck { juce::File (folderProperties.getName ()) };
-
-                auto infoTxtFile { fileToCheck.getChildFile ("info.txt") };
-                auto bankName { juce::String () };
-                // read bank name if file exists
-                if (infoTxtFile.exists ())
-                {
-                    auto infoTxtInputStream { infoTxtFile.createInputStream () };
-                    bankName = infoTxtInputStream->readNextLine ().substring (0, 11);
-                }
-
-                if (showAll)
-                    bankInfoList [bankId - 1] = { bankId, true, bankName };
-                else
-                {
-                    bankInfoList [numBanks] = { bankId, true, bankName };
-                    ++numBanks;
-                }
-            }
-            else
-            {
-                // if the entry is not a bank file, but we had started processing bank files, then we are done, because the files are sorted by type
-                if (inBankList)
-                    return false;
-            }
+            auto infoTxtInputStream { infoTxtFile.createInputStream () };
+            bankName = infoTxtInputStream->readNextLine ().substring (0, 11);
         }
-        return true; // keep looking
-    });
-    bankListProperties.setStatus ("", false);
 
-    const auto isNewFolder { currentFolder != previousFolder };
-    LogBankList (isNewFolder ? "new folder " + currentFolder.getFileName () : "no folder change");
-    juce::MessageManager::callAsync ([this, isNewFolder] ()
-    {
-        bankListBox.updateContent ();
-        if (isNewFolder)
+        if (showAll)
+            newBankInfoList [bankDirectory.bankId - 1] = { bankDirectory.bankId, true, bankName };
+        else
         {
+            newBankInfoList [newNumBanks] = { bankDirectory.bankId, true, bankName };
+            ++newNumBanks;
+        }
+    }
+    sendStatusUpdate ("");
+
+    // the first bank can only be loaded once we actually have banks to load. a scan that ran before
+    // the directory contents were available finds none, and must leave the load for the next pass
+    const auto foundBanks { ! bankDirectories.empty () };
+    juce::MessageManager::callAsync ([this, newBankInfoList, newNumBanks, scannedFolder, foundBanks] ()
+    {
+        bankInfoList = newBankInfoList;
+        numBanks = newNumBanks;
+        currentFolder = scannedFolder;
+        bankListBox.updateContent ();
+        if (foundBanks && firstBankLoadPending)
+        {
+            LogBankList ("checkBanks - loading first bank of " + scannedFolder.getFileName ());
+            firstBankLoadPending = false;
             bankListBox.scrollToEnsureRowIsOnscreen (0);
             loadFirstBank ();
         }
         bankListBox.repaint ();
     });
-    previousFolder = currentFolder;
 
     LogBankList ("BankListComponent::checkBanks - elapsed time: " + juce::String (timer.getElapsedTime ()));
 }
@@ -297,7 +345,7 @@ void BankListComponent::timerCallback ()
     {
         checkForFolderChange ();
         LogBankList ("timerCallback - starting thread, stopping timer");
-        checkBanksThread.start ();
+        startCheckBanksThread ();
         stopTimer ();
     }
     LogBankList ("timerCallback - enter");

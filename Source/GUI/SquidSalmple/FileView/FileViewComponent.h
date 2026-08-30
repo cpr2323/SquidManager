@@ -4,7 +4,6 @@
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../Utility/DirectoryDataProperties.h"
-#include "../../../Utility/LambdaThread.h"
 
 class FileViewComponent : public juce::Component,
                           private juce::ListBoxModel
@@ -23,11 +22,8 @@ private:
     DirectoryDataProperties directoryDataProperties;
     EditManager* editManager { nullptr };
 
-    juce::CriticalSection directoryListQuickLookupListLock;
-    std::vector<juce::ValueTree> directoryListQuickLookupListA;
-    std::vector<juce::ValueTree> directoryListQuickLookupListB;
-    std::vector<juce::ValueTree>* curDirectoryListQuickLookupList { &directoryListQuickLookupListA };
-    std::vector<juce::ValueTree>* updateDirectoryListQuickLookupList { &directoryListQuickLookupListB };
+    // built and read only on the message thread, so it needs no lock or double buffering
+    std::vector<juce::ValueTree> directoryListQuickLookupList;
 
     juce::TextButton openFolderButton;
     juce::TextButton newFolderButton;
@@ -40,7 +36,6 @@ private:
     int lastSelectedRow { -1 };
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
     std::unique_ptr<juce::AlertWindow> newAlertWindow;
-    LambdaThread updateFromNewDataThread { "UpdateFromNewDataThread", 100 };
 
     void buildQuickLookupList ();
     juce::ValueTree getDirectoryEntryVT (int row);

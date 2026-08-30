@@ -5,13 +5,21 @@ bool BusyChunkWriter::write (juce::AudioBuffer<float>& audioBuffer, juce::File o
 {
     // write audio data
     {
-        // create/open temp file
-        auto outputSampleStream { outputSampleFile.createOutputStream () };
-        jassert (outputSampleStream != nullptr && outputSampleStream->openedOk ());
-        outputSampleStream->setPosition (0);
-        outputSampleStream->truncate ();
+        // create/open temp file. openedOk () and truncate () are FileOutputStream only, so the
+        // setup has to happen while the pointer still has that type
+        auto sampleFileStream { outputSampleFile.createOutputStream () };
+        jassert (sampleFileStream != nullptr && sampleFileStream->openedOk ());
+        sampleFileStream->setPosition (0);
+        sampleFileStream->truncate ();
+        // createWriterFor takes a unique_ptr<OutputStream>&, and a unique_ptr<FileOutputStream>
+        // cannot bind to a reference to a different type, so the stream is moved into a base typed
+        // pointer to hand over. this is the same stream: sampleFileStream is null from here on
+        std::unique_ptr<juce::OutputStream> streamForWriter { std::move (sampleFileStream) };
         juce::WavAudioFormat wavAudioFormat;
-        std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (outputSampleStream.release (), 44100.0, 1, 16, {}, 0) };
+        // on success, the writer takes ownership of the output stream, and will delete it when done
+        auto writer { wavAudioFormat.createWriterFor (streamForWriter, juce::AudioFormatWriterOptions {}.withSampleRate (44100.0)
+                                                                                                       .withNumChannels (1)
+                                                                                                       .withBitsPerSample (16)) };
         jassert (writer != nullptr);
         if (writer == nullptr)
             return false;

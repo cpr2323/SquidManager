@@ -2,7 +2,6 @@
 #include "../../../SystemServices.h"
 #include "../../../Utility/PersistentRootProperties.h"
 #include "../../../Utility/RuntimeRootProperties.h"
-#include "../../../Utility/WatchDogTimer.h"
 
 #define LOG_FILE_VIEW 0
 #if LOG_FILE_VIEW
@@ -29,14 +28,8 @@ FileViewComponent::FileViewComponent ()
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
     showAllFiles.setButtonText ("Show All");
     showAllFiles.setTooltip ("Show all files, or show just Squid Salmple files");
-    showAllFiles.onClick = [this] () { updateFromNewDataThread.start (); };
+    showAllFiles.onClick = [this] () { updateFromNewData (); };
     addAndMakeVisible (showAllFiles);
-
-    updateFromNewDataThread.onThreadLoop = [this] ()
-    {
-        updateFromNewData ();
-        return false;
-    };
 }
 
 void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
@@ -54,7 +47,7 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
     {
         LogFileView ("FileViewComponent/onRootScanComplete");
         isRootFolder = juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory () == juce::File (directoryDataProperties.getRootFolder ());
-        updateFromNewDataThread.start ();
+        updateFromNewData ();
     };
 
 //     directoryDataProperties.onStatusChange = [this] (DirectoryDataProperties::ScanStatus status)
@@ -76,58 +69,44 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
 //             case DirectoryDataProperties::ScanStatus::done:
 //             {
 //                 isRootFolder = juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory () == juce::File (directoryDataProperties.getRootFolder ());
-//                 updateFromNewDataThread.start ();
+//                 updateFromNewData ();
 //             }
 //             break;
 //         }
 //     };
 
-    updateFromNewDataThread.start ();
+    updateFromNewData ();
 }
 
 void FileViewComponent::updateFromNewData ()
 {
     LogFileView ("FileViewComponent::updateFromNewData ()");
-    WatchdogTimer timer;
-    timer.start (10000);
+    // the directory ValueTree is shared, so it is only ever read on the message thread
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
     buildQuickLookupList ();
-    juce::MessageManager::callAsync ([this] ()
-    {
-        directoryContentsListBox.updateContent ();
-        directoryContentsListBox.repaint ();
-    });
-    //juce::Logger::outputDebugString ("FileViewComponent::updateFromNewData () - elapsed time: " + juce::String (timer.getElapsedTime ()));
+    directoryContentsListBox.updateContent ();
+    directoryContentsListBox.repaint ();
 }
 
 void FileViewComponent::buildQuickLookupList ()
 {
-    updateDirectoryListQuickLookupList->clear ();
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
+    directoryListQuickLookupList.clear ();
     ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this] (juce::ValueTree child)
     {
         const auto typeIndex { static_cast<int> (child.getProperty ("type")) };
         if (showAllFiles.getToggleState ())
         {
-            updateDirectoryListQuickLookupList->emplace_back (child);
+            directoryListQuickLookupList.emplace_back (child);
         }
         else if (typeIndex == DirectoryDataProperties::TypeIndex::audioFile ||
                  typeIndex == DirectoryDataProperties::TypeIndex::folder ||
                  typeIndex == DirectoryDataProperties::TypeIndex::systemFile)
         {
-            updateDirectoryListQuickLookupList->emplace_back (child);
+            directoryListQuickLookupList.emplace_back (child);
         }
         return true;
     });
-    juce::ScopedLock sl (directoryListQuickLookupListLock);
-    if (curDirectoryListQuickLookupList == &directoryListQuickLookupListA)
-    {
-        curDirectoryListQuickLookupList = &directoryListQuickLookupListB;
-        updateDirectoryListQuickLookupList = &directoryListQuickLookupListA;
-    }
-    else
-    {
-        curDirectoryListQuickLookupList = &directoryListQuickLookupListA;
-        updateDirectoryListQuickLookupList = &directoryListQuickLookupListB;
-    }
 }
 
 void FileViewComponent::openFolder ()
@@ -170,15 +149,13 @@ void FileViewComponent::newFolder ()
 
 int FileViewComponent::getNumRows ()
 {
-    juce::ScopedLock sl (directoryListQuickLookupListLock);
-    return static_cast<int> (curDirectoryListQuickLookupList->size () + (isRootFolder ? 0 : 1));
+    return static_cast<int> (directoryListQuickLookupList.size () + (isRootFolder ? 0 : 1));
 }
 
 juce::ValueTree FileViewComponent::getDirectoryEntryVT (int row)
 {
-    juce::ScopedLock sl (directoryListQuickLookupListLock);
     const auto quickLookupIndex { row - (isRootFolder ? 0 : 1) };
-    return (*curDirectoryListQuickLookupList) [quickLookupIndex];
+    return directoryListQuickLookupList [quickLookupIndex];
 }
 
 void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width, int height, [[maybe_unused]] bool rowIsSelected)

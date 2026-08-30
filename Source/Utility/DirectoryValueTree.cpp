@@ -35,7 +35,7 @@ DirectoryValueTree::DirectoryValueTree () : Thread ("DirectoryValueTree")
             return false;
 
         LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "checkThread.onThreadLoop - TaskManagementState::checking");
-        if (hasFolderChanged (directoryDataProperties.getRootFolderVT ()))
+        if (hasFolderChanged ())
         {
             setRequestedTaskManagementState (TaskManagementState::startScan);
             wakeUpTaskManagmentThread ();
@@ -160,15 +160,61 @@ bool DirectoryValueTree::shouldCancelOperation (LambdaThread& whichTaskThread, s
 void DirectoryValueTree::startScan ()
 {
     LogDirectoryValueTree (true, "startScan - waking up scan thread");
-    FolderProperties rootFolderProperties (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
-    jassert (! rootFolderProperties.getName ().isEmpty ());
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
+    cacheRootFolderNameForScan ();
+    jassert (! getRootFolderNameForScan ().isEmpty ());
     setRequestedTaskManagementState (TaskManagementState::startScan);
     wakeUpTaskManagmentThread ();
+}
+
+// the shared ValueTree may only be read on the message thread, so the root folder name is cached
+// here for the scan/check threads to use
+void DirectoryValueTree::cacheRootFolderNameForScan ()
+{
+    jassert (juce::MessageManager::existsAndIsCurrentThread ());
+    FolderProperties rootFolderProperties (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+    const auto rootFolderName { rootFolderProperties.getName () };
+    juce::ScopedLock sl (scanStateCS);
+    rootFolderNameForScan = rootFolderName;
+}
+
+juce::String DirectoryValueTree::getRootFolderNameForScan ()
+{
+    juce::ScopedLock sl (scanStateCS);
+    return rootFolderNameForScan;
+}
+
+std::vector<DirectoryValueTree::DirectoryEntrySummary> DirectoryValueTree::getLastScanSummary ()
+{
+    juce::ScopedLock sl (scanStateCS);
+    return lastScanSummary;
+}
+
+void DirectoryValueTree::setLastScanSummary (std::vector<DirectoryEntrySummary> summary)
+{
+    juce::ScopedLock sl (scanStateCS);
+    lastScanSummary = std::move (summary);
+}
+
+std::vector<DirectoryValueTree::DirectoryEntrySummary> DirectoryValueTree::summarizeFolder (juce::ValueTree folderVT)
+{
+    std::vector<DirectoryEntrySummary> summary;
+    summary.reserve (static_cast<size_t> (folderVT.getNumChildren ()));
+    ValueTreeHelpers::forEachChild (folderVT, [&summary] (juce::ValueTree child)
+    {
+        summary.emplace_back (DirectoryEntrySummary { child.getProperty (FolderProperties::NamePropertyId).toString (),
+                                                      static_cast<juce::int64> (child.getProperty (FolderProperties::CreationTimePropertyId)),
+                                                      static_cast<juce::int64> (child.getProperty (FolderProperties::ModificationTimePropertyId)),
+                                                      FolderProperties::isFolderVT (child) });
+        return true;
+    });
+    return summary;
 }
 
 void DirectoryValueTree::timerCallback ()
 {
     LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "timerCallback - doChangeCheck");
+    cacheRootFolderNameForScan ();
     if (setRequestedTaskManagementState (TaskManagementState::startCheck))
         wakeUpTaskManagmentThread ();
 }
@@ -300,8 +346,7 @@ void DirectoryValueTree::run ()
 
 juce::String DirectoryValueTree::getPathFromCurrentRoot (juce::String fullPath)
 {
-    FolderProperties rootFolderProperties (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
-    const auto partialPath { fullPath.fromLastOccurrenceOf (rootFolderProperties .getName (), false, true) };
+    const auto partialPath { fullPath.fromLastOccurrenceOf (getRootFolderNameForScan (), false, true) };
     return partialPath;
 }
 
@@ -309,21 +354,47 @@ void DirectoryValueTree::scanDirectory ()
 {
     LogDirectoryValueTree (true, "scanDirectory ()");
     lastScanInProgressUpdate = juce::Time::currentTimeMillis ();
-    FolderProperties rootFolderProperties (directoryDataProperties.getRootFolderVT (), FolderProperties::WrapperType::client, FolderProperties::EnableCallbacks::no);
+    const auto rootFolderName { getRootFolderNameForScan () };
     // do one initial progress update to fill in the first one
-    doProgressUpdate ("Reading File System: " + getPathFromCurrentRoot (juce::File (rootFolderProperties.getName ()).getFileName ()));
-    // clear old contents
+    doProgressUpdate ("Reading File System: " + getPathFromCurrentRoot (juce::File (rootFolderName).getFileName ()));
     timer.start (100000);
-    directoryDataProperties.getRootFolderVT ().removeAllChildren (nullptr);
+
+    // the scan is built up in a ValueTree that only this thread can see, so that it can be filled in
+    // and sorted without any other thread being able to observe it mid-change. it is handed over to
+    // the message thread, in one step, once it is complete
+    FolderProperties scanResultProperties ({}, FolderProperties::WrapperType::owner, FolderProperties::EnableCallbacks::no);
+    scanResultProperties.setName (rootFolderName, false);
     scanType = ScanType::fullScan;
-    getContentsOfFolder (directoryDataProperties.getRootFolderVT (), 0, [this] () { return shouldCancelOperation (scanThread, cancelScan); });
-    // reset the output if scan was canceled
+    getContentsOfFolder (scanResultProperties.getValueTree (), 0, [this] () { return shouldCancelOperation (scanThread, cancelScan); });
+
+    // discard the results if the scan was canceled
     if (shouldCancelOperation (scanThread, cancelScan))
     {
-        LogDirectoryValueTree (true, "scanDirectory - operation cancelled, removing all data");
-        directoryDataProperties.getRootFolderVT ().removeAllChildren (nullptr);
+        LogDirectoryValueTree (true, "scanDirectory - operation cancelled, discarding scan results");
+        return;
     }
+
+    setLastScanSummary (summarizeFolder (scanResultProperties.getValueTree ()));
+    publishScanResults (scanResultProperties.getValueTree ());
     LogDirectoryValueTree (true, "DirectoryValueTree::scanDirectory ()- elapsed time: " + juce::String (timer.getElapsedTime ()));
+}
+
+void DirectoryValueTree::publishScanResults (juce::ValueTree scanResultsVT)
+{
+    juce::MessageManager::callAsync ([this, scanResultsVT] () mutable
+    {
+        auto rootFolderVT { directoryDataProperties.getRootFolderVT () };
+        rootFolderVT.removeAllChildren (nullptr);
+        // the entries are moved, rather than copied, so that publishing costs one pointer move per
+        // entry instead of a deep copy of the whole scan
+        while (scanResultsVT.getNumChildren () > 0)
+        {
+            auto entryVT { scanResultsVT.getChild (0) };
+            scanResultsVT.removeChild (0, nullptr);
+            rootFolderVT.appendChild (entryVT, nullptr);
+        }
+        directoryDataProperties.triggerRootScanComplete (false);
+    });
 }
 
 void DirectoryValueTree::doProgressUpdate (juce::String progressString)
@@ -334,78 +405,31 @@ void DirectoryValueTree::doProgressUpdate (juce::String progressString)
     });
 }
 
-bool DirectoryValueTree::hasFolderChanged (juce::ValueTree rootFolderVT)
+bool DirectoryValueTree::hasFolderChanged ()
 {
-    FolderProperties rootFolderProperties (rootFolderVT, FolderProperties::WrapperType::owner, FolderProperties::EnableCallbacks::no);
+    // build a fresh listing in a ValueTree only this thread can see, and compare it against the
+    // summary of the last completed scan. neither side touches the shared (published) tree
     FolderProperties newCopyOfFolderProperties ({}, FolderProperties::WrapperType::owner, FolderProperties::EnableCallbacks::no);
-    newCopyOfFolderProperties.setName (rootFolderProperties.getName (), false);
+    newCopyOfFolderProperties.setName (getRootFolderNameForScan (), false);
     scanType = ScanType::checkForUpdate;
     getContentsOfFolder (newCopyOfFolderProperties.getValueTree (), 0, [this] () { return shouldCancelOperation (checkThread, cancelCheck); });
-    if (rootFolderProperties.getValueTree ().getNumChildren () != newCopyOfFolderProperties.getValueTree ().getNumChildren ())
+
+    if (shouldCancelOperation (checkThread, cancelCheck))
+        return false;
+
+    const auto previousSummary { getLastScanSummary () };
+    const auto newSummary { summarizeFolder (newCopyOfFolderProperties.getValueTree ()) };
+    if (previousSummary.size () != newSummary.size ())
     {
-        LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - number of children differ - do rescan");
+        LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - number of entries differ - do rescan");
         return true;
     }
-    for (auto childIndex { 0 }; childIndex < rootFolderProperties.getValueTree ().getNumChildren (); ++childIndex)
+    for (auto entryIndex { 0u }; entryIndex < previousSummary.size (); ++entryIndex)
     {
-        auto rootChildVT { rootFolderProperties.getValueTree ().getChild (childIndex) };
-        auto newChildVT { newCopyOfFolderProperties.getValueTree ().getChild (childIndex) };
-        if (FolderProperties::isFolderVT (rootChildVT))
+        if (previousSummary [entryIndex] != newSummary [entryIndex])
         {
-            FolderProperties curRootFolderChildFolder (rootChildVT, FolderProperties::WrapperType::owner, FolderProperties::EnableCallbacks::no);
-            if (! FolderProperties::isFolderVT (newChildVT))
-            {
-                LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " differ in type - do rescan");
-                return true;
-            }
-            else
-            {
-                FolderProperties curNewFolderChildFolder (newChildVT, FolderProperties::WrapperType::owner, FolderProperties::EnableCallbacks::no);
-                if (curRootFolderChildFolder.getName () != curNewFolderChildFolder.getName ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " names differ - do rescan");
-                    return true;
-                }
-                if (curRootFolderChildFolder.getCreateTime () != curNewFolderChildFolder.getCreateTime ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " creation times differ - do rescan");
-                    return true;
-                }
-                if (curRootFolderChildFolder.getModificationTime () != curNewFolderChildFolder.getModificationTime ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " modification times differ - do rescan");
-                    return true;
-                }
-            }
-        }
-        else
-        {
-            FileProperties curRootFolderChildFile (rootChildVT, FileProperties::WrapperType::owner, FileProperties::EnableCallbacks::no);
-            if (! FileProperties::isFileVT (newChildVT))
-            {
-                LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " differ in type - do rescan");
-                return true;
-            }
-            else
-            {
-                FileProperties curNewFolderChildFile (newChildVT, FileProperties::WrapperType::owner, FileProperties::EnableCallbacks::no);
-                if (curRootFolderChildFile.getName () != curNewFolderChildFile.getName ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " names differ - do rescan");
-                    return true;
-                }
-                if (curRootFolderChildFile.getCreateTime () != curNewFolderChildFile.getCreateTime ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " creation times differ - do rescan");
-                    return true;
-                }
-                if (curRootFolderChildFile.getModificationTime () != curNewFolderChildFile.getModificationTime ())
-                {
-                    LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (childIndex) + " modification times differ - do rescan");
-                    return true;
-                }
-
-            }
+            LogDirectoryValueTree (SHOW_CHECK_STATE_LOG, "hasFolderChanged - item #" + juce::String (entryIndex) + " differs - do rescan");
+            return true;
         }
     }
     return false;
@@ -440,8 +464,6 @@ void DirectoryValueTree::getContentsOfFolder (juce::ValueTree folderVT, int curD
             }
         }
         sortContentsOfFolder (folderVT, shouldCancelFunc);
-        if (scanType == ScanType::fullScan && curDepth == 0)
-            directoryDataProperties.triggerRootScanComplete (false);
 
         // scan the sub-folders
         ValueTreeHelpers::forEachChildOfType (folderVT, FolderProperties::FolderTypeId, [this, curDepth, shouldCancelFunc] (juce::ValueTree childFolderVT)

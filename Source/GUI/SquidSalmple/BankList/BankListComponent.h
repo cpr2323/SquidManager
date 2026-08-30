@@ -33,13 +33,30 @@ private:
     std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
     int numBanks { kMaxBanks };
     juce::File currentFolder;
-    juce::File previousFolder;
+    // set when a folder change means the first bank should be selected and loaded, cleared once
+    // that has happened. message thread only
+    bool firstBankLoadPending { true };
     int lastSelectedBankIndex { -1 };
     LambdaThread checkBanksThread { "CheckBanksThread", 100 };
+
+    // one bank folder found in the directory ValueTree. the tree is walked on the message thread to
+    // produce these, so that checkBanksThread only ever works with plain files
+    struct BankDirectoryEntry
+    {
+        int bankId {};
+        juce::File directory;
+    };
+    juce::CriticalSection bankDirectorySnapshotCS;
+    std::vector<BankDirectoryEntry> bankDirectorySnapshot;
+    juce::File snapshotRootFolder;
+    bool snapshotShowAllBanks { true };
 
     void copyBank (int bankNumber);
     void checkBanks ();
     void checkForFolderChange ();
+    void snapshotBankDirectories ();
+    void startCheckBanksThread ();
+    void sendStatusUpdate (juce::String status);
     void deleteBank (int bankNumber);
     juce::File getBankDirectory (int bankNumber);
     void forEachBankDirectory (std::function<bool (juce::File bankDirectory, int index)> bankDirectoryCallback);

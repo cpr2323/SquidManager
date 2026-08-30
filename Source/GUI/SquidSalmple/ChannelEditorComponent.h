@@ -135,7 +135,20 @@ private:
     public:
         juce::Font getTextButtonFont (juce::TextButton&, int /*buttonHeight*/) override
         {
-            return juce::Font (11);
+            return juce::Font (juce::FontOptions (11.0f));
+        }
+
+        // the default implementation reserves an indent on each side of the text, which on these
+        // 15 pixel wide buttons leaves only 5 pixels for the glyph. that is narrower than the '+'
+        // needs, so it gets squashed to the minimum horizontal scale and becomes unreadable. these
+        // buttons hold a single character, so the text is drawn across the full width instead
+        void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool, bool) override
+        {
+            g.setFont (getTextButtonFont (button, button.getHeight ()));
+            g.setColour (button.findColour (button.getToggleState () ? juce::TextButton::textColourOnId
+                                                                    : juce::TextButton::textColourOffId)
+                               .withMultipliedAlpha (button.isEnabled () ? 1.0f : 0.5f));
+            g.drawText (button.getButtonText (), button.getLocalBounds (), juce::Justification::centred, false);
         }
     };
     CueEditButtonLnF cueEditButtonLnF;

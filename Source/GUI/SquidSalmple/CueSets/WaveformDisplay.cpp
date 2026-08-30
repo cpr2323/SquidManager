@@ -223,7 +223,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 g.setFont (fontSize);
                 setBackgroundColor ();
                 // TODO - replace hardcoded 10.f with value derived from text height
-                auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (text) + 10.f };
+                auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), text) + 10.f };
                 auto center { bounds.getCentre () };
                 g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
                 setTextColor ();
@@ -270,7 +270,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
                     {
                         const auto& detailLine { dropDetails [curDropDetailLineIndex] };
-                        if (auto stringWidthPixels { g.getCurrentFont ().getStringWidthFloat (detailLine) + 10.f }; stringWidthPixels > maxStringPixels)
+                        if (auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), detailLine) + 10.f }; stringWidthPixels > maxStringPixels)
                             maxStringPixels = stringWidthPixels;
                     }
                     return maxStringPixels;

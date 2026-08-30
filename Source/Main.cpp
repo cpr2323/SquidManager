@@ -20,6 +20,66 @@ constexpr const char* kVersionDecorator { "" };
 // https://github.com/sudara/melatonin_inspector
 #define ENABLE_MELATONIN_INSPECTOR 0
 
+// set to 1 to log how long the message thread spends unresponsive. useful when moving work on to,
+// or off of, the message thread, to check that the UI still redraws and handles input promptly
+#define ENABLE_MESSAGE_THREAD_STALL_MONITOR 0
+
+#if ENABLE_MESSAGE_THREAD_STALL_MONITOR
+// times the gaps between the callbacks of a fast timer. anything beyond the timer interval is time
+// the message thread was busy, and therefore time the UI was frozen
+class MessageThreadStallMonitor : private juce::Timer
+{
+public:
+    MessageThreadStallMonitor ()
+    {
+        lastCallbackTime = juce::Time::getMillisecondCounterHiRes ();
+        startTimer (kIntervalMs);
+    }
+    ~MessageThreadStallMonitor ()
+    {
+        stopTimer ();
+        report ();
+    }
+
+    void report ()
+    {
+        juce::Logger::writeToLog ("[stall monitor] callbacks: " + juce::String (numCallbacks) +
+                                  ", worst stall: " + juce::String (worstStallMs, 1) + "ms" +
+                                  ", stalls > 16ms: " + juce::String (numStallsOver16) +
+                                  ", stalls > 50ms: " + juce::String (numStallsOver50) +
+                                  ", stalls > 100ms: " + juce::String (numStallsOver100));
+    }
+
+private:
+    static constexpr int kIntervalMs { 10 };
+    double lastCallbackTime {};
+    double worstStallMs {};
+    int numCallbacks {};
+    int numStallsOver16 {};
+    int numStallsOver50 {};
+    int numStallsOver100 {};
+
+    void timerCallback () override
+    {
+        const auto now { juce::Time::getMillisecondCounterHiRes () };
+        const auto stallMs { now - lastCallbackTime - kIntervalMs };
+        lastCallbackTime = now;
+        ++numCallbacks;
+        if (stallMs > worstStallMs)
+        {
+            worstStallMs = stallMs;
+            juce::Logger::writeToLog ("[stall monitor] new worst stall: " + juce::String (stallMs, 1) + "ms");
+        }
+        if (stallMs > 100.0)
+            ++numStallsOver100;
+        else if (stallMs > 50.0)
+            ++numStallsOver50;
+        else if (stallMs > 16.0)
+            ++numStallsOver16;
+    }
+};
+#endif
+
 const juce::String PropertiesFileExtension { ".properties" };
 
 void crashHandler (void* /*data*/)
@@ -51,12 +111,19 @@ public:
 
         //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) { DebugLog ("main", text); });
 
+#if ENABLE_MESSAGE_THREAD_STALL_MONITOR
+        messageThreadStallMonitor = std::make_unique<MessageThreadStallMonitor> ();
+#endif
+
         // async quit timer
         startTimer (125);
     }
 
     void shutdown () override
     {
+#if ENABLE_MESSAGE_THREAD_STALL_MONITOR
+        messageThreadStallMonitor.reset ();
+#endif
         persitentPropertiesFile.save ();
         mainWindow = nullptr; // (deletes our window)
         juce::Logger::setCurrentLogger (nullptr);
@@ -305,6 +372,9 @@ private:
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
     AudioPlayer audioPlayer;
+#if ENABLE_MESSAGE_THREAD_STALL_MONITOR
+    std::unique_ptr<MessageThreadStallMonitor> messageThreadStallMonitor;
+#endif
 
     // System Services
     EditManager editManager;

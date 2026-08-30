@@ -158,6 +158,15 @@ void AudioPlayer::prepareSampleForPlayback ()
     }
 }
 
+AudioPlayer::~AudioPlayer ()
+{
+    // the device manager must not be left holding a callback that is about to be destroyed. members
+    // are destroyed in reverse order of declaration, so audioSourcePlayer goes first, and then
+    // closing the device from ~AudioDeviceManager calls audioDeviceStopped () on the destroyed
+    // object - which reallocates its temp buffer, leaking it
+    shutdownAudio ();
+}
+
 void AudioPlayer::shutdownAudio ()
 {
     audioSourcePlayer.setSource (nullptr);

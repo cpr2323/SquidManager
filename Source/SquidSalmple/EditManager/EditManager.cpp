@@ -652,12 +652,16 @@ void EditManager::concatenateAndBuildCueSets (const juce::StringArray& files, in
     std::vector<CueSet> cueSetList;
     auto hadError { false };
     {
-        auto outputStream { outputFile.createOutputStream () };
+        // declared as the base type because createWriterFor takes a unique_ptr<OutputStream>&, which
+        // a unique_ptr<FileOutputStream> cannot bind to. nothing here needs the FileOutputStream
+        // specific calls, so one pointer is enough
+        std::unique_ptr<juce::OutputStream> outputStream { outputFile.createOutputStream () };
         juce::WavAudioFormat wavAudioFormat;
-        if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (outputStream.get (), 44100.0, 1, 16, {}, 0) }; writer != nullptr)
+        // on success, the writer takes ownership of the output stream, and will delete it when done
+        if (auto writer { wavAudioFormat.createWriterFor (outputStream, juce::AudioFormatWriterOptions {}.withSampleRate (44100.0)
+                                                                                                         .withNumChannels (1)
+                                                                                                         .withBitsPerSample (16)) }; writer != nullptr)
         {
-            // audioFormatWriter will delete the file stream when done
-            outputStream.release ();
 
             // build list of cue sets from file list
             // concatenate files into one file
@@ -958,9 +962,15 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
     else
     {
         // convert file from current location to channel directory
+        // truncate () is FileOutputStream only, so the setup has to happen while the pointer still
+        // has that type
         auto destinationFileStream { std::make_unique<juce::FileOutputStream> (destFile) };
         destinationFileStream->setPosition (0);
         destinationFileStream->truncate ();
+        // createWriterFor takes a unique_ptr<OutputStream>&, and a unique_ptr<FileOutputStream>
+        // cannot bind to a reference to a different type, so the stream is moved into a base typed
+        // pointer to hand over. this is the same stream: destinationFileStream is null from here on
+        std::unique_ptr<juce::OutputStream> streamForWriter { std::move (destinationFileStream) };
 
         if (auto reader { getReaderFor (srcFile) }; reader != nullptr)
         {
@@ -976,12 +986,11 @@ bool EditManager::copySampleToChannel (juce::File srcFile, juce::File destFile)
 
             // TODO - if the srcFile is a wav file, we should check to see if we need to copy the markers, and then add those to the destination file
             juce::WavAudioFormat wavAudioFormat;
-            if (std::unique_ptr<juce::AudioFormatWriter> writer { wavAudioFormat.createWriterFor (destinationFileStream.get (),
-                                                                  44100, numChannels, bitsPerSample, {}, 0) }; writer != nullptr)
+            // on success, the writer takes ownership of the destination stream, and will delete it when done
+            if (auto writer { wavAudioFormat.createWriterFor (streamForWriter, juce::AudioFormatWriterOptions {}.withSampleRate (44100)
+                                                                                                               .withNumChannels (static_cast<int> (numChannels))
+                                                                                                               .withBitsPerSample (static_cast<int> (bitsPerSample))) }; writer != nullptr)
             {
-                // audioFormatWriter will delete the file stream when done
-                destinationFileStream.release ();
-
                 if (reader->bitsPerSample == 44100)
                 {
                     // copy the whole thing

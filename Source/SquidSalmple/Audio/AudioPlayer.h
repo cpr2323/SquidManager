@@ -11,6 +11,7 @@ class AudioPlayer : public juce::AudioSource,
                     public juce::ChangeListener
 {
 public:
+    ~AudioPlayer ();
 
     void init (juce::ValueTree rootProperties);
     void shutdownAudio ();

@@ -27,7 +27,7 @@ CvAssignEditor::CvAssignEditor ()
     addAndMakeVisible (downButton);
 
     curCvAssignIndexLabel.setBorderSize ({ 0,0,0,0 });
-    curCvAssignIndexLabel.setFont (16);
+    curCvAssignIndexLabel.setFont (juce::Font (juce::FontOptions (16.0f)));
     addAndMakeVisible (curCvAssignIndexLabel);
 
     for (auto& cvAssignSection : cvAssignSectionList)
