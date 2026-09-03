@@ -4,7 +4,7 @@
 #include "../SquidBankProperties.h"
 #include "../SquidChannelProperties.h"
 #include "../../AppProperties.h"
-#include "../../Utility/RuntimeRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 struct FileInfo
 {

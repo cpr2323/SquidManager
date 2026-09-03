@@ -3,7 +3,7 @@
 #include "../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "../../SystemServices.h"
-#include "../../Utility/PersistentRootProperties.h"
+#include "oolib/Properties/PersistentRootProperties.h"
 
 const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };

@@ -8,11 +8,11 @@
 #include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
 #include "../../SquidSalmple/SquidChannelProperties.h"
-#include "../../Utility/CustomComboBox.h"
-#include "../../Utility/CustomTextEditor.h"
-#include "../../Utility/FileSelectLabel.h"
-#include "../../Utility/NoArrowComboBoxLnF.h"
-#include "../../Utility/RoundedSlideSwitch.h"
+#include "oolib/GUI/CustomComboBox.h"
+#include "oolib/GUI/CustomTextEditor.h"
+#include "oolib/GUI/FileSelectLabel.h"
+#include "oolib/GUI/NoArrowComboBoxLnF.h"
+#include "oolib/GUI/RoundedSlideSwitch.h"
 
 class ChannelEditorComponent : public juce::Component,
                                public juce::FileDragAndDropTarget

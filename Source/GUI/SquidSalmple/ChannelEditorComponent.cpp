@@ -1,8 +1,8 @@
 #include "ChannelEditorComponent.h"
 #include "../../SystemServices.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
-#include "../../Utility/PersistentRootProperties.h"
-#include "../../Utility/RuntimeRootProperties.h"
+#include "oolib/Properties/PersistentRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 constexpr auto kMaxSampleLength { 524287 };
 
@@ -1506,6 +1506,8 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     editManager = systemServices.getEditManager ();
 
     sampleFileNameSelectLabel.setFileFilter (editManager->getFileTypesList ());
+    // FileSelectLabel defaults to a generic prompt, since it is shared across applications
+    sampleFileNameSelectLabel.setDialogTitle ("Please select the Squid Salmple file you want to load...");
 
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
     audioPlayerProperties.onPlayStateChange = [this] (AudioPlayerProperties::PlayState playState)

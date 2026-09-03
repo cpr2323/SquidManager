@@ -1,10 +1,10 @@
 #include "BankListComponent.h"
 #include "../../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../../SystemServices.h"
-#include "../../../Utility/DebugLog.h"
-#include "../../../Utility/PersistentRootProperties.h"
-#include "../../../Utility/RuntimeRootProperties.h"
-#include "../../../Utility/WatchDogTimer.h"
+#include "oolib/Debug/DebugLog.h"
+#include "oolib/Debug/WatchDogTimer.h"
+#include "oolib/Properties/PersistentRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 #define LOG_BANK_LIST 0
 #if LOG_BANK_LIST

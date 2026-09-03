@@ -2,7 +2,11 @@
 
 #include <JuceHeader.h>
 #include "SquidSalmple/EditManager/EditManager.h"
-#include "Utility/ValueTreeWrapper.h"
+#include "oolib/ValueTree/ValueTreeWrapper.h"
+
+// the name SquidManager registers its audio file type under with DirectoryValueTree. clients turn it into
+// the id that appears as the 'type' property of a scanned entry with DirectoryDataProperties::getFileTypeId
+inline const juce::String kAudioFileTypeName { "audio" };
 
 class SystemServices : public ValueTreeWrapper<SystemServices>
 {

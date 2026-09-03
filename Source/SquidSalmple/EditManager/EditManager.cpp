@@ -4,8 +4,8 @@
 #include "../Metadata/SquidSalmpleDefs.h"
 #include "../Metadata/SquidMetaDataReader.h"
 #include "../Metadata/SquidMetaDataWriter.h"
-#include "../../Utility/DebugLog.h"
-#include "../../Utility/PersistentRootProperties.h"
+#include "oolib/Debug/DebugLog.h"
+#include "oolib/Properties/PersistentRootProperties.h"
 #include "../../SRC//libsamplerate-0.1.9/src/samplerate.h"
 
 #define LOG_EDIT_MANAGER 0

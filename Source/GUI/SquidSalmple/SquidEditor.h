@@ -6,7 +6,7 @@
 #include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/SquidBankProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
-#include "../../Utility/RuntimeRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 class SquidEditorComponent : public juce::Component,
                              public juce::Timer

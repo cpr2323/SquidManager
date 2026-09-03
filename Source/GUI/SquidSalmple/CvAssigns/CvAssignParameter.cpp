@@ -1,7 +1,7 @@
 #include "CvAssignParameter.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/CvParameterProperties.h"
-#include "../../../Utility/RuntimeRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 CvAssignParameter::CvAssignParameter ()
 {

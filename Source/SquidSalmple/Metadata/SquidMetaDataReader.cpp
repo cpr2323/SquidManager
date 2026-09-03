@@ -3,8 +3,8 @@
 #include "SquidSalmpleDefs.h"
 #include "../CvParameterProperties.h"
 #include "../SquidChannelProperties.h"
-#include "../../Utility/DebugLog.h"
-#include "../../Utility/DumpStack.h"
+#include "oolib/Debug/DebugLog.h"
+#include "oolib/Debug/DumpStack.h"
 
 #define LOG_READER 0
 #if LOG_READER

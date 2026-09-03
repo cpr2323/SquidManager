@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
-#include "../../../Utility/DirectoryDataProperties.h"
+#include "oolib/Directory/DirectoryDataProperties.h"
 
 class FileViewComponent : public juce::Component,
                           private juce::ListBoxModel
@@ -21,6 +21,9 @@ private:
     AppProperties appProperties;
     DirectoryDataProperties directoryDataProperties;
     EditManager* editManager { nullptr };
+    // the id DirectoryValueTree handed out for the audio file type, resolved in init once the scanner
+    // has published its registry. -1 until then, which no entry will ever carry
+    int audioFileTypeId { -1 };
 
     // built and read only on the message thread, so it needs no lock or double buffering
     std::vector<juce::ValueTree> directoryListQuickLookupList;
@@ -39,6 +42,7 @@ private:
 
     void buildQuickLookupList ();
     juce::ValueTree getDirectoryEntryVT (int row);
+    bool isAudioFile (juce::ValueTree directoryEntryVT);
     void newFolder ();
     void openFolder ();
     void updateFromNewData ();

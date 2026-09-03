@@ -6,13 +6,13 @@
 #include "SquidSalmple/Audio/AudioPlayer.h"
 #include "SquidSalmple/Bank/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
-#include "Utility/DebugLog.h"
-#include "Utility/DirectoryValueTree.h"
-#include "Utility/PersistentRootProperties.h"
-#include "Utility/RootProperties.h"
-#include "Utility/RuntimeRootProperties.h"
-#include "Utility/ValueTreeFile.h"
-#include "Utility/ValueTreeMonitor.h"
+#include "oolib/Debug/DebugLog.h"
+#include "oolib/Debug/ValueTreeMonitor.h"
+#include "oolib/Directory/DirectoryValueTree.h"
+#include "oolib/Properties/PersistentRootProperties.h"
+#include "oolib/Properties/RootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
+#include "oolib/ValueTree/ValueTreeFile.h"
 
 constexpr const char* kVersionDecorator { "" };
 
@@ -177,6 +177,28 @@ public:
         directoryValueTree.init (runtimeRootProperties.getValueTree ());
         directoryDataProperties.wrap (directoryValueTree.getDirectoryDataPropertiesVT (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::no);
         directoryDataProperties.setScanDepth (0, false);
+        // a Squid Salmple drive holds folders named "Bank <n>", which have to be ordered by that number
+        // rather than by name, so that Bank 2 comes before Bank 10
+        directoryValueTree.setComparatorForType (DirectoryValueTree::folderTypeId, [] (juce::String firstName, juce::String secondName)
+        {
+            // the names are full paths, and the bank number is only meaningful in the file name
+            auto asBankSortKey = [] (juce::String fullPath)
+            {
+                auto folderName { juce::File (fullPath).getFileName ().toLowerCase () };
+                auto bankId { 0 };
+                if (folderName.substring (0, 5) == "bank ")
+                {
+                    bankId = folderName.substring (5).getIntValue ();
+                    // every "Bank <n>" folder collapses to the same name, so the number does the ordering
+                    if (bankId > 0)
+                        folderName = "bank ";
+                }
+                return std::tuple<juce::String, int> { folderName, bankId };
+            };
+            const auto [firstFolderName, firstBankId] { asBankSortKey (firstName) };
+            const auto [secondFolderName, secondBankId] { asBankSortKey (secondName) };
+            return firstFolderName < secondFolderName || (firstFolderName == secondFolderName && firstBankId < secondBankId);
+        });
         // debug tool for watching changes on the Directory Data Properties Value Tree
         //directoryDataMonitor.assign (directoryDataProperties.getValueTreeRef ());
 
@@ -280,12 +302,26 @@ public:
         SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
         systemServices.setEditManager (&editManager);
 
-        directoryValueTree.setFileTypeIdentifier ([this] (juce::File file)
-        {
-            if (editManager.getFileInfo (file).supported)
-                return DirectoryDataProperties::TypeIndex::audioFile;
-            return DirectoryDataProperties::TypeIndex::unknownFile;
-        });
+        // the directory scanner knows nothing about Squid Salmple samples, so the audio file type is
+        // registered here, where the EditManager that decides what counts as one is available.
+        // both callbacks run on the scan thread
+        directoryValueTree.registerFileType (kAudioFileTypeName,
+            [this] (juce::File file) { return editManager.getFileInfo (file).supported; },
+            [this] (juce::ValueTree entryVT, juce::File file)
+            {
+                const auto fileInfo { editManager.getFileInfo (file) };
+                if (! fileInfo.supported)
+                {
+                    // the file changed between being identified and being described
+                    entryVT.setProperty ("error", "invalid format", nullptr);
+                    return;
+                }
+                entryVT.setProperty ("dataType", (fileInfo.usesFloatingPointData == true ? "floating point" : "integer"), nullptr);
+                entryVT.setProperty ("bitDepth", static_cast<int> (fileInfo.bitsPerSample), nullptr);
+                entryVT.setProperty ("numChannels", static_cast<int> (fileInfo.numChannels), nullptr);
+                entryVT.setProperty ("sampleRate", static_cast<int> (fileInfo.sampleRate), nullptr);
+                entryVT.setProperty ("lengthSamples", static_cast<juce::int64> (fileInfo.lengthInSamples), nullptr);
+            });
 
         // start the initial directory scan, based on the last accessed folder stored in the app properties
         directoryDataProperties.setRootFolder (appProperties.getMostRecentFolder (), false);

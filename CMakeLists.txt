@@ -6,6 +6,11 @@ project(SquidManager VERSION 1.4.0)
 #   git submodule update --init --recursive
 add_subdirectory(submodules/JUCE builds/JUCE)
 
+# oolib is a header/source collection rather than a library: its files include <JuceHeader.h>,
+# so they have to be compiled as part of a JUCE target. oolib.cmake defines OOLIB_SOURCES and
+# OOLIB_INCLUDE_DIR, and nothing else about the checkout leaks into this file.
+include(submodules/oolib/oolib.cmake)
+
 juce_add_gui_app(SquidManager
     PRODUCT_NAME "SquidManager"
     COMPANY_NAME "OmOhmProductions"
@@ -124,49 +129,6 @@ set(SRC_FILES
     Source/SRC/libsamplerate.c
     Source/SRC/libsamplerate-0.1.9/src/samplerate.h)
 
-set(UTILITY_FILES
-    Source/Utility/Crc.h
-    Source/Utility/CustomComboBox.cpp
-    Source/Utility/CustomComboBox.h
-    Source/Utility/CustomComponentMouseHandler.cpp
-    Source/Utility/CustomComponentMouseHandler.h
-    Source/Utility/CustomTextEditor.h
-    Source/Utility/DebugLog.cpp
-    Source/Utility/DebugLog.h
-    Source/Utility/DebugLogImplementation.h
-    Source/Utility/DirectoryDataProperties.cpp
-    Source/Utility/DirectoryDataProperties.h
-    Source/Utility/DirectoryValueTree.cpp
-    Source/Utility/DirectoryValueTree.h
-    Source/Utility/DumpStack.cpp
-    Source/Utility/DumpStack.h
-    Source/Utility/ErrorHelpers.cpp
-    Source/Utility/ErrorHelpers.h
-    Source/Utility/FileSelectLabel.cpp
-    Source/Utility/FileSelectLabel.h
-    Source/Utility/LambdaThread.h
-    Source/Utility/NoArrowComboBoxLnF.h
-    Source/Utility/PersistentRootProperties.cpp
-    Source/Utility/PersistentRootProperties.h
-    Source/Utility/RootProperties.cpp
-    Source/Utility/RootProperties.h
-    Source/Utility/RoundedSlideSwitch.cpp
-    Source/Utility/RoundedSlideSwitch.h
-    Source/Utility/RuntimeRootProperties.cpp
-    Source/Utility/RuntimeRootProperties.h
-    Source/Utility/SinglePoleFilter.h
-    Source/Utility/SplitWindowComponent.cpp
-    Source/Utility/SplitWindowComponent.h
-    Source/Utility/ValueTreeFile.cpp
-    Source/Utility/ValueTreeFile.h
-    Source/Utility/ValueTreeHelpers.cpp
-    Source/Utility/ValueTreeHelpers.h
-    Source/Utility/ValueTreeMonitor.cpp
-    Source/Utility/ValueTreeMonitor.h
-    Source/Utility/ValueTreeWrapper.cpp
-    Source/Utility/ValueTreeWrapper.h
-    Source/Utility/WatchDogTimer.h)
-
 # The files the Projucer marked resource="1". They are built into a separate
 # binary data target, but stay listed in the groups above so the IDE tree still
 # shows them next to the code they belong with.
@@ -193,7 +155,8 @@ source_group("Source/SquidSalmple/Data"           FILES ${SQUIDSALMPLE_DATA_FILE
 source_group("Source/SquidSalmple/EditManager"    FILES ${SQUIDSALMPLE_EDITMANAGER_FILES})
 source_group("Source/SquidSalmple/Metadata"       FILES ${SQUIDSALMPLE_METADATA_FILES})
 source_group("Source/SRC"                         FILES ${SRC_FILES})
-source_group("Source/Utility"                     FILES ${UTILITY_FILES})
+# oolib keeps its own Category folders, so let the IDE mirror them rather than flattening the list
+source_group(TREE "${OOLIB_INCLUDE_DIR}" FILES ${OOLIB_SOURCES})
 
 target_sources(SquidManager
     PRIVATE
@@ -212,7 +175,11 @@ target_sources(SquidManager
         ${SQUIDSALMPLE_EDITMANAGER_FILES}
         ${SQUIDSALMPLE_METADATA_FILES}
         ${SRC_FILES}
-        ${UTILITY_FILES})
+        ${OOLIB_SOURCES})
+
+target_include_directories(SquidManager
+    PRIVATE
+        ${OOLIB_INCLUDE_DIR})
 
 target_compile_definitions(SquidManager
     PUBLIC

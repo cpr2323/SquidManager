@@ -1,9 +1,9 @@
 #include "WaveformDisplay.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
-#include "../../../Utility/RuntimeRootProperties.h"
-#include "../../../Utility/DebugLog.h"
-#include "../../../Utility/DumpStack.h"
+#include "oolib/Debug/DebugLog.h"
+#include "oolib/Debug/DumpStack.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 constexpr auto kMaxSampleLength { 524287 };
 

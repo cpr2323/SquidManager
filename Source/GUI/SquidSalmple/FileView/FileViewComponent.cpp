@@ -1,7 +1,7 @@
 #include "FileViewComponent.h"
 #include "../../../SystemServices.h"
-#include "../../../Utility/PersistentRootProperties.h"
-#include "../../../Utility/RuntimeRootProperties.h"
+#include "oolib/Properties/PersistentRootProperties.h"
+#include "oolib/Properties/RuntimeRootProperties.h"
 
 #define LOG_FILE_VIEW 0
 #if LOG_FILE_VIEW
@@ -43,6 +43,8 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
     editManager = systemServices.getEditManager ();
 
     directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
+    // the file types are registered before the UI is built, so the registry is already published by now
+    audioFileTypeId = directoryDataProperties.getFileTypeId (kAudioFileTypeName);
     directoryDataProperties.onRootScanComplete = [this] ()
     {
         LogFileView ("FileViewComponent/onRootScanComplete");
@@ -88,23 +90,22 @@ void FileViewComponent::updateFromNewData ()
     directoryContentsListBox.repaint ();
 }
 
+// entries carry the type id DirectoryValueTree assigned them, so an audio file is one whose id matches
+// the one the audio type was registered under. folders are identified structurally, and carry no type
+bool FileViewComponent::isAudioFile (juce::ValueTree directoryEntryVT)
+{
+    return FileProperties::isFileVT (directoryEntryVT) &&
+           static_cast<int> (directoryEntryVT.getProperty (FileProperties::TypePropertyId)) == audioFileTypeId;
+}
+
 void FileViewComponent::buildQuickLookupList ()
 {
     jassert (juce::MessageManager::existsAndIsCurrentThread ());
     directoryListQuickLookupList.clear ();
     ValueTreeHelpers::forEachChild (directoryDataProperties.getRootFolderVT (), [this] (juce::ValueTree child)
     {
-        const auto typeIndex { static_cast<int> (child.getProperty ("type")) };
-        if (showAllFiles.getToggleState ())
-        {
+        if (showAllFiles.getToggleState () || FolderProperties::isFolderVT (child) || isAudioFile (child))
             directoryListQuickLookupList.emplace_back (child);
-        }
-        else if (typeIndex == DirectoryDataProperties::TypeIndex::audioFile ||
-                 typeIndex == DirectoryDataProperties::TypeIndex::folder ||
-                 typeIndex == DirectoryDataProperties::TypeIndex::systemFile)
-        {
-            directoryListQuickLookupList.emplace_back (child);
-        }
         return true;
     });
 }
@@ -176,11 +177,11 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     {
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
         juce::String filePrefix;
-        if (directoryEntryVT.getType ().toString () == "Folder")
+        if (FolderProperties::isFolderVT (directoryEntryVT))
         {
             filePrefix = "> ";
         }
-        else if (static_cast<int> (directoryEntryVT.getProperty ("type")) == DirectoryDataProperties::TypeIndex::audioFile)
+        else if (isAudioFile (directoryEntryVT))
         {
             filePrefix = "-  ";
             textColor = juce::Colours::forestgreen;
@@ -210,7 +211,7 @@ juce::String FileViewComponent::getTooltipForRow (int row)
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
 
         juce::String toolTip { juce::File (directoryEntryVT.getProperty ("name").toString ()).getFileName () };
-        if (static_cast<int> (directoryEntryVT.getProperty ("type")) == DirectoryDataProperties::TypeIndex::audioFile)
+        if (isAudioFile (directoryEntryVT))
         {
             const auto sampleRate { static_cast<int> (directoryEntryVT.getProperty ("sampleRate")) };
             if (auto errorString { directoryEntryVT.getProperty ("error").toString () }; errorString != "")
@@ -233,7 +234,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
     if (! isRootFolder && row != 0)
     {
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
-        if (static_cast<int> (directoryEntryVT.getProperty ("type")) != DirectoryDataProperties::TypeIndex::folder)
+        if (! FolderProperties::isFolderVT (directoryEntryVT))
             return;
     }
 
@@ -329,7 +330,7 @@ void FileViewComponent::listBoxItemDoubleClicked (int row, [[maybe_unused]] cons
         return;
 
     const auto directoryEntryVT { getDirectoryEntryVT (row) };
-    if (directoryEntryVT.getType ().toString () == "File" && static_cast<int> (directoryEntryVT.getProperty ("type")) == DirectoryDataProperties::TypeIndex::audioFile)
+    if (isAudioFile (directoryEntryVT))
     {
         if (onAudioFileSelected != nullptr)
             onAudioFileSelected (juce::File (directoryEntryVT.getProperty ("name").toString ()));

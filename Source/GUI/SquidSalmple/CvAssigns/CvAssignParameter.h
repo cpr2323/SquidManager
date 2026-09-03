@@ -2,8 +2,8 @@
 #include <JuceHeader.h>
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "../../../SquidSalmple/SquidChannelProperties.h"
-#include "../../../Utility/CustomTextEditor.h"
-#include "../../../Utility/RoundedSlideSwitch.h"
+#include "oolib/GUI/CustomTextEditor.h"
+#include "oolib/GUI/RoundedSlideSwitch.h"
 
 class CvAssignParameter : public juce::Component
 {

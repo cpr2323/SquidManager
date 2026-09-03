@@ -7,7 +7,7 @@
 #include "SquidSalmple/SquidEditor.h"
 #include "SquidSalmple/FileView/FileViewComponent.h"
 #include "SquidSalmple/BankList/BankListComponent.h"
-#include "../Utility/SplitWindowComponent.h"
+#include "oolib/GUI/SplitWindowComponent.h"
 
 class MainComponent : public juce::Component
 {
