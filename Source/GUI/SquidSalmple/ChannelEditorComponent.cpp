@@ -1564,6 +1564,7 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
 
     // TODO - we need to call this when the sample changes
     updateLoopPointsView ();
+    updateWaveformDisplay ();
 
     initOutputComboBox ();
 
@@ -1690,6 +1691,17 @@ void ChannelEditorComponent::initializeCallbacks ()
     };
 }
 
+void ChannelEditorComponent::updateWaveformDisplay ()
+{
+    // Only ever call this when the sample itself changes. The cue markers are
+    // pushed separately by the individual cue change handlers, and handing the
+    // waveform display a buffer makes it re-fit the view to the whole sample.
+    if (auto sampleData { squidChannelProperties.getSampleDataAudioBuffer () }; sampleData != nullptr)
+        waveformDisplay.setAudioBuffer (sampleData->getAudioBuffer ());
+    else
+        waveformDisplay.setAudioBuffer (nullptr);
+}
+
 void ChannelEditorComponent::updateLoopPointsView ()
 {
     uint32_t startSample { 0 };
@@ -1699,7 +1711,6 @@ void ChannelEditorComponent::updateLoopPointsView ()
         startSample = squidChannelProperties.getLoopCue ();
         numBytes = squidChannelProperties.getEndCue () - startSample;
         loopPointsView.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
-        waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
     }
     else
     {

@@ -2,12 +2,23 @@
 
 #include <JuceHeader.h>
 #include "../../../SquidSalmple/EditManager/EditManager.h"
+#include "oolib/GUI/InteractiveWaveform.h"
+#include "oolib/GUI/MarkerOverlay.h"
+#include "oolib/GUI/TimelineComponent.h"
 
+// A cue set editor: the timeline ruler, the waveform (pan/zoom), and the three
+// cue markers on top of it. The drawing, navigation and marker editing all come
+// from oolib; what lives here is the file drag and drop, and the cue point rules
+// the Squid imposes on the markers (start <= loop <= end), which MarkerOverlay
+// deliberately knows nothing about.
 class WaveformDisplay : public juce::Component,
                         public juce::FileDragAndDropTarget
 {
 public:
     enum class DropType { none, replace, append };
+
+    WaveformDisplay ();
+
     void init (juce::ValueTree rootPropertiesVT);
     void setChannelIndex (int theChannelIndex);
     void setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer);
@@ -16,6 +27,11 @@ public:
     void setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd);
     void setCueStartPoint (uint32_t newCueStart);
 
+    // The units the ruler (and the marker drag labels) are shown in. Samples by
+    // default; right-clicking the ruler switches between samples and time.
+    void setTimelineUnit (TimelineComponent::Unit unit);
+    TimelineComponent::Unit getTimelineUnit () const;
+
     std::function<void (uint32_t startPoint)> onStartPointChange;
     std::function<void (uint32_t loopPoint)> onLoopPointChange;
     std::function<void (uint32_t endPoint)> onEndPointChange;
@@ -23,15 +39,19 @@ public:
     std::function<bool (const juce::StringArray& files)> isInterestedInFiles;
 
 private:
-    enum class EditHandleIndex
+    // Marker indices, in the order they are added to the overlay.
+    enum MarkerIndex
     {
-        kNone = -1,
-        kStart = 0,
-        kLoop = 1,
-        kEnd = 2,
+        kStartMarker = 0,
+        kLoopMarker = 1,
+        kEndMarker = 2,
     };
 
     EditManager* editManager { nullptr };
+
+    InteractiveWaveform waveformView;
+    MarkerOverlay markerOverlay;
+    TimelineComponent timeline;
 
     uint32_t cueStart { 0 };
     uint32_t cueLoop { 0 };
@@ -40,20 +60,6 @@ private:
     juce::AudioBuffer<float>* audioBuffer { nullptr };
     int channelIndex { 0 };
 
-    juce::int64 numSamples { 0 };
-    int halfHeight { 0 };
-    int numPixels { 0 };
-    float samplesPerPixel { 0.f };
-    int markerStartY { 1 };
-    int markerEndY { 0 };
-    std::array<float, 2> dashedSpec;
-    juce::Rectangle<int> sampleStartHandle;
-    juce::Rectangle<int> sampleLoopHandle;
-    juce::Rectangle<int> sampleEndHandle;
-    int sampleStartMarkerX { 0 };
-    int sampleLoopMarkerX { 0 };
-    int sampleEndMarkerX { 0 };
-    EditHandleIndex handleIndex { EditHandleIndex::kNone };
     int draggingFilesCount { 0 };
     bool supportedFile { false };
     juce::String dropMsg;
@@ -61,8 +67,14 @@ private:
     DropType dropType { DropType::none };
     int dropAreaId { 0 };
 
-    void displayMarkers (juce::Graphics& g);
-    void displayWaveform (juce::Graphics& g);
+    void setupColours ();
+    void setupMarkers ();
+    double constrainMarker (int markerIndex, double proposedPosition) const;
+    void markerMoved (int markerIndex);
+    void moveLoopTo (uint32_t newCueLoop);
+    void updateMarkerPositions ();
+    void syncTimelineToView ();
+
     void resetDropInfo ();
     void setDropType (int x, int y);
 
@@ -73,8 +85,6 @@ private:
     void fileDragMove (const juce::StringArray& files, int, int) override;
     void fileDragExit (const juce::StringArray& files) override;
 
-    void mouseDrag (const juce::MouseEvent& e) override;
-    void mouseMove (const juce::MouseEvent& e) override;
     void resized () override;
     void paint (juce::Graphics& g) override;
     void paintOverChildren (juce::Graphics& g) override;

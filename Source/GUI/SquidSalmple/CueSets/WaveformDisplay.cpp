@@ -14,13 +14,107 @@ constexpr auto kMaxSampleLength { 524287 };
 #define LogWaveformDisplay(text) ;
 #endif
 
-const auto markerHandleSize { 10 };
+// The Squid only ever deals in 44k1 samples, so the timeline needs no other rate.
+constexpr auto kSquidSampleRate { 44100.0 };
+constexpr auto kTimelineHeight { 18 };
+
+// Where the view stops drawing the real sample line and switches to the min/max
+// peak envelope. Well above the point where the two representations coincide
+// (1 sample per pixel), so a cue set stays on the sample line until it is quite
+// zoomed out.
+constexpr auto kPeakEnvelopeThreshold { 30.0 };
+
+// The colours the cue set editor has always used: a black waveform on mid grey,
+// with the markers and the border in white.
+const juce::Colour kBackgroundColour { juce::Colours::grey.darker (0.3f) };
+const juce::Colour kForegroundColour { juce::Colours::black };
+const juce::Colour kMarkerColour { juce::Colours::white };
+
+WaveformDisplay::WaveformDisplay ()
+{
+    setupColours ();
+    waveformView.setPeakEnvelopeThreshold (kPeakEnvelopeThreshold);
+    waveformView.onViewChanged = [this] () { syncTimelineToView (); };
+    addAndMakeVisible (waveformView);
+
+    setupMarkers ();
+    markerOverlay.setWaveformView (&waveformView);
+    markerOverlay.formatPosition = [this] (double sample) { return timeline.formatSamplePosition (sample); };
+    markerOverlay.constrainPosition = [this] (int markerIndex, double proposedPosition) { return constrainMarker (markerIndex, proposedPosition); };
+    markerOverlay.onMarkerMoved = [this] (int markerIndex) { markerMoved (markerIndex); };
+    addAndMakeVisible (markerOverlay);
+
+    // Bars and beats mean nothing to a Squid cue set, so the ruler offers only
+    // samples - the units the cue points themselves are edited in, and so the
+    // default - and time. Right-clicking the ruler switches between them.
+    timeline.setSampleRate (kSquidSampleRate);
+    timeline.setAvailableUnits ({ TimelineComponent::Unit::samples, TimelineComponent::Unit::timeMinutesSeconds });
+    timeline.setUnit (TimelineComponent::Unit::samples);
+    // The marker drag labels are formatted by the timeline, so they follow it.
+    timeline.onUnitChanged = [this] (TimelineComponent::Unit) { markerOverlay.repaint (); };
+    addAndMakeVisible (timeline);
+}
 
 void WaveformDisplay::init (juce::ValueTree rootPropertiesVT)
 {
     RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
+}
+
+void WaveformDisplay::setupColours ()
+{
+    // Every part of the waveform is drawn in the one foreground colour, so the
+    // peak envelope, the RMS body inside it and the per-sample line all read as
+    // the single black trace this editor has always shown.
+    WaveformView::ColourScheme waveformColours;
+    waveformColours.background = kBackgroundColour;
+    waveformColours.peak = kForegroundColour;
+    waveformColours.rms = kForegroundColour;
+    waveformColours.sampleLine = kForegroundColour;
+    waveformColours.sampleDot = kForegroundColour;
+    // The old display had no centre line at all, so keep it to a hint of the
+    // foreground rather than a line that competes with the waveform.
+    waveformColours.centreLine = kForegroundColour.withAlpha (0.25f);
+    waveformView.setColourScheme (waveformColours);
+
+    TimelineComponent::ColourScheme timelineColours;
+    timelineColours.background = kBackgroundColour;
+    timelineColours.majorTick = kForegroundColour;
+    timelineColours.minorTick = kForegroundColour.withAlpha (0.55f);
+    timelineColours.text = kForegroundColour;
+    timeline.setColourScheme (timelineColours);
+}
+
+void WaveformDisplay::setupMarkers ()
+{
+    // Start and end bracket the cue set, so their handles point inwards, which
+    // keeps them apart and readable when the two markers meet. The loop point
+    // hangs off the bottom edge on a dashed line, as it always has, so it never
+    // reads as one of that pair.
+    MarkerOverlay::Style startStyle;
+    startStyle.colour = kMarkerColour;
+    startStyle.shape = MarkerOverlay::HandleShape::rectangle;
+    startStyle.placement = MarkerOverlay::HandlePlacement::top;
+    startStyle.alignment = MarkerOverlay::HandleAlignment::rightOfLine;
+
+    auto loopStyle { startStyle };
+    loopStyle.dashed = true;
+    loopStyle.placement = MarkerOverlay::HandlePlacement::bottom;
+
+    auto endStyle { startStyle };
+    endStyle.alignment = MarkerOverlay::HandleAlignment::leftOfLine;
+
+    auto addMarker = [this] (juce::StringRef name, const MarkerOverlay::Style& style)
+    {
+        MarkerOverlay::Marker marker;
+        marker.name = name;
+        marker.style = style;
+        markerOverlay.addMarker (marker);
+    };
+    addMarker ("Start", startStyle); // kStartMarker
+    addMarker ("Loop", loopStyle);   // kLoopMarker
+    addMarker ("End", endStyle);     // kEndMarker
 }
 
 void WaveformDisplay::setChannelIndex (int theChannelIndex)
@@ -31,12 +125,22 @@ void WaveformDisplay::setChannelIndex (int theChannelIndex)
 void WaveformDisplay::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
     LogWaveformDisplay ("setAudioBuffer");
+    // Being handed the sample that is already on display has to leave the view
+    // alone - anything else would throw away where the user has zoomed to every
+    // time some other part of the editor refreshes itself.
+    const auto sameSample { theAudioBuffer != nullptr && theAudioBuffer == audioBuffer
+                            && theAudioBuffer->getNumSamples () == waveformView.getNumSamples () };
+    const auto viewStartSample { waveformView.getVisibleStartSample () };
+    const auto viewSamplesPerPixel { waveformView.getSamplesPerPixel () };
+
     audioBuffer = theAudioBuffer;
-    if (audioBuffer == nullptr)
-        numSamples = 0;
-    else
-        numSamples = audioBuffer->getNumSamples ();
-    resized ();
+    waveformView.setAudioBuffer (audioBuffer); // this rebuilds the peaks, and fits the view to the sample
+    if (sameSample)
+        waveformView.setVisibleRange (viewStartSample, viewSamplesPerPixel * waveformView.getWidth ());
+    // The markers were bounded by the previous sample's length, so they have to
+    // be re-applied now that the new one has set the bounds.
+    updateMarkerPositions ();
+    syncTimelineToView ();
     repaint ();
 }
 
@@ -44,16 +148,14 @@ void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
 {
     LogWaveformDisplay ("setCueEndPoint");
     cueEnd = newCueEnd;
-    resized ();
-    repaint ();
+    markerOverlay.setPosition (kEndMarker, cueEnd);
 }
 
 void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
 {
-    LogWaveformDisplay ("setCueEndPoint");
+    LogWaveformDisplay ("setCueLoopPoint");
     cueLoop = newCueLoop;
-    resized ();
-    repaint ();
+    markerOverlay.setPosition (kLoopMarker, cueLoop);
 }
 
 void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd)
@@ -62,123 +164,126 @@ void WaveformDisplay::setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, u
     cueStart = newCueStart;
     cueLoop = newCueLoop;
     cueEnd = newCueEnd;
-    resized ();
-    repaint ();
+    updateMarkerPositions ();
 }
 
 void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
 {
     LogWaveformDisplay ("setCueStartPoint");
     cueStart = newCueStart;
-    resized ();
-    repaint ();
+    markerOverlay.setPosition (kStartMarker, cueStart);
+}
+
+void WaveformDisplay::setTimelineUnit (TimelineComponent::Unit unit)
+{
+    timeline.setUnit (unit);
+    markerOverlay.repaint ();
+}
+
+TimelineComponent::Unit WaveformDisplay::getTimelineUnit () const
+{
+    return timeline.getUnit ();
+}
+
+double WaveformDisplay::constrainMarker (int markerIndex, double proposedPosition) const
+{
+    // MarkerOverlay treats each marker as independent, and only keeps them inside
+    // the audio. The cue points additionally have to stay in start <= loop <= end
+    // order, which is this app's rule to enforce.
+    switch (markerIndex)
+    {
+        case kStartMarker:
+            return std::min (proposedPosition, static_cast<double> (cueEnd));
+        case kLoopMarker:
+            return std::clamp (proposedPosition, static_cast<double> (cueStart), static_cast<double> (cueEnd));
+        case kEndMarker:
+            return std::max (proposedPosition, static_cast<double> (cueStart));
+        default:
+            jassertfalse;
+            return proposedPosition;
+    }
+}
+
+void WaveformDisplay::markerMoved (int markerIndex)
+{
+    const auto newPosition { static_cast<uint32_t> (markerOverlay.getPosition (markerIndex)) };
+    switch (markerIndex)
+    {
+        case kStartMarker:
+        {
+            LogWaveformDisplay ("markerMoved - kStartMarker");
+            cueStart = newPosition;
+            // Dragging the start up to the loop takes the loop along with it.
+            if (cueStart > cueLoop)
+                moveLoopTo (cueStart);
+            if (onStartPointChange != nullptr)
+                onStartPointChange (cueStart);
+        }
+        break;
+        case kLoopMarker:
+        {
+            LogWaveformDisplay ("markerMoved - kLoopMarker");
+            moveLoopTo (newPosition);
+        }
+        break;
+        case kEndMarker:
+        {
+            LogWaveformDisplay ("markerMoved - kEndMarker");
+            cueEnd = newPosition;
+            // ...and dragging the end back onto the loop pulls the loop in.
+            if (cueEnd < cueLoop)
+                moveLoopTo (cueEnd);
+            if (onEndPointChange != nullptr)
+                onEndPointChange (cueEnd);
+        }
+        break;
+        default:
+        {
+            jassertfalse;
+        }
+        break;
+    }
+}
+
+void WaveformDisplay::moveLoopTo (uint32_t newCueLoop)
+{
+    cueLoop = newCueLoop;
+    markerOverlay.setPosition (kLoopMarker, cueLoop);
+    if (onLoopPointChange != nullptr)
+        onLoopPointChange (cueLoop);
+}
+
+void WaveformDisplay::updateMarkerPositions ()
+{
+    markerOverlay.setPosition (kStartMarker, cueStart);
+    markerOverlay.setPosition (kLoopMarker, cueLoop);
+    markerOverlay.setPosition (kEndMarker, cueEnd);
+}
+
+void WaveformDisplay::syncTimelineToView ()
+{
+    // The ruler and the waveform share their horizontal bounds, so feeding the
+    // ruler the waveform's view mapping keeps a pixel column meaning the same
+    // sample in both. The markers map through the waveform directly.
+    timeline.setView (waveformView.getVisibleStartSample (), waveformView.getSamplesPerPixel ());
+    markerOverlay.repaint ();
 }
 
 void WaveformDisplay::resized ()
 {
     LogWaveformDisplay ("resized");
-    halfHeight = getHeight () / 2;
-    numPixels = getWidth () - 2;
-    markerEndY = getHeight () - 2;
-    const auto dashSize { getHeight () / 11.f };
-    dashedSpec = { dashSize, dashSize };
-
-    if (audioBuffer == nullptr)
-    {
-        samplesPerPixel = 0.f;
-        sampleStartMarkerX = 0;
-        sampleLoopMarkerX = 0;
-        sampleEndMarkerX = 0;
-    }
-    else
-    {
-        samplesPerPixel = static_cast<float> (numSamples) / getWidth ();
-        sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
-        sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
-        sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
-    }
-    sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
-    sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
-    sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
-}
-
-void WaveformDisplay::displayWaveform (juce::Graphics& g)
-{
-    LogWaveformDisplay ("displayWaveform");
-    if (audioBuffer == nullptr)
-        return;
-    // TODO - implement side selection
-    auto readPtr { audioBuffer->getReadPointer (0) };
-
-    g.setColour (juce::Colours::black);
-    // TODO - get proper end pixel if sample ends before end of display
-    //auto curSampleValue { readPtr [0] };
-    for (auto pixelIndex { 0 }; pixelIndex < numPixels - 1; ++pixelIndex)
-    {
-        if ((pixelIndex + 1) * samplesPerPixel < numSamples)
-        {
-            const auto pixelOffset { pixelIndex + 1 };
-#if 0
-            const auto nextSampleValue = [this, pixelIndex, readPtr] ()
-            {
-                auto newSampleValue { 0.f };
-                for (auto curSampleIndexOffset { 0 }; curSampleIndexOffset < samplesPerPixel; ++curSampleIndexOffset)
-                {
-                    const auto sampleIndex { pixelIndex + 1 + curSampleIndexOffset };
-                    //juce::Logger::outputDebugString ("  sample [" + juce::String (sampleIndex) + "] : " + juce::String (readPtr [sampleIndex]));
-                    newSampleValue += readPtr [sampleIndex];
-                }
-                return newSampleValue / samplesPerPixel;
-            } ();
-            //juce::Logger::outputDebugString ("nextSampleValue: " + juce::String (nextSampleValue));
-            g.drawLine (static_cast<float> (pixelOffset),     static_cast<float> (static_cast<int> (halfHeight + (curSampleValue * halfHeight))),
-                        static_cast<float> (pixelOffset + 1), static_cast<float> (static_cast<int> (halfHeight + (nextSampleValue * halfHeight))));
-            curSampleValue = nextSampleValue;
-#else
-            g.drawLine (static_cast<float> (pixelOffset),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int> (pixelIndex * samplesPerPixel)] * halfHeight))),
-                        static_cast<float> (pixelOffset + 1),
-                        static_cast<float> (static_cast<int> (halfHeight + (readPtr [static_cast<int> ((pixelIndex + 1) * samplesPerPixel)] * halfHeight))));
-
-#endif
-        }
-        else
-        {
-            break;
-        }
-    }
-}
-
-void WaveformDisplay::displayMarkers (juce::Graphics& g)
-{
-    LogWaveformDisplay ("displayMarkers");
-    if (audioBuffer == nullptr)
-        return;
-
-    g.setColour (juce::Colours::white);
-
-    // draw sample start marker
-    g.fillRect (sampleStartHandle);
-    g.drawLine (juce::Line<int> { sampleStartMarkerX, markerStartY, sampleStartMarkerX, markerEndY }.toFloat ());
-
-    // draw loop start marker
-    g.fillRect (sampleLoopHandle);
-    g.drawDashedLine (juce::Line<int>{ sampleLoopMarkerX, markerStartY, sampleLoopMarkerX, markerEndY }.toFloat (), dashedSpec.data (), 2);
-
-    // draw sample end marker
-    g.fillRect (sampleEndHandle);
-    g.drawLine (juce::Line<int> { sampleEndMarkerX, markerStartY, sampleEndMarkerX, markerEndY }.toFloat ());
+    // The children sit inside the border this component draws around them.
+    auto bounds { getLocalBounds ().reduced (1) };
+    timeline.setBounds (bounds.removeFromTop (kTimelineHeight));
+    waveformView.setBounds (bounds);
+    markerOverlay.setBounds (bounds);
+    syncTimelineToView ();
 }
 
 void WaveformDisplay::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::grey.darker (0.3f));
-    g.fillRect (getLocalBounds ());
-
-    displayWaveform (g);
-    displayMarkers (g);
-
-    g.setColour (juce::Colours::white);
+    // The children cover everything but the border.
+    g.setColour (kMarkerColour);
     g.drawRect (getLocalBounds ());
 }
 
@@ -293,97 +398,6 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     }
 }
 
-void WaveformDisplay::mouseMove (const juce::MouseEvent& e)
-{
-    if (audioBuffer == nullptr)
-        return;
-
-    LogWaveformDisplay ("mouseMove");
-    if (sampleStartHandle.contains (e.getPosition ()))
-        handleIndex = EditHandleIndex::kStart;
-    else if (sampleLoopHandle.contains (e.getPosition ()))
-        handleIndex = EditHandleIndex::kLoop;
-    else if (sampleEndHandle.contains (e.getPosition ()))
-        handleIndex = EditHandleIndex::kEnd;
-    else
-        handleIndex = EditHandleIndex::kNone;
-    repaint ();
-    //DebugLog ("WaveformDisplay", "mouseMove - handleIndex: " + juce::String (handleIndex));
-}
-
-void WaveformDisplay::mouseDrag (const juce::MouseEvent& e)
-{
-    if (audioBuffer == nullptr)
-        return;
-
-    switch (handleIndex)
-    {
-        case EditHandleIndex::kNone:
-        {
-            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kNone");
-            return;
-        }
-        break;
-        case EditHandleIndex::kStart:
-        {
-            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kStart");
-            const auto newSampleStart { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleStart { static_cast<uint32_t> (std::clamp (newSampleStart, static_cast<int64_t> (0), static_cast<int64_t> (cueEnd))) };
-            cueStart = clampedSampleStart;
-            if (cueStart > cueLoop)
-            {
-                cueLoop = cueStart;
-                sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
-                sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
-                if (onLoopPointChange != nullptr)
-                    onLoopPointChange (cueLoop);
-            }
-            sampleStartMarkerX = 1 + static_cast<int> ((static_cast<float> (cueStart) / static_cast<float> (numSamples) * numPixels));
-            sampleStartHandle = { sampleStartMarkerX, markerStartY, markerHandleSize, markerHandleSize };
-            if (onStartPointChange != nullptr)
-                onStartPointChange (cueStart);
-            repaint ();
-        }
-        break;
-        case EditHandleIndex::kLoop:
-        {
-            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kLoop");
-            const auto newSampleLoop { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleLoop { static_cast<uint32_t> (std::clamp (newSampleLoop, static_cast<int64_t> (cueStart), static_cast<int64_t> (cueEnd))) };
-            cueLoop = clampedSampleLoop;
-            sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
-            sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
-            if (onLoopPointChange != nullptr)
-                onLoopPointChange (cueLoop);
-            repaint ();
-        }
-        break;
-        case EditHandleIndex::kEnd:
-        {
-            LogWaveformDisplay ("mouseDrag - EditHandleIndex::kEnd - starting cueLoop/cueEnd: " + juce::String (cueLoop) + "/" + juce::String (cueEnd));
-            const auto newSampleEnd { static_cast<int64_t> (e.getPosition ().getX () * samplesPerPixel) };
-            const auto clampedSampleEnd { static_cast<uint32_t> (std::clamp (newSampleEnd, static_cast<int64_t> (cueStart), static_cast<int64_t> (audioBuffer->getNumSamples ()))) };
-            cueEnd = clampedSampleEnd;
-            if (cueEnd < cueLoop)
-            {
-                cueLoop = cueEnd;
-                LogWaveformDisplay ("mouseDrag - moving loop: " + juce::String (cueLoop));
-                sampleLoopMarkerX = 1 + static_cast<int> ((static_cast<float> (cueLoop) / static_cast<float> (numSamples) * numPixels));
-                sampleLoopHandle = { sampleLoopMarkerX, markerEndY - markerHandleSize, markerHandleSize, markerHandleSize };
-                if (onLoopPointChange != nullptr)
-                    onLoopPointChange (cueLoop);
-            }
-            LogWaveformDisplay ("mouseDrag - moving end: " + juce::String (cueEnd));
-            sampleEndMarkerX = 1 + static_cast<int> ((static_cast<float> (cueEnd) / static_cast<float> (numSamples) * numPixels));
-            sampleEndHandle = { sampleEndMarkerX - markerHandleSize, markerStartY, markerHandleSize, markerHandleSize };
-            if (onEndPointChange != nullptr)
-                onEndPointChange (cueEnd);
-            repaint ();
-        }
-        break;
-    }
-}
-
 void WaveformDisplay::setDropType (int x, int y)
 {
     // if no file assigned
@@ -452,7 +466,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
             auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio { 44100. / reader->sampleRate };
+            const double ratio { kSquidSampleRate / reader->sampleRate };
             const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
 
             totalSize += actualNumSamples;
@@ -510,7 +524,7 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
                     // indicate no append happening
                     // TODO - this is not an unsupported file, but we want the error colors and the drop ignored, which uses the supportedFile flag. We should change that to a generic error flag
                     dropMsg = "No samples can be appended";
-                    tempDropDetails = "They do not fit in the remaining time of " + juce::String ((kMaxSampleLength - audioBuffer->getNumSamples ()) / 44100.f, 2) + " seconds";
+                    tempDropDetails = "They do not fit in the remaining time of " + juce::String ((kMaxSampleLength - audioBuffer->getNumSamples ()) / kSquidSampleRate, 2) + " seconds";
                     supportedFile = false;
                 }
                 else

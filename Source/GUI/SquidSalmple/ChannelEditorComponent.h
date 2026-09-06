@@ -174,6 +174,7 @@ private:
     void setFilterEnableState ();
     void setupComponents ();
     void updateLoopPointsView ();
+    void updateWaveformDisplay ();
 
     void attackDataChanged (int attack);
     void bitsDataChanged (int bits);
