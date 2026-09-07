@@ -293,9 +293,9 @@ void ChannelEditorComponent::setupComponents ()
     }
     channelSourceComboBox.setLookAndFeel (&noArrowComboBoxLnF);
     channelSourceComboBox.setTooltip ("Channel Reference. Select the channel for which this channel will get it's sample from. Can be changed on the module by holding the Chan button and turning the program knob.");
-    channelSourceComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    channelSourceComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setChannelSource (static_cast<uint8_t> (std::clamp (channelSourceComboBox.getSelectedItemIndex () + scrollAmount, 0, channelSourceComboBox.getNumItems () - 1)), true);
     };
     channelSourceComboBox.onPopupMenuCallback = [this] ()
@@ -328,18 +328,9 @@ void ChannelEditorComponent::setupComponents ()
     bitsTextEditor.getMaxValueCallback = [this] () { return 16; };
     bitsTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     bitsTextEditor.updateDataCallback = [this] (int value) { bitsUiChanged (value == 16 ? 0 : value); };
-    bitsTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    bitsTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 1;
-            else
-                return 3;
-        } ();
-        const auto newValue { squidChannelProperties.getBits () + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getBits () + static_cast<int> (valueDelta) };
         bitsTextEditor.setValue (newValue);
     };
     bitsTextEditor.onPopupMenuCallback = [this] ()
@@ -376,9 +367,9 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.addItem ("22", 2);
     rateComboBox.addItem ("44", 1);
     rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    rateComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    rateComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setRate (rateComboBox.getItemId (std::clamp (rateComboBox.getSelectedItemIndex () + scrollAmount, 0, rateComboBox.getNumItems () - 1)) - 1, true);
     };
     rateComboBox.onPopupMenuCallback = [this] ()
@@ -410,18 +401,9 @@ void ChannelEditorComponent::setupComponents ()
     speedTextEditor.getMaxValueCallback = [this] () { return 99; };
     speedTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     speedTextEditor.updateDataCallback = [this] (int value) { speedUiChanged (value); };
-    speedTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    speedTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + (multiplier * direction) };
+        const auto newValue { getUiValue (squidChannelProperties.getSpeed ()) + static_cast<int> (valueDelta) };
         speedTextEditor.setValue (newValue);
     };
     speedTextEditor.onPopupMenuCallback = [this] ()
@@ -468,9 +450,9 @@ void ChannelEditorComponent::setupComponents ()
         quantComboBox.addItem ("VI Chord", quantId++);
     }
     quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    quantComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    quantComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setQuant (std::clamp (quantComboBox.getSelectedItemIndex () + scrollAmount, 0, quantComboBox.getNumItems () - 1), true);
     };
     quantComboBox.onPopupMenuCallback = [this] ()
@@ -501,20 +483,12 @@ void ChannelEditorComponent::setupComponents ()
     pitchShiftTextEditor.setTooltip ("Pitch Shift. Adjusts how much the audio is shifted in pitch.");
     pitchShiftTextEditor.getMinValueCallback = [this] () { return 0.f; };
     pitchShiftTextEditor.getMaxValueCallback = [this] () { return 4.0f; };
+    pitchShiftTextEditor.getIncrementCallback = [this] () { return 0.01; };
     pitchShiftTextEditor.toStringCallback = [this] (double value) { return juce::String (static_cast<float> (value), 2); };
     pitchShiftTextEditor.updateDataCallback = [this] (double value) { pitchShiftUiChanged (static_cast<float> (value)); };
-    pitchShiftTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    pitchShiftTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 10;
-            else if (dragSpeed == DragSpeed::medium)
-                return 100;
-            else
-                return 1000;
-        } ();
-        const auto newValue { (squidChannelProperties.getPitchShift () + (multiplier * direction)) / 1000. };
+        const auto newValue { (squidChannelProperties.getPitchShift () / 1000.) + valueDelta };
         pitchShiftTextEditor.setValue (newValue);
     };
     pitchShiftTextEditor.onPopupMenuCallback = [this] ()
@@ -552,9 +526,9 @@ void ChannelEditorComponent::setupComponents ()
         filterTypeComboBox.addItem ("High Pass", filterId++);
     }
     filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    filterTypeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    filterTypeComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setFilterType (std::clamp (filterTypeComboBox.getSelectedItemIndex () + scrollAmount, 0, filterTypeComboBox.getNumItems () - 1), true);
     };
     filterTypeComboBox.onPopupMenuCallback = [this] ()
@@ -586,18 +560,9 @@ void ChannelEditorComponent::setupComponents ()
     filterFrequencyTextEditor.getMaxValueCallback = [this] () { return 99; };
     filterFrequencyTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     filterFrequencyTextEditor.updateDataCallback = [this] (int value) { filterFrequencyUiChanged (value); };
-    filterFrequencyTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    filterFrequencyTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { filterFrequencyTextEditor.getText ().getIntValue () + (multiplier * direction) };
+        const auto newValue { filterFrequencyTextEditor.getText ().getIntValue () + static_cast<int> (valueDelta) };
         filterFrequencyTextEditor.setValue (newValue);
     };
     filterFrequencyTextEditor.onPopupMenuCallback = [this] ()
@@ -630,18 +595,9 @@ void ChannelEditorComponent::setupComponents ()
     filterResonanceTextEditor.getMaxValueCallback = [this] () { return 99; };
     filterResonanceTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     filterResonanceTextEditor.updateDataCallback = [this] (int value) { filterResonanceUiChanged (value); };
-    filterResonanceTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    filterResonanceTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getUiValue (squidChannelProperties.getFilterResonance ()) + (multiplier * direction) };
+        const auto newValue { getUiValue (squidChannelProperties.getFilterResonance ()) + static_cast<int> (valueDelta) };
         filterResonanceTextEditor.setValue (newValue);
     };
     filterResonanceTextEditor.onPopupMenuCallback = [this] ()
@@ -673,18 +629,9 @@ void ChannelEditorComponent::setupComponents ()
     levelTextEditor.getMaxValueCallback = [this] () { return 99; };
     levelTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     levelTextEditor.updateDataCallback = [this] (int value) { levelUiChanged (value); };
-    levelTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    levelTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + (multiplier * direction) };
+        const auto newValue { getUiValue (squidChannelProperties.getLevel ()) + static_cast<int> (valueDelta) };
         levelTextEditor.setValue (newValue);
     };
     levelTextEditor.onPopupMenuCallback = [this] ()
@@ -716,18 +663,9 @@ void ChannelEditorComponent::setupComponents ()
     attackTextEditor.getMaxValueCallback = [this] () { return 99; };
     attackTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     attackTextEditor.updateDataCallback = [this] (int value) { attackUiChanged (value); };
-    attackTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    attackTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + (multiplier * direction) };
+        const auto newValue { getUiValue (squidChannelProperties.getAttack ()) + static_cast<int> (valueDelta) };
         attackTextEditor.setValue (newValue);
     };
     attackTextEditor.onPopupMenuCallback = [this] ()
@@ -759,18 +697,9 @@ void ChannelEditorComponent::setupComponents ()
     decayTextEditor.getMaxValueCallback = [this] () { return 99; };
     decayTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     decayTextEditor.updateDataCallback = [this] (int value) { decayUiChanged (value); };
-    decayTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    decayTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + (multiplier * direction) };
+        const auto newValue { getUiValue (squidChannelProperties.getDecay ()) + static_cast<int> (valueDelta) };
         decayTextEditor.setValue (newValue);
     };
     decayTextEditor.onPopupMenuCallback = [this] ()
@@ -807,9 +736,9 @@ void ChannelEditorComponent::setupComponents ()
     }
     loopModeComboBox.setTooltip ("Loop Mode. Configures how looping will operate. Normal for forward playing. ZigZag plays alternatively forwards then backwards between loop and end points. Gate options indicate sample will only play & loop whilst the associated channels trigger input is held high (like a sustain). If Decay is set however, playback will move to this stage when the trigger goes low.");
     loopModeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    loopModeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    loopModeComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setLoopMode (static_cast<uint8_t> (std::clamp (loopModeComboBox.getSelectedItemIndex () + scrollAmount, 0, loopModeComboBox.getNumItems () - 1)), true);
     };
     loopModeComboBox.onPopupMenuCallback = [this] ()
@@ -841,18 +770,9 @@ void ChannelEditorComponent::setupComponents ()
     xfadeTextEditor.getMaxValueCallback = [this] () { return 99; };
     xfadeTextEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     xfadeTextEditor.updateDataCallback = [this] (int value) { xfadeUiChanged (value); };
-    xfadeTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    xfadeTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { squidChannelProperties.getXfade () + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getXfade () + static_cast<int> (valueDelta) };
         xfadeTextEditor.setValue (newValue);
     };
     xfadeTextEditor.onPopupMenuCallback = [this] ()
@@ -910,18 +830,9 @@ void ChannelEditorComponent::setupComponents ()
     startCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
     startCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     startCueTextEditor.updateDataCallback = [this] (juce::int32 value) { startCueUiChanged (value); };
-    startCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    startCueTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 20;
-            else
-                return 100;
-        } ();
-        const auto valueOffset { multiplier * direction };
+        const auto valueOffset { static_cast<int> (valueDelta) };
         auto newValue { 0 };
         if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ())))
             newValue = 0;
@@ -985,18 +896,9 @@ void ChannelEditorComponent::setupComponents ()
     loopCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
     loopCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     loopCueTextEditor.updateDataCallback = [this] (juce::int32 value) { loopCueUiChanged (value); };
-    loopCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    loopCueTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-             else if (dragSpeed == DragSpeed::medium)
-                 return 20;
-            else
-                return 100;
-        } ();
-        const auto valueOffset { multiplier * direction };
+        const auto valueOffset { static_cast<int> (valueDelta) };
         auto newValue { 0 };
         if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ())))
             newValue = 0;
@@ -1054,18 +956,9 @@ void ChannelEditorComponent::setupComponents ()
     endCueTextEditor.getMaxValueCallback = [this] () { return squidChannelProperties.getSampleDataNumSamples (); };
     endCueTextEditor.toStringCallback = [this] (juce::int32 value) { return juce::String (value); };
     endCueTextEditor.updateDataCallback = [this] (juce::int32 value) { endCueUiChanged (value); };
-    endCueTextEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    endCueTextEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 20;
-            else
-                return 100;
-        } ();
-        const auto valueOffset { multiplier * direction };
+        const auto valueOffset { static_cast<int> (valueDelta) };
         auto newValue { 0 };
         if (valueOffset < 0 && std::abs (valueOffset) > static_cast<int> (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ())))
             newValue = 0;
@@ -1126,9 +1019,9 @@ void ChannelEditorComponent::setupComponents ()
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
     chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    chokeComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    chokeComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         const auto newItemIndex { static_cast<uint8_t> (std::clamp (chokeComboBox.getSelectedItemIndex () + scrollAmount, 0, chokeComboBox.getNumItems () - 1)) };
         squidChannelProperties.setChoke (chokeComboBox.getItemId (newItemIndex) - 1, true);
     };
@@ -1162,9 +1055,9 @@ void ChannelEditorComponent::setupComponents ()
         eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
     eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    eTrigComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    eTrigComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setETrig (static_cast<uint8_t> (std::clamp (eTrigComboBox.getSelectedItemIndex () + scrollAmount, 0, eTrigComboBox.getNumItems () - 1)), true);
     };
     eTrigComboBox.onPopupMenuCallback = [this] ()
@@ -1196,9 +1089,9 @@ void ChannelEditorComponent::setupComponents ()
     for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
     stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    stepsComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    stepsComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * direction };
+        const auto scrollAmount { static_cast<int> (valueDelta) };
         squidChannelProperties.setSteps (static_cast<uint8_t> (std::clamp (stepsComboBox.getSelectedItemIndex () + scrollAmount, 0, stepsComboBox.getNumItems () - 1)), true);
     };
     stepsComboBox.onPopupMenuCallback = [this] ()
@@ -1227,9 +1120,9 @@ void ChannelEditorComponent::setupComponents ()
     setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
     outputComboBox.setTooltip ("Neighbour Output. Select with the original channel output, or assign it to it's neighbor. Chans 1-4 to the 1+2 output or 3+4 output and channels 5-8 to the 5+6 output or 7+8 output.");
     outputComboBox.setLookAndFeel (&noArrowComboBoxLnF);
-    outputComboBox.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    outputComboBox.onDragCallback = [this] (double valueDelta)
     {
-        const auto scrollAmount { (dragSpeed == DragSpeed::fast ? 2 : 1) * (-1 * direction) };
+        const auto scrollAmount { static_cast<int> (-valueDelta) };
         const auto selectedIndex { static_cast<uint8_t> (std::clamp (outputComboBox.getSelectedItemIndex () + scrollAmount, 0, outputComboBox.getNumItems () - 1)) };
         outputComboBox.setSelectedItemIndex (selectedIndex);
         outputUiChanged (selectedIndex);

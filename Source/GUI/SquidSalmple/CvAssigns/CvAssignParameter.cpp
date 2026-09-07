@@ -45,18 +45,9 @@ CvAssignParameter::CvAssignParameter ()
     cvAttenuateEditor.getMaxValueCallback = [this] () { return 99; };
     cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvAttenuateEditor.updateDataCallback = [this] (int value) { cvAssignAttenuateUiChanged (value); };
-    cvAttenuateEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    cvAttenuateEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { getCvAttenuatonUiValue (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId)) + (multiplier * direction) };
+        const auto newValue { getCvAttenuatonUiValue (squidChannelProperties.getCvAssignAttenuate (cvIndex, parameterId)) + static_cast<int> (valueDelta) };
         cvAttenuateEditor.setValue (newValue);
     };
     cvAttenuateEditor.onPopupMenuCallback = [this] ()
@@ -90,18 +81,9 @@ CvAssignParameter::CvAssignParameter ()
     cvOffsetEditor.getMaxValueCallback = [this] () { return 99; };
     cvOffsetEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvOffsetEditor.updateDataCallback = [this] (int value) { cvAssignOffsetUiChanged (value); };
-    cvOffsetEditor.onDragCallback = [this] (DragSpeed dragSpeed, int direction)
+    cvOffsetEditor.onDragCallback = [this] (double valueDelta)
     {
-        const auto multiplier = [this, dragSpeed] ()
-        {
-            if (dragSpeed == DragSpeed::slow)
-                return 1;
-            else if (dragSpeed == DragSpeed::medium)
-                return 10;
-            else
-                return 25;
-        } ();
-        const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterId) + (multiplier * direction) };
+        const auto newValue { squidChannelProperties.getCvAssignOffset (cvIndex, parameterId) + static_cast<int> (valueDelta) };
         cvOffsetEditor.setValue (newValue);
     };
     cvOffsetEditor.onPopupMenuCallback = [this] ()
