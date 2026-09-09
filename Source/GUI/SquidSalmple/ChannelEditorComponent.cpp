@@ -243,8 +243,30 @@ void ChannelEditorComponent::setupComponents ()
         textButton.onClick = onClickCallback;
         addAndMakeVisible (textButton);
     };
+    auto setupHeaderLabel = [this] (juce::Label& label, juce::String text)
+    {
+        label.setBorderSize ({ 0, 0, 0, 0 });
+        label.setJustificationType (juce::Justification::centredLeft);
+        label.setFont (label.getFont ().withPointHeight (11.0f));
+        label.setText (text, juce::NotificationType::dontSendNotification);
+        addAndMakeVisible (label);
+    };
+    setupHeaderLabel (levelEnvHeaderLabel, "LEVEL & ENV");
+    setupHeaderLabel (filterHeaderLabel, "FILTER");
+    setupHeaderLabel (qualityHeaderLabel, "QUALITY");
+    setupHeaderLabel (loopHeaderLabel, "LOOP");
+    setupHeaderLabel (triggerHeaderLabel, "TRIGGER");
+    setupHeaderLabel (cueTriggerHeaderLabel, "CUE TRIGGER");
+    setupHeaderLabel (cuePointsHeaderLabel, "CUE POINTS");
+    setupHeaderLabel (loopTunerHeaderLabel, "LOOP TUNER");
+    setupHeaderLabel (cvAssignHeaderLabel, "CV ASSIGN");
+
+    addAndMakeVisible (startCueSwatch);
+    addAndMakeVisible (loopCueSwatch);
+    addAndMakeVisible (endCueSwatch);
+
     // FILENAME
-    setupLabel (sampleFileNameLabel, "FILE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (sampleFileNameLabel, "SAMPLE", kMediumLabelSize, juce::Justification::centredLeft);
     sampleFileNameSelectLabel.setTooltip ("Sample File Name. Click to open file browser, or drag a file onto the editor. If the file name is dimmed out this channel is using a sample from the Channel specified in the SOURCE parameter.");
     applyExplicitColours ();
     sampleFileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
@@ -2016,142 +2038,156 @@ void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
 
 void ChannelEditorComponent::resized ()
 {
-    const auto columnWidth { 160 };
-    const auto spaceBetweenColumns { 10 };
+    const auto kRowHeight { 20 };
+    const auto kRowGap { 4 };
+    const auto kHeaderHeight { 15 };
+    const auto kSectionGap { 8 };
 
-    const auto fieldWidth { columnWidth / 2 - 2 };
-    auto xInitialOffSet { 15 };
+    auto localBounds { getLocalBounds ().reduced (10, 6) };
 
-    auto xOffset { xInitialOffSet };
-    auto yOffset { kInitialYOffset };
-
-    // FILENAME
-    sampleFileNameLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    sampleFileNameSelectLabel.setBounds (sampleFileNameLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
-    toolsButton.setBounds (getWidth () - 43, sampleFileNameSelectLabel.getY (), 40, 20);
-    sampleLengthLabel.setBounds (sampleFileNameSelectLabel.getRight () + 3, yOffset, fieldWidth * 3, kParameterLineHeight);
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-
-    // column one
-    levelLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    levelTextEditor.setBounds (levelLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = levelTextEditor.getBottom () + 3;
-    attackLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    attackTextEditor.setBounds (attackLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = attackTextEditor.getBottom () + 3;
-    decayLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    decayTextEditor.setBounds (decayLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = decayTextEditor.getBottom () + 3;
-    outputLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    outputComboBox.setBounds (outputLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = outputComboBox.getBottom () + 3;
-    startCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    startCueTextEditor.setBounds (startCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = startCueTextEditor.getBottom () + 3;
-    loopCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    loopCueTextEditor.setBounds (loopCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = loopCueTextEditor.getBottom () + 3;
-    endCueLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    endCueTextEditor.setBounds (endCueLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-
-    loopPointsView.setBounds (startCueTextEditor.getRight () + spaceBetweenColumns, startCueTextEditor.getY (), columnWidth * 2, endCueTextEditor.getBottom () - startCueTextEditor.getY ());
-    oneShotPlayButton.setBounds (loopPointsView.getX () + 2, loopPointsView.getY () + 2, 35, kMediumLabelIntSize);
-    loopPlayButton.setBounds (loopPointsView.getX () + 2, loopPointsView.getBottom () - 2 - kMediumLabelIntSize, 35, kMediumLabelIntSize);
-
-    // column two
-    xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-    filterTypeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterTypeComboBox.setBounds (filterTypeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterTypeComboBox.getBottom () + 3;
-    filterFrequencyLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterFrequencyTextEditor.setBounds (filterFrequencyLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterFrequencyTextEditor.getBottom () + 3;
-    filterResonanceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    filterResonanceTextEditor.setBounds (filterResonanceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = filterResonanceTextEditor.getBottom () + 3;
-    reverseLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    reverseButton.setBounds (reverseLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-
-    // column three
-    xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-    // only one of these is visible for a given channel
-    // Speed for Channels 1-5
-    speedLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    speedTextEditor.setBounds (speedLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    // Quantize for Channels 6-8
-    quantLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    quantComboBox.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = quantComboBox.getBottom () + 3;
-    // Bits
-    bitsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    bitsTextEditor.setBounds (bitsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = bitsTextEditor.getBottom () + 3;
-    // Rate
-    rateLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    rateComboBox.setBounds (rateLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = rateComboBox.getBottom () + 3;
-    // Pitch Shift
-    pitchShiftLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    pitchShiftTextEditor.setBounds (quantLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = pitchShiftTextEditor.getBottom () + 3;
-
-    // column four
-    xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-    loopModeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    loopModeComboBox.setBounds (loopModeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = loopModeComboBox.getBottom () + 3;
-    xfadeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    xfadeTextEditor.setBounds (xfadeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = xfadeTextEditor.getBottom () + 3;
-    chokeLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    chokeComboBox.setBounds (chokeLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = chokeComboBox.getBottom () + 3;
-    eTrigLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    eTrigComboBox.setBounds (eTrigLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = eTrigComboBox.getBottom () + 3;
-    stepsLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    stepsComboBox.setBounds (stepsLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-    yOffset = stepsComboBox.getBottom () + 3;
-    channelSourceLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    channelSourceComboBox.setBounds (channelSourceLabel.getRight () + 3, yOffset, fieldWidth, kParameterLineHeight);
-
-    // column five
-    xOffset += columnWidth + spaceBetweenColumns;
-    yOffset = sampleFileNameSelectLabel.getBottom () + 3;
-    cueRandomLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    cueRandomButton.setBounds (cueRandomLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-    yOffset = cueRandomButton.getBottom () + 3;
-    cueStepLabel.setBounds (xOffset, yOffset, fieldWidth, kMediumLabelIntSize);
-    cueStepButton.setBounds (cueStepLabel.getRight () + 3, yOffset, fieldWidth, kMediumLabelIntSize + 2);
-
-    const auto kWidthOfWaveformEditor { 1082 };
-
-    // CV ASSIGNS EDITOR AT BOTTOM
-    constexpr auto kCvAssignHeight { 100 };
-    cvAssignEditor.setBounds (xInitialOffSet, getHeight () - 5 - kCvAssignHeight, kWidthOfWaveformEditor, kCvAssignHeight);
-
-    // CUE SETS STUFF BETWEEN CHANNEL PARAMETERS AND CV ASSIGNS EDITOR
-    // CUE SET BUTTONS
-    const auto kHeightOfCueSetButton { 20 };
-    const auto kWidthOfCueSetButton { kWidthOfWaveformEditor / 32 };
-    xOffset = xInitialOffSet;
-    yOffset = endCueTextEditor.getBottom () + 5 + kHeightOfCueSetButton;
-    const auto kHeightOfWaveformDisplay { cvAssignEditor.getY () - yOffset - 5 - kHeightOfCueSetButton };
-    const auto kWidthOfCueEditButtons { 15 };
-    addCueSetButton.setBounds (xInitialOffSet, yOffset, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
-    deleteCueSetButton.setBounds (xInitialOffSet, yOffset + (kHeightOfWaveformDisplay / 2) + 2, kWidthOfCueEditButtons, (kHeightOfWaveformDisplay / 2) - 2);
-    // WAVEFORM
-    const auto kWaveformXOffset { kWidthOfCueEditButtons + 2 };
-    waveformDisplay.setBounds (xOffset + kWaveformXOffset, yOffset, kWidthOfWaveformEditor - kWaveformXOffset, kHeightOfWaveformDisplay);
-    // CUE SET TABS
-    for (auto cueSetIndex { 0 }; cueSetIndex < cueSetButtons.size () / 2; ++cueSetIndex)
+    // ---------------- SAMPLE ----------------
     {
-        const auto buttonX { xOffset + kWaveformXOffset + (cueSetIndex * kWidthOfCueSetButton) };
-        cueSetButtons [cueSetIndex].setBounds (buttonX, waveformDisplay.getY () - kHeightOfCueSetButton, kWidthOfCueSetButton, kHeightOfCueSetButton);
-        cueSetButtons [cueSetIndex + 32].setBounds (buttonX, waveformDisplay.getBottom (), kWidthOfCueSetButton, kHeightOfCueSetButton);
+        auto sampleRow { localBounds.removeFromTop (kRowHeight) };
+        toolsButton.setBounds (sampleRow.removeFromRight (40));
+        sampleRow.removeFromRight (8);
+        sampleFileNameLabel.setBounds (sampleRow.removeFromLeft (62));
+        sampleRow.removeFromLeft (4);
+        sampleFileNameSelectLabel.setBounds (sampleRow.removeFromLeft (250));
+        sampleRow.removeFromLeft (10);
+        sampleLengthLabel.setBounds (sampleRow);
+    }
+    localBounds.removeFromTop (kSectionGap);
+
+    // ---------------- PARAMETERS ----------------
+    // One panel divided into six named groups, rather than six loose columns.
+    const auto kParameterRows { 4 };
+    parameterPanelBounds = localBounds.removeFromTop (kHeaderHeight + 6 + (kParameterRows * (kRowHeight + kRowGap)) + 4);
+
+    const auto columnWidth { parameterPanelBounds.getWidth () / 6 };
+    auto placeGroup = [&] (int columnIndex, juce::Label& header,
+                           const std::vector<std::pair<juce::Component*, juce::Component*>>& rows)
+    {
+        auto column { parameterPanelBounds.withX (parameterPanelBounds.getX () + (columnIndex * columnWidth))
+                                          .withWidth (columnWidth).reduced (9, 5) };
+        header.setBounds (column.removeFromTop (kHeaderHeight));
+        column.removeFromTop (6);
+        const auto labelWidth { juce::roundToInt (static_cast<float> (column.getWidth ()) * 0.47f) };
+        for (const auto& labelAndField : rows)
+        {
+            auto row { column.removeFromTop (kRowHeight) };
+            column.removeFromTop (kRowGap);
+            if (labelAndField.first != nullptr)
+                labelAndField.first->setBounds (row.removeFromLeft (labelWidth));
+            row.removeFromLeft (4);
+            if (labelAndField.second != nullptr)
+                labelAndField.second->setBounds (row);
+        }
+        if (columnIndex > 0)
+            parameterDividerX [static_cast<size_t> (columnIndex - 1)] = parameterPanelBounds.getX () + (columnIndex * columnWidth);
+    };
+
+    placeGroup (0, levelEnvHeaderLabel, { { &levelLabel,  &levelTextEditor },
+                                          { &attackLabel, &attackTextEditor },
+                                          { &decayLabel,  &decayTextEditor },
+                                          { &outputLabel, &outputComboBox } });
+    placeGroup (1, filterHeaderLabel,   { { &filterTypeLabel,      &filterTypeComboBox },
+                                          { &filterFrequencyLabel, &filterFrequencyTextEditor },
+                                          { &filterResonanceLabel, &filterResonanceTextEditor } });
+    // Speed (channels 1-5) and Quant (channels 6-8) share the top slot; only one
+    // of the pair is ever visible, so they are given the same bounds.
+    placeGroup (2, qualityHeaderLabel,  { { &speedLabel,      &speedTextEditor },
+                                          { &bitsLabel,       &bitsTextEditor },
+                                          { &rateLabel,       &rateComboBox },
+                                          { &pitchShiftLabel, &pitchShiftTextEditor } });
+    quantLabel.setBounds (speedLabel.getBounds ());
+    quantComboBox.setBounds (speedTextEditor.getBounds ());
+
+    placeGroup (3, loopHeaderLabel,     { { &loopModeLabel, &loopModeComboBox },
+                                          { &xfadeLabel,    &xfadeTextEditor },
+                                          { &reverseLabel,  &reverseButton } });
+    placeGroup (4, triggerHeaderLabel,  { { &chokeLabel,         &chokeComboBox },
+                                          { &eTrigLabel,         &eTrigComboBox },
+                                          { &stepsLabel,         &stepsComboBox },
+                                          { &channelSourceLabel, &channelSourceComboBox } });
+    placeGroup (5, cueTriggerHeaderLabel, { { &cueRandomLabel, &cueRandomButton },
+                                            { &cueStepLabel,   &cueStepButton } });
+
+    // A slide switch reads as a switch at its own size; stretched to the width of
+    // a value field it just looks like a broken text box.
+    auto sizeSlideSwitch = [] (juce::Component& slideSwitch)
+    {
+        const auto bounds { slideSwitch.getBounds () };
+        slideSwitch.setBounds (bounds.getX (), bounds.getY () + 2, 46, bounds.getHeight () - 4);
+    };
+    sizeSlideSwitch (reverseButton);
+    sizeSlideSwitch (cueRandomButton);
+    sizeSlideSwitch (cueStepButton);
+
+    localBounds.removeFromTop (kSectionGap);
+
+    // ---------------- CUE POINTS + LOOP TUNER ----------------
+    // The cue point numbers sit directly above the waveform they move, colour
+    // matched to their markers, with the tuner filling the rest of the row.
+    {
+        auto cueRow { localBounds.removeFromTop (kHeaderHeight + 6 + kRowHeight + kRowGap + kRowHeight) };
+
+        auto cuePointsColumn { cueRow.removeFromLeft (440) };
+        cuePointsHeaderLabel.setBounds (cuePointsColumn.removeFromTop (kHeaderHeight));
+        cuePointsColumn.removeFromTop (6);
+
+        auto cueFieldsRow { cuePointsColumn.removeFromTop (kRowHeight) };
+        const auto cueGroupWidth { cueFieldsRow.getWidth () / 3 };
+        auto placeCuePoint = [&cueFieldsRow, cueGroupWidth] (MarkerSwatch& swatch, juce::Label& label, juce::Component& field)
+        {
+            auto group { cueFieldsRow.removeFromLeft (cueGroupWidth) };
+            swatch.setBounds (group.removeFromLeft (3).reduced (0, 2));
+            group.removeFromLeft (6);
+            label.setBounds (group.removeFromLeft (44));
+            group.removeFromLeft (3);
+            field.setBounds (group.withTrimmedRight (10));
+        };
+        placeCuePoint (startCueSwatch, startCueLabel, startCueTextEditor);
+        placeCuePoint (loopCueSwatch,  loopCueLabel,  loopCueTextEditor);
+        placeCuePoint (endCueSwatch,   endCueLabel,   endCueTextEditor);
+
+        cuePointsColumn.removeFromTop (kRowGap);
+        auto transportRow { cuePointsColumn.removeFromTop (kRowHeight) };
+        oneShotPlayButton.setBounds (transportRow.removeFromLeft (110));
+        transportRow.removeFromLeft (8);
+        loopPlayButton.setBounds (transportRow.removeFromLeft (110));
+
+        cueRow.removeFromLeft (4);
+        loopTunerHeaderLabel.setBounds (cueRow.removeFromTop (kHeaderHeight));
+        cueRow.removeFromTop (6);
+        loopPointsView.setBounds (cueRow);
+    }
+    localBounds.removeFromTop (kSectionGap);
+
+    // ---------------- CV ASSIGN, along the bottom ----------------
+    constexpr auto kCvAssignHeight { 100 };
+    cvAssignEditor.setBounds (localBounds.removeFromBottom (kCvAssignHeight));
+    cvAssignHeaderLabel.setBounds (localBounds.removeFromBottom (kHeaderHeight));
+    localBounds.removeFromBottom (kSectionGap);
+
+    // ---------------- CUE SETS + WAVEFORM fill what is left ----------------
+    const auto kCueChipHeight { 18 };
+    const auto kCueToolWidth { 15 };
+    auto topChipRow { localBounds.removeFromTop (kCueChipHeight) };
+    auto bottomChipRow { localBounds.removeFromBottom (kCueChipHeight) };
+
+    auto waveArea { localBounds };
+    auto cueToolColumn { waveArea.removeFromLeft (kCueToolWidth) };
+    waveArea.removeFromLeft (2);
+    addCueSetButton.setBounds (cueToolColumn.removeFromTop ((cueToolColumn.getHeight () / 2) - 2));
+    deleteCueSetButton.setBounds (cueToolColumn.withTrimmedTop (4));
+    waveformDisplay.setBounds (waveArea);
+
+    const auto chipWidth { waveArea.getWidth () / 32 };
+    for (auto cueSetIndex { 0 }; cueSetIndex < static_cast<int> (cueSetButtons.size () / 2); ++cueSetIndex)
+    {
+        const auto chipX { waveArea.getX () + (cueSetIndex * chipWidth) };
+        cueSetButtons [static_cast<size_t> (cueSetIndex)].setBounds (chipX, topChipRow.getY (), chipWidth, kCueChipHeight);
+        cueSetButtons [static_cast<size_t> (cueSetIndex + 32)].setBounds (chipX, bottomChipRow.getY (), chipWidth, kCueChipHeight);
     }
 }
 
@@ -2163,14 +2199,31 @@ void ChannelEditorComponent::lookAndFeelChanged ()
 
 void ChannelEditorComponent::applyExplicitColours ()
 {
-    // this label keeps per-instance colours, so they have to be refreshed by hand
+    // these keep per-instance colours, so they have to be refreshed by hand
     sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, findColour (SquidColours::fieldBackground));
     sampleFileNameSelectLabel.setOutline (findColour (SquidColours::outline));
+
+    const auto headerColour { findColour (SquidColours::accentText) };
+    for (auto* header : { &levelEnvHeaderLabel, &filterHeaderLabel, &qualityHeaderLabel,
+                          &loopHeaderLabel, &triggerHeaderLabel, &cueTriggerHeaderLabel,
+                          &cuePointsHeaderLabel, &loopTunerHeaderLabel, &cvAssignHeaderLabel,
+                          &sampleFileNameLabel })
+        header->setColour (juce::Label::ColourIds::textColourId, headerColour);
 }
 
 void ChannelEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (findColour (SquidColours::windowBackground));
+
+    // The parameter groups read as one panel divided up, rather than six loose
+    // columns, so the block is outlined and the groups separated by hairlines.
+    g.setColour (findColour (SquidColours::outline));
+    g.drawRect (parameterPanelBounds, 1);
+    for (const auto dividerX : parameterDividerX)
+        if (dividerX > 0)
+            g.drawVerticalLine (dividerX,
+                                static_cast<float> (parameterPanelBounds.getY () + 4),
+                                static_cast<float> (parameterPanelBounds.getBottom () - 4));
 }
 
 void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)

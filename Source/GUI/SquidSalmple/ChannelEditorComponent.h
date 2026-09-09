@@ -100,6 +100,46 @@ private:
     juce::TextButton oneShotPlayButton;
     juce::TextButton loopPlayButton;
 
+    // Names the groups the parameters are divided into. These carry the accent
+    // colour rather than the default text colour, so they are refreshed in
+    // applyExplicitColours when the palette changes.
+    juce::Label levelEnvHeaderLabel;
+    juce::Label filterHeaderLabel;
+    juce::Label qualityHeaderLabel;
+    juce::Label loopHeaderLabel;
+    juce::Label triggerHeaderLabel;
+    juce::Label cueTriggerHeaderLabel;
+    juce::Label cuePointsHeaderLabel;
+    juce::Label loopTunerHeaderLabel;
+    juce::Label cvAssignHeaderLabel;
+
+    /*
+        A short colour bar beside a cue point field, drawn in the same colour as
+        that point's marker on the waveform, so the number and the thing it moves
+        read as one object. It resolves at paint time, so it follows the palette
+        with no extra work.
+    */
+    class MarkerSwatch : public juce::Component
+    {
+    public:
+        explicit MarkerSwatch (int theColourId) : colourId (theColourId) {}
+        void paint (juce::Graphics& g) override
+        {
+            g.setColour (findColour (colourId));
+            g.fillRoundedRectangle (getLocalBounds ().toFloat (), 1.0f);
+        }
+    private:
+        int colourId;
+    };
+    MarkerSwatch startCueSwatch { SquidColours::markerStart };
+    MarkerSwatch loopCueSwatch { SquidColours::markerLoop };
+    MarkerSwatch endCueSwatch { SquidColours::markerEnd };
+
+    // set in resized, drawn in paint - the panel outline and the hairlines that
+    // separate the six parameter groups
+    juce::Rectangle<int> parameterPanelBounds;
+    std::array<int, 5> parameterDividerX { { 0, 0, 0, 0, 0 } };
+
     // LOWER PANE
     WaveformDisplay waveformDisplay;
     class CueSetButton : public juce::TextButton
