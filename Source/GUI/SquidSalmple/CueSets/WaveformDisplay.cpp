@@ -1,4 +1,5 @@
 #include "WaveformDisplay.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "oolib/Debug/DebugLog.h"
@@ -26,9 +27,6 @@ constexpr auto kPeakEnvelopeThreshold { 30.0 };
 
 // The colours the cue set editor has always used: a black waveform on mid grey,
 // with the markers and the border in white.
-const juce::Colour kBackgroundColour { juce::Colours::grey.darker (0.3f) };
-const juce::Colour kForegroundColour { juce::Colours::black };
-const juce::Colour kMarkerColour { juce::Colours::white };
 
 WaveformDisplay::WaveformDisplay ()
 {
@@ -67,6 +65,10 @@ void WaveformDisplay::setupColours ()
     // Every part of the waveform is drawn in the one foreground colour, so the
     // peak envelope, the RMS body inside it and the per-sample line all read as
     // the single black trace this editor has always shown.
+    const auto kBackgroundColour { findColour (SquidColours::waveformBackground) };
+    const auto kForegroundColour { findColour (SquidColours::waveformForeground) };
+
+
     WaveformView::ColourScheme waveformColours;
     waveformColours.background = kBackgroundColour;
     waveformColours.peak = kForegroundColour;
@@ -84,6 +86,22 @@ void WaveformDisplay::setupColours ()
     timelineColours.minorTick = kForegroundColour.withAlpha (0.55f);
     timelineColours.text = kForegroundColour;
     timeline.setColourScheme (timelineColours);
+
+    // The markers are added once, by setupMarkers; re-tint them in place rather
+    // than rebuilding, so a palette change cannot duplicate them.
+    const int markerColourIds [] { SquidColours::markerStart, SquidColours::markerLoop, SquidColours::markerEnd };
+    for (auto markerIndex { 0 }; markerIndex < markerOverlay.getNumMarkers (); ++markerIndex)
+    {
+        auto style { markerOverlay.getStyle (markerIndex) };
+        style.colour = findColour (markerColourIds [markerIndex]);
+        markerOverlay.setStyle (markerIndex, style);
+    }
+}
+
+void WaveformDisplay::lookAndFeelChanged ()
+{
+    juce::Component::lookAndFeelChanged ();
+    setupColours ();
 }
 
 void WaveformDisplay::setupMarkers ()
@@ -93,16 +111,18 @@ void WaveformDisplay::setupMarkers ()
     // hangs off the bottom edge on a dashed line, as it always has, so it never
     // reads as one of that pair.
     MarkerOverlay::Style startStyle;
-    startStyle.colour = kMarkerColour;
+    startStyle.colour = findColour (SquidColours::markerStart);
     startStyle.shape = MarkerOverlay::HandleShape::rectangle;
     startStyle.placement = MarkerOverlay::HandlePlacement::top;
     startStyle.alignment = MarkerOverlay::HandleAlignment::rightOfLine;
 
     auto loopStyle { startStyle };
+    loopStyle.colour = findColour (SquidColours::markerLoop);
     loopStyle.dashed = true;
     loopStyle.placement = MarkerOverlay::HandlePlacement::bottom;
 
     auto endStyle { startStyle };
+    endStyle.colour = findColour (SquidColours::markerEnd);
     endStyle.alignment = MarkerOverlay::HandleAlignment::leftOfLine;
 
     auto addMarker = [this] (juce::StringRef name, const MarkerOverlay::Style& style)
@@ -283,7 +303,7 @@ void WaveformDisplay::resized ()
 void WaveformDisplay::paint (juce::Graphics& g)
 {
     // The children cover everything but the border.
-    g.setColour (kMarkerColour);
+    g.setColour (findColour (SquidColours::outline));
     g.drawRect (getLocalBounds ());
 }
 
@@ -297,25 +317,25 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     auto setBackgroundColor = [this, &g] ()
     {
         if (supportedFile)
-            g.setColour (juce::Colours::white.withAlpha (0.7f));
+            g.setColour (findColour (SquidColours::dropChipBackground));
         else
-            g.setColour (juce::Colours::black.withAlpha (0.7f));
+            g.setColour (findColour (SquidColours::dropChipBackgroundUnsupported));
     };
     auto setTextColor = [this, &g] ()
     {
         if (supportedFile)
-            g.setColour (juce::Colours::black);
+            g.setColour (findColour (SquidColours::dropChipText));
         else
-            g.setColour (juce::Colours::red.darker (0.5f));
+            g.setColour (findColour (SquidColours::dropError));
     };
     if (draggingFilesCount > 0)
     {
         jassert (dropType != DropType::none);
         if (audioBuffer == nullptr)
         {
-            g.fillAll (juce::Colours::white.withAlpha (0.1f));
+            g.fillAll (findColour (SquidColours::dropOverlay).withAlpha (0.1f));
             g.setFont (dropMsgFontSizeSingle);
-            g.setColour (juce::Colours::black);
+            g.setColour (findColour (SquidColours::dropChipText));
             if (draggingFilesCount == 1)
                 g.drawText ("Assign sample to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
             else
@@ -335,7 +355,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                 g.drawText (text, bounds, juce::Justification::centred, false);
             };
             auto localBounds { getLocalBounds () };
-            juce::Colour fillColor { juce::Colours::white };
+            juce::Colour fillColor { findColour (SquidColours::dropOverlay).withAlpha (1.0f) };
             const float activeAlpha { 0.1f };
             const float nonActiveAlpha { 0.5f };
             g.setColour (fillColor.withAlpha (dropType == DropType::replace ? activeAlpha : nonActiveAlpha));

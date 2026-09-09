@@ -29,7 +29,7 @@ void AudioPlayer::init (juce::ValueTree rootPropertiesVT)
     };
 
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::owner, AudioPlayerProperties::EnableCallbacks::yes);
-    audioPlayerProperties.onShowConfigDialog = [this] () { showConfigDialog (); };
+
     audioPlayerProperties.onPlayStateChange = [this] (AudioPlayerProperties::PlayState newPlayState)
     {
         LogAudioPlayer ("init: audioPlayerProperties.onPlayStateChange");
@@ -216,17 +216,6 @@ void AudioPlayer::handlePlayState (AudioPlayerProperties::PlayState newPlayState
         curSampleOffset = sampleStart;
     }
     playState = newPlayState;
-}
-
-void AudioPlayer::showConfigDialog ()
-{
-    juce::DialogWindow::LaunchOptions o;
-    o.escapeKeyTriggersCloseButton = true;
-    o.dialogBackgroundColour = juce::Colours::grey;
-    o.dialogTitle = "AUDIO SETTTINGS";
-    audioSetupComp.setBounds (0, 0, 400, 600);
-    o.content.set (&audioSetupComp, false);
-    o.launchAsync ();
 }
 
 void AudioPlayer::prepareToPlay (int samplesPerBlockExpected, double newSampleRate)

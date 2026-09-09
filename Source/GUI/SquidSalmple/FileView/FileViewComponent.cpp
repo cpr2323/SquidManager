@@ -1,4 +1,5 @@
 #include "FileViewComponent.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SystemServices.h"
 #include "oolib/Properties/PersistentRootProperties.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
@@ -23,7 +24,6 @@ FileViewComponent::FileViewComponent ()
     newFolderButton.setTooltip ("Create a new folder");
     newFolderButton.onClick = [this] () { newFolder (); };
     addAndMakeVisible (newFolderButton);
-    directoryContentsListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
     addAndMakeVisible (directoryContentsListBox);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
     showAllFiles.setButtonText ("Show All");
@@ -167,7 +167,7 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     if (rowIsSelected)
         lastSelectedRow = row;
 
-    juce::Colour textColor { juce::Colours::whitesmoke };
+    juce::Colour textColor { findColour (SquidColours::textDim) };
     juce::String fileListItem;
     if (! isRootFolder && row == 0)
     {
@@ -184,7 +184,7 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         else if (isAudioFile (directoryEntryVT))
         {
             filePrefix = "-  ";
-            textColor = juce::Colours::forestgreen;
+            textColor = findColour (SquidColours::textSupported);
         }
         else
         {
@@ -244,10 +244,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
             return;
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
         auto folder { juce::File (directoryEntryVT.getProperty ("name").toString ()) };
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
-        pm.setLookAndFeel (popupMenuLnF);
         pm.addSectionHeader (folder.getFileName ());
         pm.addSeparator ();
         pm.addItem ("Rename", true, false, [this, folder] ()
@@ -289,7 +286,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
                 }
             }));
         });
-        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        pm.showMenuAsync ({});
     }
     else
     {
@@ -353,6 +350,6 @@ void FileViewComponent::resized ()
 
 void FileViewComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (findColour (SquidColours::windowBackground));
 }
 

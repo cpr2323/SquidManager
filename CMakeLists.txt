@@ -42,6 +42,15 @@ set(GUI_FILES
     Source/GUI/GuiProperties.h
     Source/GUI/MainComponent.cpp
     Source/GUI/MainComponent.h
+    Source/GUI/SettingsDialogComponent.cpp
+    Source/GUI/SettingsDialogComponent.h
+    Source/GUI/Theme/Palette.cpp
+    Source/GUI/Theme/Palette.h
+    Source/GUI/Theme/SquidColourIds.h
+    Source/GUI/Theme/SquidLookAndFeel.cpp
+    Source/GUI/Theme/SquidLookAndFeel.h
+    Source/GUI/Theme/ThemeController.cpp
+    Source/GUI/Theme/ThemeController.h
     Source/GUI/sqedit2_2.png)
 
 set(GUI_SQUIDSALMPLE_FILES

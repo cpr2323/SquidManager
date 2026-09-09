@@ -22,9 +22,15 @@ public:
 
     static inline const juce::Identifier SystemServicesTypeId { "SystemServices" };
     static inline const juce::Identifier EditManagerPropertyId   { "editManager" };
+    static inline const juce::Identifier AudioDeviceManagerPropertyId { "audioDeviceManager" };
 
     void setEditManager (EditManager* editManger);
     EditManager* getEditManager ();
+
+    // published by the audio layer so the GUI can build a device selector without
+    // the audio layer having to own one
+    void setAudioDeviceManager (juce::AudioDeviceManager* audioDeviceManager);
+    juce::AudioDeviceManager* getAudioDeviceManager ();
 
     void initValueTree () {}
     void processValueTree () {}

@@ -104,7 +104,7 @@ private:
             {
                 TabBarButton::paintOverChildren (g);
                 if (draggingFile)
-                    g.fillAll (juce::Colours::white.withAlpha (0.5f));
+                    g.fillAll (findColour (SquidColours::dropOverlay));
 
             }
         };
@@ -124,5 +124,6 @@ private:
 
     void timerCallback () override;
     void resized () override;
+    void lookAndFeelChanged () override;
     void paint (juce::Graphics& g) override;
 };

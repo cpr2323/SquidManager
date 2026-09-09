@@ -67,6 +67,7 @@ private:
     DropType dropType { DropType::none };
     int dropAreaId { 0 };
 
+    void lookAndFeelChanged () override;
     void setupColours ();
     void setupMarkers ();
     double constrainMarker (int markerIndex, double proposedPosition) const;

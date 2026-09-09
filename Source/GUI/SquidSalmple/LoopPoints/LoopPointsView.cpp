@@ -1,4 +1,5 @@
 #include "LoopPointsView.h"
+#include "../../Theme/SquidColourIds.h"
 
 void LoopPointsView::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
@@ -16,7 +17,7 @@ void LoopPointsView::paint (juce::Graphics& g)
     const auto halfWidth { getWidth () / 2 };
     const auto halfHeight { getHeight () / 2 };
 
-    g.setColour (juce::Colours::white);
+    g.setColour (findColour (SquidColours::outline));
     // NOTE: Squid Salmple samples can only be 11 seconds long, so we use a uint32_t to store offsets and length
     if (audioBuffer != nullptr && static_cast<uint32_t> (audioBuffer->getNumSamples ()) >= numSamples && numSamples > 4)
     {
@@ -24,12 +25,12 @@ void LoopPointsView::paint (juce::Graphics& g)
         juce::dsp::AudioBlock<float> loopSamples { audioBlock.getSubBlock (sampleOffset, numSamples) };
         const auto samplesToDisplay { static_cast<int> (std::min<juce::int64> (numSamples, halfWidth)) };
 
-        g.setColour (juce::Colours::lightgrey);
+        g.setColour (findColour (SquidColours::waveformCentreLine));
         const auto dashSize { getHeight () / 11.f };
         std::array<float, 2> dashedSpec { dashSize, dashSize };
         g.drawDashedLine (juce::Line<int>{ 0, halfHeight, getWidth (), halfHeight }.toFloat (), dashedSpec.data (), 2);
 
-        g.setColour (juce::Colours::white);
+        g.setColour (findColour (SquidColours::waveformForeground));
         auto readPtr { loopSamples.getChannelPointer (0) };
         for (auto sampleCount { 0 }; sampleCount < samplesToDisplay - 1; ++sampleCount)
         {

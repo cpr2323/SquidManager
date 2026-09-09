@@ -1,4 +1,5 @@
 #include "CvAssignParameter.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/CvParameterProperties.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
@@ -220,7 +221,7 @@ void CvAssignParameter::enablementChanged ()
 
 void CvAssignParameter::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::white.darker (0.3f));
+    g.setColour (findColour (SquidColours::outlineDim));
     g.drawRect (getLocalBounds ());
 }
 
@@ -228,7 +229,7 @@ void CvAssignParameter::paintOverChildren (juce::Graphics& g)
 {
     if (! isEnabled ())
     {
-        g.setColour (juce::Colours::white.withAlpha (0.5f));
+        g.setColour (findColour (SquidColours::disabledOverlay));
         g.fillAll ();
     }
 }

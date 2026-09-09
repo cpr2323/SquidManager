@@ -1,4 +1,5 @@
 #include "BankListComponent.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../../SystemServices.h"
 #include "oolib/Debug/DebugLog.h"
@@ -21,7 +22,6 @@ BankListComponent::BankListComponent ()
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { startCheckBanksThread (); };
     addAndMakeVisible (showAllBanks);
-    bankListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
     addAndMakeVisible (bankListBox);
 
     checkBanksThread.onThreadLoop = [this] ()
@@ -297,7 +297,7 @@ void BankListComponent::resized ()
 
 void BankListComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (findColour (SquidColours::windowBackground));
 }
 
 int BankListComponent::getNumRows ()
@@ -314,13 +314,13 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         if (rowIsSelected)
         {
             lastSelectedBankIndex = row;
-            rowColor = juce::Colours::black;
-            textColor = juce::Colours::yellow;
+            rowColor = findColour (SquidColours::listBackground);
+            textColor = findColour (SquidColours::textSelected);
         }
         else
         {
-            rowColor = juce::Colours::black;
-            textColor = juce::Colours::whitesmoke;
+            rowColor = findColour (SquidColours::listBackground);
+            textColor = findColour (SquidColours::textDim);
         }
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
         if (thisBankExists)
@@ -453,16 +453,13 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         if (! thisBankExists)
             bankName = "(empty)";
 
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
-        pm.setLookAndFeel (popupMenuLnF);
         pm.addSectionHeader (juce::String (bankNumber) + " - " + bankName);
         pm.addSeparator ();
         pm.addItem ("Copy", thisBankExists, false, [this, bankNumber = bankNumber] () { copyBank (bankNumber); });
         pm.addItem ("Paste", copyDirectory != juce::File (), false, [this, bankNumber = bankNumber] () { pasteBank (bankNumber); });
         pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { deleteBank (bankNumber); });
-        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        pm.showMenuAsync ({});
     }
     else
     {

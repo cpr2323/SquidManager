@@ -1,4 +1,5 @@
 #include "SquidEditor.h"
+#include "../Theme/SquidColourIds.h"
 #include "../../SquidSalmple/Bank/BankHelpers.h"
 #include "../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
@@ -19,10 +20,8 @@ SquidEditorComponent::SquidEditorComponent ()
 
     auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
     {
-        const auto textColor { juce::Colours::white };
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (justification);
-        label.setColour (juce::Label::ColourIds::textColourId, textColor);
         label.setFont (label.getFont ().withPointHeight (fontSize));
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
@@ -32,7 +31,6 @@ SquidEditorComponent::SquidEditorComponent ()
         textEditor.setJustification (justification);
         textEditor.setIndents (1, 0);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
-        textEditor.setColour (juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::black);
         addAndMakeVisible (textEditor);
     };
 
@@ -88,10 +86,7 @@ SquidEditorComponent::SquidEditorComponent ()
     toolsButton.setButtonText ("TOOLS");
     toolsButton.onClick = [this] ()
     {
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
-        pm.setLookAndFeel (popupMenuLnF);
         pm.addSectionHeader ("Bank");
         pm.addSeparator ();
 
@@ -106,7 +101,7 @@ SquidEditorComponent::SquidEditorComponent ()
             editManager->setBankUnedited ();
         });
 
-        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        pm.showMenuAsync ({});
     };
     addAndMakeVisible (toolsButton);
 
@@ -119,7 +114,7 @@ SquidEditorComponent::SquidEditorComponent ()
     };
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
     {
-        channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), juce::Colours::darkgrey, &channelEditorComponents [curChannelIndex], false);
+        channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), findColour (SquidColours::tabBackground), &channelEditorComponents [curChannelIndex], false);
     }
     addAndMakeVisible (channelTabs);
     channelTabs.onSelectedTabChanged = [this] (int)
@@ -235,7 +230,21 @@ void SquidEditorComponent::resized ()
     channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
 }
 
+void SquidEditorComponent::lookAndFeelChanged ()
+{
+    juce::Component::lookAndFeelChanged ();
+    // TabbedComponent stores a colour per tab rather than resolving one, so a
+    // palette change has to be pushed into them
+    for (auto tabIndex { 0 }; tabIndex < channelTabs.getNumTabs (); ++tabIndex)
+        channelTabs.setTabBackgroundColour (tabIndex, findColour (SquidColours::tabBackground));
+
+    // a plain TextEditor stores a colour with the text it already holds, so the
+    // existing contents have to be re-tinted (oolib's CustomTextEditor does this
+    // for itself, which is why the parameter fields do not need it here)
+    bankNameEditor.applyColourToAllText (findColour (juce::TextEditor::textColourId), true);
+}
+
 void SquidEditorComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (findColour (SquidColours::windowBackground));
 }

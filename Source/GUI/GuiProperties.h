@@ -17,18 +17,34 @@ public:
     void setPosition (int x, int y, bool includeSelfCallback);
     void setSize (int width, int height, bool includeSelfCallback);
     void setPaneSizes (int pane1Size, int pane2Size, int pane3Size, bool includeSelfCallback);
+    // 0.0 is the near-black scheme. Persisted now so the setting survives before
+    // there is any UI to change it.
+    void setGroundLevel (float groundLevel, bool includeSelfCallback);
+    // a request for the settings window; whoever shows it listens for this
+    void showSettingsDialog (bool includeSelfCallback);
+    // the settings page last looked at, so the window reopens where it was left
+    void setSettingsTabName (juce::String tabName, bool includeSelfCallback);
 
     std::tuple<int,int> getPosition ();
     std::tuple<int, int> getSize ();
     std::tuple<int, int, int> getPaneSizes ();
+    float getGroundLevel ();
+    juce::String getSettingsTabName ();
+
+    std::function<void (float groundLevel)> onGroundLevelChange;
+    std::function<void ()> onShowSettingsDialog;
 
     static inline const juce::Identifier GuiTypeId { "GUI" };
-    static inline const juce::Identifier PositionPropertyId  { "position" };
-    static inline const juce::Identifier SizePropertyId      { "size" };
-    static inline const juce::Identifier PaneSizesPropertyId { "paneSizes" };
+    static inline const juce::Identifier PositionPropertyId    { "position" };
+    static inline const juce::Identifier SizePropertyId        { "size" };
+    static inline const juce::Identifier PaneSizesPropertyId   { "paneSizes" };
+    static inline const juce::Identifier GroundLevelPropertyId { "groundLevel" };
+    static inline const juce::Identifier ShowSettingsDialogPropertyId { "showSettingsDialog" };
+    static inline const juce::Identifier SettingsTabNamePropertyId    { "settingsTabName" };
 
     void initValueTree ();
     void processValueTree ();
 
 private:
+    void valueTreePropertyChanged (juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property) override;
 };

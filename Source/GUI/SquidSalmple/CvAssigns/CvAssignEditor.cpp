@@ -2,10 +2,6 @@
 
 CvAssignEditor::CvAssignEditor ()
 {
-    upButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-    upButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-    upButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-    upButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
     upButton.onClick = [this] ()
     {
         if (curCvAssignIndex == 0)
@@ -14,10 +10,6 @@ CvAssignEditor::CvAssignEditor ()
     };
     addAndMakeVisible (upButton);
 
-    downButton.setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-    downButton.setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-    downButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-    downButton.setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
     downButton.onClick = [this] ()
     {
         if (curCvAssignIndex == cvAssignSectionList.size () - 1)
@@ -53,7 +45,7 @@ void CvAssignEditor::setEnableState (int cvParameterId, bool enabled)
 
 void CvAssignEditor::paint (juce::Graphics& g)
 {
-    g.setColour (juce::Colours::white);
+    g.setColour (findColour (SquidColours::outline));
     g.drawLine (0, 0, 15, 0);
     g.drawLine (0.f, 0.f, 0.f, static_cast<float> (getHeight ()));
     g.drawLine (0.f, static_cast<float> (getHeight ()), 15.f, static_cast<float> (getHeight ()));

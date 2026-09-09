@@ -1,0 +1,285 @@
+#include "Palette.h"
+#include "SquidColourIds.h"
+#include "oolib/GUI/ColourResolver.h"
+
+namespace
+{
+    // ---- the two designed ends -------------------------------------------------
+    // Near-black is violet biased rather than neutral grey, taken from the Squid's
+    // own display; the accents are the module's button cyan and its panel LEDs.
+    const juce::Colour kInk950Dark  { 0xff07060a }, kInk950Light  { 0xffffffff };
+    const juce::Colour kInk900Dark  { 0xff0b0a0f }, kInk900Light  { 0xfff1f1f5 };
+    const juce::Colour kInk850Dark  { 0xff100e15 }, kInk850Light  { 0xfff8f8fb };
+    const juce::Colour kInk800Dark  { 0xff15131c }, kInk800Light  { 0xffebebf1 };
+    const juce::Colour kInk750Dark  { 0xff1a1723 }, kInk750Light  { 0xffe8e8ef };
+    const juce::Colour kInk700Dark  { 0xff211d2b }, kInk700Light  { 0xffdedee7 };
+    const juce::Colour kInk650Dark  { 0xff2a2438 }, kInk650Light  { 0xffc2c2d0 };
+    const juce::Colour kLineDark    { 0xff241f30 }, kLineLight    { 0xffdcdce5 };
+    const juce::Colour kLineSoftDark { 0xff1c1826 }, kLineSoftLight { 0xffe9e9f0 };
+
+    const juce::Colour kTextDark    { 0xffe4e0ec }, kTextLight    { 0xff191822 };
+    const juce::Colour kDimDark     { 0xff9a93ab }, kDimLight     { 0xff56535f };
+    const juce::Colour kMuteDark    { 0xff6a6380 }, kMuteLight    { 0xff7c7887 };
+    const juce::Colour kGhostDark   { 0xff443e56 }, kGhostLight   { 0xffada9b8 };
+
+    const juce::Colour kAccentDark     { 0xff2fb3e3 }, kAccentLight     { 0xff0e86b8 };
+    const juce::Colour kAccentTextDark { 0xff2a9ac4 }, kAccentTextLight { 0xff0c79a6 };
+    const juce::Colour kAccentDeepDark { 0xff17607c }, kAccentDeepLight { 0xff2e90bc };
+    const juce::Colour kAccentInkDark  { 0xff04222e }, kAccentInkLight  { 0xffffffff };
+    const juce::Colour kSelectDark     { 0xff111c22 }, kSelectLight     { 0xffdceff8 };
+
+    const juce::Colour kGreenDark { 0xff35a97b }, kGreenLight { 0xff159163 };
+    const juce::Colour kOliveDark { 0xffb9be3c }, kOliveLight { 0xff7e8317 };
+
+    // waveform lane: the darkest surface at one end, lighter than the panels at
+    // the other, which is why it flips at a different ground level than they do
+    const juce::Colour kLaneDark   { 0xff0a0910 }, kLaneLight   { 0xffededf3 };
+    const juce::Colour kTraceDark  { 0xff82daf8 }, kTraceLight  { 0xff083e56 };
+    const juce::Colour kCentreDark { 0x21e4e0ec }, kCentreLight { 0x2e1e1c28 };
+
+    // markers. Start green and End red is the pairing that reads without being
+    // learned; Loop is gold, and is the one value identical at both ends - it has
+    // to hold on a near-black lane and a near-white one, so it must be a mid tone.
+    const juce::Colour kMarkerStartDark { 0xff35a97b }, kMarkerStartLight { 0xff0b7a50 };
+    const juce::Colour kMarkerLoop      { 0xffc58309 };
+    const juce::Colour kMarkerEndDark   { 0xffd9483e }, kMarkerEndLight   { 0xffb0271d };
+
+    const juce::Colour kErrorOnLightChip { 0xffb0271d }, kErrorOnDarkChip { 0xffe8756a };
+}
+
+float Palette::relativeLuminance (juce::Colour colour) noexcept
+{
+    auto linear = [] (float channel)
+    {
+        return channel <= 0.03928f ? channel / 12.92f
+                                   : std::pow ((channel + 0.055f) / 1.055f, 2.4f);
+    };
+    return 0.2126f * linear (colour.getFloatRed ())
+         + 0.7152f * linear (colour.getFloatGreen ())
+         + 0.0722f * linear (colour.getFloatBlue ());
+}
+
+Palette::Palette ()
+{
+    using S = Surface;
+    const auto transparent { juce::Colours::transparentBlack };
+
+    // push: 1.0 drives all the way to pure white / black at the crossover, which
+    // is what plain text wants. Semantic colours use less, so they keep their hue
+    // rather than washing out to white at the midpoint.
+    specs =
+    {
+        // ---- surfaces: plain interpolation ----
+        { SquidColours::windowBackground, kInk900Dark,  kInk900Light },
+        { SquidColours::fieldBackground,  kInk950Dark,  kInk950Light },
+        { SquidColours::listBackground,   kInk850Dark,  kInk850Light },
+        { SquidColours::panelHeader,      kInk800Dark,  kInk800Light },
+        { SquidColours::buttonBackground, kInk750Dark,  kInk750Light },
+        { SquidColours::tabBackground,    kInk850Dark,  kInk850Light },
+        { SquidColours::dialogBackground, kInk900Dark,  kInk900Light },
+        { SquidColours::outline,          kLineDark,    kLineLight },
+        { SquidColours::outlineDim,       kLineSoftDark, kLineSoftLight },
+        { SquidColours::accent,           kAccentDark,  kAccentLight },
+        { SquidColours::accentDeep,       kAccentDeepDark, kAccentDeepLight },
+        { SquidColours::waveformBackground, kLaneDark,  kLaneLight },
+        { SquidColours::markerLoop,       kMarkerLoop,  kMarkerLoop },
+        { SquidColours::disabledOverlay,  kInk900Dark.withAlpha (0.62f), kInk900Light.withAlpha (0.62f) },
+        { SquidColours::dropOverlay,      kInk950Dark.withAlpha (0.66f), juce::Colour (0xff605e70).withAlpha (0.42f) },
+
+        // ---- ink on the panels ----
+        { SquidColours::text,          kTextDark,       kTextLight,       S::ground, 1.00f },
+        { SquidColours::textDim,       kDimDark,        kDimLight,        S::ground, 0.80f },
+        { SquidColours::menuHeaderText, kMuteDark,      kMuteLight,       S::ground, 0.80f },
+        { SquidColours::textSelected,  kAccentTextDark, kAccentTextLight, S::ground, 0.60f },
+        { SquidColours::accentText,    kAccentTextDark, kAccentTextLight, S::ground, 0.60f },
+        { SquidColours::textSupported, kGreenDark,      kGreenLight,      S::ground, 0.35f },
+
+        // ---- ink on the waveform lane ----
+        { SquidColours::waveformForeground, kTraceDark,  kTraceLight,       S::lane, 0.50f },
+        { SquidColours::waveformCentreLine, kCentreDark, kCentreLight,      S::lane, 0.40f },
+        { SquidColours::markerStart,        kMarkerStartDark, kMarkerStartLight, S::lane, 0.35f },
+        { SquidColours::markerEnd,          kMarkerEndDark,   kMarkerEndLight,   S::lane, 0.35f },
+
+        // ---- ink on an accent fill ----
+        { SquidColours::accentInk, kAccentInkDark, kAccentInkLight, S::accentFill, 1.00f },
+
+        // ---- the drop plate, and the ink on it ----
+        // The plate is the text colour, so it is always the maximum contrast
+        // against the ground; its own ink is therefore the ground colour, and the
+        // two cannot collide however far the slider travels.
+        { SquidColours::dropChipBackground,            kTextDark,   kTextLight,   S::ground, 1.00f },
+        { SquidColours::dropChipBackgroundUnsupported, kTextDark,   kTextLight,   S::ground, 1.00f },
+        { SquidColours::dropChipText,                  kInk900Dark, kInk900Light, S::chip,   1.00f },
+        { SquidColours::dropError,                     kErrorOnDarkChip, kErrorOnLightChip, S::chip, 0.30f },
+
+        // ---- JUCE widget roles ----
+        { juce::Label::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::Label::backgroundColourId, transparent, transparent },
+
+        { juce::TextEditor::backgroundColourId,      kInk950Dark, kInk950Light },
+        { juce::TextEditor::textColourId,            kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::TextEditor::outlineColourId,         kLineDark, kLineLight },
+        { juce::TextEditor::focusedOutlineColourId,  kAccentDeepDark, kAccentDeepLight },
+        { juce::TextEditor::highlightColourId,       kAccentDark.withAlpha (0.4f), kAccentLight.withAlpha (0.3f) },
+        { juce::TextEditor::highlightedTextColourId, kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::CaretComponent::caretColourId,       kAccentDark, kAccentLight },
+
+        { juce::ComboBox::backgroundColourId,   kInk950Dark, kInk950Light },
+        { juce::ComboBox::textColourId,         kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::ComboBox::outlineColourId,      kLineDark, kLineLight },
+        { juce::ComboBox::buttonColourId,       kInk950Dark, kInk950Light },
+        { juce::ComboBox::arrowColourId,        kMuteDark, kMuteLight, S::ground, 0.60f },
+        { juce::ComboBox::focusedOutlineColourId, kAccentDeepDark, kAccentDeepLight },
+
+        { juce::ListBox::backgroundColourId, kInk850Dark, kInk850Light },
+        { juce::ListBox::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::ListBox::outlineColourId,    kLineDark, kLineLight },
+
+        { juce::TextButton::buttonColourId,   kInk750Dark, kInk750Light },
+        { juce::TextButton::buttonOnColourId, kAccentDark, kAccentLight },
+        { juce::TextButton::textColourOffId,  kDimDark, kDimLight, S::ground, 0.80f },
+        { juce::TextButton::textColourOnId,   kAccentInkDark, kAccentInkLight, S::accentFill, 1.00f },
+
+        { juce::ToggleButton::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::ToggleButton::tickColourId,       kAccentDark, kAccentLight },
+        { juce::ToggleButton::tickDisabledColourId, kGhostDark, kGhostLight, S::ground, 0.40f },
+
+        { juce::PopupMenu::backgroundColourId,            kInk800Dark, kInk800Light },
+        { juce::PopupMenu::textColourId,                  kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::PopupMenu::headerTextColourId,            kMuteDark, kMuteLight, S::ground, 0.80f },
+        { juce::PopupMenu::highlightedBackgroundColourId, kSelectDark, kSelectLight },
+        { juce::PopupMenu::highlightedTextColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+
+        { juce::ScrollBar::thumbColourId,      kInk650Dark, kInk650Light },
+        { juce::ScrollBar::trackColourId,      transparent, transparent },
+        { juce::ScrollBar::backgroundColourId, transparent, transparent },
+
+        { juce::TabbedComponent::backgroundColourId,   kInk900Dark, kInk900Light },
+        { juce::TabbedComponent::outlineColourId,      kLineDark, kLineLight },
+        { juce::TabbedButtonBar::tabOutlineColourId,   kLineDark, kLineLight },
+        { juce::TabbedButtonBar::frontOutlineColourId, kAccentDark, kAccentLight },
+        { juce::TabbedButtonBar::tabTextColourId,      kMuteDark, kMuteLight, S::ground, 0.80f },
+        { juce::TabbedButtonBar::frontTextColourId,    kTextDark, kTextLight, S::ground, 1.00f },
+
+        { juce::ResizableWindow::backgroundColourId, kInk900Dark, kInk900Light },
+        { juce::DocumentWindow::textColourId,        kTextDark, kTextLight, S::ground, 1.00f },
+
+        { juce::AlertWindow::backgroundColourId, kInk800Dark, kInk800Light },
+        { juce::AlertWindow::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::AlertWindow::outlineColourId,    kLineDark, kLineLight },
+
+        { juce::Slider::backgroundColourId,      kInk950Dark, kInk950Light },
+        { juce::Slider::trackColourId,           kAccentDeepDark, kAccentDeepLight },
+        { juce::Slider::thumbColourId,           kAccentDark, kAccentLight },
+        { juce::Slider::textBoxTextColourId,     kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::Slider::textBoxBackgroundColourId, kInk950Dark, kInk950Light },
+        { juce::Slider::textBoxOutlineColourId,  kLineDark, kLineLight },
+
+        // ---- oolib roles ----
+        { oolib::ColourIds::splitterBackground,    kInk900Dark, kInk900Light },
+        { oolib::ColourIds::splitterHandle,        kInk700Dark, kInk700Light },
+        { oolib::ColourIds::splitterHandleOutline, kAccentDeepDark, kAccentDeepLight },
+        { oolib::ColourIds::slideSwitchTrackOff,   kInk700Dark, kInk700Light },
+        { oolib::ColourIds::slideSwitchTrackOn,    kAccentDeepDark, kAccentDeepLight },
+        { oolib::ColourIds::slideSwitchThumbOff,   kDimDark, kDimLight, S::ground, 0.55f },
+        { oolib::ColourIds::slideSwitchThumbOn,    kAccentDark, kAccentLight },
+        { oolib::ColourIds::customTextEditorText,  kTextDark, kTextLight, S::ground, 1.00f },
+    };
+
+    resolve ();
+}
+
+void Palette::setGround (float newGround)
+{
+    const auto clamped { std::clamp (newGround, 0.0f, 1.0f) };
+    if (juce::approximatelyEqual (clamped, ground))
+        return;
+    ground = clamped;
+    resolve ();
+}
+
+juce::Colour Palette::get (int colourId) const
+{
+    for (const auto& [id, colour] : colours)
+        if (id == colourId)
+            return colour;
+
+    // Every ID the app asks for should be defined here.
+    jassertfalse;
+    return juce::Colours::magenta;
+}
+
+juce::Colour Palette::resolveToken (const TokenSpec& spec, float groundLevel,
+                                    const std::vector<float>& surfaceLuminance,
+                                    const std::vector<float>& surfaceLuminanceAtWhite) const
+{
+    if (spec.surface == Surface::none)
+        return spec.dark.interpolatedWith (spec.light, groundLevel);
+
+    const auto surfaceIndex { static_cast<size_t> (spec.surface) };
+    const auto backgroundLuminance { surfaceLuminance [surfaceIndex] };
+    const auto onDark { backgroundLuminance < kCrossover };
+    const auto base { onDark ? spec.dark : spec.light };
+
+    // 0 at either end of the travel, 1 at the crossover. Squared, so the push is
+    // concentrated where contrast is actually scarce and both ends land exactly
+    // on the designed values.
+    const auto maxLuminance { surfaceLuminanceAtWhite [surfaceIndex] };
+    const auto span { onDark ? kCrossover
+                             : std::max (1.0e-6f, maxLuminance - kCrossover) };
+    const auto distance { onDark ? backgroundLuminance
+                                 : maxLuminance - backgroundLuminance };
+    const auto linearAmount { std::clamp (distance / span, 0.0f, 1.0f) };
+    const auto amount { linearAmount * linearAmount * spec.push };
+
+    const auto target { onDark ? juce::Colours::white : juce::Colours::black };
+    // interpolatedWith would drag the alpha toward the target's, so put it back
+    return base.interpolatedWith (target, amount).withAlpha (base.getFloatAlpha ());
+}
+
+void Palette::resolve ()
+{
+    // The reference surfaces are plain ramps, so they can be resolved first and
+    // then used to decide which way every flip token goes.
+    auto surfaceAt = [this] (int colourId, float atGround)
+    {
+        for (const auto& spec : specs)
+            if (spec.colourId == colourId)
+                return spec.dark.interpolatedWith (spec.light, atGround);
+        jassertfalse;
+        return juce::Colours::magenta;
+    };
+
+    const auto groundColour { surfaceAt (SquidColours::windowBackground, ground) };
+    const auto laneColour   { surfaceAt (SquidColours::waveformBackground, ground) };
+    const auto accentColour { surfaceAt (SquidColours::accent, ground) };
+
+    // The drop plate is the text colour, which is itself a flip token, so it has
+    // to be resolved before anything that sits on top of it.
+    std::vector<float> luminance (5, 0.0f), luminanceAtWhite (5, 0.0f);
+    auto setSurface = [&] (Surface surface, juce::Colour now, juce::Colour atWhite)
+    {
+        luminance [static_cast<size_t> (surface)] = relativeLuminance (now);
+        luminanceAtWhite [static_cast<size_t> (surface)] = relativeLuminance (atWhite);
+    };
+    setSurface (Surface::ground,     groundColour, surfaceAt (SquidColours::windowBackground, 1.0f));
+    setSurface (Surface::lane,       laneColour,   surfaceAt (SquidColours::waveformBackground, 1.0f));
+    setSurface (Surface::accentFill, accentColour, surfaceAt (SquidColours::accent, 1.0f));
+
+    auto plateSpec = [this] ()
+    {
+        for (const auto& spec : specs)
+            if (spec.colourId == SquidColours::dropChipBackground)
+                return spec;
+        jassertfalse;
+        return TokenSpec {};
+    } ();
+    const auto plateNow { resolveToken (plateSpec, ground, luminance, luminanceAtWhite) };
+    const auto plateAtWhite { resolveToken (plateSpec, 1.0f, luminance, luminanceAtWhite) };
+    setSurface (Surface::chip, plateNow, plateAtWhite);
+
+    colours.clear ();
+    colours.reserve (specs.size ());
+    for (const auto& spec : specs)
+        colours.emplace_back (spec.colourId, resolveToken (spec, ground, luminance, luminanceAtWhite));
+}

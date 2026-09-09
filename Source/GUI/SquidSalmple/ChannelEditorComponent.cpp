@@ -1,4 +1,5 @@
 #include "ChannelEditorComponent.h"
+#include "../Theme/SquidColourIds.h"
 #include "../../SystemServices.h"
 #include "../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "oolib/Properties/PersistentRootProperties.h"
@@ -29,10 +30,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
     toolsButton.setTooltip ("Channel Tools");
     toolsButton.onClick = [this] ()
     {
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu editMenu;
-        editMenu.setLookAndFeel (popupMenuLnF);
         editMenu.addSectionHeader ("Channel " + juce::String (squidChannelProperties.getChannelIndex () + 1));
         editMenu.addSeparator ();
         {
@@ -200,7 +198,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
         {
             editManager->setChannelUnedited (squidChannelProperties.getChannelIndex ());
         });
-        editMenu.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        editMenu.showMenuAsync ({});
 
     };
     addAndMakeVisible (toolsButton);
@@ -210,27 +208,14 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
 ChannelEditorComponent::~ChannelEditorComponent ()
 {
-    addCueSetButton.setLookAndFeel (nullptr);
-    deleteCueSetButton.setLookAndFeel (nullptr);
-    outputComboBox.setLookAndFeel (nullptr);
-    stepsComboBox.setLookAndFeel (nullptr);
-    eTrigComboBox.setLookAndFeel (nullptr);
-    chokeComboBox.setLookAndFeel (nullptr);
-    loopModeComboBox.setLookAndFeel (nullptr);
-    filterTypeComboBox.setLookAndFeel (nullptr);
-    quantComboBox.setLookAndFeel (nullptr);
-    rateComboBox.setLookAndFeel (nullptr);
-    channelSourceComboBox.setLookAndFeel (nullptr);
 }
 
 void ChannelEditorComponent::setupComponents ()
 {
     auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
     {
-        const auto textColor { juce::Colours::white };
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (justification);
-        label.setColour (juce::Label::ColourIds::textColourId, textColor);
         label.setFont (label.getFont ().withPointHeight (fontSize));
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
@@ -240,14 +225,12 @@ void ChannelEditorComponent::setupComponents ()
         textEditor.setJustification (justification);
         textEditor.setIndents (1, 0);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
-        textEditor.setColour (juce::TextEditor::ColourIds::backgroundColourId, juce::Colours::black);
         //textEditor.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         addAndMakeVisible (textEditor);
     };
     auto setupComboBox = [this] (juce::ComboBox& comboBox, juce::String parameterName, std::function<void ()> onChangeCallback)
     {
         jassert (onChangeCallback != nullptr);
-        comboBox.setColour (juce::ComboBox::ColourIds::backgroundColourId, juce::Colours::black);
         //comboBox.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         comboBox.onChange = onChangeCallback;
         addAndMakeVisible (comboBox);
@@ -256,7 +239,6 @@ void ChannelEditorComponent::setupComponents ()
     {
         textButton.setButtonText (text);
         textButton.setClickingTogglesState (true);
-        textButton.setColour (juce::TextButton::ColourIds::buttonOnColourId, textButton.findColour (juce::TextButton::ColourIds::buttonOnColourId).brighter (0.5));
         //textButton.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         textButton.onClick = onClickCallback;
         addAndMakeVisible (textButton);
@@ -264,9 +246,7 @@ void ChannelEditorComponent::setupComponents ()
     // FILENAME
     setupLabel (sampleFileNameLabel, "FILE", kMediumLabelSize, juce::Justification::centred);
     sampleFileNameSelectLabel.setTooltip ("Sample File Name. Click to open file browser, or drag a file onto the editor. If the file name is dimmed out this channel is using a sample from the Channel specified in the SOURCE parameter.");
-    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::textColourId, juce::Colours::white);
-    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, juce::Colours::black);
-    sampleFileNameSelectLabel.setOutline (juce::Colours::white);
+    applyExplicitColours ();
     sampleFileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
     {
         if (! handleSampleAssignment (files[0]))
@@ -291,7 +271,7 @@ void ChannelEditorComponent::setupComponents ()
             channelSourceComboBox.addItem (channelString, curChannelIndex + 1);
         }
     }
-    channelSourceComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    channelSourceComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     channelSourceComboBox.setTooltip ("Channel Reference. Select the channel for which this channel will get it's sample from. Can be changed on the module by holding the Chan button and turning the program knob.");
     channelSourceComboBox.onDragCallback = [this] (double valueDelta)
     {
@@ -366,7 +346,7 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.addItem ("14", 3);
     rateComboBox.addItem ("22", 2);
     rateComboBox.addItem ("44", 1);
-    rateComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    rateComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     rateComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -449,7 +429,7 @@ void ChannelEditorComponent::setupComponents ()
         quantComboBox.addItem ("IV Chord", quantId++);
         quantComboBox.addItem ("VI Chord", quantId++);
     }
-    quantComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    quantComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     quantComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -525,7 +505,7 @@ void ChannelEditorComponent::setupComponents ()
         filterTypeComboBox.addItem ("Notch", filterId++);
         filterTypeComboBox.addItem ("High Pass", filterId++);
     }
-    filterTypeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    filterTypeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     filterTypeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -735,7 +715,7 @@ void ChannelEditorComponent::setupComponents ()
         loopModeComboBox.addItem ("ZigZag Gate", loopId++);
     }
     loopModeComboBox.setTooltip ("Loop Mode. Configures how looping will operate. Normal for forward playing. ZigZag plays alternatively forwards then backwards between loop and end points. Gate options indicate sample will only play & loop whilst the associated channels trigger input is held high (like a sustain). If Decay is set however, playback will move to this stage when the trigger goes low.");
-    loopModeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    loopModeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     loopModeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1018,7 +998,7 @@ void ChannelEditorComponent::setupComponents ()
     // CHOKE
     setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
-    chokeComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    chokeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     chokeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1054,7 +1034,7 @@ void ChannelEditorComponent::setupComponents ()
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
         eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
-    eTrigComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    eTrigComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     eTrigComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1088,7 +1068,7 @@ void ChannelEditorComponent::setupComponents ()
     stepsComboBox.addItem ("Off", 1);
     for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
-    stepsComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    stepsComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     stepsComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1119,7 +1099,7 @@ void ChannelEditorComponent::setupComponents ()
     // Output
     setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
     outputComboBox.setTooltip ("Neighbour Output. Select with the original channel output, or assign it to it's neighbor. Chans 1-4 to the 1+2 output or 3+4 output and channels 5-8 to the 5+6 output or 7+8 output.");
-    outputComboBox.setLookAndFeel (&noArrowComboBoxLnF);
+    outputComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     outputComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (-valueDelta) };
@@ -1233,13 +1213,13 @@ void ChannelEditorComponent::setupComponents ()
 
     // CUE SET ADD/DELETE BUTTONS
     addCueSetButton.setTooltip ("Add Cue Set. Will append a new Cue Set to the end.");
-    addCueSetButton.setLookAndFeel (&cueEditButtonLnF);
+    addCueSetButton.getProperties ().set (SquidLnFProperties::singleGlyphButton, true);
     addCueSetButton.setButtonText ("+");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
     addCueSetButton.setEnabled (false);
     addAndMakeVisible (addCueSetButton);
     deleteCueSetButton.setTooltip ("Delete Cue Set. Will delete the currently selected Cue Set.");
-    deleteCueSetButton.setLookAndFeel (&cueEditButtonLnF);
+    deleteCueSetButton.getProperties ().set (SquidLnFProperties::singleGlyphButton, true);
     deleteCueSetButton.setButtonText ("-");
     deleteCueSetButton.onClick = [this] () { deleteCueSet (squidChannelProperties.getCurCueSet ()); };
     deleteCueSetButton.setEnabled (false);
@@ -2175,9 +2155,22 @@ void ChannelEditorComponent::resized ()
     }
 }
 
+void ChannelEditorComponent::lookAndFeelChanged ()
+{
+    juce::Component::lookAndFeelChanged ();
+    applyExplicitColours ();
+}
+
+void ChannelEditorComponent::applyExplicitColours ()
+{
+    // this label keeps per-instance colours, so they have to be refreshed by hand
+    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, findColour (SquidColours::fieldBackground));
+    sampleFileNameSelectLabel.setOutline (findColour (SquidColours::outline));
+}
+
 void ChannelEditorComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    g.fillAll (findColour (SquidColours::windowBackground));
 }
 
 void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
@@ -2191,21 +2184,21 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
         {
             constexpr auto fontHeight { 30.f };
             const auto dropBounds { juce::Rectangle<int> { 0, 0, getWidth (), cueSetButtons [0].getY () } };
-            g.setColour (juce::Colours::white.withAlpha (0.5f));
+            g.setColour (findColour (SquidColours::dropOverlay));
             g.fillRect (dropBounds);
             g.setFont (fontHeight);
 
             if (supportedFile)
-                g.setColour (juce::Colours::white.withAlpha (0.7f));
+                g.setColour (findColour (SquidColours::dropChipBackground));
             else
-                g.setColour (juce::Colours::black.withAlpha (0.7f));
+                g.setColour (findColour (SquidColours::dropChipBackgroundUnsupported));
             auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f };
             auto center { dropBounds.getCentre () };
             g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
             if (supportedFile)
-                g.setColour (juce::Colours::black);
+                g.setColour (findColour (SquidColours::dropChipText));
             else
-                g.setColour (juce::Colours::red.darker (0.5f));
+                g.setColour (findColour (SquidColours::dropError));
             g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
         }
         else
@@ -2252,24 +2245,24 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             const auto dropMsgBounds { juce::Rectangle<int> (0, 0, dropAreaBounds.getWidth (), static_cast<int> (dropMsgFontSizeDouble)).withCentre (dropAreaBounds.getCentre ()) };
 
             // fill entire drop area with transparent
-            g.setColour (juce::Colours::white.withAlpha (0.5f));
+            g.setColour (findColour (SquidColours::dropOverlay));
             g.fillRect (dropBounds);
 
             // display main drop message background
             // draw main drop message
             g.setFont (dropMsgFontSizeDouble);
-            g.setColour (juce::Colours::white.withAlpha (0.7f));
+            g.setColour (findColour (SquidColours::dropChipBackground));
             g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
-            g.setColour (juce::Colours::black);
+            g.setColour (findColour (SquidColours::dropChipText));
             g.drawText (dropMsg, dropMsgBounds, juce::Justification::centred, false);
 
             // calculate background rectangle size from longest line and number of lines, using ellipsis if necessary
             g.setFont (dropDetailsFontSize);
             auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (longestLine + 20), lines.size () * static_cast<int> (dropDetailsFontSize) }.withCentre (detailsBounds.getCentre ()) };
             //dropDetailsDisplayBounds.setY (detailsBounds.getHeight () / 2.f - dropDetailsDisplayBounds.getHeight () / 2.f );
-            g.setColour (juce::Colours::white.withAlpha (0.7f));
+            g.setColour (findColour (SquidColours::dropChipBackground));
             g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
-            g.setColour (juce::Colours::black);
+            g.setColour (findColour (SquidColours::dropChipText));
             for (auto lineIndex { 0 }; lineIndex < lines.size (); ++lineIndex)
             {
                 g.drawText (lines [lineIndex], dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize)), juce::Justification::centred, false);

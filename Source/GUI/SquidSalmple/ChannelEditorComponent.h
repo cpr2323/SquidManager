@@ -1,6 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../Theme/SquidColourIds.h"
+#include "../Theme/SquidLookAndFeel.h"
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
 #include "LoopPoints/LoopPointsView.h"
@@ -106,52 +108,34 @@ private:
         CueSetButton ()
             : TextButton ()
         {
-            setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
-            setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-            setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+            applyColours ();
         }
         void enablementChanged () override
         {
-            if (isEnabled ())
-            {
-                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
-                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            }
-            else
-            {
-                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            }
+            applyColours ();
+        }
+        void lookAndFeelChanged () override
+        {
+            juce::TextButton::lookAndFeelChanged ();
+            applyColours ();
+        }
+    private:
+        // The explicit colours are re-applied rather than set once, so that a
+        // palette change reaches them; an explicit setColour always wins over
+        // the LookAndFeel, so it has to be refreshed by hand.
+        void applyColours ()
+        {
+            const auto background { isEnabled () ? SquidColours::buttonBackground
+                                                 : SquidColours::windowBackground };
+            setColour (juce::TextButton::ColourIds::buttonColourId, findColour (background));
+            setColour (juce::TextButton::ColourIds::textColourOffId, findColour (SquidColours::text));
+            setColour (juce::TextButton::ColourIds::buttonOnColourId, findColour (SquidColours::text));
+            setColour (juce::TextButton::ColourIds::textColourOnId, findColour (SquidColours::windowBackground));
         }
     };
     std::array<CueSetButton, 64> cueSetButtons;
     CvAssignEditor cvAssignEditor;
 
-    NoArrowComboBoxLnF noArrowComboBoxLnF;
-
-    class CueEditButtonLnF : public juce::LookAndFeel_V4
-    {
-    public:
-        juce::Font getTextButtonFont (juce::TextButton&, int /*buttonHeight*/) override
-        {
-            return juce::Font (juce::FontOptions (11.0f));
-        }
-
-        // the default implementation reserves an indent on each side of the text, which on these
-        // 15 pixel wide buttons leaves only 5 pixels for the glyph. that is narrower than the '+'
-        // needs, so it gets squashed to the minimum horizontal scale and becomes unreadable. these
-        // buttons hold a single character, so the text is drawn across the full width instead
-        void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool, bool) override
-        {
-            g.setFont (getTextButtonFont (button, button.getHeight ()));
-            g.setColour (button.findColour (button.getToggleState () ? juce::TextButton::textColourOnId
-                                                                    : juce::TextButton::textColourOffId)
-                               .withMultipliedAlpha (button.isEnabled () ? 1.0f : 0.5f));
-            g.drawText (button.getButtonText (), button.getLocalBounds (), juce::Justification::centred, false);
-        }
-    };
-    CueEditButtonLnF cueEditButtonLnF;
 
     juce::TextButton addCueSetButton;
     juce::TextButton deleteCueSetButton;
@@ -231,6 +215,8 @@ private:
     void fileDragExit (const juce::StringArray& files) override;
 
     void resized () override;
+    void lookAndFeelChanged () override;
+    void applyExplicitColours ();
     void paint (juce::Graphics& g) override;
     void paintOverChildren (juce::Graphics& g) override;
 };
