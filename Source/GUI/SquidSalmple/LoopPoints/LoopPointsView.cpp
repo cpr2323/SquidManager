@@ -54,6 +54,8 @@ void LoopPointsView::paint (juce::Graphics& g)
         //jassertfalse;
     }
 
+    // set explicitly: these used to inherit whatever colour the trace left behind
+    g.setColour (findColour (SquidColours::outline));
     g.drawRect (getLocalBounds ());
     g.fillRect (getWidth () / 2, 0, 1, getHeight ());
 }

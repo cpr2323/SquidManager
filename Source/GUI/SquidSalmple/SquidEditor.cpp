@@ -35,7 +35,8 @@ SquidEditorComponent::SquidEditorComponent ()
     };
 
     // NAME
-    setupLabel (bankNameLabel, "NAME", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (bankNameLabel, "BANK", kMediumLabelSize, juce::Justification::centredLeft);
+    setupLabel (unsavedEditsLabel, "", 12.0f, juce::Justification::centredLeft);
     bankNameEditor.setTooltip ("Bank Name. Maximum of 11 characters long. Stored in the info.txt file in the bank folder");
     bankNameEditor.onFocusLost = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onReturnKey = [this] () { nameUiChanged (bankNameEditor.getText ()); };
@@ -44,7 +45,7 @@ SquidEditorComponent::SquidEditorComponent ()
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
 
     // SAVE BUTTON
-    saveButton.setButtonText ("SAVE");
+    saveButton.setButtonText ("SAVE BANK");
     saveButton.setEnabled (false);
     saveButton.onClick = [this] ()
     {
@@ -83,7 +84,6 @@ SquidEditorComponent::SquidEditorComponent ()
     addAndMakeVisible (saveButton);
 
     // TOOLS BUTTON
-    toolsButton.setButtonText ("TOOLS");
     toolsButton.onClick = [this] ()
     {
         juce::PopupMenu pm;
@@ -181,7 +181,23 @@ void SquidEditorComponent::nameDataChanged (juce::String name)
 void SquidEditorComponent::timerCallback ()
 {
     // check if data has changed
-    saveButton.setEnabled (! BankHelpers::areEntireBanksEqual (unEditedSquidBankProperties.getValueTree (), squidBankProperties.getValueTree ()));
+    const auto hasUnsavedEdits { ! BankHelpers::areEntireBanksEqual (unEditedSquidBankProperties.getValueTree (), squidBankProperties.getValueTree ()) };
+    saveButton.setEnabled (hasUnsavedEdits);
+    if (hasUnsavedEdits != bankHasUnsavedEdits)
+    {
+        bankHasUnsavedEdits = hasUnsavedEdits;
+        // the app cannot say which value changed, only that something did
+        unsavedEditsLabel.setText (hasUnsavedEdits ? "UNSAVED EDITS" : "", juce::NotificationType::dontSendNotification);
+        applyExplicitColours ();
+    }
+
+    // a channel tab lights when that channel holds a sample
+    squidBankProperties.forEachChannel ([this] (juce::ValueTree channelPropertiesVT, int channelIndex)
+    {
+        SquidChannelProperties channelProperties (channelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+        channelTabs.setChannelHasContent (channelIndex, channelProperties.getSampleFileName ().isNotEmpty ());
+        return true;
+    });
 }
 
 void SquidEditorComponent::bankLoseEditWarning (juce::String title, std::function<void ()> overwriteFunction, std::function<void ()> cancelFunction)
@@ -214,25 +230,42 @@ void SquidEditorComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
 
-    localBounds.removeFromTop (5);
-    // put bank name and save button on the top line
-    auto topRowBounds { localBounds.removeFromTop (kParameterLineHeight) };
-    topRowBounds.removeFromLeft (5);
-    bankNameLabel.setBounds (topRowBounds.removeFromLeft (45));
-    topRowBounds.removeFromLeft (3);
-    bankNameEditor.setBounds (topRowBounds.removeFromLeft (80));
-    topRowBounds.removeFromRight (5);
-    saveButton.setBounds (topRowBounds.removeFromRight (80));
-    toolsButton.setBounds (saveButton.getBounds ().withY (saveButton.getBottom () + 3));
+    localBounds.removeFromTop (4);
+    auto topRowBounds { localBounds.removeFromTop (24) };
+    topRowBounds.removeFromLeft (10);
+    bankNameLabel.setBounds (topRowBounds.removeFromLeft (40));
+    topRowBounds.removeFromLeft (4);
+    bankNameEditor.setBounds (topRowBounds.removeFromLeft (110));
+    topRowBounds.removeFromLeft (12);
+    unsavedEditsLabel.setBounds (topRowBounds.removeFromLeft (120));
 
-    const auto channelSectionY { saveButton.getBottom () + 3 };
+    topRowBounds.removeFromRight (10);
+    saveButton.setBounds (topRowBounds.removeFromRight (100));
+    topRowBounds.removeFromRight (6);
+    toolsButton.setBounds (topRowBounds.removeFromRight (100));
+
+    const auto channelSectionY { saveButton.getBottom () + 4 };
     const auto kWidthOfWaveformEditor { 1082 };
     channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
+}
+
+void SquidEditorComponent::applyExplicitColours ()
+{
+    bankNameLabel.setColour (juce::Label::ColourIds::textColourId, findColour (SquidColours::accentText));
+    unsavedEditsLabel.setColour (juce::Label::ColourIds::textColourId, findColour (SquidColours::unsavedEdits));
+    // Save is the one action in this header worth making obvious - but only when
+    // there is something to save. JUCE does not dim a disabled button's fill, so
+    // an always-accent Save would look ready to press with nothing to write.
+    saveButton.setColour (juce::TextButton::ColourIds::buttonColourId,
+                          findColour (bankHasUnsavedEdits ? SquidColours::accent : SquidColours::buttonBackground));
+    saveButton.setColour (juce::TextButton::ColourIds::textColourOffId,
+                          findColour (bankHasUnsavedEdits ? SquidColours::accentInk : SquidColours::textDim));
 }
 
 void SquidEditorComponent::lookAndFeelChanged ()
 {
     juce::Component::lookAndFeelChanged ();
+    applyExplicitColours ();
     // TabbedComponent stores a colour per tab rather than resolving one, so a
     // palette change has to be pushed into them
     for (auto tabIndex { 0 }; tabIndex < channelTabs.getNumTabs (); ++tabIndex)

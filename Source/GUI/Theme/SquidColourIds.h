@@ -27,6 +27,8 @@ namespace SquidColours
         textDim,                        // list rows at rest
         textSelected,                   // the selected bank row
         textSupported,                  // a folder that holds a loadable bank
+        unsavedEdits,                   // the olive the module uses on its Func LEDs
+        selectedRow,                    // tint behind a selected row or an active toggle
 
         outline,                        // hairlines and label outlines
         outlineDim,                     // the quieter divider between CV columns

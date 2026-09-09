@@ -41,7 +41,7 @@ private:
 
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
 
-    juce::TextButton toolsButton;
+    MenuButton toolsButton { "CHANNEL TOOLS" };
     juce::Label sampleLengthLabel;
 
     // Edit fields
@@ -97,8 +97,8 @@ private:
     RoundedSlideSwitch cueStepButton;
 
     LoopPointsView loopPointsView;
-    juce::TextButton oneShotPlayButton;
-    juce::TextButton loopPlayButton;
+    ChromeButton oneShotPlayButton { "ONCE" };
+    ChromeButton loopPlayButton { "LOOP" };
 
     // Names the groups the parameters are divided into. These carry the accent
     // colour rather than the default text colour, so they are refreshed in
@@ -111,7 +111,6 @@ private:
     juce::Label cueTriggerHeaderLabel;
     juce::Label cuePointsHeaderLabel;
     juce::Label loopTunerHeaderLabel;
-    juce::Label cvAssignHeaderLabel;
 
     /*
         A short colour bar beside a cue point field, drawn in the same colour as
@@ -137,7 +136,10 @@ private:
 
     // set in resized, drawn in paint - the panel outline and the hairlines that
     // separate the six parameter groups
+    juce::Rectangle<int> sampleCardBounds;
     juce::Rectangle<int> parameterPanelBounds;
+    juce::Rectangle<int> cueSetsCardBounds;
+    juce::Rectangle<int> cvAssignCardBounds;
     std::array<int, 5> parameterDividerX { { 0, 0, 0, 0, 0 } };
 
     // LOWER PANE

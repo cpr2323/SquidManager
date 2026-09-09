@@ -9,12 +9,8 @@ BottomStatusWindow::BottomStatusWindow ()
 
     addAndMakeVisible (statusLabel);
 
-    settingsButton.setButtonText ("SETTINGS");
-    settingsButton.onClick = [this] ()
-    {
-        guiProperties.showSettingsDialog (false);
-    };
-    addAndMakeVisible (settingsButton);
+    // Settings now lives in the path bar at the top, alongside the output device;
+    // this strip is left for transient status messages.
 }
 
 void BottomStatusWindow::init (juce::ValueTree rootPropertiesVT)
@@ -45,6 +41,4 @@ void BottomStatusWindow::resized ()
     auto localBounds { getLocalBounds () };
     localBounds.reduce (5, 3);
     statusLabel.setBounds (localBounds);
-    const auto buttonWidth { 70 };
-    settingsButton.setBounds (getWidth () - 5 - buttonWidth, getHeight () / 2 - 10, buttonWidth, 20);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../../Theme/UiComponents.h"
 #include "BankListProperties.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
@@ -28,7 +29,8 @@ private:
     EditManager* editManager { nullptr };
     juce::File copyDirectory;
 
-    juce::ToggleButton showAllBanks { "Show All" };
+    PaneHeader paneHeader { "BANKS" };
+    ChromeButton showAllBanks { "ALL" };
     juce::ListBox bankListBox { {}, this };
     std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
     int numBanks { kMaxBanks };

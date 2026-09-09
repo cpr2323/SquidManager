@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "ChannelEditorComponent.h"
+#include "../Theme/UiComponents.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/SquidBankProperties.h"
@@ -46,6 +47,13 @@ private:
         TabbedComponentWithDropTabs (juce::TabbedButtonBar::Orientation orientation) : TabbedComponentWithChangeCallback (orientation) {}
         std::function<bool (juce::String fileName)> isSupportedFile;
         std::function<bool (juce::String fileName, int channelIndex)> loadFile;
+
+        // lights the tab's led when that channel holds a sample
+        void setChannelHasContent (int tabIndex, bool channelHasContent)
+        {
+            if (auto* tabButton { dynamic_cast<FileDropTargetTabBarButton*> (getTabbedButtonBar ().getTabButton (tabIndex)) })
+                tabButton->setHasContent (channelHasContent);
+        }
 
     protected:
         juce::TabBarButton* createTabButton (const juce::String& tabName, int /*tabIndex*/) override
@@ -96,24 +104,41 @@ private:
                 }
             }
 
+            void setHasContent (bool channelHasContent)
+            {
+                if (hasContent == channelHasContent)
+                    return;
+                hasContent = channelHasContent;
+                repaint ();
+            }
+
         private:
             bool draggingFile { false };
+            bool hasContent { false };
             std::function<bool (juce::String fileName)> isSupportedFile;
             std::function<bool (juce::String fileName, int channelIndex)> loadFile;
             void paintOverChildren (juce::Graphics& g) override
             {
                 TabBarButton::paintOverChildren (g);
+
+                // says at a glance which channels are in use
+                const auto ledBounds { getLocalBounds ().withTrimmedLeft (7).withWidth (7)
+                                                        .withSizeKeepingCentre (7, 7).toFloat () };
+                StatusLed::draw (g, ledBounds, hasContent,
+                                 findColour (SquidColours::markerStart), findColour (SquidColours::outline));
+
                 if (draggingFile)
                     g.fillAll (findColour (SquidColours::dropOverlay));
-
             }
         };
     };
 
     juce::Label bankNameLabel;
     juce::TextEditor bankNameEditor;
+    juce::Label unsavedEditsLabel;
     juce::TextButton saveButton;
-    juce::TextButton toolsButton;
+    MenuButton toolsButton { "BANK TOOLS" };
+    bool bankHasUnsavedEdits { false };
     TabbedComponentWithDropTabs channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
     std::unique_ptr<juce::FileChooser> fileChooser;
 
@@ -124,6 +149,7 @@ private:
 
     void timerCallback () override;
     void resized () override;
+    void applyExplicitColours ();
     void lookAndFeelChanged () override;
     void paint (juce::Graphics& g) override;
 };

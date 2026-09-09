@@ -16,17 +16,16 @@ const auto kDialogTextEditorName { "foldername" };
 FileViewComponent::FileViewComponent ()
 {
     setOpaque (true);
-    openFolderButton.setButtonText ("Open");
+    addAndMakeVisible (paneHeader);
     openFolderButton.setTooltip ("Navigate to a specific folder");
     openFolderButton.onClick = [this] () { openFolder (); };
     addAndMakeVisible (openFolderButton);
-    newFolderButton.setButtonText ("New");
     newFolderButton.setTooltip ("Create a new folder");
     newFolderButton.onClick = [this] () { newFolder (); };
     addAndMakeVisible (newFolderButton);
     addAndMakeVisible (directoryContentsListBox);
+    showAllFiles.setClickingTogglesState (true);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
-    showAllFiles.setButtonText ("Show All");
     showAllFiles.setTooltip ("Show all files, or show just Squid Salmple files");
     showAllFiles.onClick = [this] () { updateFromNewData (); };
     addAndMakeVisible (showAllFiles);
@@ -337,14 +336,17 @@ void FileViewComponent::listBoxItemDoubleClicked (int row, [[maybe_unused]] cons
 void FileViewComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
-    localBounds.reduce (3, 3);
-    auto toolRow { localBounds.removeFromTop (25) };
-    openFolderButton.setBounds (toolRow.removeFromLeft (50));
-    toolRow.removeFromLeft (5);
-    newFolderButton.setBounds (toolRow.removeFromLeft (50));
-    showAllFiles.setBounds (toolRow);
+    auto headerBounds { localBounds.removeFromTop (24) };
+    paneHeader.setBounds (headerBounds);
 
-    localBounds.removeFromTop (3);
+    // the pane tools live in the header strip, as they do in the banks pane
+    auto toolRow { paneHeader.getFreeBounds ().translated (headerBounds.getX (), headerBounds.getY ()) };
+    showAllFiles.setBounds (toolRow.removeFromRight (32));
+    toolRow.removeFromRight (3);
+    newFolderButton.setBounds (toolRow.removeFromRight (36));
+    toolRow.removeFromRight (3);
+    openFolderButton.setBounds (toolRow.removeFromRight (42));
+
     directoryContentsListBox.setBounds (localBounds);
 }
 

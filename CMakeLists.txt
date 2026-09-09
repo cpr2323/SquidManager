@@ -47,6 +47,7 @@ set(GUI_FILES
     Source/GUI/Theme/Palette.cpp
     Source/GUI/Theme/Palette.h
     Source/GUI/Theme/SquidColourIds.h
+    Source/GUI/Theme/UiComponents.h
     Source/GUI/Theme/SquidLookAndFeel.cpp
     Source/GUI/Theme/SquidLookAndFeel.h
     Source/GUI/Theme/ThemeController.cpp

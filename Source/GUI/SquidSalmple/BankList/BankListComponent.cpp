@@ -17,8 +17,9 @@
 BankListComponent::BankListComponent ()
 {
     setOpaque (true);
+    addAndMakeVisible (paneHeader);
+    showAllBanks.setClickingTogglesState (true);
     showAllBanks.setToggleState (true, juce::NotificationType::dontSendNotification);
-    showAllBanks.setButtonText ("Show All");
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { startCheckBanksThread (); };
     addAndMakeVisible (showAllBanks);
@@ -231,6 +232,13 @@ void BankListComponent::checkBanks ()
         bankInfoList = newBankInfoList;
         numBanks = newNumBanks;
         currentFolder = scannedFolder;
+
+        auto banksWithContent { 0 };
+        for (auto bankIndex { 0 }; bankIndex < numBanks; ++bankIndex)
+            if (std::get<1> (bankInfoList [static_cast<size_t> (bankIndex)]))
+                ++banksWithContent;
+        paneHeader.setCountText (juce::String (banksWithContent) + "/" + juce::String (numBanks));
+
         bankListBox.updateContent ();
         if (foundBanks && firstBankLoadPending)
         {
@@ -290,8 +298,10 @@ void BankListComponent::loadBank (juce::File bankDirectory)
 void BankListComponent::resized ()
 {
     auto localBounds { getLocalBounds () };
-    auto toolRow { localBounds.removeFromTop (25) };
-    showAllBanks.setBounds (toolRow.removeFromLeft (100));
+    auto headerBounds { localBounds.removeFromTop (24) };
+    paneHeader.setBounds (headerBounds);
+    // the count owns the right end of the header, so the tool button sits beside the title
+    showAllBanks.setBounds (paneHeader.getFreeBounds ().translated (headerBounds.getX (), headerBounds.getY ()).removeFromLeft (32));
     bankListBox.setBounds (localBounds);
 }
 
@@ -333,8 +343,21 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
             bankName = "(empty)";
             textColor = textColor.withAlpha (0.5f);
         }
+        juce::ignoreUnused (rowColor);
+        auto rowBounds { juce::Rectangle<int> { 0, 0, width, height } };
+
+        // the lit dot says the bank holds something, so the name does not have to
+        const auto ledBounds { rowBounds.removeFromRight (14).withSizeKeepingCentre (6, 6).toFloat () };
+        StatusLed::draw (g, ledBounds, thisBankExists,
+                         findColour (SquidColours::markerStart), findColour (SquidColours::outline));
+
+        g.setFont (juce::Font (juce::FontOptions (12.0f)));
+        g.setColour (findColour (SquidColours::textDim).withAlpha (rowIsSelected ? 1.0f : 0.7f));
+        g.drawText (juce::String (bankNumber), rowBounds.removeFromLeft (24), juce::Justification::centredRight, false);
+        rowBounds.removeFromLeft (8);
+
         g.setColour (textColor);
-        g.drawText ("  " + juce::String (bankNumber) + "-" + bankName, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
+        g.drawText (bankName, rowBounds, juce::Justification::centredLeft, true);
     }
 }
 

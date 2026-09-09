@@ -8,7 +8,7 @@
 constexpr auto kMaxSampleLength { 524287 };
 
 const auto kLargeLabelSize { 20.0f };
-const auto kMediumLabelSize { 14.0f };
+const auto kMediumLabelSize { 12.0f };
 const auto kSmallLabelSize { 12.0f };
 const auto kLargeLabelIntSize { static_cast<int> (kLargeLabelSize) };
 const auto kMediumLabelIntSize { static_cast<int> (kMediumLabelSize) };
@@ -26,7 +26,6 @@ const auto kDialogTextEditorName { "samplename" };
 ChannelEditorComponent::ChannelEditorComponent ()
 {
     setOpaque (true);
-    toolsButton.setButtonText ("TOOLS");
     toolsButton.setTooltip ("Channel Tools");
     toolsButton.onClick = [this] ()
     {
@@ -259,7 +258,6 @@ void ChannelEditorComponent::setupComponents ()
     setupHeaderLabel (cueTriggerHeaderLabel, "CUE TRIGGER");
     setupHeaderLabel (cuePointsHeaderLabel, "CUE POINTS");
     setupHeaderLabel (loopTunerHeaderLabel, "LOOP TUNER");
-    setupHeaderLabel (cvAssignHeaderLabel, "CV ASSIGN");
 
     addAndMakeVisible (startCueSwatch);
     addAndMakeVisible (loopCueSwatch);
@@ -1573,8 +1571,8 @@ void ChannelEditorComponent::initializeCallbacks ()
         if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
         {
             waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
-            sampleLengthLabel.setText ("(" + juce::String (squidChannelProperties.getSampleDataNumSamples () / squidChannelProperties.getSampleDataSampleRate (), 2) + " seconds/" +
-                                       juce::String (squidChannelProperties.getSampleDataNumSamples ()) + " samples)", juce::NotificationType::dontSendNotification);
+            sampleLengthLabel.setText (juce::String (squidChannelProperties.getSampleDataNumSamples () / squidChannelProperties.getSampleDataSampleRate (), 2) + " s   " +
+                                       juce::String (squidChannelProperties.getSampleDataNumSamples ()) + " samples", juce::NotificationType::dontSendNotification);
         }
         else
         {
@@ -2043,12 +2041,14 @@ void ChannelEditorComponent::resized ()
     const auto kHeaderHeight { 15 };
     const auto kSectionGap { 8 };
 
-    auto localBounds { getLocalBounds ().reduced (10, 6) };
+    auto localBounds { getLocalBounds ().reduced (10, 4) };
 
     // ---------------- SAMPLE ----------------
     {
-        auto sampleRow { localBounds.removeFromTop (kRowHeight) };
-        toolsButton.setBounds (sampleRow.removeFromRight (40));
+        auto sampleCard { localBounds.removeFromTop (kRowHeight + 10) };
+        sampleCardBounds = sampleCard;
+        auto sampleRow { sampleCard.reduced (9, 5) };
+        toolsButton.setBounds (sampleRow.removeFromRight (104));
         sampleRow.removeFromRight (8);
         sampleFileNameLabel.setBounds (sampleRow.removeFromLeft (62));
         sampleRow.removeFromLeft (4);
@@ -2114,10 +2114,11 @@ void ChannelEditorComponent::resized ()
 
     // A slide switch reads as a switch at its own size; stretched to the width of
     // a value field it just looks like a broken text box.
+    // right aligned, so the switches line up with the value fields above them
     auto sizeSlideSwitch = [] (juce::Component& slideSwitch)
     {
         const auto bounds { slideSwitch.getBounds () };
-        slideSwitch.setBounds (bounds.getX (), bounds.getY () + 2, 46, bounds.getHeight () - 4);
+        slideSwitch.setBounds (bounds.getRight () - 46, bounds.getY () + 2, 46, bounds.getHeight () - 4);
     };
     sizeSlideSwitch (reverseButton);
     sizeSlideSwitch (cueRandomButton);
@@ -2128,8 +2129,11 @@ void ChannelEditorComponent::resized ()
     // ---------------- CUE POINTS + LOOP TUNER ----------------
     // The cue point numbers sit directly above the waveform they move, colour
     // matched to their markers, with the tuner filling the rest of the row.
+    const auto cueCardTop { localBounds.getY () };
+    const auto cueCardX { localBounds.getX () };
+    const auto cueCardWidth { localBounds.getWidth () };
     {
-        auto cueRow { localBounds.removeFromTop (kHeaderHeight + 6 + kRowHeight + kRowGap + kRowHeight) };
+        auto cueRow { localBounds.removeFromTop (kHeaderHeight + 6 + kRowHeight + kRowGap + kRowHeight + 10).reduced (9, 5) };
 
         auto cuePointsColumn { cueRow.removeFromLeft (440) };
         cuePointsHeaderLabel.setBounds (cuePointsColumn.removeFromTop (kHeaderHeight));
@@ -2161,17 +2165,19 @@ void ChannelEditorComponent::resized ()
         cueRow.removeFromTop (6);
         loopPointsView.setBounds (cueRow);
     }
-    localBounds.removeFromTop (kSectionGap);
 
     // ---------------- CV ASSIGN, along the bottom ----------------
+    // the editor draws its own header row, with the CV tabs in it
     constexpr auto kCvAssignHeight { 100 };
-    cvAssignEditor.setBounds (localBounds.removeFromBottom (kCvAssignHeight));
-    cvAssignHeaderLabel.setBounds (localBounds.removeFromBottom (kHeaderHeight));
+    cvAssignCardBounds = localBounds.removeFromBottom (kCvAssignHeight + CvAssignEditor::kHeaderHeight + 8);
+    cvAssignEditor.setBounds (cvAssignCardBounds.reduced (9, 4));
     localBounds.removeFromBottom (kSectionGap);
 
     // ---------------- CUE SETS + WAVEFORM fill what is left ----------------
     const auto kCueChipHeight { 18 };
     const auto kCueToolWidth { 15 };
+    localBounds = localBounds.reduced (9, 0).withTrimmedBottom (6);
+    cueSetsCardBounds = { cueCardX, cueCardTop, cueCardWidth, localBounds.getBottom () + 6 - cueCardTop };
     auto topChipRow { localBounds.removeFromTop (kCueChipHeight) };
     auto bottomChipRow { localBounds.removeFromBottom (kCueChipHeight) };
 
@@ -2206,7 +2212,7 @@ void ChannelEditorComponent::applyExplicitColours ()
     const auto headerColour { findColour (SquidColours::accentText) };
     for (auto* header : { &levelEnvHeaderLabel, &filterHeaderLabel, &qualityHeaderLabel,
                           &loopHeaderLabel, &triggerHeaderLabel, &cueTriggerHeaderLabel,
-                          &cuePointsHeaderLabel, &loopTunerHeaderLabel, &cvAssignHeaderLabel,
+                          &cuePointsHeaderLabel, &loopTunerHeaderLabel,
                           &sampleFileNameLabel })
         header->setColour (juce::Label::ColourIds::textColourId, headerColour);
 }
@@ -2217,8 +2223,19 @@ void ChannelEditorComponent::paint (juce::Graphics& g)
 
     // The parameter groups read as one panel divided up, rather than six loose
     // columns, so the block is outlined and the groups separated by hairlines.
+    // Each section is a panel lifted off the ground, so the editor reads as a
+    // few blocks rather than one field of controls.
+    for (const auto& card : { sampleCardBounds, parameterPanelBounds, cueSetsCardBounds, cvAssignCardBounds })
+    {
+        if (card.isEmpty ())
+            continue;
+        g.setColour (findColour (SquidColours::listBackground));
+        g.fillRect (card);
+        g.setColour (findColour (SquidColours::outline));
+        g.drawRect (card, 1);
+    }
+
     g.setColour (findColour (SquidColours::outline));
-    g.drawRect (parameterPanelBounds, 1);
     for (const auto dividerX : parameterDividerX)
         if (dividerX > 0)
             g.drawVerticalLine (dividerX,

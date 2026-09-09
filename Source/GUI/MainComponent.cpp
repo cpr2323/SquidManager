@@ -35,6 +35,8 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
 
     bankListEditorSplitter.setComponents (&bankListComponent, &squidEditorComponent);
     bankListEditorSplitter.setHorizontalSplit (false);
+    // nested inside the splitter below, so it must not inset its panes a second time
+    bankListEditorSplitter.setOuterMargin (0);
 
     folderBrowserEditorSplitter.setComponents (&fileViewComponent, &bankListEditorSplitter);
     folderBrowserEditorSplitter.setHorizontalSplit (false);
@@ -47,6 +49,12 @@ MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
     addAndMakeVisible (currentFolderComponent);
     addAndMakeVisible (folderBrowserEditorSplitter);
     addAndMakeVisible (bottomStatusWindow);
+
+    // The theme is installed before any window exists, so the startup pass of
+    // sendLookAndFeelChange reached nothing. Without this, every component that
+    // applies its own colours in lookAndFeelChanged stays unstyled until the
+    // background slider is first moved.
+    sendLookAndFeelChange ();
 }
 
 void MainComponent::showSettingsDialog ()

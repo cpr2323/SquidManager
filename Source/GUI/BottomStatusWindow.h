@@ -18,7 +18,6 @@ private:
     BankListProperties bankListProperties;
 
     juce::Label statusLabel;
-    juce::TextButton settingsButton;
     std::unique_ptr<juce::AlertWindow> settingsAlertWindow;
 
     void paint (juce::Graphics& g) override;

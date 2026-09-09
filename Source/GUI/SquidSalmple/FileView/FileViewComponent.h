@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../../Theme/UiComponents.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "oolib/Directory/DirectoryDataProperties.h"
@@ -28,9 +29,10 @@ private:
     // built and read only on the message thread, so it needs no lock or double buffering
     std::vector<juce::ValueTree> directoryListQuickLookupList;
 
-    juce::TextButton openFolderButton;
-    juce::TextButton newFolderButton;
-    juce::ToggleButton showAllFiles { "Show All" };
+    PaneHeader paneHeader { "FOLDERS" };
+    ChromeButton openFolderButton { "OPEN" };
+    ChromeButton newFolderButton { "NEW" };
+    ChromeButton showAllFiles { "ALL" };
     std::unique_ptr<juce::FileChooser> fileChooser;
     juce::ListBox directoryContentsListBox { {}, this };
     juce::CriticalSection queuedFolderLock;

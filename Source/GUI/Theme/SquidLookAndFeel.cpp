@@ -50,6 +50,13 @@ void SquidLookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label& l
     label.setFont (getComboBoxFont (box));
 }
 
+int SquidLookAndFeel::getTabButtonBestWidth (juce::TabBarButton& button, int tabDepth)
+{
+    // the channel tabs carry a status led to the left of their text, so they need
+    // more room than the text alone would ask for
+    return juce::LookAndFeel_V4::getTabButtonBestWidth (button, tabDepth) + 16;
+}
+
 juce::Font SquidLookAndFeel::getTextButtonFont (juce::TextButton& button, int buttonHeight)
 {
     if (button.getProperties ().contains (SquidLnFProperties::singleGlyphButton))

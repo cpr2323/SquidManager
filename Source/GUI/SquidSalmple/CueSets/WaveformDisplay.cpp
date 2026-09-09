@@ -80,11 +80,14 @@ void WaveformDisplay::setupColours ()
     waveformColours.centreLine = kForegroundColour.withAlpha (0.25f);
     waveformView.setColourScheme (waveformColours);
 
+    // The timeline is a ruler rather than part of the waveform, so it takes the
+    // chrome colours instead of the trace colour.
+    const auto kTimelineInk { findColour (SquidColours::textDim) };
     TimelineComponent::ColourScheme timelineColours;
     timelineColours.background = kBackgroundColour;
-    timelineColours.majorTick = kForegroundColour;
-    timelineColours.minorTick = kForegroundColour.withAlpha (0.55f);
-    timelineColours.text = kForegroundColour;
+    timelineColours.majorTick = kTimelineInk;
+    timelineColours.minorTick = kTimelineInk.withAlpha (0.55f);
+    timelineColours.text = kTimelineInk;
     timeline.setColourScheme (timelineColours);
 
     // The markers are added once, by setupMarkers; re-tint them in place rather
@@ -115,6 +118,7 @@ void WaveformDisplay::setupMarkers ()
     startStyle.shape = MarkerOverlay::HandleShape::rectangle;
     startStyle.placement = MarkerOverlay::HandlePlacement::top;
     startStyle.alignment = MarkerOverlay::HandleAlignment::rightOfLine;
+    startStyle.label = MarkerOverlay::LabelVisibility::always;
 
     auto loopStyle { startStyle };
     loopStyle.colour = findColour (SquidColours::markerLoop);

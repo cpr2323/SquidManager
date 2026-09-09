@@ -93,6 +93,8 @@ Palette::Palette ()
         { SquidColours::textSelected,  kAccentTextDark, kAccentTextLight, S::ground, 0.60f },
         { SquidColours::accentText,    kAccentTextDark, kAccentTextLight, S::ground, 0.60f },
         { SquidColours::textSupported, kGreenDark,      kGreenLight,      S::ground, 0.35f },
+        { SquidColours::unsavedEdits,  kOliveDark,      kOliveLight,      S::ground, 0.35f },
+        { SquidColours::selectedRow,   kSelectDark,     kSelectLight },
 
         // ---- ink on the waveform lane ----
         { SquidColours::waveformForeground, kTraceDark,  kTraceLight,       S::lane, 0.50f },
