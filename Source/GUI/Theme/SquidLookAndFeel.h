@@ -41,6 +41,8 @@ public:
                        int buttonX, int buttonY, int buttonW, int buttonH,
                        juce::ComboBox& box) override;
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override;
+    juce::Font getComboBoxFont (juce::ComboBox& box) override;
+    juce::Font getPopupMenuFont () override;
     int getTabButtonBestWidth (juce::TabBarButton& button, int tabDepth) override;
     juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override;
     void drawButtonText (juce::Graphics& g, juce::TextButton& button,

@@ -167,7 +167,7 @@ private:
                 }
 
                 // Text
-                g.setFont (juce::Font (juce::FontOptions (11.0f)));
+                g.setFont (SquidFonts::condensed (11.5f, "SemiBold"));
                 g.setColour (findColour (getToggleState () ? SquidColours::accentText
                                                           : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
                 g.drawText (getButtonText (), full.withTrimmedLeft (20), juce::Justification::centredLeft, false);

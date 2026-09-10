@@ -351,11 +351,12 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         StatusLed::draw (g, ledBounds, thisBankExists,
                          findColour (SquidColours::markerStart), findColour (SquidColours::outline));
 
-        g.setFont (juce::Font (juce::FontOptions (12.0f)));
+        g.setFont (SquidFonts::mono (10.5f));
         g.setColour (findColour (SquidColours::textDim).withAlpha (rowIsSelected ? 1.0f : 0.7f));
         g.drawText (juce::String (bankNumber), rowBounds.removeFromLeft (24), juce::Justification::centredRight, false);
         rowBounds.removeFromLeft (8);
 
+        g.setFont (SquidFonts::sans (12.0f));
         g.setColour (textColor);
         g.drawText (bankName, rowBounds, juce::Justification::centredLeft, true);
     }

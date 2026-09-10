@@ -2,16 +2,19 @@
 #include "../../Theme/SquidColourIds.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/CvParameterProperties.h"
+#include "../../Theme/UiComponents.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
 
 CvAssignParameter::CvAssignParameter ()
 {
+    parameterLabel.setFont (SquidFonts::condensed (10.0f, "SemiBold"));
     parameterLabel.setJustificationType (juce::Justification::centred);
     parameterLabel.setText ("---", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (parameterLabel);
 
     // ENABLE BUTTON
     assignEnableLabel.setText ("ON", juce::NotificationType::dontSendNotification);
+    assignEnableLabel.setFont (SquidFonts::condensed (9.0f));
     addAndMakeVisible (assignEnableLabel);
     assignEnableButton.setTooltip ("CV Assign Enable. Enables control of this parameter via CV.");
     assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
@@ -40,10 +43,12 @@ CvAssignParameter::CvAssignParameter ()
 
     // ATTENUATE TEXT EDITOR
     cvAttenuateLabel.setText ("ATN", juce::NotificationType::dontSendNotification);
+    cvAttenuateLabel.setFont (SquidFonts::condensed (9.0f));
     addAndMakeVisible (cvAttenuateLabel);
     cvAttenuateEditor.setTooltip ("Attenuate CV Input. Adjusts the amount of attenuation applied to the CV before sending it to this parameter. Attenuation can be postive or negative.");
     cvAttenuateEditor.getMinValueCallback = [this] () { return -99; };
     cvAttenuateEditor.getMaxValueCallback = [this] () { return 99; };
+    cvAttenuateEditor.setFont (SquidFonts::mono (12.0f));
     cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvAttenuateEditor.updateDataCallback = [this] (int value) { cvAssignAttenuateUiChanged (value); };
     cvAttenuateEditor.onDragCallback = [this] (double valueDelta)
@@ -76,10 +81,12 @@ CvAssignParameter::CvAssignParameter ()
 
     // OFFSET TEXT EDITOR
     cvOffsetLabel.setText ("OFS", juce::NotificationType::dontSendNotification);
+    cvOffsetLabel.setFont (SquidFonts::condensed (9.0f));
     addAndMakeVisible (cvOffsetLabel);
     cvOffsetEditor.setTooltip ("Offset CV Input. Adjusts the amount of offset applied to the CV before sending it to this parameter.");
     cvOffsetEditor.getMinValueCallback = [this] () { return 0; };
     cvOffsetEditor.getMaxValueCallback = [this] () { return 99; };
+    cvOffsetEditor.setFont (SquidFonts::mono (12.0f));
     cvOffsetEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvOffsetEditor.updateDataCallback = [this] (int value) { cvAssignOffsetUiChanged (value); };
     cvOffsetEditor.onDragCallback = [this] (double valueDelta)

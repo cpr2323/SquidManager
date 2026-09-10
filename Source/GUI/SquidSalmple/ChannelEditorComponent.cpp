@@ -202,6 +202,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
     };
     addAndMakeVisible (toolsButton);
     addAndMakeVisible (sampleLengthLabel);
+    sampleLengthLabel.setFont (SquidFonts::mono (11.0f));
     setupComponents ();
 }
 
@@ -215,13 +216,14 @@ void ChannelEditorComponent::setupComponents ()
     {
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (justification);
-        label.setFont (label.getFont ().withPointHeight (fontSize));
+        label.setFont (SquidFonts::condensed (fontSize));
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
     auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters, juce::String parameterName)
     {
         textEditor.setJustification (justification);
+        textEditor.setFont (SquidFonts::mono (12.0f));
         textEditor.setIndents (1, 0);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
         //textEditor.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
@@ -246,7 +248,7 @@ void ChannelEditorComponent::setupComponents ()
     {
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (juce::Justification::centredLeft);
-        label.setFont (label.getFont ().withPointHeight (11.0f));
+        label.setFont (SquidFonts::condensed (9.5f, "SemiBold"));
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };

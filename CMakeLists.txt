@@ -144,6 +144,10 @@ set(SRC_FILES
 # shows them next to the code they belong with.
 set(RESOURCE_FILES
     Source/GUI/sqedit2_2.png
+    Assets/Fonts/IBM-Plex-Mono-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-SemiBold.ttf
     ${SQUIDSALMPLE_DATA_FILES})
 
 set_source_files_properties(${RESOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)

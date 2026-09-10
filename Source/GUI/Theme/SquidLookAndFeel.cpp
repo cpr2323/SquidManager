@@ -1,8 +1,19 @@
 #include "SquidLookAndFeel.h"
+#include "UiComponents.h"
 
 SquidLookAndFeel::SquidLookAndFeel ()
 {
     applyPalette ();
+}
+
+juce::Font SquidLookAndFeel::getComboBoxFont (juce::ComboBox&)
+{
+    return SquidFonts::mono (12.0f);
+}
+
+juce::Font SquidLookAndFeel::getPopupMenuFont ()
+{
+    return SquidFonts::sans (12.0f);
 }
 
 void SquidLookAndFeel::setGround (float newGround)
@@ -60,9 +71,9 @@ int SquidLookAndFeel::getTabButtonBestWidth (juce::TabBarButton& button, int tab
 juce::Font SquidLookAndFeel::getTextButtonFont (juce::TextButton& button, int buttonHeight)
 {
     if (button.getProperties ().contains (SquidLnFProperties::singleGlyphButton))
-        return juce::Font (juce::FontOptions (11.0f));
+        return SquidFonts::condensed (11.0f);
 
-    return juce::LookAndFeel_V4::getTextButtonFont (button, buttonHeight);
+    return SquidFonts::condensed (10.5f, "SemiBold");
 }
 
 void SquidLookAndFeel::drawButtonText (juce::Graphics& g, juce::TextButton& button,

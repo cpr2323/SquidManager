@@ -9,7 +9,7 @@
 const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };
 const auto kInitialYOffset { 5 };
-static const auto kMediumLabelSize { 14.0f };
+static const auto kMediumLabelSize { 10.0f };
 
 const auto kScaleMax { 65535. };
 const auto kScaleStep { kScaleMax / 100 };
@@ -22,7 +22,7 @@ SquidEditorComponent::SquidEditorComponent ()
     {
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (justification);
-        label.setFont (label.getFont ().withPointHeight (fontSize));
+        label.setFont (SquidFonts::condensed (fontSize, "SemiBold"));
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
@@ -43,6 +43,7 @@ SquidEditorComponent::SquidEditorComponent ()
     bankNameEditor.onTextChange = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     // TODO - make sure I have the correct valid character set
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
+    bankNameEditor.setFont (SquidFonts::mono (12.5f));
 
     // SAVE BUTTON
     saveButton.setButtonText ("SAVE BANK");

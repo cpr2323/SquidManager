@@ -194,6 +194,7 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         fileListItem = " " + filePrefix + file.getFileName ();
     }
 
+    g.setFont (SquidFonts::sans (12.0f));
     g.setColour (textColor);
     g.drawText (fileListItem, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
 }

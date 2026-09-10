@@ -19,7 +19,7 @@ CvAssignEditor::CvAssignEditor ()
 {
     cvAssignHeaderLabel.setBorderSize ({ 0, 0, 0, 0 });
     cvAssignHeaderLabel.setJustificationType (juce::Justification::centredLeft);
-    cvAssignHeaderLabel.setFont (cvAssignHeaderLabel.getFont ().withPointHeight (11.0f));
+    cvAssignHeaderLabel.setFont (SquidFonts::condensed (9.5f, "SemiBold"));
     cvAssignHeaderLabel.setText ("CV ASSIGN", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (cvAssignHeaderLabel);
 

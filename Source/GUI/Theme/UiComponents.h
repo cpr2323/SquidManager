@@ -2,6 +2,59 @@
 
 #include <JuceHeader.h>
 #include "SquidColourIds.h"
+#include <BinaryData.h>
+
+namespace SquidFonts
+{
+    inline juce::Typeface::Ptr condensedTypeface (juce::String style)
+    {
+        const auto* data = style == "SemiBold" ? BinaryData::IBMPlexSansCondensedSemiBold_ttf
+                                                : BinaryData::IBMPlexSansCondensedRegular_ttf;
+        const auto size = style == "SemiBold" ? BinaryData::IBMPlexSansCondensedSemiBold_ttfSize
+                                               : BinaryData::IBMPlexSansCondensedRegular_ttfSize;
+        return juce::Typeface::createSystemTypefaceFor (data, static_cast<size_t> (size));
+    }
+
+    inline const juce::Typeface::Ptr& condensedTypefaceCached (juce::String style)
+    {
+        static const auto regular = condensedTypeface ("Regular");
+        static const auto semiBold = condensedTypeface ("SemiBold");
+        return style == "SemiBold" ? semiBold : regular;
+    }
+
+    inline const juce::Typeface::Ptr& monoTypefaceCached ()
+    {
+        static const auto mono = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::IBMPlexMonoRegular_ttf,
+            static_cast<size_t> (BinaryData::IBMPlexMonoRegular_ttfSize));
+        return mono;
+    }
+
+    inline const juce::Typeface::Ptr& sansTypefaceCached ()
+    {
+        static const auto sans = juce::Typeface::createSystemTypefaceFor (
+            BinaryData::IBMPlexSansRegular_ttf,
+            static_cast<size_t> (BinaryData::IBMPlexSansRegular_ttfSize));
+        return sans;
+    }
+
+    inline juce::Font sans (float height)
+    {
+        return juce::Font (juce::FontOptions (sansTypefaceCached ()).withHeight (height));
+    }
+
+    inline juce::Font condensed (float height, juce::String style = "Regular")
+    {
+        const auto tracking { style == "Regular" ? 0.10f : 0.14f };
+        return juce::Font (juce::FontOptions (condensedTypefaceCached (style)).withHeight (height)
+                               .withKerningFactor (tracking));
+    }
+
+    inline juce::Font mono (float height)
+    {
+        return juce::Font (juce::FontOptions (monoTypefaceCached ()).withHeight (height));
+    }
+}
 
 /*
     Small pieces the app repeats often enough that they should only exist once.
@@ -97,7 +150,7 @@ public:
         g.setColour (findColour (SquidColours::outline));
         g.drawHorizontalLine (getHeight () - 1, 0.0f, static_cast<float> (getWidth ()));
 
-        g.setFont (juce::Font (juce::FontOptions (11.0f)));
+        g.setFont (SquidFonts::condensed (9.5f, "SemiBold"));
         g.setColour (findColour (SquidColours::accentText));
         g.drawText (title, 8, 0, titleWidth, getHeight (), juce::Justification::centredLeft, false);
 
@@ -131,7 +184,7 @@ public:
         auto arrowArea { bounds.removeFromRight (16) };
 
         g.setColour (findColour (isEnabled () ? SquidColours::textDim : SquidColours::outlineDim));
-        g.setFont (juce::Font (juce::FontOptions (11.0f)));
+        g.setFont (SquidFonts::condensed (10.0f, "SemiBold"));
         g.drawText (getButtonText (), bounds.withTrimmedLeft (9), juce::Justification::centredLeft, false);
 
         juce::Path arrow;
@@ -165,7 +218,7 @@ public:
         g.setColour (findColour (toggledOn || isMouseOver ? SquidColours::accentDeep : SquidColours::outline));
         g.drawRoundedRectangle (bounds, 2.0f, 1.0f);
 
-        g.setFont (juce::Font (juce::FontOptions (11.0f)));
+        g.setFont (SquidFonts::condensed (10.0f, "SemiBold"));
         g.setColour (findColour (! isEnabled () ? SquidColours::outlineDim
                                                 : (toggledOn ? SquidColours::accentText : SquidColours::textDim)));
         g.drawText (getButtonText (), getLocalBounds (), juce::Justification::centred, false);

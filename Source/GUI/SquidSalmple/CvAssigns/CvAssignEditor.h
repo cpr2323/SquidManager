@@ -56,7 +56,7 @@ private:
             StatusLed::draw (g, ledBounds, hasRouting,
                              findColour (SquidColours::markerStart), findColour (SquidColours::outline));
 
-            g.setFont (juce::Font (juce::FontOptions (12.0f)));
+            g.setFont (SquidFonts::condensed (10.0f, "SemiBold"));
             g.setColour (findColour (selected ? SquidColours::text
                                               : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
             g.drawText ("CV " + juce::String (cvIndex + 1), getLocalBounds ().withTrimmedLeft (20),
