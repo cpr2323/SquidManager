@@ -59,8 +59,11 @@ private:
             g.setFont (juce::Font (juce::FontOptions (12.0f)));
             g.setColour (findColour (selected ? SquidColours::text
                                               : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
-            g.drawText ("CV " + juce::String (cvIndex + 1), getLocalBounds ().withTrimmedLeft (16),
+            g.drawText ("CV " + juce::String (cvIndex + 1), getLocalBounds ().withTrimmedLeft (20),
                         juce::Justification::centredLeft, false);
+
+            g.setColour (findColour (SquidColours::outline));
+            g.drawVerticalLine (getWidth () - 1, 3.0f, static_cast<float> (getHeight () - 3));
         }
 
     private:

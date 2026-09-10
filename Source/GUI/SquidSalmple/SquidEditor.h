@@ -56,6 +56,13 @@ private:
         }
 
     protected:
+        void paintOverChildren (juce::Graphics& g) override
+        {
+            juce::TabbedComponent::paintOverChildren (g);
+            g.setColour (findColour (SquidColours::outline));
+            g.drawRect (getLocalBounds (), 1);
+        }
+
         juce::TabBarButton* createTabButton (const juce::String& tabName, int /*tabIndex*/) override
         {
             return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar (), isSupportedFile, loadFile);
@@ -129,6 +136,56 @@ private:
 
                 if (draggingFile)
                     g.fillAll (findColour (SquidColours::dropOverlay));
+            }
+
+            void paintButton (juce::Graphics& g, bool isMouseOver, bool /*isMouseDown*/) override
+            {
+                // Draw a compact tab: small left LED, tight label plate and a thin
+                // accent underline when selected to match the facelift mockup.
+                const auto full = getLocalBounds();
+
+                // LED to the left
+                const auto ledBounds = full.withTrimmedLeft (6).withWidth (7)
+                                            .withSizeKeepingCentre (7, 7).toFloat ();
+                StatusLed::draw (g, ledBounds, hasContent,
+                                 findColour (SquidColours::markerStart), findColour (SquidColours::outline));
+
+                // text area sits to the right of the LED with a small inset
+                auto textArea = full.withTrimmedLeft (16).reduced (6, 4);
+
+                // If selected, draw a subtle filled plate behind the entire
+                // tab (including the LED) and a thin accent rail at its bottom
+                // edge so the LED reads as part of the highlighted area.
+                if (getToggleState())
+                {
+                    g.setColour (findColour (SquidColours::selectedRow));
+                    g.fillRoundedRectangle (full.toFloat(), 3.0f);
+                    g.setColour (findColour (SquidColours::accent));
+                    auto railArea = full;
+                    railArea.removeFromBottom (2);
+                    g.fillRect (railArea.removeFromBottom (2).toFloat());
+                }
+
+                // Text
+                g.setFont (juce::Font (juce::FontOptions (11.0f)));
+                g.setColour (findColour (getToggleState () ? SquidColours::accentText
+                                                          : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
+                g.drawText (getButtonText (), full.withTrimmedLeft (20), juce::Justification::centredLeft, false);
+
+                // show the drop overlay if a file is being dragged (overlay the
+                // tab content area only)
+                if (draggingFile)
+                {
+                    g.setColour (findColour (SquidColours::dropOverlay));
+                    g.fillRoundedRectangle (full.toFloat(), 3.0f);
+                }
+
+                // draw a hairline separator on the right edge so tabs read as
+                // distinct items
+                g.setColour (findColour (SquidColours::outline));
+                const int x = full.getRight () - 1;
+                g.drawVerticalLine (x, static_cast<float> (full.getY () + 3),
+                                    static_cast<float> (full.getBottom () - 3));
             }
         };
     };
