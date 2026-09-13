@@ -47,7 +47,7 @@ public:
 
 private:
     // Which resolved surface a flip token sits on.
-    enum class Surface { none, ground, lane, accentFill, chip };
+    enum class Surface { none, ground, lane, accentFill };
 
     struct TokenSpec
     {

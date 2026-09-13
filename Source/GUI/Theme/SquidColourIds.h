@@ -50,11 +50,7 @@ namespace SquidColours
         markerEnd,                      // red, as the module's Rec button
 
         // drag and drop overlay
-        dropOverlay,                    // wash drawn over the drop target
-        dropChipBackground,             // rounded plate behind the drop message
-        dropChipBackgroundUnsupported,  // same plate when the file cannot be loaded
-        dropChipText,
-        dropError,                      // message text when the file is not supported
+        dropOverlay,                    // wash drawn over the drop target; the message on it uses the tooltip colours
 
         // chrome
         tabBackground,

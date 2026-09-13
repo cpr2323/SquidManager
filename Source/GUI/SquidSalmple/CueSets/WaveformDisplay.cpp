@@ -1,6 +1,6 @@
 #include "WaveformDisplay.h"
 #include "../../Theme/SquidColourIds.h"
-#include "../../Theme/SquidFonts.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "oolib/Debug/DebugLog.h"
@@ -346,19 +346,9 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     constexpr auto dropMsgFontSizeSingle { 30.f };
     constexpr auto dropMsgFontSizeDouble { 20.f };
     constexpr auto dropDetailsFontSize   { 15.f };
-    auto setBackgroundColor = [this, &g] ()
-    {
-        if (supportedFile)
-            g.setColour (findColour (SquidColours::dropChipBackground));
-        else
-            g.setColour (findColour (SquidColours::dropChipBackgroundUnsupported));
-    };
     auto setTextColor = [this, &g] ()
     {
-        if (supportedFile)
-            g.setColour (findColour (SquidColours::dropChipText));
-        else
-            g.setColour (findColour (SquidColours::dropError));
+        g.setColour (SquidPaint::messageInk (*this, ! supportedFile));
     };
     if (draggingFilesCount > 0)
     {
@@ -367,7 +357,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         {
             g.fillAll (findColour (SquidColours::dropOverlay).withAlpha (0.1f));
             g.setFont (dropMsgFontSizeSingle);
-            g.setColour (findColour (SquidColours::dropChipText));
+            g.setColour (SquidPaint::messageInk (*this));
             if (draggingFilesCount == 1)
                 g.drawText ("Assign sample to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
             else
@@ -375,14 +365,13 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
-            auto displayTextWithBackground = [&g, this, &setBackgroundColor, &setTextColor] (juce::StringRef text, float fontSize, const juce::Rectangle<int>& bounds)
+            auto displayTextWithBackground = [&g, this, &setTextColor] (juce::StringRef text, float fontSize, const juce::Rectangle<int>& bounds)
             {
                 g.setFont (fontSize);
-                setBackgroundColor ();
                 // TODO - replace hardcoded 10.f with value derived from text height
                 auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), text) + 10.f };
                 auto center { bounds.getCentre () };
-                g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
+                SquidPaint::messagePlate (g, *this, { static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
                 setTextColor ();
                 g.drawText (text, bounds, juce::Justification::centred, false);
             };
@@ -433,8 +422,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     return maxStringPixels;
                 } ();
                 auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (maxDetailsWidthPixels), backgroundLines * static_cast<int> (dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ()) };
-                setBackgroundColor ();
-                g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
+                SquidPaint::messagePlate (g, *this, dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
                 dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize / 2));
                 for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
@@ -517,13 +505,23 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         auto draggedFile { juce::File (fileName) };
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
-            auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio { kSquidSampleRate / reader->sampleRate };
-            const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
+            // The extension only says what a file claims to be. One that is damaged,
+            // empty, not really audio, or a cloud placeholder that has not been
+            // downloaded yet has no reader, and cannot be used.
+            if (auto reader { editManager->getReaderFor (draggedFile) }; reader != nullptr)
+            {
+                const double ratio { kSquidSampleRate / reader->sampleRate };
+                const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
 
-            totalSize += actualNumSamples;
-            if (totalSize < kMaxSampleLength)
-                ++filesConcatenated;
+                totalSize += actualNumSamples;
+                if (totalSize < kMaxSampleLength)
+                    ++filesConcatenated;
+            }
+            else
+            {
+                updateDropDetails ("Cannot read: " + draggedFile.getFileName ());
+                supportedFile = false;
+            }
         }
         else
         {

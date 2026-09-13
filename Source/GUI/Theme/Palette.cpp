@@ -44,7 +44,6 @@ namespace
     const juce::Colour kMarkerLoop      { 0xffc58309 };
     const juce::Colour kMarkerEndDark   { 0xffd9483e }, kMarkerEndLight   { 0xffb0271d };
 
-    const juce::Colour kErrorOnLightChip { 0xffb0271d }, kErrorOnDarkChip { 0xffe8756a };
 
     // the switch track, and the halos that only do any work on a dark ground
     const juce::Colour kSwitchOnDark { 0xff0c1f28 }, kSwitchOnLight { 0xffcfe9f5 };
@@ -133,15 +132,6 @@ Palette::Palette ()
 
         // ---- ink on an accent fill ----
         { SquidColours::accentInk, kAccentInkDark, kAccentInkLight, S::accentFill, 1.00f },
-
-        // ---- the drop plate, and the ink on it ----
-        // The plate is the text colour, so it is always the maximum contrast
-        // against the ground; its own ink is therefore the ground colour, and the
-        // two cannot collide however far the slider travels.
-        { SquidColours::dropChipBackground,            kTextDark,   kTextLight,   S::ground, 1.00f },
-        { SquidColours::dropChipBackgroundUnsupported, kTextDark,   kTextLight,   S::ground, 1.00f },
-        { SquidColours::dropChipText,                  kInk900Dark, kInk900Light, S::chip,   1.00f },
-        { SquidColours::dropError,                     kErrorOnDarkChip, kErrorOnLightChip, S::chip, 0.30f },
 
         // ---- JUCE widget roles ----
         { juce::Label::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
@@ -295,9 +285,7 @@ void Palette::resolve ()
     const auto laneColour   { surfaceAt (SquidColours::waveformBackground, ground) };
     const auto accentColour { surfaceAt (SquidColours::accent, ground) };
 
-    // The drop plate is the text colour, which is itself a flip token, so it has
-    // to be resolved before anything that sits on top of it.
-    std::vector<float> luminance (5, 0.0f), luminanceAtWhite (5, 0.0f);
+    std::vector<float> luminance (4, 0.0f), luminanceAtWhite (4, 0.0f);
     auto setSurface = [&] (Surface surface, juce::Colour now, juce::Colour atWhite)
     {
         luminance [static_cast<size_t> (surface)] = relativeLuminance (now);
@@ -306,18 +294,6 @@ void Palette::resolve ()
     setSurface (Surface::ground,     groundColour, surfaceAt (SquidColours::windowBackground, 1.0f));
     setSurface (Surface::lane,       laneColour,   surfaceAt (SquidColours::waveformBackground, 1.0f));
     setSurface (Surface::accentFill, accentColour, surfaceAt (SquidColours::accent, 1.0f));
-
-    auto plateSpec = [this] ()
-    {
-        for (const auto& spec : specs)
-            if (spec.colourId == SquidColours::dropChipBackground)
-                return spec;
-        jassertfalse;
-        return TokenSpec {};
-    } ();
-    const auto plateNow { resolveToken (plateSpec, ground, luminance, luminanceAtWhite) };
-    const auto plateAtWhite { resolveToken (plateSpec, 1.0f, luminance, luminanceAtWhite) };
-    setSurface (Surface::chip, plateNow, plateAtWhite);
 
     colours.clear ();
     colours.reserve (specs.size ());

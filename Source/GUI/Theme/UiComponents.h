@@ -27,6 +27,24 @@ namespace SquidPaint
         g.drawRoundedRectangle (area, cornerSize, 1.0f);
     }
 
+    // The plate behind a transient message, such as what a file drop will do. It is
+    // coloured exactly as a tooltip is, from the tooltip's own colour IDs, so the
+    // two kinds of passing message look alike and cannot drift apart.
+    inline void messagePlate (juce::Graphics& g, const juce::Component& colourSource, juce::Rectangle<float> bounds, float cornerSize)
+    {
+        g.setColour (colourSource.findColour (juce::TooltipWindow::backgroundColourId));
+        g.fillRoundedRectangle (bounds, cornerSize);
+        g.setColour (colourSource.findColour (juce::TooltipWindow::outlineColourId));
+        g.drawRoundedRectangle (bounds.reduced (0.5f), cornerSize, 1.0f);
+    }
+
+    // The ink for a message on a messagePlate; a file that cannot be used is said so in red.
+    inline juce::Colour messageInk (const juce::Component& colourSource, bool isProblem = false)
+    {
+        return colourSource.findColour (isProblem ? static_cast<int> (SquidColours::danger)
+                                                  : static_cast<int> (juce::TooltipWindow::textColourId));
+    }
+
     // The width a line of text takes in a font, tracking included.
     inline int textWidth (const juce::Font& font, const juce::String& text)
     {

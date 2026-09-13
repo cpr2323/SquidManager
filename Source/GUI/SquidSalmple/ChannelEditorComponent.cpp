@@ -1823,7 +1823,11 @@ void ChannelEditorComponent::bitsUiChanged (int bits)
 
 void ChannelEditorComponent::configFileSelectorFromChannelSource ()
 {
-    sampleFileNameSelectLabel.setEnabled (squidChannelProperties.getChannelSource () == squidChannelProperties.getChannelIndex ());
+    const auto usesOwnSample { squidChannelProperties.getChannelSource () == squidChannelProperties.getChannelIndex () };
+    sampleFileNameSelectLabel.setEnabled (usesOwnSample);
+    sampleFileNameSelectLabel.setSourceChannel (usesOwnSample ? -1 : static_cast<int> (squidChannelProperties.getChannelSource ()));
+    // the chip is sized to what it shows, which now may include the source channel
+    resized ();
 }
 
 void ChannelEditorComponent::channelSourceUiChanged (uint8_t channelSourceIndex)
@@ -2007,11 +2011,22 @@ void ChannelEditorComponent::fileDragEnter (const juce::StringArray& files, int 
         auto draggedFile { juce::File (files [channelOffset]) };
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
-            auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio { 44100. / reader->sampleRate };
-            const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
-            if (actualNumSamples > kMaxSampleLength)
-                dropDetails += juce::String (dropDetails.length () > 0 ? ". " : "") + "Channel " + juce::String (currentChannelIndex + 1) + " will be truncated to 11 seconds";
+            // The extension only says what a file claims to be. One that is damaged,
+            // empty, not really audio, or a cloud placeholder that has not been
+            // downloaded yet has no reader, and cannot be assigned.
+            if (auto reader { editManager->getReaderFor (draggedFile) }; reader != nullptr)
+            {
+                const double ratio { 44100. / reader->sampleRate };
+                const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
+                if (actualNumSamples > kMaxSampleLength)
+                    dropDetails += juce::String (dropDetails.length () > 0 ? ". " : "") + "Channel " + juce::String (currentChannelIndex + 1) + " will be truncated to 11 seconds";
+            }
+            else
+            {
+                dropMsg = "Cannot read file(s)";
+                dropDetails += juce::String (dropDetails.length () > 0 ? ". " : "") + "Cannot read " + draggedFile.getFileName ();
+                supportedFile = false;
+            }
         }
         else
         {
@@ -2339,17 +2354,10 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             g.fillRect (dropBounds);
             g.setFont (fontHeight);
 
-            if (supportedFile)
-                g.setColour (findColour (SquidColours::dropChipBackground));
-            else
-                g.setColour (findColour (SquidColours::dropChipBackgroundUnsupported));
             auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f };
             auto center { dropBounds.getCentre () };
-            g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
-            if (supportedFile)
-                g.setColour (findColour (SquidColours::dropChipText));
-            else
-                g.setColour (findColour (SquidColours::dropError));
+            SquidPaint::messagePlate (g, *this, { static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontHeight / 2.f), stringWidthPixels, fontHeight + 5.f }, 10.f);
+            g.setColour (SquidPaint::messageInk (*this, ! supportedFile));
             g.drawText (dropMsg, dropBounds, juce::Justification::centred, false);
         }
         else
@@ -2402,18 +2410,16 @@ void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)
             // display main drop message background
             // draw main drop message
             g.setFont (dropMsgFontSizeDouble);
-            g.setColour (findColour (SquidColours::dropChipBackground));
-            g.fillRoundedRectangle (dropMsgBounds.toFloat ().withWidth (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
-            g.setColour (findColour (SquidColours::dropChipText));
+            SquidPaint::messagePlate (g, *this, dropMsgBounds.toFloat ().withWidth (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), dropMsg) + 10.f).withCentre (dropMsgBounds.getCentre ().toFloat ()).withY (dropMsgBounds.getY () + 2.f), 10.f);
+            g.setColour (SquidPaint::messageInk (*this));
             g.drawText (dropMsg, dropMsgBounds, juce::Justification::centred, false);
 
             // calculate background rectangle size from longest line and number of lines, using ellipsis if necessary
             g.setFont (dropDetailsFontSize);
             auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (longestLine + 20), lines.size () * static_cast<int> (dropDetailsFontSize) }.withCentre (detailsBounds.getCentre ()) };
             //dropDetailsDisplayBounds.setY (detailsBounds.getHeight () / 2.f - dropDetailsDisplayBounds.getHeight () / 2.f );
-            g.setColour (findColour (SquidColours::dropChipBackground));
-            g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
-            g.setColour (findColour (SquidColours::dropChipText));
+            SquidPaint::messagePlate (g, *this, dropDetailsDisplayBounds.toFloat (), 10.f);
+            g.setColour (SquidPaint::messageInk (*this));
             for (auto lineIndex { 0 }; lineIndex < lines.size (); ++lineIndex)
             {
                 g.drawText (lines [lineIndex], dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize)), juce::Justification::centred, false);

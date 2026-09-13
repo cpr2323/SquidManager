@@ -65,8 +65,12 @@ private:
     juce::Label sampleFileNameLabel;
 
     /*
-        The sample file, as a chip: the name in full ink and the extension dimmed,
-        since the name is the part that tells samples apart. Click it to browse.
+        The sample file, as a chip. Only the name is shown: .wav is the only type
+        the Squid plays, so the extension would say nothing. Click it to browse.
+
+        A channel can play another channel's sample. Then the name is dimmed, since
+        it cannot be changed from here, and the channel it comes from is named at
+        the right hand end, as (C2), in normal ink.
     */
     class SampleFileChip : public FileSelectLabel
     {
@@ -75,17 +79,25 @@ private:
 
         void setFileName (const juce::String& fileName)
         {
-            const auto file { juce::File (fileName) };
-            name = file.getFileNameWithoutExtension ();
-            extension = file.getFileExtension ();
+            name = juce::File (fileName).getFileNameWithoutExtension ();
             setText (name, juce::NotificationType::dontSendNotification);
+            repaint ();
+        }
+
+        // the channel the sample is taken from, or -1 when it is this channel's own
+        void setSourceChannel (int newSourceChannelIndex)
+        {
+            sourceTag = newSourceChannelIndex < 0 ? juce::String () : "(C" + juce::String (newSourceChannelIndex + 1) + ")";
             repaint ();
         }
 
         int getIdealWidth () const
         {
-            const auto shown { name.isEmpty () ? juce::String (kNoSampleText) : name + extension };
-            return SquidPaint::textWidth (SquidType::fileName (), shown) + 20;
+            const auto chipFont { SquidType::fileName () };
+            auto width { SquidPaint::textWidth (chipFont, name.isEmpty () ? juce::String (kNoSampleText) : name) + (kPadding * 2) + 2 };
+            if (sourceTag.isNotEmpty ())
+                width += kTagGap + SquidPaint::textWidth (chipFont, sourceTag);
+            return width;
         }
 
         void paint (juce::Graphics& g) override
@@ -97,27 +109,42 @@ private:
             g.setColour (findColour (enabled && isMouseOver (true) ? SquidColours::accentDeep : SquidColours::outline));
             g.drawRoundedRectangle (area, 2.0f, 1.0f);
 
-            auto content { getLocalBounds ().reduced (9, 0) };
+            auto content { getLocalBounds ().reduced (kPadding, 0) };
             const auto chipFont { SquidType::fileName () };
             g.setFont (chipFont);
+
+            const auto ink { findColour (SquidColours::text) };
+            if (sourceTag.isNotEmpty ())
+            {
+                g.setColour (ink);
+                g.drawText (sourceTag, content.removeFromRight (SquidPaint::textWidth (chipFont, sourceTag)), juce::Justification::centredRight, false);
+                content.removeFromRight (kTagGap);
+            }
+
             if (name.isEmpty ())
             {
                 g.setColour (findColour (SquidColours::textGhost));
                 g.drawText (kNoSampleText, content, juce::Justification::centredLeft, true);
                 return;
             }
-            // a channel playing another channel's sample shows that sample dimmed
-            g.setColour (findColour (enabled ? SquidColours::text : SquidColours::textDim));
-            const auto nameWidth { std::min (SquidPaint::textWidth (chipFont, name), content.getWidth ()) };
-            g.drawText (name, content.removeFromLeft (nameWidth), juce::Justification::centredLeft, true);
-            g.setColour (findColour (SquidColours::textGhost));
-            g.drawText (extension, content, juce::Justification::centredLeft, true);
+
+            // Dimmed by mixing the text toward the field it sits on, rather than using
+            // the dim ink. That ink is tuned to be legible on its own, so in the middle
+            // of the background slider it comes out nearly as strong as normal text;
+            // a mix keeps the dimmed name clearly weaker at every ground level.
+            g.setColour (enabled ? ink : ink.interpolatedWith (findColour (SquidColours::fieldBackground), kDimmedMix));
+            g.drawText (name, content, juce::Justification::centredLeft, true);
         }
 
     private:
         static constexpr const char* kNoSampleText { "no sample" };
+        static constexpr int kPadding { 9 };
+        static constexpr int kTagGap { 8 };
+        // how far toward the field a dimmed name goes: at 0.45 it stays at least 1.8
+        // times less contrasty than normal text, and above 2.4:1, across the slider
+        static constexpr float kDimmedMix { 0.45f };
         juce::String name;
-        juce::String extension;
+        juce::String sourceTag;
 
         // the outline FileSelectLabel draws is part of the chip here
         void paintOverChildren (juce::Graphics&) override {}
