@@ -55,31 +55,6 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
         updateFromNewData ();
     };
 
-//     directoryDataProperties.onStatusChange = [this] (DirectoryDataProperties::ScanStatus status)
-//     {
-//         switch (status)
-//         {
-//             case DirectoryDataProperties::ScanStatus::empty:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::scanning:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::canceled:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::done:
-//             {
-//                 isRootFolder = juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory () == juce::File (directoryDataProperties.getRootFolder ());
-//                 updateFromNewData ();
-//             }
-//             break;
-//         }
-//     };
-
     updateFromNewData ();
 }
 
@@ -199,14 +174,10 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     }
 
     auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
-    const auto arrowArea { rowBounds.removeFromLeft (8).toFloat () };
-    rowBounds.removeFromLeft (6);
     const auto folderArea { rowBounds.removeFromLeft (9).toFloat () };
     rowBounds.removeFromLeft (6);
     if (isFolder)
     {
-        g.setColour (findColour (SquidColours::textGhost));
-        SquidPaint::caretRight (g, arrowArea.getCentre (), 7.0f);
         g.setColour (findColour (rowIsSelected ? SquidColours::accent : SquidColours::accentDeep));
         SquidPaint::folder (g, folderArea.withSizeKeepingCentre (9.0f, 8.0f));
     }
