@@ -20,6 +20,7 @@ private:
     juce::Label statusLabel;
     std::unique_ptr<juce::AlertWindow> settingsAlertWindow;
 
+    void lookAndFeelChanged () override;
     void paint (juce::Graphics& g) override;
     void resized () override;
 };

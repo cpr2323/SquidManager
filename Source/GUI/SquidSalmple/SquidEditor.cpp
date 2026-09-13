@@ -9,7 +9,6 @@
 const auto kParameterLineHeight { 20 };
 const auto kInterControlYOffset { 2 };
 const auto kInitialYOffset { 5 };
-static const auto kMediumLabelSize { 10.0f };
 
 const auto kScaleMax { 65535. };
 const auto kScaleStep { kScaleMax / 100 };
@@ -18,35 +17,30 @@ SquidEditorComponent::SquidEditorComponent ()
 {
     setOpaque (true);
 
-    auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
-    {
-        label.setBorderSize ({ 0, 0, 0, 0 });
-        label.setJustificationType (justification);
-        label.setFont (SquidFonts::condensed (fontSize, "SemiBold"));
-        label.setText (text, juce::NotificationType::dontSendNotification);
-        addAndMakeVisible (label);
-    };
     auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters)
     {
         textEditor.setJustification (justification);
-        textEditor.setIndents (1, 0);
+        textEditor.setIndents (7, 0);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
+        HoverHighlight::attach (textEditor);
         addAndMakeVisible (textEditor);
     };
 
     // NAME
-    setupLabel (bankNameLabel, "BANK", kMediumLabelSize, juce::Justification::centredLeft);
-    setupLabel (unsavedEditsLabel, "", 12.0f, juce::Justification::centredLeft);
+    bankNameLabel.setBorderSize ({ 0, 0, 0, 0 });
+    bankNameLabel.setJustificationType (juce::Justification::centredLeft);
+    bankNameLabel.setFont (SquidType::sectionHeader ());
+    bankNameLabel.setText ("BANK", juce::NotificationType::dontSendNotification);
+    addAndMakeVisible (bankNameLabel);
     bankNameEditor.setTooltip ("Bank Name. Maximum of 11 characters long. Stored in the info.txt file in the bank folder");
     bankNameEditor.onFocusLost = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onReturnKey = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     bankNameEditor.onTextChange = [this] () { nameUiChanged (bankNameEditor.getText ()); };
     // TODO - make sure I have the correct valid character set
     setupTextEditor (bankNameEditor, juce::Justification::centredLeft, 12, " !\"#$%^&'()#+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
-    bankNameEditor.setFont (SquidFonts::mono (12.5f));
+    bankNameEditor.setFont (SquidType::nameField ());
 
     // SAVE BUTTON
-    saveButton.setButtonText ("SAVE BANK");
     saveButton.setEnabled (false);
     saveButton.onClick = [this] ()
     {
@@ -117,6 +111,10 @@ SquidEditorComponent::SquidEditorComponent ()
     {
         channelTabs.addTab ("CH " + juce::String::charToString ('1' + curChannelIndex), findColour (SquidColours::tabBackground), &channelEditorComponents [curChannelIndex], false);
     }
+    channelTabs.setTabBarDepth (kTabBarHeight);
+    channelTabs.setOutline (0);
+    channelTabs.setIndent (0);
+    channelTabs.getTabbedButtonBar ().getProperties ().set (SquidLnFProperties::tabsHaveLeds, true);
     addAndMakeVisible (channelTabs);
     channelTabs.onSelectedTabChanged = [this] (int)
     {
@@ -188,7 +186,7 @@ void SquidEditorComponent::timerCallback ()
     {
         bankHasUnsavedEdits = hasUnsavedEdits;
         // the app cannot say which value changed, only that something did
-        unsavedEditsLabel.setText (hasUnsavedEdits ? "UNSAVED EDITS" : "", juce::NotificationType::dontSendNotification);
+        repaint (unsavedEditsBounds);
         applyExplicitColours ();
     }
 
@@ -229,38 +227,39 @@ void SquidEditorComponent::bankLoseEditWarning (juce::String title, std::functio
 
 void SquidEditorComponent::resized ()
 {
-    auto localBounds { getLocalBounds () };
+    // inside the pane's outline
+    auto localBounds { getLocalBounds ().reduced (1) };
 
-    localBounds.removeFromTop (4);
-    auto topRowBounds { localBounds.removeFromTop (24) };
-    topRowBounds.removeFromLeft (10);
-    bankNameLabel.setBounds (topRowBounds.removeFromLeft (40));
-    topRowBounds.removeFromLeft (4);
-    bankNameEditor.setBounds (topRowBounds.removeFromLeft (110));
-    topRowBounds.removeFromLeft (12);
-    unsavedEditsLabel.setBounds (topRowBounds.removeFromLeft (120));
+    headerBounds = localBounds.removeFromTop (kHeaderHeight);
+    static constexpr auto kGap { 9 };
+    auto headerRow { headerBounds.withTrimmedBottom (1).reduced (kGap, 0) };
+    auto placeLeft = [&headerRow] (juce::Component& component, int width, int height)
+    {
+        component.setBounds (headerRow.removeFromLeft (width).withSizeKeepingCentre (width, height));
+        headerRow.removeFromLeft (kGap);
+    };
+    placeLeft (bankNameLabel, SquidPaint::textWidth (SquidType::sectionHeader (), bankNameLabel.getText ()) + 2, headerRow.getHeight ());
+    placeLeft (bankNameEditor, 122, kFieldHeight);
+    unsavedEditsBounds = headerRow.removeFromLeft (static_cast<int> (StatusLed::kDiameter) + 6 + SquidPaint::textWidth (SquidType::statusTag (), kUnsavedEditsText) + 2);
 
-    topRowBounds.removeFromRight (10);
-    saveButton.setBounds (topRowBounds.removeFromRight (100));
-    topRowBounds.removeFromRight (6);
-    toolsButton.setBounds (topRowBounds.removeFromRight (100));
+    const auto saveWidth { saveButton.getIdealWidth () };
+    saveButton.setBounds (headerRow.removeFromRight (saveWidth).withSizeKeepingCentre (saveWidth, ActionButton::kNormalHeight));
+    headerRow.removeFromRight (kGap);
+    const auto toolsWidth { toolsButton.getIdealWidth () };
+    toolsButton.setBounds (headerRow.removeFromRight (toolsWidth).withSizeKeepingCentre (toolsWidth, ActionButton::kNormalHeight));
 
-    const auto channelSectionY { saveButton.getBottom () + 4 };
-    const auto kWidthOfWaveformEditor { 1082 };
-    channelTabs.setBounds (3, channelSectionY, kWidthOfWaveformEditor + 30, getHeight () - channelSectionY - 5);
+    // The channel editor lays itself out to whatever width it is given, but below
+    // this it would have to crowd its controls, so it is clipped instead.
+    constexpr auto kMinimumEditorWidth { 1000 };
+    channelTabs.setBounds (localBounds.withWidth (std::max (localBounds.getWidth (), kMinimumEditorWidth)));
 }
 
 void SquidEditorComponent::applyExplicitColours ()
 {
     bankNameLabel.setColour (juce::Label::ColourIds::textColourId, findColour (SquidColours::accentText));
-    unsavedEditsLabel.setColour (juce::Label::ColourIds::textColourId, findColour (SquidColours::unsavedEdits));
     // Save is the one action in this header worth making obvious - but only when
-    // there is something to save. JUCE does not dim a disabled button's fill, so
-    // an always-accent Save would look ready to press with nothing to write.
-    saveButton.setColour (juce::TextButton::ColourIds::buttonColourId,
-                          findColour (bankHasUnsavedEdits ? SquidColours::accent : SquidColours::buttonBackground));
-    saveButton.setColour (juce::TextButton::ColourIds::textColourOffId,
-                          findColour (bankHasUnsavedEdits ? SquidColours::accentInk : SquidColours::textDim));
+    // there is something to save, or it would look ready to press with nothing to write.
+    saveButton.setPrimary (bankHasUnsavedEdits);
 }
 
 void SquidEditorComponent::lookAndFeelChanged ()
@@ -280,5 +279,24 @@ void SquidEditorComponent::lookAndFeelChanged ()
 
 void SquidEditorComponent::paint (juce::Graphics& g)
 {
+    // opaque, so the ground behind the rounded corners is this component's to paint
     g.fillAll (findColour (SquidColours::windowBackground));
+    SquidPaint::card (g, *this, getLocalBounds (), SquidColours::windowBackground);
+
+    g.setColour (findColour (SquidColours::listBackground));
+    g.fillRect (headerBounds);
+    g.setColour (findColour (SquidColours::outline));
+    g.fillRect (headerBounds.withTop (headerBounds.getBottom () - 1));
+
+    if (bankHasUnsavedEdits)
+    {
+        auto tagBounds { unsavedEditsBounds };
+        const auto ledBounds { tagBounds.removeFromLeft (static_cast<int> (StatusLed::kDiameter)).toFloat ()
+                                        .withSizeKeepingCentre (StatusLed::kDiameter, StatusLed::kDiameter) };
+        StatusLed::draw (g, ledBounds, true, *this, SquidColours::unsavedEdits);
+        tagBounds.removeFromLeft (6);
+        g.setFont (SquidType::statusTag ());
+        g.setColour (findColour (SquidColours::unsavedEdits));
+        g.drawText (kUnsavedEditsText, tagBounds, juce::Justification::centredLeft, false);
+    }
 }

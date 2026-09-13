@@ -45,6 +45,19 @@ namespace
     const juce::Colour kMarkerEndDark   { 0xffd9483e }, kMarkerEndLight   { 0xffb0271d };
 
     const juce::Colour kErrorOnLightChip { 0xffb0271d }, kErrorOnDarkChip { 0xffe8756a };
+
+    // the switch track, and the halos that only do any work on a dark ground
+    const juce::Colour kSwitchOnDark { 0xff0c1f28 }, kSwitchOnLight { 0xffcfe9f5 };
+    const juce::Colour kAccentEdgeDark { 0xff5ccbf2 }, kAccentEdgeLight { 0xff0a6d96 };
+    const juce::Colour kRedDark { 0xffd9483e }, kRedLight { 0xffc0392b };
+    const juce::Colour kDangerBackgroundDark { 0xff2a1414 }, kDangerBackgroundLight { 0xfffbe1de };
+
+    const juce::Colour kGridDark { 0xff171422 }, kGridLight { 0xffdcdce6 };
+    const juce::Colour kShadeDark { 0xa807060a }, kShadeLight { 0x47605e70 };
+
+    const juce::Colour kTunerDashDark { 0x739a93ab }, kTunerDashLight { 0x661e1b28 };
+    const juce::Colour kTunerDividerDark { 0x8ce4e0ec }, kTunerDividerLight { 0x8c181520 };
+    const juce::Colour kCaptionDark { 0xff6a6380 }, kCaptionLight { 0xff5c5869 };
 }
 
 float Palette::relativeLuminance (juce::Colour colour) noexcept
@@ -85,6 +98,19 @@ Palette::Palette ()
         { SquidColours::markerLoop,       kMarkerLoop,  kMarkerLoop },
         { SquidColours::disabledOverlay,  kInk900Dark.withAlpha (0.62f), kInk900Light.withAlpha (0.62f) },
         { SquidColours::dropOverlay,      kInk950Dark.withAlpha (0.66f), juce::Colour (0xff605e70).withAlpha (0.42f) },
+        { SquidColours::outlineStrong,    kInk650Dark,  kInk650Light },
+        { SquidColours::hoverBackground,  kInk700Dark,  kInk700Light },
+        { SquidColours::accentEdge,       kAccentEdgeDark, kAccentEdgeLight },
+        { SquidColours::switchOnBackground, kSwitchOnDark, kSwitchOnLight },
+        { SquidColours::dangerBackground, kDangerBackgroundDark, kDangerBackgroundLight },
+        // a halo is a smudge on a light ground, so these fade out rather than flip
+        { SquidColours::accentGlow,       kAccentDark.withAlpha (0.5f), transparent },
+        { SquidColours::ledGlow,          kGreenDark.withAlpha (0.8f),  transparent },
+        { SquidColours::waveformGrid,     kGridDark,       kGridLight },
+        { SquidColours::waveformShade,    kShadeDark,      kShadeLight },
+        { SquidColours::tunerBackground,  kInk950Dark,     kLaneLight },
+        { SquidColours::tunerDash,        kTunerDashDark,  kTunerDashLight },
+        { SquidColours::tunerDivider,     kTunerDividerDark, kTunerDividerLight },
 
         // ---- ink on the panels ----
         { SquidColours::text,          kTextDark,       kTextLight,       S::ground, 1.00f },
@@ -95,12 +121,15 @@ Palette::Palette ()
         { SquidColours::textSupported, kGreenDark,      kGreenLight,      S::ground, 0.35f },
         { SquidColours::unsavedEdits,  kOliveDark,      kOliveLight,      S::ground, 0.35f },
         { SquidColours::selectedRow,   kSelectDark,     kSelectLight },
+        { SquidColours::textGhost,     kGhostDark,      kGhostLight,      S::ground, 0.40f },
+        { SquidColours::danger,        kRedDark,        kRedLight,        S::ground, 0.35f },
 
         // ---- ink on the waveform lane ----
         { SquidColours::waveformForeground, kTraceDark,  kTraceLight,       S::lane, 0.50f },
         { SquidColours::waveformCentreLine, kCentreDark, kCentreLight,      S::lane, 0.40f },
         { SquidColours::markerStart,        kMarkerStartDark, kMarkerStartLight, S::lane, 0.35f },
         { SquidColours::markerEnd,          kMarkerEndDark,   kMarkerEndLight,   S::lane, 0.35f },
+        { SquidColours::tunerCaption,       kCaptionDark,     kCaptionLight,     S::lane, 0.60f },
 
         // ---- ink on an accent fill ----
         { SquidColours::accentInk, kAccentInkDark, kAccentInkLight, S::accentFill, 1.00f },
@@ -166,6 +195,12 @@ Palette::Palette ()
         { juce::ResizableWindow::backgroundColourId, kInk900Dark, kInk900Light },
         { juce::DocumentWindow::textColourId,        kTextDark, kTextLight, S::ground, 1.00f },
 
+        // tooltips sit on whatever is under them, so the rim is ink rather than a
+        // hairline: it has to stand off every surface at every ground level
+        { juce::TooltipWindow::backgroundColourId, kInk800Dark, kInk800Light },
+        { juce::TooltipWindow::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
+        { juce::TooltipWindow::outlineColourId,    kDimDark, kDimLight, S::ground, 0.80f },
+
         { juce::AlertWindow::backgroundColourId, kInk800Dark, kInk800Light },
         { juce::AlertWindow::textColourId,       kTextDark, kTextLight, S::ground, 1.00f },
         { juce::AlertWindow::outlineColourId,    kLineDark, kLineLight },
@@ -181,10 +216,14 @@ Palette::Palette ()
         { oolib::ColourIds::splitterBackground,    kInk900Dark, kInk900Light },
         { oolib::ColourIds::splitterHandle,        kInk700Dark, kInk700Light },
         { oolib::ColourIds::splitterHandleOutline, kAccentDeepDark, kAccentDeepLight },
-        { oolib::ColourIds::slideSwitchTrackOff,   kInk700Dark, kInk700Light },
-        { oolib::ColourIds::slideSwitchTrackOn,    kAccentDeepDark, kAccentDeepLight },
-        { oolib::ColourIds::slideSwitchThumbOff,   kDimDark, kDimLight, S::ground, 0.55f },
+        { oolib::ColourIds::splitterDivider,       kLineSoftDark, kLineSoftLight },
+        { oolib::ColourIds::slideSwitchTrackOff,   kInk950Dark, kInk950Light },
+        { oolib::ColourIds::slideSwitchTrackOn,    kSwitchOnDark, kSwitchOnLight },
+        { oolib::ColourIds::slideSwitchTrackOutlineOff, kLineDark, kLineLight },
+        { oolib::ColourIds::slideSwitchTrackOutlineOn,  kAccentDeepDark, kAccentDeepLight },
+        { oolib::ColourIds::slideSwitchThumbOff,   kGhostDark, kGhostLight, S::ground, 0.40f },
         { oolib::ColourIds::slideSwitchThumbOn,    kAccentDark, kAccentLight },
+        { oolib::ColourIds::slideSwitchThumbGlow,  kAccentDark.withAlpha (0.85f), transparent },
         { oolib::ColourIds::customTextEditorText,  kTextDark, kTextLight, S::ground, 1.00f },
     };
 

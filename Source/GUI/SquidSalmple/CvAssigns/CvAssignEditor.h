@@ -13,8 +13,10 @@ public:
     void setEnableState (int cvParameterId, bool enabled);
 
     static constexpr int kNumCvAssigns { 7 };
-    // the header row this editor draws for itself, so the owner can allow for it
-    static constexpr int kHeaderHeight { 22 };
+    // the header band this editor draws for itself, and the matrix under it, so
+    // the owner can size the card around them
+    static constexpr int kHeaderHeight { 34 };
+    static constexpr int kMatrixHeight { 91 };
 
 private:
     /*
@@ -31,6 +33,12 @@ private:
             setClickingTogglesState (false);
         }
 
+        static juce::String getLabel (int cvIndex) { return "CV " + juce::String (cvIndex + 1); }
+        static int getIdealWidth (int cvIndex)
+        {
+            return kPadding + static_cast<int> (StatusLed::kDiameter) + kLedGap + SquidPaint::textWidth (SquidType::cvTab (), getLabel (cvIndex)) + kPadding;
+        }
+
         void setSelected (bool nowSelected) { selected = nowSelected; repaint (); }
         void setHasRouting (bool nowHasRouting)
         {
@@ -42,31 +50,38 @@ private:
 
         void paintButton (juce::Graphics& g, bool isMouseOver, bool) override
         {
-            auto bounds { getLocalBounds () };
+            const auto bounds { getLocalBounds () };
+            const auto hovered { isMouseOver && ! selected };
+
+            g.fillAll (findColour (selected ? SquidColours::windowBackground : SquidColours::buttonBackground));
+
+            auto content { bounds.withTrimmedLeft (kPadding) };
+            const auto ledBounds { content.removeFromLeft (static_cast<int> (StatusLed::kDiameter)).toFloat ()
+                                          .withSizeKeepingCentre (StatusLed::kDiameter, StatusLed::kDiameter) };
+            StatusLed::draw (g, ledBounds, hasRouting, *this);
+            content.removeFromLeft (kLedGap);
+
+            g.setFont (SquidType::cvTab ());
+            g.setColour (findColour (selected ? SquidColours::text
+                                              : (hovered ? SquidColours::textDim : SquidColours::menuHeaderText)));
+            g.drawText (getLabel (cvIndex), content, juce::Justification::centredLeft, false);
+
             if (selected)
             {
-                g.setColour (findColour (SquidColours::selectedRow));
-                g.fillRect (bounds);
                 g.setColour (findColour (SquidColours::accent));
-                g.fillRect (bounds.removeFromBottom (2));
+                g.fillRect (bounds.withTop (bounds.getBottom () - 2));
             }
-
-            const auto ledBounds { getLocalBounds ().withTrimmedLeft (7).withWidth (7)
-                                                    .withSizeKeepingCentre (7, 7).toFloat () };
-            StatusLed::draw (g, ledBounds, hasRouting,
-                             findColour (SquidColours::markerStart), findColour (SquidColours::outline));
-
-            g.setFont (SquidFonts::condensed (10.0f, "SemiBold"));
-            g.setColour (findColour (selected ? SquidColours::text
-                                              : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
-            g.drawText ("CV " + juce::String (cvIndex + 1), getLocalBounds ().withTrimmedLeft (20),
-                        juce::Justification::centredLeft, false);
-
-            g.setColour (findColour (SquidColours::outline));
-            g.drawVerticalLine (getWidth () - 1, 3.0f, static_cast<float> (getHeight () - 3));
+            else if (hovered)
+            {
+                g.setColour (findColour (SquidColours::accentDeep));
+                g.drawRect (bounds, 1);
+            }
         }
 
     private:
+        static constexpr int kPadding { 10 };
+        static constexpr int kLedGap { 6 };
+
         int cvIndex;
         bool selected { false };
         bool hasRouting { false };
@@ -75,8 +90,18 @@ private:
     SquidChannelProperties squidChannelProperties;
     juce::Label cvAssignHeaderLabel;
     std::array<std::unique_ptr<CvTabButton>, kNumCvAssigns> cvTabs;
+    // tab labels never change, so they are measured once rather than on every layout
+    std::array<int, kNumCvAssigns> cvTabWidths {};
     std::array<CvAssignSection, kNumCvAssigns> cvAssignSectionList;
+    // Where a section goes. Only the section on screen is given it in resized; the
+    // others are given it when their tab is picked. Each section holds 16 columns of
+    // controls, so laying out the six hidden ones on every resize was most of the cost
+    // of resizing the editor.
+    juce::Rectangle<int> sectionBounds;
     int curCvAssignIndex { 0 };
+
+    // set in resized, drawn in paint: the outline around the joined tab group
+    juce::Rectangle<int> tabGroupBounds;
 
     void refreshRoutingLed (int cvIndex);
     void applyExplicitColours ();

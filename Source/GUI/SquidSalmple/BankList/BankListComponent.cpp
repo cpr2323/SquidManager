@@ -23,6 +23,8 @@ BankListComponent::BankListComponent ()
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { startCheckBanksThread (); };
     addAndMakeVisible (showAllBanks);
+    bankListBox.setRowHeight (24);
+    bankListBox.setOutlineThickness (0);
     addAndMakeVisible (bankListBox);
 
     checkBanksThread.onThreadLoop = [this] ()
@@ -238,6 +240,8 @@ void BankListComponent::checkBanks ()
             if (std::get<1> (bankInfoList [static_cast<size_t> (bankIndex)]))
                 ++banksWithContent;
         paneHeader.setCountText (juce::String (banksWithContent) + "/" + juce::String (numBanks));
+        // the tool button is placed against the count, which may have changed width
+        resized ();
 
         bankListBox.updateContent ();
         if (foundBanks && firstBankLoadPending)
@@ -295,19 +299,28 @@ void BankListComponent::loadBank (juce::File bankDirectory)
     editManager->loadBank (bankDirectory);
 }
 
+int BankListComponent::getMinimumWidth () const
+{
+    // plus the outline on either side
+    return paneHeader.getRequiredWidth (showAllBanks.getIdealWidth ()) + 2;
+}
+
 void BankListComponent::resized ()
 {
-    auto localBounds { getLocalBounds () };
-    auto headerBounds { localBounds.removeFromTop (24) };
+    // inside the pane's outline
+    auto localBounds { getLocalBounds ().reduced (1) };
+    auto headerBounds { localBounds.removeFromTop (PaneHeader::kHeight) };
     paneHeader.setBounds (headerBounds);
-    // the count owns the right end of the header, so the tool button sits beside the title
-    showAllBanks.setBounds (paneHeader.getFreeBounds ().translated (headerBounds.getX (), headerBounds.getY ()).removeFromLeft (32));
+    // right aligned against the count, as the folder tools are against the pane edge
+    showAllBanks.setBounds ((paneHeader.getFreeBounds () + headerBounds.getPosition ()).removeFromRight (showAllBanks.getIdealWidth ()));
     bankListBox.setBounds (localBounds);
 }
 
 void BankListComponent::paint (juce::Graphics& g)
 {
+    // opaque, so the ground behind the rounded corners is this component's to paint
     g.fillAll (findColour (SquidColours::windowBackground));
+    SquidPaint::card (g, *this, getLocalBounds ());
 }
 
 int BankListComponent::getNumRows ()
@@ -319,20 +332,13 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
 {
     if (row < numBanks)
     {
-        juce::Colour textColor;
-        juce::Colour rowColor;
         if (rowIsSelected)
-        {
             lastSelectedBankIndex = row;
-            rowColor = findColour (SquidColours::listBackground);
-            textColor = findColour (SquidColours::textSelected);
-        }
-        else
-        {
-            rowColor = findColour (SquidColours::listBackground);
-            textColor = findColour (SquidColours::textDim);
-        }
+        const auto hovered { row == rowHover.getRow () };
+
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+        auto nameColourId { static_cast<int> (rowIsSelected ? SquidColours::accentText
+                                                            : (hovered ? SquidColours::text : SquidColours::textDim)) };
         if (thisBankExists)
         {
             if (bankName.isEmpty ())
@@ -340,25 +346,37 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         }
         else
         {
-            bankName = "(empty)";
-            textColor = textColor.withAlpha (0.5f);
+            bankName = "empty";
+            if (! rowIsSelected)
+                nameColourId = SquidColours::textGhost;
         }
-        juce::ignoreUnused (rowColor);
-        auto rowBounds { juce::Rectangle<int> { 0, 0, width, height } };
+
+        if (rowIsSelected)
+        {
+            g.fillAll (findColour (SquidColours::selectedRow));
+            g.setColour (findColour (SquidColours::accent));
+            g.fillRect (0, 0, 2, height);
+        }
+
+        auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
 
         // the lit dot says the bank holds something, so the name does not have to
-        const auto ledBounds { rowBounds.removeFromRight (14).withSizeKeepingCentre (6, 6).toFloat () };
-        StatusLed::draw (g, ledBounds, thisBankExists,
-                         findColour (SquidColours::markerStart), findColour (SquidColours::outline));
+        const auto ledBounds { rowBounds.removeFromRight (static_cast<int> (StatusLed::kDiameter)).toFloat ()
+                                        .withSizeKeepingCentre (StatusLed::kDiameter, StatusLed::kDiameter) };
+        StatusLed::draw (g, ledBounds, thisBankExists, *this);
+        rowBounds.removeFromRight (7);
 
-        g.setFont (SquidFonts::mono (10.5f));
-        g.setColour (findColour (SquidColours::textDim).withAlpha (rowIsSelected ? 1.0f : 0.7f));
-        g.drawText (juce::String (bankNumber), rowBounds.removeFromLeft (24), juce::Justification::centredRight, false);
-        rowBounds.removeFromLeft (8);
+        g.setFont (SquidType::bankNumber ());
+        g.setColour (findColour (rowIsSelected ? SquidColours::accentText : SquidColours::textGhost));
+        g.drawText (juce::String (bankNumber), rowBounds.removeFromLeft (20), juce::Justification::centredRight, false);
+        rowBounds.removeFromLeft (7);
 
-        g.setFont (SquidFonts::sans (12.0f));
-        g.setColour (textColor);
+        g.setFont (SquidType::body ());
+        g.setColour (findColour (nameColourId));
         g.drawText (bankName, rowBounds, juce::Justification::centredLeft, true);
+
+        if (hovered)
+            ListRowHover::paintOutline (g, *this, width, height);
     }
 }
 

@@ -201,8 +201,6 @@ ChannelEditorComponent::ChannelEditorComponent ()
 
     };
     addAndMakeVisible (toolsButton);
-    addAndMakeVisible (sampleLengthLabel);
-    sampleLengthLabel.setFont (SquidFonts::mono (11.0f));
     setupComponents ();
 }
 
@@ -212,19 +210,21 @@ ChannelEditorComponent::~ChannelEditorComponent ()
 
 void ChannelEditorComponent::setupComponents ()
 {
-    auto setupLabel = [this] (juce::Label& label, juce::String text, float fontSize, juce::Justification justification)
+    auto setupLabel = [this] (juce::Label& label, juce::String text)
     {
         label.setBorderSize ({ 0, 0, 0, 0 });
-        label.setJustificationType (justification);
-        label.setFont (SquidFonts::condensed (fontSize));
+        label.setJustificationType (juce::Justification::centredLeft);
+        label.setFont (SquidType::parameterLabel ());
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
     auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters, juce::String parameterName)
     {
         textEditor.setJustification (justification);
-        textEditor.setFont (SquidFonts::mono (12.0f));
-        textEditor.setIndents (1, 0);
+        textEditor.setFont (SquidType::value ());
+        textEditor.setBorder ({ 0, 7, 0, 7 });
+        textEditor.setIndents (0, 0);
+        HoverHighlight::attach (textEditor);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
         //textEditor.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         addAndMakeVisible (textEditor);
@@ -234,6 +234,7 @@ void ChannelEditorComponent::setupComponents ()
         jassert (onChangeCallback != nullptr);
         //comboBox.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         comboBox.onChange = onChangeCallback;
+        HoverHighlight::attach (comboBox);
         addAndMakeVisible (comboBox);
     };
     auto setupButton = [this] (juce::TextButton& textButton, juce::String text, juce::String parameterName, std::function<void ()> onClickCallback)
@@ -248,7 +249,7 @@ void ChannelEditorComponent::setupComponents ()
     {
         label.setBorderSize ({ 0, 0, 0, 0 });
         label.setJustificationType (juce::Justification::centredLeft);
-        label.setFont (SquidFonts::condensed (9.5f, "SemiBold"));
+        label.setFont (SquidType::sectionHeader ());
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
@@ -266,7 +267,7 @@ void ChannelEditorComponent::setupComponents ()
     addAndMakeVisible (endCueSwatch);
 
     // FILENAME
-    setupLabel (sampleFileNameLabel, "SAMPLE", kMediumLabelSize, juce::Justification::centredLeft);
+    setupHeaderLabel (sampleFileNameLabel, "SAMPLE");
     sampleFileNameSelectLabel.setTooltip ("Sample File Name. Click to open file browser, or drag a file onto the editor. If the file name is dimmed out this channel is using a sample from the Channel specified in the SOURCE parameter.");
     applyExplicitColours ();
     sampleFileNameSelectLabel.onFilesSelected = [this] (const juce::StringArray& files)
@@ -281,9 +282,9 @@ void ChannelEditorComponent::setupComponents ()
         // Clone
         // Revert
     };
-    setupLabel (sampleFileNameSelectLabel, "", 15.0, juce::Justification::centredLeft);
+    addAndMakeVisible (sampleFileNameSelectLabel);
 
-    setupLabel (channelSourceLabel, "SOURCE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (channelSourceLabel, "SOURCE");
     {
         for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
         {
@@ -293,7 +294,6 @@ void ChannelEditorComponent::setupComponents ()
             channelSourceComboBox.addItem (channelString, curChannelIndex + 1);
         }
     }
-    channelSourceComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     channelSourceComboBox.setTooltip ("Channel Reference. Select the channel for which this channel will get it's sample from. Can be changed on the module by holding the Chan button and turning the program knob.");
     channelSourceComboBox.onDragCallback = [this] (double valueDelta)
     {
@@ -324,7 +324,7 @@ void ChannelEditorComponent::setupComponents ()
     setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t> (channelSourceComboBox.getSelectedItemIndex ())); });
 
     // BITS
-    setupLabel (bitsLabel, "BITS", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (bitsLabel, "BITS");
     bitsTextEditor.setTooltip ("Bits. Adjust the bit depth of playback. Can be from 1 to 16. Can be changed on the module in the Quality settings.");
     bitsTextEditor.getMinValueCallback = [this] () { return 1; };
     bitsTextEditor.getMaxValueCallback = [this] () { return 16; };
@@ -356,9 +356,10 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (bitsTextEditor, juce::Justification::centred, 0, "0123456789", "Bits"); // 1-16
+    setupTextEditor (bitsTextEditor, juce::Justification::centredRight, 0, "0123456789", "Bits"); // 1-16
     // RATE
-    setupLabel (rateLabel, "RATE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (rateLabel, "RATE");
+    rateComboBox.getProperties ().set (SquidLnFProperties::valueUnit, "kHz");
     rateComboBox.setTooltip ("Rate. Adjusts the playback rate of the sample in khz. Values are 4, 6, 7, 9, 11, 14, 22, 44. Can be changed on the module in the Quality settings.");
     rateComboBox.addItem ("4", 8);
     rateComboBox.addItem ("6", 7);
@@ -368,7 +369,6 @@ void ChannelEditorComponent::setupComponents ()
     rateComboBox.addItem ("14", 3);
     rateComboBox.addItem ("22", 2);
     rateComboBox.addItem ("44", 1);
-    rateComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     rateComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -397,7 +397,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
-    setupLabel (speedLabel, "SPEED", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (speedLabel, "SPEED");
     speedTextEditor.setTooltip ("Speed. Linear playback speed control. From 1 to 100, where 50 is normal speed. Available for Channels 1-5. Can be changed on the module in the Quality settings.");
     speedTextEditor.getMinValueCallback = [this] () { return 1; };
     speedTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -429,9 +429,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (speedTextEditor, juce::Justification::centred, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
+    setupTextEditor (speedTextEditor, juce::Justification::centredRight, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
     // QUANTIZE
-    setupLabel (quantLabel, "QUANT", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (quantLabel, "QUANT");
     quantComboBox.setTooltip ("Quantization. This applies pitch quantisation to the sample playback (speed). Note the original pitch of the sample file serves as the scale's root note. Available for Channels 6-8.");
     {
         auto quantId { 1 };
@@ -451,7 +451,6 @@ void ChannelEditorComponent::setupComponents ()
         quantComboBox.addItem ("IV Chord", quantId++);
         quantComboBox.addItem ("VI Chord", quantId++);
     }
-    quantComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     quantComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -481,7 +480,7 @@ void ChannelEditorComponent::setupComponents ()
     setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
 
     // PITCH SHIFT
-    setupLabel (pitchShiftLabel, "PITCH", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (pitchShiftLabel, "PITCH");
     pitchShiftTextEditor.setTooltip ("Pitch Shift. Adjusts how much the audio is shifted in pitch.");
     pitchShiftTextEditor.getMinValueCallback = [this] () { return 0.f; };
     pitchShiftTextEditor.getMaxValueCallback = [this] () { return 4.0f; };
@@ -514,10 +513,10 @@ void ChannelEditorComponent::setupComponents ()
         }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (pitchShiftTextEditor, juce::Justification::centred, 0, "0123456789.", "Pitch");
+    setupTextEditor (pitchShiftTextEditor, juce::Justification::centredRight, 0, "0123456789.", "Pitch");
 
     // FILTER TYPE
-    setupLabel (filterTypeLabel, "FILTER", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (filterTypeLabel, "TYPE");
     filterTypeComboBox.setTooltip ("Filer Type. Enables the resonant multimode filter and the corresponding Frequency and Resonance parameters. Filer Types: Off, Low Pass, Band Pass, Notch, and High Pass.");
     {
         auto filterId { 1 };
@@ -527,7 +526,6 @@ void ChannelEditorComponent::setupComponents ()
         filterTypeComboBox.addItem ("Notch", filterId++);
         filterTypeComboBox.addItem ("High Pass", filterId++);
     }
-    filterTypeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     filterTypeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -556,7 +554,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
-    setupLabel (filterFrequencyLabel, "FREQ", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (filterFrequencyLabel, "FREQ");
     filterFrequencyTextEditor.setTooltip ("Filter Frequency. Adjusts the cut off frequency of the filter, only appears when a filter type is selected.");
     filterFrequencyTextEditor.getMinValueCallback = [this] () { return 0; };
     filterFrequencyTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -588,10 +586,10 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (filterFrequencyTextEditor, juce::Justification::centred, 0, "0123456789", "Frequency"); // 1-99?
+    setupTextEditor (filterFrequencyTextEditor, juce::Justification::centredRight, 0, "0123456789", "Frequency"); // 1-99?
 
     // FILTER RESONANCE
-    setupLabel (filterResonanceLabel, "RESO", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (filterResonanceLabel, "RESO");
     filterResonanceTextEditor.setTooltip ("Filter Resonance. Adjust the resonant peak of the filter, only appears when a filter type is selected.");
     filterResonanceTextEditor.getMinValueCallback = [this] () { return 0; };
     filterResonanceTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -623,9 +621,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (filterResonanceTextEditor, juce::Justification::centred, 0, "0123456789", "Resonance"); // 1-99?
+    setupTextEditor (filterResonanceTextEditor, juce::Justification::centredRight, 0, "0123456789", "Resonance"); // 1-99?
     // LEVEL
-    setupLabel (levelLabel, "LEVEL", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (levelLabel, "LEVEL");
     levelTextEditor.setTooltip ("Level. Adjust the playback volume of a sample. At 50 is unity gain. below will attenuate, above increase. Use this setting to avoid digital clipping when mixed. Value defaults to 30 as to conservatively avoid digital clipping.");
     levelTextEditor.getMinValueCallback = [this] () { return 1; };
     levelTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -657,9 +655,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (levelTextEditor, juce::Justification::centred, 0, "0123456789", "Level"); // 1-99
+    setupTextEditor (levelTextEditor, juce::Justification::centredRight, 0, "0123456789", "Level"); // 1-99
     // ATTACK
-    setupLabel (attackLabel, "ATTACK", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (attackLabel, "ATTACK");
     attackTextEditor.setTooltip ("Add a simple attack envelope to control volume at the beginning of sample playback. Behaves similar to Decay if the sample is set to loop.");
     attackTextEditor.getMinValueCallback = [this] () { return 0; };
     attackTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -691,9 +689,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (attackTextEditor, juce::Justification::centred, 0, "0123456789", "Attack"); // 0-99
+    setupTextEditor (attackTextEditor, juce::Justification::centredRight, 0, "0123456789", "Attack"); // 0-99
     // DECAY
-    setupLabel (decayLabel, "DECAY", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (decayLabel, "DECAY");
     decayTextEditor.setTooltip ("Add a simple decay envelope to fade out the volume of the sample. Decay time shortens as value rises. If a sample is set to loop the envelope will effect the loop as a whole (rather than single sample) with max decay time being 10 seconds.");
     decayTextEditor.getMinValueCallback = [this] () { return 0; };
     decayTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -725,9 +723,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (decayTextEditor, juce::Justification::centred, 0, "0123456789", "Decay"); // 0-99
+    setupTextEditor (decayTextEditor, juce::Justification::centredRight, 0, "0123456789", "Decay"); // 0-99
     // LOOP MODE
-    setupLabel (loopModeLabel, "LOOP MODE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (loopModeLabel, "MODE");
     {
         auto loopId { 1 };
         loopModeComboBox.addItem ("None", loopId++);
@@ -737,7 +735,6 @@ void ChannelEditorComponent::setupComponents ()
         loopModeComboBox.addItem ("ZigZag Gate", loopId++);
     }
     loopModeComboBox.setTooltip ("Loop Mode. Configures how looping will operate. Normal for forward playing. ZigZag plays alternatively forwards then backwards between loop and end points. Gate options indicate sample will only play & loop whilst the associated channels trigger input is held high (like a sustain). If Decay is set however, playback will move to this stage when the trigger goes low.");
-    loopModeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     loopModeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -766,7 +763,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
-    setupLabel (xfadeLabel, "XFADE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (xfadeLabel, "XFADE");
     xfadeTextEditor.setTooltip ("Loop Crossfade. Adds a simple cross fade between the sample end and loop points as to smooth out loops.");
     xfadeTextEditor.getMinValueCallback = [this] () { return 0; };
     xfadeTextEditor.getMaxValueCallback = [this] () { return 99; };
@@ -798,9 +795,9 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (xfadeTextEditor, juce::Justification::centred, 0, "0123456789", "XFade"); // 0 -99
+    setupTextEditor (xfadeTextEditor, juce::Justification::centredRight, 0, "0123456789", "XFade"); // 0 -99
     // REVERSE
-    setupLabel (reverseLabel, "REVERSE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (reverseLabel, "REVERSE");
     reverseButton.setTooltip ("Reverse. Reverses the sample");
     reverseButton.onClick = [this] () { reverseUiChanged (reverseButton.getToggleState ()); };
     reverseButton.onPopupMenuCallback = [this] ()
@@ -826,7 +823,8 @@ void ChannelEditorComponent::setupComponents ()
     };
     addAndMakeVisible (reverseButton);
     // START
-    setupLabel (startCueLabel, "START", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (startCueLabel, "START");
+    startCueLabel.setFont (SquidType::cuePointLabel ());
     startCueTextEditor.setTooltip ("Cue Start. Sets the starting sample for playback.");
     startCueTextEditor.getMinValueCallback = [this] () { return 0; };
     startCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
@@ -890,9 +888,10 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (startCueTextEditor, juce::Justification::centred, 0, "0123456789", "Start"); // 0 - sample length?
+    setupTextEditor (startCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "Start"); // 0 - sample length?
     // LOOP
-    setupLabel (loopCueLabel, "LOOP", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (loopCueLabel, "LOOP");
+    loopCueLabel.setFont (SquidType::cuePointLabel ());
     loopCueTextEditor.setTooltip ("Cue Loop. Sets the loop starting sample for playback.");
     loopCueTextEditor.getMinValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
     loopCueTextEditor.getMaxValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()); };
@@ -950,9 +949,10 @@ void ChannelEditorComponent::setupComponents ()
         }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (loopCueTextEditor, juce::Justification::centred, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
+    setupTextEditor (loopCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
-    setupLabel (endCueLabel, "END", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (endCueLabel, "END");
+    endCueLabel.setFont (SquidType::cuePointLabel ());
     endCueTextEditor.setTooltip ("Cue End. Sets the end sample for playback and looping.");
     endCueTextEditor.getMinValueCallback = [this] () { return SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()); };
     endCueTextEditor.getMaxValueCallback = [this] () { return squidChannelProperties.getSampleDataNumSamples (); };
@@ -1016,11 +1016,10 @@ void ChannelEditorComponent::setupComponents ()
         }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (endCueTextEditor, juce::Justification::centred, 0, "0123456789", "End"); // sampleStart - sample length
+    setupTextEditor (endCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "End"); // sampleStart - sample length
     // CHOKE
-    setupLabel (chokeLabel, "CHOKE", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (chokeLabel, "CHOKE");
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
-    chokeComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     chokeComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1050,13 +1049,12 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedId () - 1); }); // Off, C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
-    setupLabel (eTrigLabel, "EOS TRIG", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (eTrigLabel, "EOS TRIG");
     eTrigComboBox.setTooltip ("EOS Trigger. Selecting a channel will start playback of that channel when this one ends. Selecting On will cause a trigger to happen on the Trigger Output.");
     eTrigComboBox.addItem ("Off", 1);
     for (auto curChannelIndex { 0 }; curChannelIndex < 8; ++curChannelIndex)
         eTrigComboBox.addItem ("> " + juce::String (curChannelIndex + 1), curChannelIndex + 2);
     eTrigComboBox.addItem ("On", 10);
-    eTrigComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     eTrigComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1085,12 +1083,11 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps
-    setupLabel (stepsLabel, "STEPS", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (stepsLabel, "STEPS");
     stepsComboBox.setTooltip ("Steps. Cycles incoming triggers across specified adjacent channels in a stepped round robin fashion. This allows for polyphonic type triggering of samples.");
     stepsComboBox.addItem ("Off", 1);
     for (auto curNumSteps { 0 }; curNumSteps < 7; ++curNumSteps)
         stepsComboBox.addItem ("- " + juce::String (curNumSteps + 2), curNumSteps + 2);
-    stepsComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     stepsComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (valueDelta) };
@@ -1119,9 +1116,8 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (stepsComboBox, "Steps", [this] () { stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     // Output
-    setupLabel (outputLabel, "OUTPUT", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (outputLabel, "OUTPUT");
     outputComboBox.setTooltip ("Neighbour Output. Select with the original channel output, or assign it to it's neighbor. Chans 1-4 to the 1+2 output or 3+4 output and channels 5-8 to the 5+6 output or 7+8 output.");
-    outputComboBox.getProperties ().set (SquidLnFProperties::noComboBoxArrow, true);
     outputComboBox.onDragCallback = [this] (double valueDelta)
     {
         const auto scrollAmount { static_cast<int> (-valueDelta) };
@@ -1148,7 +1144,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     setupComboBox (outputComboBox, "Output", [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
     // CUE RANDOM
-    setupLabel (cueRandomLabel, "CUE RANDOM", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (cueRandomLabel, "RANDOM");
     cueRandomButton.setTooltip ("Random Cue Selection. Enabling will cause a random Cue Set to be selected each time the channel is triggered.");
     cueRandomButton.onClick = [this] ()
     {
@@ -1173,7 +1169,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     addAndMakeVisible (cueRandomButton);
     // CUE STEP
-    setupLabel (cueStepLabel, "CUE STEP", kMediumLabelSize, juce::Justification::centred);
+    setupLabel (cueStepLabel, "STEP");
     cueStepButton.setTooltip ("Step Cue Selection. Enabling will cause the next Cue Set to be selected each time the channel is triggered. Once it reaches the end, it will wrap around to the first.");
     cueStepButton.onClick = [this] ()
     {
@@ -1198,51 +1194,46 @@ void ChannelEditorComponent::setupComponents ()
     };
     addAndMakeVisible (cueStepButton);
 
+    for (auto* slideSwitch : { &reverseButton, &cueRandomButton, &cueStepButton })
+        slideSwitch->setThumbShape (RoundedSlideSwitch::ThumbShape::circle);
+
     // LOOP POINTS VIEW
     addAndMakeVisible (loopPointsView);
 
     // PLAY BUTTONS
-    auto setupPlayButton = [this] (juce::TextButton& playButton, juce::String text, bool initilalEnabledState, juce::String otherButtonText, AudioPlayerProperties::PlayMode playMode)
+    auto setupPlayButton = [this] (TransportButton& playButton, AudioPlayerProperties::PlayMode playMode)
     {
-        playButton.setButtonText (text);
-        playButton.setEnabled (initilalEnabledState);
-        playButton.onClick = [this, text, &playButton, playMode, otherButtonText] ()
+        playButton.setEnabled (false);
+        playButton.onClick = [this, &playButton, playMode] ()
         {
-            if (playButton.getButtonText () == "STOP")
+            if (playButton.isPlaying ())
             {
-                // stopping
                 audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::stop, false);
-                playButton.setButtonText (text);
+                playButton.setPlaying (false);
             }
             else
             {
                 audioPlayerProperties.setSampleSource (squidChannelProperties.getChannelIndex (), false);
                 audioPlayerProperties.setPlayMode (playMode, false);
                 audioPlayerProperties.setPlayState (AudioPlayerProperties::PlayState::play, false);
-                playButton.setButtonText ("STOP");
-                if (&playButton == &oneShotPlayButton)
-                    loopPlayButton.setButtonText (otherButtonText);
-                else
-                    oneShotPlayButton.setButtonText (otherButtonText);
+                // only one of the pair can be playing
+                oneShotPlayButton.setPlaying (&playButton == &oneShotPlayButton);
+                loopPlayButton.setPlaying (&playButton == &loopPlayButton);
             }
         };
         addAndMakeVisible (playButton);
     };
     loopPlayButton.setTooltip ("Continuous looping playback back the sample, using the loop and end cue points. No DSP is applied.");
-    setupPlayButton (loopPlayButton, "LOOP", false, "ONCE", AudioPlayerProperties::PlayMode::loop);
+    setupPlayButton (loopPlayButton, AudioPlayerProperties::PlayMode::loop);
     oneShotPlayButton.setTooltip ("Play back the sample once, using the start and end cue points. No DSP is applied.");
-    setupPlayButton (oneShotPlayButton, "ONCE", false, "LOOP", AudioPlayerProperties::PlayMode::once);
+    setupPlayButton (oneShotPlayButton, AudioPlayerProperties::PlayMode::once);
 
     // CUE SET ADD/DELETE BUTTONS
     addCueSetButton.setTooltip ("Add Cue Set. Will append a new Cue Set to the end.");
-    addCueSetButton.getProperties ().set (SquidLnFProperties::singleGlyphButton, true);
-    addCueSetButton.setButtonText ("+");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
     addCueSetButton.setEnabled (false);
     addAndMakeVisible (addCueSetButton);
     deleteCueSetButton.setTooltip ("Delete Cue Set. Will delete the currently selected Cue Set.");
-    deleteCueSetButton.getProperties ().set (SquidLnFProperties::singleGlyphButton, true);
-    deleteCueSetButton.setButtonText ("-");
     deleteCueSetButton.onClick = [this] () { deleteCueSet (squidChannelProperties.getCurCueSet ()); };
     deleteCueSetButton.setEnabled (false);
     addAndMakeVisible (deleteCueSetButton);
@@ -1343,6 +1334,7 @@ void ChannelEditorComponent::setFilterEnableState ()
     const auto filterEnabled { squidChannelProperties.getFilterType () != 0 };
     filterFrequencyTextEditor.setEnabled (filterEnabled);
     filterResonanceTextEditor.setEnabled (filterEnabled);
+    applyExplicitColours ();
     cvAssignEditor.setEnableState (CvParameterIndex::FiltFreq, filterEnabled);
     cvAssignEditor.setEnableState (CvParameterIndex::FiltRes, filterEnabled);
     cvAssignEditor.repaint ();
@@ -1411,8 +1403,8 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
         {
             juce::MessageManager::callAsync ([this] ()
             {
-                oneShotPlayButton.setButtonText ("ONCE");
-                loopPlayButton.setButtonText ("LOOP");
+                oneShotPlayButton.setPlaying (false);
+                loopPlayButton.setPlaying (false);
             });
         }
         else if (playState == AudioPlayerProperties::PlayState::play)
@@ -1421,16 +1413,16 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
             {
                 juce::MessageManager::callAsync ([this] ()
                 {
-                    oneShotPlayButton.setButtonText ("STOP");
-                    loopPlayButton.setButtonText ("LOOP");
+                    oneShotPlayButton.setPlaying (true);
+                    loopPlayButton.setPlaying (false);
                 });
             }
             else
             {
                 juce::MessageManager::callAsync ([this] ()
                 {
-                    oneShotPlayButton.setButtonText ("ONCE");
-                    loopPlayButton.setButtonText ("STOP");
+                    oneShotPlayButton.setPlaying (false);
+                    loopPlayButton.setPlaying (true);
                 });
             }
         }
@@ -1573,13 +1565,21 @@ void ChannelEditorComponent::initializeCallbacks ()
         if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)
         {
             waveformDisplay.setAudioBuffer (squidChannelProperties.getSampleDataAudioBuffer ()->getAudioBuffer ());
-            sampleLengthLabel.setText (juce::String (squidChannelProperties.getSampleDataNumSamples () / squidChannelProperties.getSampleDataSampleRate (), 2) + " s   " +
-                                       juce::String (squidChannelProperties.getSampleDataNumSamples ()) + " samples", juce::NotificationType::dontSendNotification);
+            const auto numSamples { squidChannelProperties.getSampleDataNumSamples () };
+            sampleSecondsText = juce::String (numSamples / squidChannelProperties.getSampleDataSampleRate (), 2);
+            // grouped, as the mockup writes it: 13,125
+            auto digits { juce::String (numSamples) };
+            for (auto insertAt { digits.length () - 3 }; insertAt > 0; insertAt -= 3)
+                digits = digits.substring (0, insertAt) + "," + digits.substring (insertAt);
+            sampleCountText = digits;
+            repaint (sampleMetaBounds);
         }
         else
         {
             waveformDisplay.setAudioBuffer (nullptr);
-            sampleLengthLabel.setText ("", juce::NotificationType::dontSendNotification);
+            sampleSecondsText = {};
+            sampleCountText = {};
+            repaint (sampleMetaBounds);
         }
         oneShotPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
         loopPlayButton.setEnabled (squidChannelProperties.getSampleDataAudioBuffer () != nullptr);
@@ -1727,8 +1727,9 @@ void ChannelEditorComponent::eTrigDataChanged (int eTrig)
 
 void ChannelEditorComponent::sampleFileNameDataChanged (juce::String sampleFileName)
 {
-    const auto justTheFileName { juce::File (sampleFileName).getFileNameWithoutExtension () };
-    sampleFileNameSelectLabel.setText (justTheFileName, juce::NotificationType::dontSendNotification);
+    sampleFileNameSelectLabel.setFileName (sampleFileName);
+    // the chip is sized to the name it shows
+    resized ();
 }
 
 void ChannelEditorComponent::filterTypeDataChanged (int filterType)
@@ -2036,167 +2037,196 @@ void ChannelEditorComponent::fileDragExit (const juce::StringArray&)
    repaint ();
 }
 
+namespace
+{
+    // Measurements from the mockup, in one place, so the layout reads as intent.
+    constexpr auto kEditorPadding { 7 };
+    constexpr auto kSectionGap { 7 };
+    constexpr auto kSectionHeaderHeight { 14 };
+    constexpr auto kFieldHeight { 21 };
+    constexpr auto kFieldWidth { 62 };
+    constexpr auto kParameterRowGap { 5 };
+    constexpr auto kSampleCardHeight { 37 };
+    constexpr auto kSampleChipHeight { 25 };
+    constexpr auto kCueHeaderHeight { 82 };
+    constexpr auto kCuePointColumnWidth { 118 };
+    constexpr auto kCuePointColumnGap { 8 };
+    constexpr auto kCueChipRowHeight { 24 };
+    constexpr auto kCueToolWidth { 22 };
+    constexpr auto kSwitchWidth { 34 };
+    constexpr auto kSwitchHeight { 17 };
+}
+
 void ChannelEditorComponent::resized ()
 {
-    const auto kRowHeight { 20 };
-    const auto kRowGap { 4 };
-    const auto kHeaderHeight { 15 };
-    const auto kSectionGap { 8 };
-
-    auto localBounds { getLocalBounds ().reduced (10, 4) };
+    auto localBounds { getLocalBounds ().reduced (kEditorPadding) };
 
     // ---------------- SAMPLE ----------------
     {
-        auto sampleCard { localBounds.removeFromTop (kRowHeight + 10) };
-        sampleCardBounds = sampleCard;
-        auto sampleRow { sampleCard.reduced (9, 5) };
-        toolsButton.setBounds (sampleRow.removeFromRight (104));
-        sampleRow.removeFromRight (8);
-        sampleFileNameLabel.setBounds (sampleRow.removeFromLeft (62));
-        sampleRow.removeFromLeft (4);
-        sampleFileNameSelectLabel.setBounds (sampleRow.removeFromLeft (250));
-        sampleRow.removeFromLeft (10);
-        sampleLengthLabel.setBounds (sampleRow);
+        constexpr auto kGap { 9 };
+        sampleCardBounds = localBounds.removeFromTop (kSampleCardHeight);
+        auto sampleRow { sampleCardBounds.reduced (1).reduced (8, 0) };
+        sampleFileNameLabel.setBounds (sampleRow.removeFromLeft (SquidPaint::textWidth (SquidType::sectionHeader (), sampleFileNameLabel.getText ()) + 2));
+        sampleRow.removeFromLeft (kGap);
+
+        const auto toolsWidth { toolsButton.getIdealWidth () };
+        toolsButton.setBounds (sampleRow.removeFromRight (toolsWidth).withSizeKeepingCentre (toolsWidth, ActionButton::kSmallHeight));
+        sampleRow.removeFromRight (kGap);
+
+        const auto chipWidth { juce::jlimit (120, 360, sampleFileNameSelectLabel.getIdealWidth ()) };
+        sampleFileNameSelectLabel.setBounds (sampleRow.removeFromLeft (chipWidth).withSizeKeepingCentre (chipWidth, kSampleChipHeight));
+        sampleRow.removeFromLeft (kGap);
+        sampleMetaBounds = sampleRow;
     }
     localBounds.removeFromTop (kSectionGap);
 
     // ---------------- PARAMETERS ----------------
-    // One panel divided into six named groups, rather than six loose columns.
-    const auto kParameterRows { 4 };
-    parameterPanelBounds = localBounds.removeFromTop (kHeaderHeight + 6 + (kParameterRows * (kRowHeight + kRowGap)) + 4);
-
-    const auto columnWidth { parameterPanelBounds.getWidth () / 6 };
-    auto placeGroup = [&] (int columnIndex, juce::Label& header,
-                           const std::vector<std::pair<juce::Component*, juce::Component*>>& rows)
+    // One panel divided into six named groups, each a label column and a narrow
+    // value column, so the numbers line up down the group.
     {
-        auto column { parameterPanelBounds.withX (parameterPanelBounds.getX () + (columnIndex * columnWidth))
-                                          .withWidth (columnWidth).reduced (9, 5) };
-        header.setBounds (column.removeFromTop (kHeaderHeight));
-        column.removeFromTop (6);
-        const auto labelWidth { juce::roundToInt (static_cast<float> (column.getWidth ()) * 0.47f) };
-        for (const auto& labelAndField : rows)
+        static constexpr auto kParameterRows { 4 };
+        static constexpr auto kGroupTopPadding { 7 };
+        static constexpr auto kGroupBottomPadding { 9 };
+        parameterPanelBounds = localBounds.removeFromTop (1 + kGroupTopPadding + kSectionHeaderHeight + 2 + kParameterRowGap
+                                                          + (kParameterRows * kFieldHeight) + ((kParameterRows - 1) * kParameterRowGap)
+                                                          + kGroupBottomPadding + 1);
+        const auto inner { parameterPanelBounds.reduced (1) };
+        const auto columnWidth { static_cast<float> (inner.getWidth ()) / 6.0f };
+
+        auto placeGroup = [this, inner, columnWidth] (int columnIndex, juce::Label& header,
+                                                      const std::vector<std::pair<juce::Component*, juce::Component*>>& rows)
         {
-            auto row { column.removeFromTop (kRowHeight) };
-            column.removeFromTop (kRowGap);
-            if (labelAndField.first != nullptr)
-                labelAndField.first->setBounds (row.removeFromLeft (labelWidth));
-            row.removeFromLeft (4);
-            if (labelAndField.second != nullptr)
-                labelAndField.second->setBounds (row);
-        }
-        if (columnIndex > 0)
-            parameterDividerX [static_cast<size_t> (columnIndex - 1)] = parameterPanelBounds.getX () + (columnIndex * columnWidth);
-    };
+            const auto left { inner.getX () + juce::roundToInt (static_cast<float> (columnIndex) * columnWidth) };
+            const auto right { inner.getX () + juce::roundToInt (static_cast<float> (columnIndex + 1) * columnWidth) };
+            const auto isLastColumn { columnIndex == 5 };
+            if (! isLastColumn)
+                parameterDividerX [static_cast<size_t> (columnIndex)] = right - 1;
 
-    placeGroup (0, levelEnvHeaderLabel, { { &levelLabel,  &levelTextEditor },
-                                          { &attackLabel, &attackTextEditor },
-                                          { &decayLabel,  &decayTextEditor },
-                                          { &outputLabel, &outputComboBox } });
-    placeGroup (1, filterHeaderLabel,   { { &filterTypeLabel,      &filterTypeComboBox },
-                                          { &filterFrequencyLabel, &filterFrequencyTextEditor },
-                                          { &filterResonanceLabel, &filterResonanceTextEditor } });
-    // Speed (channels 1-5) and Quant (channels 6-8) share the top slot; only one
-    // of the pair is ever visible, so they are given the same bounds.
-    placeGroup (2, qualityHeaderLabel,  { { &speedLabel,      &speedTextEditor },
-                                          { &bitsLabel,       &bitsTextEditor },
-                                          { &rateLabel,       &rateComboBox },
-                                          { &pitchShiftLabel, &pitchShiftTextEditor } });
-    quantLabel.setBounds (speedLabel.getBounds ());
-    quantComboBox.setBounds (speedTextEditor.getBounds ());
+            auto content { juce::Rectangle<int> { left, inner.getY (), right - left, inner.getHeight () }
+                               .withTrimmedRight (isLastColumn ? 0 : 1)
+                               .reduced (9, 0)
+                               .withTrimmedTop (kGroupTopPadding) };
+            header.setBounds (content.removeFromTop (kSectionHeaderHeight));
+            content.removeFromTop (2 + kParameterRowGap);
+            for (const auto& [label, field] : rows)
+            {
+                auto row { content.removeFromTop (kFieldHeight) };
+                content.removeFromTop (kParameterRowGap);
+                if (field != nullptr)
+                    field->setBounds (row.removeFromRight (kFieldWidth));
+                row.removeFromRight (7);
+                if (label != nullptr)
+                    label->setBounds (row);
+            }
+        };
 
-    placeGroup (3, loopHeaderLabel,     { { &loopModeLabel, &loopModeComboBox },
-                                          { &xfadeLabel,    &xfadeTextEditor },
-                                          { &reverseLabel,  &reverseButton } });
-    placeGroup (4, triggerHeaderLabel,  { { &chokeLabel,         &chokeComboBox },
-                                          { &eTrigLabel,         &eTrigComboBox },
-                                          { &stepsLabel,         &stepsComboBox },
-                                          { &channelSourceLabel, &channelSourceComboBox } });
-    placeGroup (5, cueTriggerHeaderLabel, { { &cueRandomLabel, &cueRandomButton },
-                                            { &cueStepLabel,   &cueStepButton } });
+        placeGroup (0, levelEnvHeaderLabel, { { &levelLabel,  &levelTextEditor },
+                                              { &attackLabel, &attackTextEditor },
+                                              { &decayLabel,  &decayTextEditor },
+                                              { &outputLabel, &outputComboBox } });
+        placeGroup (1, filterHeaderLabel,   { { &filterTypeLabel,      &filterTypeComboBox },
+                                              { &filterFrequencyLabel, &filterFrequencyTextEditor },
+                                              { &filterResonanceLabel, &filterResonanceTextEditor } });
+        // Speed (channels 1-5) and Quant (channels 6-8) share the top slot; only one
+        // of the pair is ever visible, so they are given the same bounds.
+        placeGroup (2, qualityHeaderLabel,  { { &speedLabel,      &speedTextEditor },
+                                              { &bitsLabel,       &bitsTextEditor },
+                                              { &rateLabel,       &rateComboBox },
+                                              { &pitchShiftLabel, &pitchShiftTextEditor } });
+        quantLabel.setBounds (speedLabel.getBounds ());
+        quantComboBox.setBounds (speedTextEditor.getBounds ());
 
-    // A slide switch reads as a switch at its own size; stretched to the width of
-    // a value field it just looks like a broken text box.
-    // right aligned, so the switches line up with the value fields above them
-    auto sizeSlideSwitch = [] (juce::Component& slideSwitch)
-    {
-        const auto bounds { slideSwitch.getBounds () };
-        slideSwitch.setBounds (bounds.getRight () - 46, bounds.getY () + 2, 46, bounds.getHeight () - 4);
-    };
-    sizeSlideSwitch (reverseButton);
-    sizeSlideSwitch (cueRandomButton);
-    sizeSlideSwitch (cueStepButton);
+        placeGroup (3, loopHeaderLabel,     { { &loopModeLabel, &loopModeComboBox },
+                                              { &xfadeLabel,    &xfadeTextEditor },
+                                              { &reverseLabel,  &reverseButton } });
+        placeGroup (4, triggerHeaderLabel,  { { &chokeLabel,         &chokeComboBox },
+                                              { &eTrigLabel,         &eTrigComboBox },
+                                              { &stepsLabel,         &stepsComboBox },
+                                              { &channelSourceLabel, &channelSourceComboBox } });
+        placeGroup (5, cueTriggerHeaderLabel, { { &cueRandomLabel, &cueRandomButton },
+                                                { &cueStepLabel,   &cueStepButton } });
 
+        // A slide switch reads as a switch at its own size; stretched to the width of
+        // a value field it just looks like a broken text box. Right aligned, so the
+        // switches line up with the value fields above them.
+        for (auto* slideSwitch : { &reverseButton, &cueRandomButton, &cueStepButton })
+            slideSwitch->setBounds (slideSwitch->getBounds ().removeFromRight (kSwitchWidth).withSizeKeepingCentre (kSwitchWidth, kSwitchHeight));
+    }
     localBounds.removeFromTop (kSectionGap);
 
-    // ---------------- CUE POINTS + LOOP TUNER ----------------
+    // ---------------- CV ASSIGN, along the bottom ----------------
+    // the editor draws its own header band, with the CV tabs in it
+    cvAssignCardBounds = localBounds.removeFromBottom (1 + CvAssignEditor::kHeaderHeight + CvAssignEditor::kMatrixHeight + 1);
+    cvAssignEditor.setBounds (cvAssignCardBounds.reduced (1));
+    localBounds.removeFromBottom (kSectionGap);
+
+    // ---------------- CUE POINTS, CUE SETS AND WAVEFORM fill what is left ----------------
+    cueSetsCardBounds = localBounds;
+    auto cueCard { localBounds.reduced (1) };
+
     // The cue point numbers sit directly above the waveform they move, colour
-    // matched to their markers, with the tuner filling the rest of the row.
-    const auto cueCardTop { localBounds.getY () };
-    const auto cueCardX { localBounds.getX () };
-    const auto cueCardWidth { localBounds.getWidth () };
+    // matched to their markers, with the loop tuner filling the rest of the band.
     {
-        auto cueRow { localBounds.removeFromTop (kHeaderHeight + 6 + kRowHeight + kRowGap + kRowHeight + 10).reduced (9, 5) };
+        cueHeaderBounds = cueCard.removeFromTop (kCueHeaderHeight);
+        auto header { cueHeaderBounds.withTrimmedBottom (1).reduced (8, 6) };
 
-        auto cuePointsColumn { cueRow.removeFromLeft (440) };
-        cuePointsHeaderLabel.setBounds (cuePointsColumn.removeFromTop (kHeaderHeight));
+        auto cuePointsColumn { header.removeFromLeft ((kCuePointColumnWidth * 3) + (kCuePointColumnGap * 2)) };
+        header.removeFromLeft (16);
+
+        cuePointsHeaderLabel.setBounds (cuePointsColumn.removeFromTop (kSectionHeaderHeight));
         cuePointsColumn.removeFromTop (6);
-
-        auto cueFieldsRow { cuePointsColumn.removeFromTop (kRowHeight) };
-        const auto cueGroupWidth { cueFieldsRow.getWidth () / 3 };
-        auto placeCuePoint = [&cueFieldsRow, cueGroupWidth] (MarkerSwatch& swatch, juce::Label& label, juce::Component& field)
+        auto cueFieldsRow { cuePointsColumn.removeFromTop (kFieldHeight) };
+        auto placeCuePoint = [&cueFieldsRow] (MarkerSwatch& swatch, juce::Label& label, juce::Component& field)
         {
-            auto group { cueFieldsRow.removeFromLeft (cueGroupWidth) };
-            swatch.setBounds (group.removeFromLeft (3).reduced (0, 2));
+            auto group { cueFieldsRow.removeFromLeft (kCuePointColumnWidth) };
+            cueFieldsRow.removeFromLeft (kCuePointColumnGap);
+            // never taller than its row, so it disappears with the row when the card is squeezed shut
+            swatch.setBounds (group.removeFromLeft (3).withSizeKeepingCentre (3, std::min (15, group.getHeight ())));
             group.removeFromLeft (6);
-            label.setBounds (group.removeFromLeft (44));
-            group.removeFromLeft (3);
-            field.setBounds (group.withTrimmedRight (10));
+            label.setBounds (group.removeFromLeft (32));
+            group.removeFromLeft (6);
+            field.setBounds (group);
         };
         placeCuePoint (startCueSwatch, startCueLabel, startCueTextEditor);
         placeCuePoint (loopCueSwatch,  loopCueLabel,  loopCueTextEditor);
         placeCuePoint (endCueSwatch,   endCueLabel,   endCueTextEditor);
 
-        cuePointsColumn.removeFromTop (kRowGap);
-        auto transportRow { cuePointsColumn.removeFromTop (kRowHeight) };
-        oneShotPlayButton.setBounds (transportRow.removeFromLeft (110));
-        transportRow.removeFromLeft (8);
-        loopPlayButton.setBounds (transportRow.removeFromLeft (110));
+        cuePointsColumn.removeFromTop (6);
+        auto transportRow { cuePointsColumn.removeFromTop (TransportButton::kHeight) };
+        const auto transportWidth { (transportRow.getWidth () - kCuePointColumnGap) / 2 };
+        oneShotPlayButton.setBounds (transportRow.removeFromLeft (transportWidth));
+        loopPlayButton.setBounds (transportRow.removeFromRight (transportWidth));
 
-        cueRow.removeFromLeft (4);
-        loopTunerHeaderLabel.setBounds (cueRow.removeFromTop (kHeaderHeight));
-        cueRow.removeFromTop (6);
-        loopPointsView.setBounds (cueRow);
+        loopTunerHeaderLabel.setBounds (header.removeFromTop (kSectionHeaderHeight));
+        header.removeFromTop (6);
+        loopPointsView.setBounds (header);
     }
 
-    // ---------------- CV ASSIGN, along the bottom ----------------
-    // the editor draws its own header row, with the CV tabs in it
-    constexpr auto kCvAssignHeight { 100 };
-    cvAssignCardBounds = localBounds.removeFromBottom (kCvAssignHeight + CvAssignEditor::kHeaderHeight + 8);
-    cvAssignEditor.setBounds (cvAssignCardBounds.reduced (9, 4));
-    localBounds.removeFromBottom (kSectionGap);
-
-    // ---------------- CUE SETS + WAVEFORM fill what is left ----------------
-    const auto kCueChipHeight { 18 };
-    const auto kCueToolWidth { 15 };
-    localBounds = localBounds.reduced (9, 0).withTrimmedBottom (6);
-    cueSetsCardBounds = { cueCardX, cueCardTop, cueCardWidth, localBounds.getBottom () + 6 - cueCardTop };
-    auto topChipRow { localBounds.removeFromTop (kCueChipHeight) };
-    auto bottomChipRow { localBounds.removeFromBottom (kCueChipHeight) };
-
-    auto waveArea { localBounds };
-    auto cueToolColumn { waveArea.removeFromLeft (kCueToolWidth) };
-    waveArea.removeFromLeft (2);
-    addCueSetButton.setBounds (cueToolColumn.removeFromTop ((cueToolColumn.getHeight () / 2) - 2));
-    deleteCueSetButton.setBounds (cueToolColumn.withTrimmedTop (4));
-    waveformDisplay.setBounds (waveArea);
-
-    const auto chipWidth { waveArea.getWidth () / 32 };
-    for (auto cueSetIndex { 0 }; cueSetIndex < static_cast<int> (cueSetButtons.size () / 2); ++cueSetIndex)
+    // 32 chips above the waveform and 32 below, spanning the card
+    topCueChipBounds = cueCard.removeFromTop (kCueChipRowHeight + 1);
+    bottomCueChipBounds = cueCard.removeFromBottom (kCueChipRowHeight + 1);
+    auto placeChips = [this] (juce::Rectangle<int> rowBounds, size_t firstChip)
     {
-        const auto chipX { waveArea.getX () + (cueSetIndex * chipWidth) };
-        cueSetButtons [static_cast<size_t> (cueSetIndex)].setBounds (chipX, topChipRow.getY (), chipWidth, kCueChipHeight);
-        cueSetButtons [static_cast<size_t> (cueSetIndex + 32)].setBounds (chipX, bottomChipRow.getY (), chipWidth, kCueChipHeight);
-    }
+        static constexpr auto kChipsPerRow { 32 };
+        static constexpr auto kChipGap { 1.0f };
+        const auto row { rowBounds.reduced (3) };
+        const auto chipWidth { (static_cast<float> (row.getWidth ()) - (kChipGap * (kChipsPerRow - 1))) / kChipsPerRow };
+        for (auto chipIndex { 0 }; chipIndex < kChipsPerRow; ++chipIndex)
+        {
+            const auto chipLeft { row.getX () + juce::roundToInt (static_cast<float> (chipIndex) * (chipWidth + kChipGap)) };
+            const auto chipRight { row.getX () + juce::roundToInt ((static_cast<float> (chipIndex) * (chipWidth + kChipGap)) + chipWidth) };
+            cueSetButtons [firstChip + static_cast<size_t> (chipIndex)].setBounds (chipLeft, row.getY (), chipRight - chipLeft, row.getHeight ());
+        }
+    };
+    placeChips (topCueChipBounds.withTrimmedBottom (1), 0);
+    placeChips (bottomCueChipBounds.withTrimmedTop (1), 32);
+
+    // add and delete stacked beside the waveform, split by a hairline
+    cueToolBounds = cueCard.removeFromLeft (kCueToolWidth + 1);
+    auto cueTools { cueToolBounds.withTrimmedRight (1) };
+    addCueSetButton.setBounds (cueTools.removeFromTop (cueTools.getHeight () / 2).withTrimmedBottom (1));
+    deleteCueSetButton.setBounds (cueTools);
+    waveformDisplay.setBounds (cueCard);
 }
 
 void ChannelEditorComponent::lookAndFeelChanged ()
@@ -2207,42 +2237,91 @@ void ChannelEditorComponent::lookAndFeelChanged ()
 
 void ChannelEditorComponent::applyExplicitColours ()
 {
-    // these keep per-instance colours, so they have to be refreshed by hand
-    sampleFileNameSelectLabel.setColour (juce::Label::ColourIds::backgroundColourId, findColour (SquidColours::fieldBackground));
-    sampleFileNameSelectLabel.setOutline (findColour (SquidColours::outline));
+    // Labels keep per-instance colours, so they have to be refreshed by hand when
+    // the palette changes.
+    auto tint = [this] (juce::Label& label, int colourId)
+    {
+        label.setColour (juce::Label::ColourIds::textColourId, findColour (colourId));
+    };
 
-    const auto headerColour { findColour (SquidColours::accentText) };
     for (auto* header : { &levelEnvHeaderLabel, &filterHeaderLabel, &qualityHeaderLabel,
                           &loopHeaderLabel, &triggerHeaderLabel, &cueTriggerHeaderLabel,
-                          &cuePointsHeaderLabel, &loopTunerHeaderLabel,
-                          &sampleFileNameLabel })
-        header->setColour (juce::Label::ColourIds::textColourId, headerColour);
+                          &cuePointsHeaderLabel, &loopTunerHeaderLabel, &sampleFileNameLabel })
+        tint (*header, SquidColours::accentText);
+
+    for (auto* label : { &levelLabel, &attackLabel, &decayLabel, &outputLabel, &filterTypeLabel,
+                         &speedLabel, &quantLabel, &bitsLabel, &rateLabel, &pitchShiftLabel,
+                         &loopModeLabel, &xfadeLabel, &reverseLabel, &chokeLabel, &eTrigLabel,
+                         &stepsLabel, &channelSourceLabel, &cueRandomLabel, &cueStepLabel,
+                         &startCueLabel, &loopCueLabel, &endCueLabel })
+        tint (*label, SquidColours::textDim);
+
+    // a parameter that does nothing in the current filter mode says so in its label too
+    const auto filterEnabled { filterFrequencyTextEditor.isEnabled () };
+    tint (filterFrequencyLabel, filterEnabled ? SquidColours::textDim : SquidColours::textGhost);
+    tint (filterResonanceLabel, filterEnabled ? SquidColours::textDim : SquidColours::textGhost);
 }
 
 void ChannelEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (findColour (SquidColours::windowBackground));
 
-    // The parameter groups read as one panel divided up, rather than six loose
-    // columns, so the block is outlined and the groups separated by hairlines.
-    // Each section is a panel lifted off the ground, so the editor reads as a
-    // few blocks rather than one field of controls.
-    for (const auto& card : { sampleCardBounds, parameterPanelBounds, cueSetsCardBounds, cvAssignCardBounds })
-    {
-        if (card.isEmpty ())
-            continue;
-        g.setColour (findColour (SquidColours::listBackground));
-        g.fillRect (card);
-        g.setColour (findColour (SquidColours::outline));
-        g.drawRect (card, 1);
-    }
+    // Each section is a panel lifted off the ground, so the editor reads as a few
+    // blocks rather than one field of controls.
+    const std::array<juce::Rectangle<int>, 4> cards { sampleCardBounds, parameterPanelBounds, cueSetsCardBounds, cvAssignCardBounds };
+    for (const auto& card : cards)
+        if (! card.isEmpty ())
+            SquidPaint::card (g, *this, card);
 
-    g.setColour (findColour (SquidColours::outline));
+    const auto outline { findColour (SquidColours::outline) };
+
+    // the parameter groups are separated by hairlines running the panel's height
+    g.setColour (outline);
     for (const auto dividerX : parameterDividerX)
         if (dividerX > 0)
-            g.drawVerticalLine (dividerX,
-                                static_cast<float> (parameterPanelBounds.getY () + 4),
-                                static_cast<float> (parameterPanelBounds.getBottom () - 4));
+            g.fillRect (dividerX, parameterPanelBounds.getY () + 1, 1, parameterPanelBounds.getHeight () - 2);
+
+    // the bands inside the cue card sit a step above the card, each with its hairline
+    const auto band { findColour (SquidColours::panelHeader) };
+    g.setColour (band);
+    g.fillRect (cueHeaderBounds.withTrimmedBottom (1));
+    g.fillRect (topCueChipBounds.withTrimmedBottom (1));
+    g.fillRect (bottomCueChipBounds.withTrimmedTop (1));
+    g.setColour (outline);
+    g.fillRect (cueHeaderBounds.withTop (cueHeaderBounds.getBottom () - 1));
+    g.fillRect (topCueChipBounds.withTop (topCueChipBounds.getBottom () - 1));
+    g.fillRect (bottomCueChipBounds.withHeight (1));
+    // behind the cue tools, so the gap between them and their right edge read as hairlines
+    g.fillRect (cueToolBounds);
+
+    // the bands cover the card's rounded corners, so its outline goes back on top
+    for (const auto& card : cards)
+        if (! card.isEmpty ())
+        {
+            g.setColour (outline);
+            g.drawRoundedRectangle (card.toFloat ().reduced (0.5f), 3.0f, 1.0f);
+        }
+
+    // "0.30 s  .  13,125 samples" - the numbers in the dim ink, their units muted
+    if (sampleSecondsText.isNotEmpty ())
+    {
+        const auto font { SquidType::meta () };
+        const auto separator { juce::String (juce::CharPointer_UTF8 (" s \xc2\xb7 ")) };
+        auto metaBounds { sampleMetaBounds };
+        g.setFont (font);
+        auto drawPiece = [&g, &metaBounds, &font] (const juce::String& text, juce::Colour colour)
+        {
+            const auto width { SquidPaint::textWidth (font, text) };
+            g.setColour (colour);
+            g.drawText (text, metaBounds.removeFromLeft (width), juce::Justification::centredLeft, false);
+        };
+        const auto numberColour { findColour (SquidColours::textDim) };
+        const auto unitColour { findColour (SquidColours::menuHeaderText) };
+        drawPiece (sampleSecondsText, numberColour);
+        drawPiece (separator, unitColour);
+        drawPiece (sampleCountText, numberColour);
+        drawPiece (" samples", unitColour);
+    }
 }
 
 void ChannelEditorComponent::paintOverChildren (juce::Graphics& g)

@@ -56,13 +56,6 @@ private:
         }
 
     protected:
-        void paintOverChildren (juce::Graphics& g) override
-        {
-            juce::TabbedComponent::paintOverChildren (g);
-            g.setColour (findColour (SquidColours::outline));
-            g.drawRect (getLocalBounds (), 1);
-        }
-
         juce::TabBarButton* createTabButton (const juce::String& tabName, int /*tabIndex*/) override
         {
             return new FileDropTargetTabBarButton (tabName, getTabbedButtonBar (), isSupportedFile, loadFile);
@@ -124,78 +117,65 @@ private:
             bool hasContent { false };
             std::function<bool (juce::String fileName)> isSupportedFile;
             std::function<bool (juce::String fileName, int channelIndex)> loadFile;
-            void paintOverChildren (juce::Graphics& g) override
+            void paintButton (juce::Graphics& g, bool isMouseOver, bool /*isMouseDown*/) override
             {
-                TabBarButton::paintOverChildren (g);
+                const auto bounds { getLocalBounds () };
+                const auto selected { getToggleState () };
+                const auto hovered { isMouseOver && ! selected };
+
+                // the front tab takes the colour of the page under it, so the two
+                // read as one surface; the others sit on the strip
+                if (selected)
+                    g.fillAll (findColour (SquidColours::windowBackground));
+                else if (hovered)
+                    g.fillAll (findColour (SquidColours::panelHeader));
+
+                g.setColour (findColour (SquidColours::outlineDim));
+                g.fillRect (bounds.withLeft (bounds.getRight () - 1));
 
                 // says at a glance which channels are in use
-                const auto ledBounds { getLocalBounds ().withTrimmedLeft (7).withWidth (7)
-                                                        .withSizeKeepingCentre (7, 7).toFloat () };
-                StatusLed::draw (g, ledBounds, hasContent,
-                                 findColour (SquidColours::markerStart), findColour (SquidColours::outline));
+                auto content { bounds.withTrimmedLeft (13) };
+                const auto ledBounds { content.removeFromLeft (static_cast<int> (StatusLed::kDiameter)).toFloat ()
+                                              .withSizeKeepingCentre (StatusLed::kDiameter, StatusLed::kDiameter) };
+                StatusLed::draw (g, ledBounds, hasContent, *this);
+                content.removeFromLeft (7);
+
+                g.setFont (SquidType::channelTab ());
+                g.setColour (findColour (selected ? SquidColours::text
+                                                  : (hovered ? SquidColours::textDim : SquidColours::menuHeaderText)));
+                g.drawText (getButtonText (), content, juce::Justification::centredLeft, false);
+
+                if (selected)
+                {
+                    g.setColour (findColour (SquidColours::accent));
+                    g.fillRect (bounds.withTop (bounds.getBottom () - 2));
+                }
+                else if (hovered)
+                {
+                    g.setColour (findColour (SquidColours::accentDeep));
+                    g.drawRect (bounds.withTrimmedBottom (1), 1);
+                }
 
                 if (draggingFile)
                     g.fillAll (findColour (SquidColours::dropOverlay));
-            }
-
-            void paintButton (juce::Graphics& g, bool isMouseOver, bool /*isMouseDown*/) override
-            {
-                // Draw a compact tab: small left LED, tight label plate and a thin
-                // accent underline when selected to match the facelift mockup.
-                const auto full = getLocalBounds();
-
-                // LED to the left
-                const auto ledBounds = full.withTrimmedLeft (6).withWidth (7)
-                                            .withSizeKeepingCentre (7, 7).toFloat ();
-                StatusLed::draw (g, ledBounds, hasContent,
-                                 findColour (SquidColours::markerStart), findColour (SquidColours::outline));
-
-                // text area sits to the right of the LED with a small inset
-                auto textArea = full.withTrimmedLeft (16).reduced (6, 4);
-
-                // If selected, draw a subtle filled plate behind the entire
-                // tab (including the LED) and a thin accent rail at its bottom
-                // edge so the LED reads as part of the highlighted area.
-                if (getToggleState())
-                {
-                    g.setColour (findColour (SquidColours::selectedRow));
-                    g.fillRoundedRectangle (full.toFloat(), 3.0f);
-                    g.setColour (findColour (SquidColours::accent));
-                    auto railArea = full;
-                    railArea.removeFromBottom (2);
-                    g.fillRect (railArea.removeFromBottom (2).toFloat());
-                }
-
-                // Text
-                g.setFont (SquidFonts::condensed (11.5f, "SemiBold"));
-                g.setColour (findColour (getToggleState () ? SquidColours::accentText
-                                                          : (isMouseOver ? SquidColours::textDim : SquidColours::menuHeaderText)));
-                g.drawText (getButtonText (), full.withTrimmedLeft (20), juce::Justification::centredLeft, false);
-
-                // show the drop overlay if a file is being dragged (overlay the
-                // tab content area only)
-                if (draggingFile)
-                {
-                    g.setColour (findColour (SquidColours::dropOverlay));
-                    g.fillRoundedRectangle (full.toFloat(), 3.0f);
-                }
-
-                // draw a hairline separator on the right edge so tabs read as
-                // distinct items
-                g.setColour (findColour (SquidColours::outline));
-                const int x = full.getRight () - 1;
-                g.drawVerticalLine (x, static_cast<float> (full.getY () + 3),
-                                    static_cast<float> (full.getBottom () - 3));
             }
         };
     };
 
     juce::Label bankNameLabel;
     juce::TextEditor bankNameEditor;
-    juce::Label unsavedEditsLabel;
-    juce::TextButton saveButton;
+    ActionButton saveButton { "SAVE BANK" };
     MenuButton toolsButton { "BANK TOOLS" };
     bool bankHasUnsavedEdits { false };
+
+    static constexpr int kHeaderHeight { 38 };
+    static constexpr int kTabBarHeight { 31 };
+    static constexpr int kFieldHeight { 23 };
+    static inline const juce::String kUnsavedEditsText { "UNSAVED EDITS" };
+
+    // set in resized, drawn in paint
+    juce::Rectangle<int> headerBounds;
+    juce::Rectangle<int> unsavedEditsBounds;
     TabbedComponentWithDropTabs channelTabs { juce::TabbedButtonBar::Orientation::TabsAtTop };
     std::unique_ptr<juce::FileChooser> fileChooser;
 

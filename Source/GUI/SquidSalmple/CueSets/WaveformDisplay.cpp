@@ -1,5 +1,6 @@
 #include "WaveformDisplay.h"
 #include "../../Theme/SquidColourIds.h"
+#include "../../Theme/SquidFonts.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "oolib/Debug/DebugLog.h"
@@ -17,7 +18,10 @@ constexpr auto kMaxSampleLength { 524287 };
 
 // The Squid only ever deals in 44k1 samples, so the timeline needs no other rate.
 constexpr auto kSquidSampleRate { 44100.0 };
+// the ruler, and the hairline under it
 constexpr auto kTimelineHeight { 18 };
+// vertical divisions behind the trace
+constexpr auto kGridDivisions { 8 };
 
 // Where the view stops drawing the real sample line and switches to the min/max
 // peak envelope. Well above the point where the two representations coincide
@@ -32,6 +36,20 @@ WaveformDisplay::WaveformDisplay ()
 {
     setupColours ();
     waveformView.setPeakEnvelopeThreshold (kPeakEnvelopeThreshold);
+    // the audio outside the cue set is washed back, so start .. end reads as the part that plays
+    waveformView.onPaintOverlay = [this] (juce::Graphics& g, WaveformView& view)
+    {
+        if (audioBuffer == nullptr || markerOverlay.getNumMarkers () <= kEndMarker)
+            return;
+        const auto startX { view.sampleToX (markerOverlay.getPosition (kStartMarker)) };
+        const auto endX { view.sampleToX (markerOverlay.getPosition (kEndMarker)) };
+        const auto height { static_cast<float> (view.getHeight ()) };
+        g.setColour (findColour (SquidColours::waveformShade));
+        if (startX > 0.0f)
+            g.fillRect (juce::Rectangle<float> { 0.0f, 0.0f, startX, height });
+        if (endX < static_cast<float> (view.getWidth ()))
+            g.fillRect (juce::Rectangle<float> { endX, 0.0f, static_cast<float> (view.getWidth ()) - endX, height });
+    };
     waveformView.onViewChanged = [this] () { syncTimelineToView (); };
     addAndMakeVisible (waveformView);
 
@@ -62,12 +80,11 @@ void WaveformDisplay::init (juce::ValueTree rootPropertiesVT)
 
 void WaveformDisplay::setupColours ()
 {
-    // Every part of the waveform is drawn in the one foreground colour, so the
-    // peak envelope, the RMS body inside it and the per-sample line all read as
-    // the single black trace this editor has always shown.
+    // Every part of the waveform is drawn in the one trace colour, so the peak
+    // envelope, the RMS body inside it and the per-sample line all read as the
+    // same trace.
     const auto kBackgroundColour { findColour (SquidColours::waveformBackground) };
     const auto kForegroundColour { findColour (SquidColours::waveformForeground) };
-
 
     WaveformView::ColourScheme waveformColours;
     waveformColours.background = kBackgroundColour;
@@ -75,20 +92,27 @@ void WaveformDisplay::setupColours ()
     waveformColours.rms = kForegroundColour;
     waveformColours.sampleLine = kForegroundColour;
     waveformColours.sampleDot = kForegroundColour;
-    // The old display had no centre line at all, so keep it to a hint of the
-    // foreground rather than a line that competes with the waveform.
-    waveformColours.centreLine = kForegroundColour.withAlpha (0.25f);
+    waveformColours.centreLine = findColour (SquidColours::waveformCentreLine);
     waveformView.setColourScheme (waveformColours);
+    waveformView.setGrid (kGridDivisions, findColour (SquidColours::waveformGrid));
 
     // The timeline is a ruler rather than part of the waveform, so it takes the
     // chrome colours instead of the trace colour.
-    const auto kTimelineInk { findColour (SquidColours::textDim) };
     TimelineComponent::ColourScheme timelineColours;
-    timelineColours.background = kBackgroundColour;
-    timelineColours.majorTick = kTimelineInk;
-    timelineColours.minorTick = kTimelineInk.withAlpha (0.55f);
-    timelineColours.text = kTimelineInk;
+    timelineColours.background = findColour (SquidColours::listBackground);
+    timelineColours.majorTick = findColour (SquidColours::menuHeaderText);
+    timelineColours.minorTick = findColour (SquidColours::textGhost);
+    timelineColours.text = findColour (SquidColours::menuHeaderText);
     timeline.setColourScheme (timelineColours);
+    timeline.setLabelStyle ({ SquidType::ruler (), true, true });
+
+    MarkerOverlay::Appearance markerAppearance;
+    markerAppearance.handleOutline = juce::Colours::transparentBlack;
+    markerAppearance.labelFont = SquidType::markerLabel ();
+    markerAppearance.labelSeparator = ": ";
+    markerAppearance.labelPlate = juce::Colours::transparentBlack;
+    markerAppearance.labelGap = 8.0f;
+    markerOverlay.setAppearance (markerAppearance);
 
     // The markers are added once, by setupMarkers; re-tint them in place rather
     // than rebuilding, so a palette change cannot duplicate them.
@@ -111,10 +135,12 @@ void WaveformDisplay::setupMarkers ()
 {
     // Start and end bracket the cue set, so their handles point inwards, which
     // keeps them apart and readable when the two markers meet. The loop point
-    // hangs off the bottom edge on a dashed line, as it always has, so it never
-    // reads as one of that pair.
+    // hangs off the bottom edge, so it never reads as one of that pair.
     MarkerOverlay::Style startStyle;
     startStyle.colour = findColour (SquidColours::markerStart);
+    startStyle.lineThickness = 1.0f;
+    startStyle.handleWidth = 9.0f;
+    startStyle.handleHeight = 15.0f;
     startStyle.shape = MarkerOverlay::HandleShape::rectangle;
     startStyle.placement = MarkerOverlay::HandlePlacement::top;
     startStyle.alignment = MarkerOverlay::HandleAlignment::rightOfLine;
@@ -122,7 +148,6 @@ void WaveformDisplay::setupMarkers ()
 
     auto loopStyle { startStyle };
     loopStyle.colour = findColour (SquidColours::markerLoop);
-    loopStyle.dashed = true;
     loopStyle.placement = MarkerOverlay::HandlePlacement::bottom;
 
     auto endStyle { startStyle };
@@ -136,9 +161,9 @@ void WaveformDisplay::setupMarkers ()
         marker.style = style;
         markerOverlay.addMarker (marker);
     };
-    addMarker ("Start", startStyle); // kStartMarker
-    addMarker ("Loop", loopStyle);   // kLoopMarker
-    addMarker ("End", endStyle);     // kEndMarker
+    addMarker ("START", startStyle); // kStartMarker
+    addMarker ("LOOP", loopStyle);   // kLoopMarker
+    addMarker ("END", endStyle);     // kEndMarker
 }
 
 void WaveformDisplay::setChannelIndex (int theChannelIndex)
@@ -173,6 +198,7 @@ void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
     LogWaveformDisplay ("setCueEndPoint");
     cueEnd = newCueEnd;
     markerOverlay.setPosition (kEndMarker, cueEnd);
+    waveformView.repaint ();
 }
 
 void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
@@ -196,6 +222,7 @@ void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
     LogWaveformDisplay ("setCueStartPoint");
     cueStart = newCueStart;
     markerOverlay.setPosition (kStartMarker, cueStart);
+    waveformView.repaint ();
 }
 
 void WaveformDisplay::setTimelineUnit (TimelineComponent::Unit unit)
@@ -231,6 +258,8 @@ double WaveformDisplay::constrainMarker (int markerIndex, double proposedPositio
 void WaveformDisplay::markerMoved (int markerIndex)
 {
     const auto newPosition { static_cast<uint32_t> (markerOverlay.getPosition (markerIndex)) };
+    // the wash outside the cue set follows the markers
+    waveformView.repaint ();
     switch (markerIndex)
     {
         case kStartMarker:
@@ -282,6 +311,7 @@ void WaveformDisplay::updateMarkerPositions ()
     markerOverlay.setPosition (kStartMarker, cueStart);
     markerOverlay.setPosition (kLoopMarker, cueLoop);
     markerOverlay.setPosition (kEndMarker, cueEnd);
+    waveformView.repaint ();
 }
 
 void WaveformDisplay::syncTimelineToView ()
@@ -296,19 +326,17 @@ void WaveformDisplay::syncTimelineToView ()
 void WaveformDisplay::resized ()
 {
     LogWaveformDisplay ("resized");
-    // The children sit inside the border this component draws around them.
-    auto bounds { getLocalBounds ().reduced (1) };
+    // the card this sits in draws the edges, so the children take every pixel
+    auto bounds { getLocalBounds () };
     timeline.setBounds (bounds.removeFromTop (kTimelineHeight));
     waveformView.setBounds (bounds);
     markerOverlay.setBounds (bounds);
     syncTimelineToView ();
 }
 
-void WaveformDisplay::paint (juce::Graphics& g)
+void WaveformDisplay::paint (juce::Graphics&)
 {
-    // The children cover everything but the border.
-    g.setColour (findColour (SquidColours::outline));
-    g.drawRect (getLocalBounds ());
+    // the children cover every pixel
 }
 
 void WaveformDisplay::paintOverChildren (juce::Graphics& g)

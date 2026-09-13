@@ -11,6 +11,9 @@
 
     The path is drawn as breadcrumbs rather than a raw path string - the folder
     you are in is the part that matters, so it is the part that is not dimmed.
+    The open bank is added as the last crumb, but only while it is one of the
+    banks of the folder being viewed; move to a folder with no banks and the
+    crumbs stop at that folder.
 */
 class CurrentFolderComponent : public juce::Component
 {
@@ -24,12 +27,13 @@ private:
     GuiProperties guiProperties;
     juce::AudioDeviceManager* audioDeviceManager { nullptr };
 
+    static constexpr int kPadding { 9 };
     juce::StringArray pathSegments;
 
-    ChromeButton outputButton { "OUT" };
-    ChromeButton settingsButton { "SETTINGS" };
+    ChromeButton outputButton { "OUT", ChromeButton::Size::chip };
+    ChromeButton settingsButton { "SETTINGS", ChromeButton::Size::chip };
 
-    void setFolder (juce::String folderName);
+    void refreshPath ();
     void showOutputMenu ();
     void refreshOutputName ();
 

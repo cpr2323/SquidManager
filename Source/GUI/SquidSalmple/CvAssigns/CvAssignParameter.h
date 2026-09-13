@@ -21,11 +21,15 @@ private:
     EditManager* editManager { nullptr };
 
     juce::Label parameterLabel;
-    juce::Label assignEnableLabel;
     RoundedSlideSwitch assignEnableButton;
     juce::Label cvAttenuateLabel;
     CustomTextEditorInt cvAttenuateEditor;
     juce::Label cvOffsetLabel;
+    // The ATN and OFS labels never change, so they are measured once rather than
+    // on every layout: shaping text is expensive, and there are 112 of these
+    // components laid out together.
+    int cvAttenuateLabelWidth { 0 };
+    int cvOffsetLabelWidth { 0 };
     CustomTextEditorInt cvOffsetEditor;
 
     int getCvAttenuatonUiValue (int internalValue);
@@ -39,7 +43,7 @@ private:
     void cvAssignOffsetUiChanged (int offset);
 
     void enablementChanged () override;
-    void paint (juce::Graphics& g) override;
+    void lookAndFeelChanged () override;
     void paintOverChildren (juce::Graphics& g) override;
     void resized () override;
 };

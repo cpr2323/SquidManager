@@ -7,6 +7,7 @@
 CurrentFolderComponent::CurrentFolderComponent ()
 {
     setOpaque (true);
+    outputButton.setShowsCaret (true);
     outputButton.onClick = [this] () { showOutputMenu (); };
     addAndMakeVisible (outputButton);
 
@@ -19,21 +20,32 @@ void CurrentFolderComponent::init (juce::ValueTree rootPropertiesVT)
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::no);
-    appProperties.onMostRecentFileChange = [this] (juce::String folderName) { setFolder (folderName); };
+    // the folder being viewed and the bank last opened change independently
+    appProperties.onMostRecentFolderChange = [this] (juce::String) { refreshPath (); };
+    appProperties.onMostRecentFileChange = [this] (juce::String) { refreshPath (); };
 
     RuntimeRootProperties runtimeRootProperties (rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     audioDeviceManager = systemServices.getAudioDeviceManager ();
 
-    setFolder (appProperties.getRecentlyUsedFile (0));
+    refreshPath ();
     refreshOutputName ();
 }
 
-void CurrentFolderComponent::setFolder (juce::String folderName)
+void CurrentFolderComponent::refreshPath ()
 {
+    const auto viewedFolder { appProperties.getMostRecentFolder () };
     pathSegments.clear ();
-    pathSegments.addTokens (folderName, juce::File::getSeparatorString (), {});
+    pathSegments.addTokens (viewedFolder, juce::File::getSeparatorString (), {});
     pathSegments.removeEmptyStrings ();
+
+    // Banks are the numbered folders inside the folder being viewed, so the last
+    // bank opened is only still open if it is one of those.
+    const auto lastBankOpened { appProperties.getRecentlyUsedFile (0) };
+    if (viewedFolder.isNotEmpty () && lastBankOpened.isNotEmpty ()
+        && juce::File (lastBankOpened).getParentDirectory () == juce::File (viewedFolder))
+        pathSegments.add (juce::File (lastBankOpened).getFileName ());
+
     repaint ();
 }
 
@@ -44,7 +56,7 @@ void CurrentFolderComponent::refreshOutputName ()
         if (auto* device { audioDeviceManager->getCurrentAudioDevice () })
             deviceName = device->getName ();
 
-    outputButton.setButtonText ("OUT  " + deviceName);
+    outputButton.setValueText (deviceName);
     resized ();
 }
 
@@ -85,47 +97,52 @@ void CurrentFolderComponent::showOutputMenu ()
 
 void CurrentFolderComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (findColour (SquidColours::panelHeader));
+    g.fillAll (findColour (SquidColours::listBackground));
     g.setColour (findColour (SquidColours::outline));
     g.drawHorizontalLine (getHeight () - 1, 0.0f, static_cast<float> (getWidth ()));
 
     // breadcrumbs: everything before the current folder is context, so it is dimmed
-    const auto dimColour { findColour (SquidColours::textDim) };
-    const auto currentColour { findColour (SquidColours::text) };
-    const auto separatorColour { findColour (SquidColours::textDim).withAlpha (0.55f) };
+    const auto separator { juce::String (juce::CharPointer_UTF8 ("\xe2\x80\xba")) };
+    constexpr auto kGap { 5 };
+    const auto contextFont { SquidType::body () };
+    const auto currentFont { SquidType::bodyStrong () };
+    const auto textArea { getLocalBounds ().withTrimmedBottom (1) };
 
-    g.setFont (juce::Font (juce::FontOptions (12.0f)));
-    auto x { 10 };
+    auto x { kPadding };
     const auto rightEdge { outputButton.getX () - 12 };
     for (auto segmentIndex { 0 }; segmentIndex < pathSegments.size (); ++segmentIndex)
     {
         const auto isLast { segmentIndex == pathSegments.size () - 1 };
         const auto segment { pathSegments [segmentIndex] };
-        const auto segmentWidth { juce::roundToInt (juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), segment)) + 2 };
+        const auto& font { isLast ? currentFont : contextFont };
+        const auto segmentWidth { SquidPaint::textWidth (font, segment) };
         if (x + segmentWidth > rightEdge)
             break;
 
-        g.setColour (isLast ? currentColour : dimColour);
-        g.drawText (segment, x, 0, segmentWidth, getHeight (), juce::Justification::centredLeft, false);
-        x += segmentWidth;
+        g.setFont (font);
+        g.setColour (findColour (isLast ? SquidColours::text : SquidColours::textDim));
+        g.drawText (segment, textArea.withX (x).withWidth (segmentWidth + 1), juce::Justification::centredLeft, false);
+        x += segmentWidth + kGap;
 
         if (! isLast)
         {
-            g.setColour (separatorColour);
-            g.drawText (">", x + 3, 0, 10, getHeight (), juce::Justification::centredLeft, false);
-            x += 15;
+            const auto separatorWidth { SquidPaint::textWidth (contextFont, separator) };
+            g.setFont (contextFont);
+            g.setColour (findColour (SquidColours::menuHeaderText));
+            g.drawText (separator, textArea.withX (x).withWidth (separatorWidth + 1), juce::Justification::centredLeft, false);
+            x += separatorWidth + kGap;
         }
     }
 }
 
 void CurrentFolderComponent::resized ()
 {
-    auto localBounds { getLocalBounds ().reduced (8, 5) };
-    settingsButton.setBounds (localBounds.removeFromRight (74));
-    localBounds.removeFromRight (6);
+    auto localBounds { getLocalBounds ().withTrimmedBottom (1).reduced (kPadding, 0) };
+    const auto settingsWidth { settingsButton.getIdealWidth () };
+    settingsButton.setBounds (localBounds.removeFromRight (settingsWidth).withSizeKeepingCentre (settingsWidth, ChromeButton::kChipHeight));
+    localBounds.removeFromRight (8);
 
-    const auto outputWidth { juce::jlimit (90, 260,
-                                           juce::roundToInt (juce::GlyphArrangement::getStringWidth (juce::Font (juce::FontOptions (11.0f)),
-                                                                                                     outputButton.getButtonText ())) + 24) };
-    outputButton.setBounds (localBounds.removeFromRight (outputWidth));
+    // a long device name is cut short rather than pushing the path out of view
+    const auto outputWidth { std::min (outputButton.getIdealWidth (), 320) };
+    outputButton.setBounds (localBounds.removeFromRight (outputWidth).withSizeKeepingCentre (outputWidth, ChromeButton::kChipHeight));
 }

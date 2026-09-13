@@ -59,6 +59,24 @@ namespace SquidColours
         // chrome
         tabBackground,
         dialogBackground,
-        menuHeaderText
+        menuHeaderText,                 // the muted ink: inactive tabs, section headers in menus
+
+        textGhost,                      // the quietest ink: separators, unlit values, bank numbers
+        outlineStrong,                  // a border that has to be seen: scroll thumbs, pressed chips
+        hoverBackground,                // behind a tool button under the pointer
+        accentEdge,                     // the lighter rim of an accent fill
+        accentGlow,                     // halo around a lit accent control; none on a light ground
+        switchOnBackground,             // the track of a slide switch that is on
+        ledGlow,                        // halo around a lit led; none on a light ground
+        danger,                         // a destructive tool under the pointer
+        dangerBackground,
+
+        waveformGrid,                   // the vertical divisions behind the trace
+        waveformShade,                  // wash over the audio outside start .. end
+
+        tunerBackground,
+        tunerDash,                      // the loop tuner's zero line
+        tunerDivider,                   // where the loop end meets the loop start
+        tunerCaption
     };
 }

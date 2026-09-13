@@ -30,6 +30,9 @@ private:
     juce::TooltipWindow tooltipWindow;
 
     void restoreLayout ();
+    void applyMinimumPaneWidths ();
+    int constrainFolderPaneOffset (int proposedSplitOffset);
+    int constrainBankPaneOffset (int proposedSplitOffset);
     void saveLayoutChanges ();
     void showSettingsDialog ();
 

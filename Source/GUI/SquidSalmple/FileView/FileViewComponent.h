@@ -15,6 +15,9 @@ public:
 
     void init (juce::ValueTree rootPropertiesVT);
 
+    // narrow enough that the header still fits its title and tools
+    int getMinimumWidth () const;
+
     std::function<void (juce::File audioFile)> onAudioFileSelected;
     std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
 
@@ -35,6 +38,7 @@ private:
     ChromeButton showAllFiles { "ALL" };
     std::unique_ptr<juce::FileChooser> fileChooser;
     juce::ListBox directoryContentsListBox { {}, this };
+    ListRowHover rowHover { directoryContentsListBox };
     juce::CriticalSection queuedFolderLock;
     juce::File queuedFolderToScan;
     bool isRootFolder { false };

@@ -12,6 +12,8 @@
 #endif
 
 const auto kDialogTextEditorName { "foldername" };
+constexpr auto kRowHeight { 24 };
+constexpr auto kToolGap { 6 };
 
 FileViewComponent::FileViewComponent ()
 {
@@ -23,6 +25,8 @@ FileViewComponent::FileViewComponent ()
     newFolderButton.setTooltip ("Create a new folder");
     newFolderButton.onClick = [this] () { newFolder (); };
     addAndMakeVisible (newFolderButton);
+    directoryContentsListBox.setRowHeight (kRowHeight);
+    directoryContentsListBox.setOutlineThickness (0);
     addAndMakeVisible (directoryContentsListBox);
     showAllFiles.setClickingTogglesState (true);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
@@ -166,37 +170,58 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     if (rowIsSelected)
         lastSelectedRow = row;
 
-    juce::Colour textColor { findColour (SquidColours::textDim) };
-    juce::String fileListItem;
+    // A folder row is marked with a triangle and a folder, as a place that opens;
+    // a file row keeps the same indent so the names line up.
+    auto isFolder { true };
+    auto isAudio { false };
+    auto textColourId { static_cast<int> (SquidColours::textDim) };
+    juce::String name;
     if (! isRootFolder && row == 0)
     {
-        fileListItem = " >  ..";
+        name = "..";
     }
     else
     {
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
-        juce::String filePrefix;
-        if (FolderProperties::isFolderVT (directoryEntryVT))
-        {
-            filePrefix = "> ";
-        }
-        else if (isAudioFile (directoryEntryVT))
-        {
-            filePrefix = "-  ";
-            textColor = findColour (SquidColours::textSupported);
-        }
-        else
-        {
-            filePrefix = "   ";
-            textColor = textColor.darker (0.4f);
-        }
-        auto file { juce::File (directoryEntryVT.getProperty ("name").toString ()) };
-        fileListItem = " " + filePrefix + file.getFileName ();
+        isFolder = FolderProperties::isFolderVT (directoryEntryVT);
+        isAudio = ! isFolder && isAudioFile (directoryEntryVT);
+        if (! isFolder)
+            textColourId = isAudio ? SquidColours::textSupported : SquidColours::textGhost;
+        name = juce::File (directoryEntryVT.getProperty ("name").toString ()).getFileName ();
     }
 
-    g.setFont (SquidFonts::sans (12.0f));
-    g.setColour (textColor);
-    g.drawText (fileListItem, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
+    const auto hovered { row == rowHover.getRow () };
+    if (rowIsSelected)
+    {
+        g.fillAll (findColour (SquidColours::selectedRow));
+        g.setColour (findColour (SquidColours::accent));
+        g.fillRect (0, 0, 2, height);
+    }
+
+    auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
+    const auto arrowArea { rowBounds.removeFromLeft (8).toFloat () };
+    rowBounds.removeFromLeft (6);
+    const auto folderArea { rowBounds.removeFromLeft (9).toFloat () };
+    rowBounds.removeFromLeft (6);
+    if (isFolder)
+    {
+        g.setColour (findColour (SquidColours::textGhost));
+        SquidPaint::caretRight (g, arrowArea.getCentre (), 7.0f);
+        g.setColour (findColour (rowIsSelected ? SquidColours::accent : SquidColours::accentDeep));
+        SquidPaint::folder (g, folderArea.withSizeKeepingCentre (9.0f, 8.0f));
+    }
+    else if (isAudio)
+    {
+        g.setColour (findColour (SquidColours::textSupported));
+        SquidPaint::audioFile (g, folderArea.withSizeKeepingCentre (9.0f, 10.0f));
+    }
+
+    g.setFont (SquidType::body ());
+    g.setColour (findColour (rowIsSelected || hovered ? SquidColours::text : textColourId));
+    g.drawText (name, rowBounds, juce::Justification::centredLeft, true);
+
+    if (hovered)
+        ListRowHover::paintOutline (g, *this, width, height);
 }
 
 juce::String FileViewComponent::getTooltipForRow (int row)
@@ -334,25 +359,38 @@ void FileViewComponent::listBoxItemDoubleClicked (int row, [[maybe_unused]] cons
     }
 }
 
+int FileViewComponent::getMinimumWidth () const
+{
+    const auto toolsWidth { openFolderButton.getIdealWidth () + newFolderButton.getIdealWidth () + showAllFiles.getIdealWidth () + (2 * kToolGap) };
+    // plus the outline on either side
+    return paneHeader.getRequiredWidth (toolsWidth) + 2;
+}
+
 void FileViewComponent::resized ()
 {
-    auto localBounds { getLocalBounds () };
-    auto headerBounds { localBounds.removeFromTop (24) };
+    // inside the pane's outline
+    auto localBounds { getLocalBounds ().reduced (1) };
+    auto headerBounds { localBounds.removeFromTop (PaneHeader::kHeight) };
     paneHeader.setBounds (headerBounds);
 
-    // the pane tools live in the header strip, as they do in the banks pane
-    auto toolRow { paneHeader.getFreeBounds ().translated (headerBounds.getX (), headerBounds.getY ()) };
-    showAllFiles.setBounds (toolRow.removeFromRight (32));
-    toolRow.removeFromRight (3);
-    newFolderButton.setBounds (toolRow.removeFromRight (36));
-    toolRow.removeFromRight (3);
-    openFolderButton.setBounds (toolRow.removeFromRight (42));
+    // the pane tools live in the header strip, right aligned
+    auto toolRow { paneHeader.getFreeBounds () + headerBounds.getPosition () };
+    auto placeTool = [&toolRow] (ChromeButton& tool)
+    {
+        tool.setBounds (toolRow.removeFromRight (tool.getIdealWidth ()));
+        toolRow.removeFromRight (kToolGap);
+    };
+    placeTool (showAllFiles);
+    placeTool (newFolderButton);
+    placeTool (openFolderButton);
 
     directoryContentsListBox.setBounds (localBounds);
 }
 
 void FileViewComponent::paint (juce::Graphics& g)
 {
+    // opaque, so the ground behind the rounded corners is this component's to paint
     g.fillAll (findColour (SquidColours::windowBackground));
+    SquidPaint::card (g, *this, getLocalBounds ());
 }
 

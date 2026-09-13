@@ -14,18 +14,19 @@
 */
 namespace SquidLnFProperties
 {
-    // combo box drawn without the drop-down arrow, text across the full width
-    static inline const juce::Identifier noComboBoxArrow { "noComboBoxArrow" };
-    // text button holding a single character, drawn without the usual side indent
-    static inline const juce::Identifier singleGlyphButton { "singleGlyphButton" };
+    // a unit drawn after a combo box's value, as the rate reads "44 kHz"
+    static inline const juce::Identifier valueUnit { "valueUnit" };
+    // set on a TabbedButtonBar whose tabs carry a status led before their name
+    static inline const juce::Identifier tabsHaveLeds { "tabsHaveLeds" };
 }
 
 /*
-    Installs a Palette into JUCE's colour lookup.
+    Installs a Palette into JUCE's colour lookup, and the app's type into its font
+    lookup.
 
     ThemeController sets this as the default LookAndFeel, so every component in
     the app - including popup menus and dialogs, which have no parent to inherit
-    from - resolves its colours through here.
+    from - resolves its colours and default typeface through here.
 */
 class SquidLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -37,16 +38,43 @@ public:
 
     const Palette& getPalette () const noexcept { return palette; }
 
+    // value fields
+    void fillTextEditorBackground (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override;
+    void drawTextEditorOutline (juce::Graphics& g, int width, int height, juce::TextEditor& textEditor) override;
+
     void drawComboBox (juce::Graphics& g, int width, int height, bool isButtonDown,
                        int buttonX, int buttonY, int buttonW, int buttonH,
                        juce::ComboBox& box) override;
     void positionComboBoxText (juce::ComboBox& box, juce::Label& label) override;
     juce::Font getComboBoxFont (juce::ComboBox& box) override;
-    juce::Font getPopupMenuFont () override;
-    int getTabButtonBestWidth (juce::TabBarButton& button, int tabDepth) override;
+
+    // buttons that do not paint themselves: dialogs, alert windows
     juce::Font getTextButtonFont (juce::TextButton& button, int buttonHeight) override;
-    void drawButtonText (juce::Graphics& g, juce::TextButton& button,
-                         bool isMouseOver, bool isButtonDown) override;
+    void drawButtonBackground (juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour,
+                               bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
+
+    // tabs
+    int getTabButtonBestWidth (juce::TabBarButton& button, int tabDepth) override;
+    int getTabButtonOverlap (int tabDepth) override;
+    void drawTabbedButtonBarBackground (juce::TabbedButtonBar& buttonBar, juce::Graphics& g) override;
+    void drawTabAreaBehindFrontButton (juce::TabbedButtonBar& buttonBar, juce::Graphics& g, int width, int height) override;
+
+    // menus
+    juce::Font getPopupMenuFont () override;
+    void drawPopupMenuSectionHeader (juce::Graphics& g, const juce::Rectangle<int>& area, const juce::String& sectionName) override;
+    void getIdealPopupMenuSectionHeaderSizeWithOptions (const juce::String& text, int standardMenuItemHeight,
+                                                        int& idealWidth, int& idealHeight,
+                                                        const juce::PopupMenu::Options& options) override;
+
+    // tooltips: square, since the window is opaque, with a rim that stands off the ground
+    juce::Rectangle<int> getTooltipBounds (const juce::String& tipText, juce::Point<int> screenPos, juce::Rectangle<int> parentArea) override;
+    void drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height) override;
+
+    // scrollbars: a thin rounded thumb and no track
+    int getDefaultScrollbarWidth () override;
+    void drawScrollbar (juce::Graphics& g, juce::ScrollBar& scrollbar, int x, int y, int width, int height,
+                        bool isScrollbarVertical, int thumbStartPosition, int thumbSize,
+                        bool isMouseOver, bool isMouseDown) override;
 
 private:
     void applyPalette ();

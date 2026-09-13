@@ -1,5 +1,6 @@
 #include "BottomStatusWindow.h"
 #include "Theme/SquidColourIds.h"
+#include "Theme/SquidFonts.h"
 #include "oolib/Properties/PersistentRootProperties.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
 
@@ -7,6 +8,8 @@ BottomStatusWindow::BottomStatusWindow ()
 {
     setOpaque (true);
 
+    statusLabel.setFont (SquidType::statusMessage ());
+    statusLabel.setBorderSize ({ 0, 0, 0, 0 });
     addAndMakeVisible (statusLabel);
 
     // Settings now lives in the path bar at the top, alongside the output device;
@@ -29,16 +32,22 @@ void BottomStatusWindow::init (juce::ValueTree rootPropertiesVT)
     };
 }
 
+void BottomStatusWindow::lookAndFeelChanged ()
+{
+    juce::Component::lookAndFeelChanged ();
+    // status messages are secondary to the work, so they are set in the dim ink
+    statusLabel.setColour (juce::Label::textColourId, findColour (SquidColours::textDim));
+}
+
 void BottomStatusWindow::paint (juce::Graphics& g)
 {
-    g.fillAll (findColour (SquidColours::windowBackground));
+    g.fillAll (findColour (SquidColours::listBackground));
     g.setColour (findColour (SquidColours::outline));
-    g.drawRect (getLocalBounds (), 1);
+    g.drawHorizontalLine (0, 0.0f, static_cast<float> (getWidth ()));
 }
 
 void BottomStatusWindow::resized ()
 {
     auto localBounds { getLocalBounds () };
-    localBounds.reduce (5, 3);
-    statusLabel.setBounds (localBounds);
+    statusLabel.setBounds (localBounds.withTrimmedTop (1).reduced (9, 0));
 }

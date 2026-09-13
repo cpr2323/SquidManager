@@ -1,5 +1,6 @@
 #include "LoopPointsView.h"
 #include "../../Theme/SquidColourIds.h"
+#include "../../Theme/SquidFonts.h"
 
 void LoopPointsView::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
@@ -17,18 +18,21 @@ void LoopPointsView::paint (juce::Graphics& g)
     const auto halfWidth { getWidth () / 2 };
     const auto halfHeight { getHeight () / 2 };
 
-    g.setColour (findColour (SquidColours::outline));
+    const auto area { getLocalBounds ().toFloat () };
+    g.setColour (findColour (SquidColours::tunerBackground));
+    g.fillRoundedRectangle (area, 2.0f);
+
+    // the zero line is there whether or not there is audio to hang on it
+    g.setColour (findColour (SquidColours::tunerDash));
+    const auto dashSize { getHeight () / 11.f };
+    std::array<float, 2> dashedSpec { dashSize, dashSize };
+    g.drawDashedLine (juce::Line<int>{ 0, halfHeight, getWidth (), halfHeight }.toFloat (), dashedSpec.data (), 2);
     // NOTE: Squid Salmple samples can only be 11 seconds long, so we use a uint32_t to store offsets and length
     if (audioBuffer != nullptr && static_cast<uint32_t> (audioBuffer->getNumSamples ()) >= numSamples && numSamples > 4)
     {
         juce::dsp::AudioBlock<float> audioBlock { *audioBuffer };
         juce::dsp::AudioBlock<float> loopSamples { audioBlock.getSubBlock (sampleOffset, numSamples) };
         const auto samplesToDisplay { static_cast<int> (std::min<juce::int64> (numSamples, halfWidth)) };
-
-        g.setColour (findColour (SquidColours::waveformCentreLine));
-        const auto dashSize { getHeight () / 11.f };
-        std::array<float, 2> dashedSpec { dashSize, dashSize };
-        g.drawDashedLine (juce::Line<int>{ 0, halfHeight, getWidth (), halfHeight }.toFloat (), dashedSpec.data (), 2);
 
         g.setColour (findColour (SquidColours::waveformForeground));
         auto readPtr { loopSamples.getChannelPointer (0) };
@@ -54,8 +58,20 @@ void LoopPointsView::paint (juce::Graphics& g)
         //jassertfalse;
     }
 
+    // where the end of the loop meets its start
+    g.setColour (findColour (SquidColours::tunerDivider));
+    g.fillRect (halfWidth, 0, 1, getHeight ());
+
+    // which side is which, along the bottom either side of the divider
+    constexpr auto kCaptionGap { 7 };
+    constexpr auto kCaptionHeight { 13 };
+    const auto captionRow { getLocalBounds ().removeFromBottom (kCaptionHeight + 1).withTrimmedBottom (1) };
+    g.setFont (SquidType::caption ());
+    g.setColour (findColour (SquidColours::tunerCaption));
+    g.drawText ("END", captionRow.withRight (halfWidth - kCaptionGap), juce::Justification::centredRight, false);
+    g.drawText ("START", captionRow.withLeft (halfWidth + kCaptionGap + 1), juce::Justification::centredLeft, false);
+
     // set explicitly: these used to inherit whatever colour the trace left behind
     g.setColour (findColour (SquidColours::outline));
-    g.drawRect (getLocalBounds ());
-    g.fillRect (getWidth () / 2, 0, 1, getHeight ());
+    g.drawRoundedRectangle (area.reduced (0.5f), 2.0f, 1.0f);
 }

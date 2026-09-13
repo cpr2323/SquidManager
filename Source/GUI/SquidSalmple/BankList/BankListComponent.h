@@ -18,6 +18,9 @@ public:
     ~BankListComponent () = default;
     void init (juce::ValueTree rootPropertiesVT);
 
+    // narrow enough that the header still fits its title, tool and count
+    int getMinimumWidth () const;
+
     std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
 
 private:
@@ -32,6 +35,7 @@ private:
     PaneHeader paneHeader { "BANKS" };
     ChromeButton showAllBanks { "ALL" };
     juce::ListBox bankListBox { {}, this };
+    ListRowHover rowHover { bankListBox };
     std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
     int numBanks { kMaxBanks };
     juce::File currentFolder;
