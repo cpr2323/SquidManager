@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(SquidManager VERSION 1.4.0)
+project(SquidManager VERSION 1.4)
 
 # Submodules must be initialised before building:
 #   git submodule update --init --recursive
