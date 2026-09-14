@@ -27,6 +27,14 @@ public:
     void setCuePoints (uint32_t newCueStart, uint32_t newCueLoop, uint32_t newCueEnd);
     void setCueStartPoint (uint32_t newCueStart);
 
+    // show the whole sample across the view
+    void fitToView ();
+    // back to a vertical zoom of 1, where full scale fills the height
+    void resetVerticalZoom ();
+
+    // the ruler along the top, so tools beside the display can line up with it
+    static constexpr int kTimelineHeight { 18 };
+
     // The units the ruler (and the marker drag labels) are shown in. Samples by
     // default; right-clicking the ruler switches between samples and time.
     void setTimelineUnit (TimelineComponent::Unit unit);

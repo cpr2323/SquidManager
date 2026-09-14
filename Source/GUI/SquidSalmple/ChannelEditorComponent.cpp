@@ -1228,6 +1228,11 @@ void ChannelEditorComponent::setupComponents ()
     oneShotPlayButton.setTooltip ("Play back the sample once, using the start and end cue points. No DSP is applied.");
     setupPlayButton (oneShotPlayButton, AudioPlayerProperties::PlayMode::once);
 
+    // WAVEFORM TOOLS
+    waveformToolsButton.setTooltip ("WAVEFORM TOOLS");
+    waveformToolsButton.onClick = [this] () { showWaveformToolsMenu (); };
+    addAndMakeVisible (waveformToolsButton);
+
     // CUE SET ADD/DELETE BUTTONS
     addCueSetButton.setTooltip ("Add Cue Set. Will append a new Cue Set to the end.");
     addCueSetButton.onClick = [this] () { appendCueSet (); };
@@ -1321,6 +1326,16 @@ int ChannelEditorComponent::getUiValue (int internalValue)
 int ChannelEditorComponent::getInternalValue (int uiValue)
 {
     return static_cast<int> (uiValue * kScaleStep);
+}
+
+void ChannelEditorComponent::showWaveformToolsMenu ()
+{
+    juce::PopupMenu menu;
+    menu.addSectionHeader ("WAVEFORM");
+    menu.addSeparator ();
+    menu.addItem ("Fit To View", [this] () { waveformDisplay.fitToView (); });
+    menu.addItem ("Reset Vertical Zoom", [this] () { waveformDisplay.resetVerticalZoom (); });
+    menu.showMenuAsync (juce::PopupMenu::Options ().withTargetComponent (&waveformToolsButton));
 }
 
 void ChannelEditorComponent::setCueEditButtonsEnableState ()
@@ -2239,9 +2254,10 @@ void ChannelEditorComponent::resized ()
     placeChips (topCueChipBounds.withTrimmedBottom (1), 0);
     placeChips (bottomCueChipBounds.withTrimmedTop (1), 32);
 
-    // add and delete stacked beside the waveform, split by a hairline
+    // the waveform menu level with the ruler, then add and delete below it, split by hairlines
     cueToolBounds = cueCard.removeFromLeft (kCueToolWidth + 1);
     auto cueTools { cueToolBounds.withTrimmedRight (1) };
+    waveformToolsButton.setBounds (cueTools.removeFromTop (WaveformDisplay::kTimelineHeight).withTrimmedBottom (1));
     addCueSetButton.setBounds (cueTools.removeFromTop (cueTools.getHeight () / 2).withTrimmedBottom (1));
     deleteCueSetButton.setBounds (cueTools);
     waveformDisplay.setBounds (cueCard);

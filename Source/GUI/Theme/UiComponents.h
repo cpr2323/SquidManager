@@ -74,6 +74,41 @@ namespace SquidPaint
         g.fillPath (caret);
     }
 
+    // A gear, for a menu of settings: a toothed ring with a hole, drawn as one path
+    // so the hole is cut out rather than painted over.
+    inline void gear (juce::Graphics& g, juce::Rectangle<float> bounds)
+    {
+        static constexpr auto kTeeth { 8 };
+        const auto centre { bounds.getCentre () };
+        const auto outerRadius { std::min (bounds.getWidth (), bounds.getHeight ()) * 0.5f };
+        const auto rootRadius { outerRadius * 0.74f };
+        const auto holeRadius { outerRadius * 0.34f };
+        const auto toothHalfAngle { juce::MathConstants<float>::pi / static_cast<float> (kTeeth) * 0.5f };
+
+        juce::Path shape;
+        auto started { false };
+        for (auto tooth { 0 }; tooth < kTeeth; ++tooth)
+        {
+            const auto angle { juce::MathConstants<float>::twoPi * static_cast<float> (tooth) / static_cast<float> (kTeeth) };
+            const auto points = { centre.getPointOnCircumference (rootRadius, angle - (toothHalfAngle * 2.0f)),
+                                  centre.getPointOnCircumference (outerRadius, angle - toothHalfAngle),
+                                  centre.getPointOnCircumference (outerRadius, angle + toothHalfAngle),
+                                  centre.getPointOnCircumference (rootRadius, angle + (toothHalfAngle * 2.0f)) };
+            for (const auto& point : points)
+            {
+                if (! started)
+                    shape.startNewSubPath (point);
+                else
+                    shape.lineTo (point);
+                started = true;
+            }
+        }
+        shape.closeSubPath ();
+        shape.addEllipse (centre.x - holeRadius, centre.y - holeRadius, holeRadius * 2.0f, holeRadius * 2.0f);
+        shape.setUsingNonZeroWinding (false);
+        g.fillPath (shape);
+    }
+
     // An audio file: a short run of bars of differing heights, like a waveform.
     inline void audioFile (juce::Graphics& g, juce::Rectangle<float> bounds)
     {

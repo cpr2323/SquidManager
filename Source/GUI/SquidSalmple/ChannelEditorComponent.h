@@ -269,8 +269,9 @@ private:
     };
 
     /*
-        Add and delete cue set, stacked beside the waveform. Deleting is the one
-        destructive tool in the editor, so it warns in red under the pointer.
+        The tools stacked beside the waveform: the waveform menu, level with the
+        ruler, then add and delete cue set. Deleting is the one destructive tool in
+        the editor, so it warns in red under the pointer.
     */
     class CueToolButton : public juce::Button
     {
@@ -279,6 +280,9 @@ private:
             : juce::Button ({}), glyph (std::move (glyphText)), destructive (isDestructive)
         {
         }
+
+        // an empty glyph draws a gear
+        static inline const juce::String kGear {};
 
         void paintButton (juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
         {
@@ -291,10 +295,15 @@ private:
                 g.setColour (findColour (SquidColours::accentDeep));
                 g.drawRect (getLocalBounds (), 1);
             }
-            g.setFont (SquidType::glyph ());
             g.setColour (findColour (! enabled ? SquidColours::textGhost
                                                : (hovered ? (destructive ? SquidColours::danger : SquidColours::text)
                                                           : SquidColours::textDim)));
+            if (glyph.isEmpty ())
+            {
+                SquidPaint::gear (g, getLocalBounds ().toFloat ().withSizeKeepingCentre (11.0f, 11.0f));
+                return;
+            }
+            g.setFont (SquidType::glyph ());
             g.drawText (glyph, getLocalBounds (), juce::Justification::centred, false);
         }
 
@@ -306,12 +315,14 @@ private:
     CvAssignEditor cvAssignEditor;
 
 
+    CueToolButton waveformToolsButton { CueToolButton::kGear, false };
     CueToolButton addCueSetButton { "+", false };
     CueToolButton deleteCueSetButton { juce::String (juce::CharPointer_UTF8 ("\xe2\x88\x92")), true };
 
     int curCueSetIndex { 0 };
 
     void appendCueSet ();
+    void showWaveformToolsMenu ();
     void configFileSelectorFromChannelSource ();
     void deleteCueSet (int cueSetIndex);
     int getFilterFrequencyUiValue (int internalValue);

@@ -18,8 +18,6 @@ constexpr auto kMaxSampleLength { 524287 };
 
 // The Squid only ever deals in 44k1 samples, so the timeline needs no other rate.
 constexpr auto kSquidSampleRate { 44100.0 };
-// the ruler, and the hairline under it
-constexpr auto kTimelineHeight { 18 };
 // vertical divisions behind the trace
 constexpr auto kGridDivisions { 8 };
 
@@ -223,6 +221,18 @@ void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
     cueStart = newCueStart;
     markerOverlay.setPosition (kStartMarker, cueStart);
     waveformView.repaint ();
+}
+
+void WaveformDisplay::fitToView ()
+{
+    waveformView.zoomToFit ();
+    // zoomToFit does not report a view change, so the ruler and markers are told here
+    syncTimelineToView ();
+}
+
+void WaveformDisplay::resetVerticalZoom ()
+{
+    waveformView.setVerticalZoom (1.0f);
 }
 
 void WaveformDisplay::setTimelineUnit (TimelineComponent::Unit unit)
