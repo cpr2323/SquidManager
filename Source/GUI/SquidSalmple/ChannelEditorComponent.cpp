@@ -1391,10 +1391,13 @@ void ChannelEditorComponent::init (juce::ValueTree squidChannelPropertiesVT, juc
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::client, AppProperties::EnableCallbacks::yes);
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     editManager = systemServices.getEditManager ();
+    jassert (editManager != nullptr);
 
     sampleFileNameSelectLabel.setFileFilter (editManager->getFileTypesList ());
     // FileSelectLabel defaults to a generic prompt, since it is shared across applications
     sampleFileNameSelectLabel.setDialogTitle ("Please select the Squid Salmple file you want to load...");
+
+    loopPointsView.init (squidChannelPropertiesVT, rootPropertiesVT);
 
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::client, AudioPlayerProperties::EnableCallbacks::yes);
     audioPlayerProperties.onPlayStateChange = [this] (AudioPlayerProperties::PlayState playState)

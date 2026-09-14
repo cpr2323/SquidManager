@@ -1,6 +1,16 @@
 #include "LoopPointsView.h"
 #include "../../Theme/SquidColourIds.h"
 #include "../../Theme/SquidFonts.h"
+#include "../../../SystemServices.h"
+
+void LoopPointsView::init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT)
+{
+    RuntimeRootProperties runtimeRootProperties { rootPropertiesVT, RuntimeRootProperties::WrapperType::client, RuntimeRootProperties::EnableCallbacks::no };
+    SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
+    editManager = systemServices.getEditManager ();
+    jassert (editManager != nullptr);
+    squidChannelProperties.wrap (squidChannelPropertiesVT, SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::yes);
+}
 
 void LoopPointsView::setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer)
 {
@@ -11,6 +21,61 @@ void LoopPointsView::setLoopPoints (uint32_t theSampleOffset, uint32_t theNumSam
 {
     sampleOffset = theSampleOffset;
     numSamples = theNumSamples;
+}
+
+void LoopPointsView::mouseDown (const juce::MouseEvent& event)
+{
+    if (! event.mods.isPopupMenu ())
+        return;
+
+    enum WhichEndOfLoop { loopCue, endCue };
+    WhichEndOfLoop whichEndOfLoop { event.getMouseDownPosition ().getX () < getWidth () / 2 ? WhichEndOfLoop::endCue : WhichEndOfLoop::loopCue };
+    juce::PopupMenu loopTunerMenu;
+    loopTunerMenu.addSectionHeader ("Sample " + juce::String (whichEndOfLoop == WhichEndOfLoop::endCue ? "End" : "Loop"));
+    loopTunerMenu.addSeparator ();
+    {
+        juce::PopupMenu zeroCrossingMenuOptions;
+        if (whichEndOfLoop == WhichEndOfLoop::endCue)
+        {
+            zeroCrossingMenuOptions.addItem ("Left  <<", true, false, [this] ()
+            {
+                auto newEndCue { editManager->findPreviousZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()),
+                                                                        SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()),
+                                                                        *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
+                if (newEndCue != -1)
+                    squidChannelProperties.setEndCue (SquidChannelProperties::sampleOffsetToByteOffset (newEndCue), true);
+            });
+            zeroCrossingMenuOptions.addItem ("Right >>", true, false, [this] ()
+            {
+                auto newEndCue { editManager->findNextZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()),
+                                                                    squidChannelProperties.getSampleDataNumSamples (),
+                                                                    *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
+                if (newEndCue != -1)
+                    squidChannelProperties.setEndCue (SquidChannelProperties::sampleOffsetToByteOffset (newEndCue), true);
+            });
+        }
+        else
+        {
+            zeroCrossingMenuOptions.addItem ("Left  <<", true, false, [this] ()
+            {
+                auto newLoopCue { editManager->findPreviousZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()),
+                                                                        SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCue ()),
+                                                                        *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
+                if (newLoopCue != -1)
+                    squidChannelProperties.setLoopCue (SquidChannelProperties::sampleOffsetToByteOffset (newLoopCue), true);
+            });
+            zeroCrossingMenuOptions.addItem ("Right >>", true, false, [this] ()
+            {
+                auto newLoopCue { editManager->findNextZeroCrossing (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCue ()),
+                                                                    SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCue ()),
+                                                                    *squidChannelProperties.getSampleDataAudioBuffer ().get ()->getAudioBuffer ()) };
+                if (newLoopCue != -1)
+                    squidChannelProperties.setLoopCue (SquidChannelProperties::sampleOffsetToByteOffset (newLoopCue), true);
+            });
+        }
+        loopTunerMenu.addSubMenu ("Zero Crossing", zeroCrossingMenuOptions);
+    }
+    loopTunerMenu.showMenuAsync ({});
 }
 
 void LoopPointsView::paint (juce::Graphics& g)
@@ -69,7 +134,7 @@ void LoopPointsView::paint (juce::Graphics& g)
     g.setFont (SquidType::caption ());
     g.setColour (findColour (SquidColours::tunerCaption));
     g.drawText ("END", captionRow.withRight (halfWidth - kCaptionGap), juce::Justification::centredRight, false);
-    g.drawText ("START", captionRow.withLeft (halfWidth + kCaptionGap + 1), juce::Justification::centredLeft, false);
+    g.drawText ("LOOP", captionRow.withLeft (halfWidth + kCaptionGap + 1), juce::Justification::centredLeft, false);
 
     // set explicitly: these used to inherit whatever colour the trace left behind
     g.setColour (findColour (SquidColours::outline));

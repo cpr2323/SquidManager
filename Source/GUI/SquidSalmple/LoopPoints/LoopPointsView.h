@@ -1,12 +1,12 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../../../SquidSalmple/EditManager/EditManager.h"
 
-// TODO - refactor to take a ChannelProperties VT and get the data from there
-//        Will just need an function to set whether to use Sample or Loop points
 class LoopPointsView : public juce::Component
 {
 public:
+    void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void setAudioBuffer (juce::AudioBuffer<float>* theAudioBuffer);
     void setLoopPoints (uint32_t theSampleOffset, uint32_t theNumSamples);
 
@@ -14,6 +14,11 @@ private:
     juce::AudioBuffer<float>* audioBuffer { nullptr };
     uint32_t sampleOffset { 0 };
     uint32_t numSamples { 0 };
+    SquidChannelProperties squidChannelProperties;
 
-    void paint (juce::Graphics& g);
+    EditManager* editManager { nullptr };
+
+    void mouseDown (const juce::MouseEvent& event) override;
+
+    void paint (juce::Graphics& g) override;
 };
