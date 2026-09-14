@@ -137,13 +137,19 @@ juce::ValueTree FileViewComponent::getDirectoryEntryVT (int row)
     return directoryListQuickLookupList [quickLookupIndex];
 }
 
+void FileViewComponent::selectedRowsChanged (int lastRowSelected)
+{
+    // The list is for navigating, not choosing: clicking a folder opens it, and
+    // nothing in the list stays marked as active afterwards. The ListBox selects a
+    // row on every click before telling the model, so the selection is undone here.
+    if (lastRowSelected >= 0)
+        directoryContentsListBox.deselectAllRows ();
+}
+
 void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width, int height, [[maybe_unused]] bool rowIsSelected)
 {
     if (row >= getNumRows ())
         return;
-
-    if (rowIsSelected)
-        lastSelectedRow = row;
 
     // A folder row is marked with a triangle and a folder, as a place that opens;
     // a file row keeps the same indent so the names line up.
@@ -166,19 +172,13 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     }
 
     const auto hovered { row == rowHover.getRow () };
-    if (rowIsSelected)
-    {
-        g.fillAll (findColour (SquidColours::selectedRow));
-        g.setColour (findColour (SquidColours::accent));
-        g.fillRect (0, 0, 2, height);
-    }
 
     auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
     const auto folderArea { rowBounds.removeFromLeft (9).toFloat () };
     rowBounds.removeFromLeft (6);
     if (isFolder)
     {
-        g.setColour (findColour (rowIsSelected ? SquidColours::accent : SquidColours::accentDeep));
+        g.setColour (findColour (SquidColours::accentDeep));
         SquidPaint::folder (g, folderArea.withSizeKeepingCentre (9.0f, 8.0f));
     }
     else if (isAudio)
@@ -188,7 +188,7 @@ void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
     }
 
     g.setFont (SquidType::body ());
-    g.setColour (findColour (rowIsSelected || hovered ? SquidColours::text : textColourId));
+    g.setColour (findColour (hovered ? SquidColours::text : textColourId));
     g.drawText (name, rowBounds, juce::Justification::centredLeft, true);
 
     if (hovered)
@@ -303,12 +303,8 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 
         if (overwriteBankOrCancel != nullptr)
         {
-            auto cancelSelection = [this] ()
-            {
-                directoryContentsListBox.selectRow (lastSelectedRow, false, true);
-            };
-
-            overwriteBankOrCancel (completeSelection, cancelSelection);
+            // nothing was marked when the folder was clicked, so there is nothing to put back
+            overwriteBankOrCancel (completeSelection, [] () {});
         }
         else
         {

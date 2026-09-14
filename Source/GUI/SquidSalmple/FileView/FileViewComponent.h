@@ -42,7 +42,6 @@ private:
     juce::CriticalSection queuedFolderLock;
     juce::File queuedFolderToScan;
     bool isRootFolder { false };
-    int lastSelectedRow { -1 };
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
     std::unique_ptr<juce::AlertWindow> newAlertWindow;
 
@@ -60,5 +59,6 @@ private:
     void listBoxItemClicked (int row, const juce::MouseEvent& me) override;
     void listBoxItemDoubleClicked (int row, const juce::MouseEvent& me) override;
     void paintListBoxItem (int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
+    void selectedRowsChanged (int lastRowSelected) override;
 };
     
