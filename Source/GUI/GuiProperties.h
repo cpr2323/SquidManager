@@ -19,7 +19,7 @@ public:
     void setPaneSizes (int pane1Size, int pane2Size, int pane3Size, bool includeSelfCallback);
     // 0.0 is the near-black scheme. Persisted now so the setting survives before
     // there is any UI to change it.
-    void setGroundLevel (float groundLevel, bool includeSelfCallback);
+    void setBackgroundLevel (float backgroundLevel, bool includeSelfCallback);
     // a request for the settings window; whoever shows it listens for this
     void showSettingsDialog (bool includeSelfCallback);
     // the settings page last looked at, so the window reopens where it was left
@@ -28,17 +28,17 @@ public:
     std::tuple<int,int> getPosition ();
     std::tuple<int, int> getSize ();
     std::tuple<int, int, int> getPaneSizes ();
-    float getGroundLevel ();
+    float getBackgroundLevel ();
     juce::String getSettingsTabName ();
 
-    std::function<void (float groundLevel)> onGroundLevelChange;
+    std::function<void (float backgroundLevel)> onBackgroundLevelChange;
     std::function<void ()> onShowSettingsDialog;
 
     static inline const juce::Identifier GuiTypeId { "GUI" };
     static inline const juce::Identifier PositionPropertyId    { "position" };
     static inline const juce::Identifier SizePropertyId        { "size" };
     static inline const juce::Identifier PaneSizesPropertyId   { "paneSizes" };
-    static inline const juce::Identifier GroundLevelPropertyId { "groundLevel" };
+    static inline const juce::Identifier BackgroundLevelPropertyId { "backgroundLevel" };
     static inline const juce::Identifier ShowSettingsDialogPropertyId { "showSettingsDialog" };
     static inline const juce::Identifier SettingsTabNamePropertyId    { "settingsTabName" };
 

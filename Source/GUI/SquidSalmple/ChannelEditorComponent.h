@@ -131,7 +131,7 @@ private:
             // Dimmed by mixing the text toward the field it sits on, rather than using
             // the dim ink. That ink is tuned to be legible on its own, so in the middle
             // of the background slider it comes out nearly as strong as normal text;
-            // a mix keeps the dimmed name clearly weaker at every ground level.
+            // a mix keeps the dimmed name clearly weaker at every background level.
             g.setColour (enabled ? ink : ink.interpolatedWith (findColour (SquidColours::fieldBackground), kDimmedMix));
             g.drawText (name, content, juce::Justification::centredLeft, true);
         }

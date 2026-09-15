@@ -2300,7 +2300,7 @@ void ChannelEditorComponent::paint (juce::Graphics& g)
 {
     g.fillAll (findColour (SquidColours::windowBackground));
 
-    // Each section is a panel lifted off the ground, so the editor reads as a few
+    // Each section is a panel lifted off the background, so the editor reads as a few
     // blocks rather than one field of controls.
     const std::array<juce::Rectangle<int>, 4> cards { sampleCardBounds, parameterPanelBounds, cueSetsCardBounds, cvAssignCardBounds };
     for (const auto& card : cards)

@@ -7,7 +7,7 @@ const auto defaultHeight { 609 };
 const auto defaultSplitter1Offset { 140 };
 const auto defaultSplitter2Offset { 170 };
 const auto defaultSplitter3Offset { 480 };
-const auto defaultGroundLevel { 0.0f };
+const auto defaultBackgroundLevel { 0.0f };
 // empty means 'no preference yet', so the window opens on its first tab
 const auto defaultSettingsTabName { juce::String () };
 
@@ -16,7 +16,7 @@ void GuiProperties::initValueTree ()
     setPosition (defaultXPos, defaultYPos, false);
     setSize (defaultWidth, defaultHeight, false);
     setPaneSizes (defaultSplitter1Offset, defaultSplitter2Offset, defaultSplitter3Offset, false);
-    setGroundLevel (defaultGroundLevel, false);
+    setBackgroundLevel (defaultBackgroundLevel, false);
     setValue (false, ShowSettingsDialogPropertyId, false);
     setSettingsTabName (defaultSettingsTabName, false);
 }
@@ -29,8 +29,8 @@ void GuiProperties::processValueTree ()
         setSize (defaultWidth, defaultHeight, false);
     if (! data.hasProperty (PaneSizesPropertyId))
         setPaneSizes (defaultSplitter1Offset, defaultSplitter2Offset, defaultSplitter3Offset, false);
-    if (! data.hasProperty (GroundLevelPropertyId))
-        setGroundLevel (defaultGroundLevel, false);
+    if (! data.hasProperty (BackgroundLevelPropertyId))
+        setBackgroundLevel (defaultBackgroundLevel, false);
     if (! data.hasProperty (ShowSettingsDialogPropertyId))
         setValue (false, ShowSettingsDialogPropertyId, false);
     if (! data.hasProperty (SettingsTabNamePropertyId))
@@ -54,9 +54,9 @@ void GuiProperties::setPaneSizes (int pane1Size, int pane2Size, int pane3Size, b
     setValue (paneSizes, PaneSizesPropertyId, includeSelfCallback);
 }
 
-void GuiProperties::setGroundLevel (float groundLevel, bool includeSelfCallback)
+void GuiProperties::setBackgroundLevel (float backgroundLevel, bool includeSelfCallback)
 {
-    setValue (std::clamp (groundLevel, 0.0f, 1.0f), GroundLevelPropertyId, includeSelfCallback);
+    setValue (std::clamp (backgroundLevel, 0.0f, 1.0f), BackgroundLevelPropertyId, includeSelfCallback);
 }
 
 void GuiProperties::showSettingsDialog (bool includeSelfCallback)
@@ -90,9 +90,9 @@ std::tuple<int, int, int> GuiProperties::getPaneSizes ()
     return { values [0].getIntValue (), values [1].getIntValue (), values [2].getIntValue () };
 }
 
-float GuiProperties::getGroundLevel ()
+float GuiProperties::getBackgroundLevel ()
 {
-    return getValue<float> (GroundLevelPropertyId);
+    return getValue<float> (BackgroundLevelPropertyId);
 }
 
 juce::String GuiProperties::getSettingsTabName ()
@@ -104,10 +104,10 @@ void GuiProperties::valueTreePropertyChanged (juce::ValueTree& treeWhoseProperty
 {
     if (treeWhosePropertyHasChanged == data)
     {
-        if (property == GroundLevelPropertyId)
+        if (property == BackgroundLevelPropertyId)
         {
-            if (onGroundLevelChange != nullptr)
-                onGroundLevelChange (getGroundLevel ());
+            if (onBackgroundLevelChange != nullptr)
+                onBackgroundLevelChange (getBackgroundLevel ());
         }
         else if (property == ShowSettingsDialogPropertyId)
         {

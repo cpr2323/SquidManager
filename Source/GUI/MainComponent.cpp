@@ -5,7 +5,7 @@
 
 const auto kPathBarHeight { 34 };
 const auto kStatusBarHeight { 26 };
-// the ground showing around and between the panes
+// the background showing around and between the panes
 const auto kPaneMargin { 5 };
 
 MainComponent::MainComponent (juce::ValueTree rootPropertiesVT)
@@ -124,7 +124,7 @@ void MainComponent::saveLayoutChanges ()
 void MainComponent::paint (juce::Graphics& g)
 {
     // the children do not cover every pixel, so this has to paint the gaps -
-    // without it, a palette change leaves the old ground showing through
+    // without it, a palette change leaves the old background showing through
     g.fillAll (findColour (SquidColours::windowBackground));
 }
 

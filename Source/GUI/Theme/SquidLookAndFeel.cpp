@@ -37,9 +37,9 @@ SquidLookAndFeel::SquidLookAndFeel ()
     setDefaultSansSerifTypeface (SquidFonts::getDefaultTypeface ());
 }
 
-void SquidLookAndFeel::setGround (float newGround)
+void SquidLookAndFeel::setBackground (float newBackground)
 {
-    palette.setGround (newGround);
+    palette.setBackground (newBackground);
     applyPalette ();
 }
 

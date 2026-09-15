@@ -323,7 +323,7 @@ void BankListComponent::resized ()
 
 void BankListComponent::paint (juce::Graphics& g)
 {
-    // opaque, so the ground behind the rounded corners is this component's to paint
+    // opaque, so the background behind the rounded corners is this component's to paint
     g.fillAll (findColour (SquidColours::windowBackground));
     SquidPaint::card (g, *this, getLocalBounds ());
 }

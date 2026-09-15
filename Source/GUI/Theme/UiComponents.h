@@ -16,7 +16,7 @@
 namespace SquidPaint
 {
     // A section of the editor, or a whole pane: a filled, outlined panel lifted
-    // off the ground.
+    // off the background.
     inline void card (juce::Graphics& g, const juce::Component& colourSource, juce::Rectangle<int> bounds,
                       int fillColourId = SquidColours::listBackground, float cornerSize = 3.0f)
     {
@@ -137,8 +137,8 @@ namespace SquidPaint
 /*
     The module reports itself with LEDs, so the app does too: a hollow ring for
     "nothing here", a lit dot for "has content". Two states only - anything more
-    would be inventing information the app does not have. On a dark ground a lit
-    led carries a soft halo; the ledGlow token fades that out as the ground lightens.
+    would be inventing information the app does not have. On a dark background a lit
+    led carries a soft halo; the ledGlow token fades that out as the background lightens.
 */
 class StatusLed : public juce::Component
 {

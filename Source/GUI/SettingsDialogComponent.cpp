@@ -122,16 +122,16 @@ void SettingsDialogComponent::AppearancePage::init (juce::ValueTree rootProperti
     guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::yes);
 
     // follow the stored value, wherever it was changed from
-    guiProperties.onGroundLevelChange = [this] (float groundLevel)
+    guiProperties.onBackgroundLevelChange = [this] (float backgroundLevel)
     {
-        backgroundSlider.setValue (groundLevel, juce::NotificationType::dontSendNotification);
+        backgroundSlider.setValue (backgroundLevel, juce::NotificationType::dontSendNotification);
     };
-    backgroundSlider.setValue (guiProperties.getGroundLevel (), juce::NotificationType::dontSendNotification);
+    backgroundSlider.setValue (guiProperties.getBackgroundLevel (), juce::NotificationType::dontSendNotification);
 
     // write only; whoever cares about the new value is listening for it
     backgroundSlider.onValueChange = [this] ()
     {
-        guiProperties.setGroundLevel (static_cast<float> (backgroundSlider.getValue ()), false);
+        guiProperties.setBackgroundLevel (static_cast<float> (backgroundSlider.getValue ()), false);
     };
 }
 

@@ -20,24 +20,24 @@ void ThemeController::init (juce::ValueTree rootPropertiesVT)
 {
     PersistentRootProperties persistentRootProperties (rootPropertiesVT, PersistentRootProperties::WrapperType::client, PersistentRootProperties::EnableCallbacks::no);
     guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::client, GuiProperties::EnableCallbacks::yes);
-    guiProperties.onGroundLevelChange = [this] (float groundLevel) { requestGround (groundLevel); };
+    guiProperties.onBackgroundLevelChange = [this] (float backgroundLevel) { requestBackground (backgroundLevel); };
 
     // the stored level is applied straight away, before there is anything to repaint
-    requestedGround = guiProperties.getGroundLevel ();
-    appliedGround = requestedGround;
-    applyGround (requestedGround);
+    requestedBackground = guiProperties.getBackgroundLevel ();
+    appliedBackground = requestedBackground;
+    applyBackground (requestedBackground);
 }
 
-void ThemeController::requestGround (float groundLevel)
+void ThemeController::requestBackground (float backgroundLevel)
 {
-    requestedGround = groundLevel;
+    requestedBackground = backgroundLevel;
 
     // First change of a gesture goes through immediately, so dragging the slider
     // responds at once rather than after a tick.
     if (! isTimerRunning ())
     {
-        appliedGround = requestedGround;
-        applyGround (requestedGround);
+        appliedBackground = requestedBackground;
+        applyBackground (requestedBackground);
         startTimer (kMinIntervalMs);
         return;
     }
@@ -48,10 +48,10 @@ void ThemeController::requestGround (float groundLevel)
 
 void ThemeController::timerCallback ()
 {
-    if (! juce::approximatelyEqual (requestedGround, appliedGround))
+    if (! juce::approximatelyEqual (requestedBackground, appliedBackground))
     {
-        appliedGround = requestedGround;
-        applyGround (requestedGround);
+        appliedBackground = requestedBackground;
+        applyBackground (requestedBackground);
         // keep running: the gesture is still going, and the value that arrives
         // after this one still has to land
         return;
@@ -61,9 +61,9 @@ void ThemeController::timerCallback ()
     stopTimer ();
 }
 
-void ThemeController::applyGround (float groundLevel)
+void ThemeController::applyBackground (float backgroundLevel)
 {
-    lookAndFeel.setGround (groundLevel);
+    lookAndFeel.setBackground (backgroundLevel);
 
     // Every top level window has to be told, not just the main one: the settings
     // dialog and any open popup are siblings on the desktop, not children of it.

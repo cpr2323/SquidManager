@@ -17,7 +17,7 @@ namespace SquidColours
     enum ColourIds
     {
         // surfaces
-        windowBackground = 0x53710001,  // the ground every editor pane fills with
+        windowBackground = 0x53710001,  // the background every editor pane fills with
         fieldBackground,                // text editors, combo boxes
         listBackground,                 // list boxes and panes
         panelHeader,                    // strips that sit above a pane's content
@@ -61,9 +61,9 @@ namespace SquidColours
         outlineStrong,                  // a border that has to be seen: scroll thumbs, pressed chips
         hoverBackground,                // behind a tool button under the pointer
         accentEdge,                     // the lighter rim of an accent fill
-        accentGlow,                     // halo around a lit accent control; none on a light ground
+        accentGlow,                     // halo around a lit accent control; none on a light background
         switchOnBackground,             // the track of a slide switch that is on
-        ledGlow,                        // halo around a lit led; none on a light ground
+        ledGlow,                        // halo around a lit led; none on a light background
         danger,                         // a destructive tool under the pointer
         dangerBackground,
 

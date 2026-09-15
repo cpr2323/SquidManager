@@ -6,7 +6,7 @@
 /*
     The single place every colour in the app is decided.
 
-    A Palette resolves every (colourId, colour) pair from one scalar: the ground
+    A Palette resolves every (colourId, colour) pair from one scalar: the background
     level, 0.0 being the near-black scheme and 1.0 a white one. Nothing else in
     the app picks a colour literal.
 
@@ -24,7 +24,7 @@
 
     The switch is per-surface, not global: the waveform lane starts as the
     darkest thing in the window and ends lighter than the panels, so it crosses
-    at a different ground level than the panels do. Each flip token names the
+    at a different background level than the panels do. Each flip token names the
     surface it actually sits on.
 */
 class Palette
@@ -32,8 +32,8 @@ class Palette
 public:
     Palette ();
 
-    void  setGround (float newGround);
-    float getGround () const noexcept { return ground; }
+    void  setBackground (float newBackground);
+    float getBackground () const noexcept { return background; }
 
     juce::Colour get (int colourId) const;
 
@@ -47,7 +47,7 @@ public:
 
 private:
     // Which resolved surface a flip token sits on.
-    enum class Surface { none, ground, lane, accentFill };
+    enum class Surface { none, background, lane, accentFill };
 
     struct TokenSpec
     {
@@ -59,11 +59,11 @@ private:
     };
 
     void resolve ();
-    juce::Colour resolveToken (const TokenSpec& spec, float groundLevel,
+    juce::Colour resolveToken (const TokenSpec& spec, float backgroundLevel,
                                const std::vector<float>& surfaceLuminance,
                                const std::vector<float>& surfaceLuminanceAtWhite) const;
 
-    float ground { 0.0f };
+    float background { 0.0f };
     std::vector<TokenSpec> specs;
     std::vector<std::pair<int, juce::Colour>> colours;
 };

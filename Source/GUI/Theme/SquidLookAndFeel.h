@@ -33,8 +33,8 @@ class SquidLookAndFeel : public juce::LookAndFeel_V4
 public:
     SquidLookAndFeel ();
 
-    void setGround (float newGround);
-    float getGround () const noexcept { return palette.getGround (); }
+    void setBackground (float newBackground);
+    float getBackground () const noexcept { return palette.getBackground (); }
 
     const Palette& getPalette () const noexcept { return palette; }
 
@@ -66,7 +66,7 @@ public:
                                                         int& idealWidth, int& idealHeight,
                                                         const juce::PopupMenu::Options& options) override;
 
-    // tooltips: square, since the window is opaque, with a rim that stands off the ground
+    // tooltips: square, since the window is opaque, with a rim that stands off the background
     juce::Rectangle<int> getTooltipBounds (const juce::String& tipText, juce::Point<int> screenPos, juce::Rectangle<int> parentArea) override;
     void drawTooltip (juce::Graphics& g, const juce::String& text, int width, int height) override;
 

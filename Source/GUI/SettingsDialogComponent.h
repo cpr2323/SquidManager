@@ -29,7 +29,7 @@ public:
 
 private:
     /*
-        The ground control. It is a plain client of GuiProperties: it writes the
+        The background control. It is a plain client of GuiProperties: it writes the
         new level and reads the current one, and knows nothing about the
         LookAndFeel or about who repaints. ThemeController hears the same
         property change and does that work.
