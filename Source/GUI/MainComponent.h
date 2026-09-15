@@ -4,6 +4,7 @@
 #include "BottomStatusWindow.h"
 #include "CurrentFolderComponent.h"
 #include "GuiProperties.h"
+#include "SettingsDialogComponent.h"
 #include "SquidSalmple/SquidEditor.h"
 #include "SquidSalmple/FileView/FileViewComponent.h"
 #include "SquidSalmple/BankList/BankListComponent.h"
@@ -16,6 +17,7 @@ public:
     ~MainComponent () = default;
 
 private:
+    juce::ValueTree rootProperties;
     GuiProperties guiProperties;
     SquidEditorComponent squidEditorComponent;
     BottomStatusWindow bottomStatusWindow;
@@ -28,7 +30,11 @@ private:
     juce::TooltipWindow tooltipWindow;
 
     void restoreLayout ();
+    void applyMinimumPaneWidths ();
+    int constrainFolderPaneOffset (int proposedSplitOffset);
+    int constrainBankPaneOffset (int proposedSplitOffset);
     void saveLayoutChanges ();
+    void showSettingsDialog ();
 
     void resized () override;
     void paint (juce::Graphics& g) override;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(SquidManager VERSION 1.4.0)
+project(SquidManager VERSION 1.4)
 
 # Submodules must be initialised before building:
 #   git submodule update --init --recursive
@@ -42,6 +42,18 @@ set(GUI_FILES
     Source/GUI/GuiProperties.h
     Source/GUI/MainComponent.cpp
     Source/GUI/MainComponent.h
+    Source/GUI/SettingsDialogComponent.cpp
+    Source/GUI/SettingsDialogComponent.h
+    Source/GUI/Theme/Palette.cpp
+    Source/GUI/Theme/Palette.h
+    Source/GUI/Theme/SquidColourIds.h
+    Source/GUI/Theme/SquidFonts.cpp
+    Source/GUI/Theme/SquidFonts.h
+    Source/GUI/Theme/UiComponents.h
+    Source/GUI/Theme/SquidLookAndFeel.cpp
+    Source/GUI/Theme/SquidLookAndFeel.h
+    Source/GUI/Theme/ThemeController.cpp
+    Source/GUI/Theme/ThemeController.h
     Source/GUI/sqedit2_2.png)
 
 set(GUI_SQUIDSALMPLE_FILES
@@ -134,6 +146,10 @@ set(SRC_FILES
 # shows them next to the code they belong with.
 set(RESOURCE_FILES
     Source/GUI/sqedit2_2.png
+    Assets/Fonts/IBM-Plex-Mono-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-SemiBold.ttf
     ${SQUIDSALMPLE_DATA_FILES})
 
 set_source_files_properties(${RESOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -199,3 +215,19 @@ target_link_libraries(SquidManager
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags)
+
+# The third party licenses have to travel with the app, so they are copied into the
+# folder JUCE builds it into - SquidManager_artefacts/<config> - beside the .exe, or
+# beside the .app bundle on macOS. That folder can then be distributed as it is.
+#
+# The copy is a target of its own that SquidManager depends on, rather than a post
+# build step: a post build step only runs when the app relinks, so an added or
+# changed license would not arrive until some code changed too. Depending on it
+# means any build of SquidManager - including building just that project in Visual
+# Studio - copies the licenses.
+add_custom_target(SquidManagerLicenses
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Licenses"
+                                               "$<GENEX_EVAL:$<TARGET_PROPERTY:SquidManager,RUNTIME_OUTPUT_DIRECTORY>>/Licenses"
+    COMMENT "Copying Licenses next to SquidManager"
+    VERBATIM)
+add_dependencies(SquidManager SquidManagerLicenses)

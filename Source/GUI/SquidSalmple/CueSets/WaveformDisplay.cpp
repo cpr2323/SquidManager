@@ -1,4 +1,6 @@
 #include "WaveformDisplay.h"
+#include "../../Theme/SquidColourIds.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 #include "oolib/Debug/DebugLog.h"
@@ -16,7 +18,8 @@ constexpr auto kMaxSampleLength { 524287 };
 
 // The Squid only ever deals in 44k1 samples, so the timeline needs no other rate.
 constexpr auto kSquidSampleRate { 44100.0 };
-constexpr auto kTimelineHeight { 18 };
+// vertical divisions behind the trace
+constexpr auto kGridDivisions { 8 };
 
 // Where the view stops drawing the real sample line and switches to the min/max
 // peak envelope. Well above the point where the two representations coincide
@@ -26,14 +29,25 @@ constexpr auto kPeakEnvelopeThreshold { 30.0 };
 
 // The colours the cue set editor has always used: a black waveform on mid grey,
 // with the markers and the border in white.
-const juce::Colour kBackgroundColour { juce::Colours::grey.darker (0.3f) };
-const juce::Colour kForegroundColour { juce::Colours::black };
-const juce::Colour kMarkerColour { juce::Colours::white };
 
 WaveformDisplay::WaveformDisplay ()
 {
     setupColours ();
     waveformView.setPeakEnvelopeThreshold (kPeakEnvelopeThreshold);
+    // the audio outside the cue set is washed back, so start .. end reads as the part that plays
+    waveformView.onPaintOverlay = [this] (juce::Graphics& g, WaveformView& view)
+    {
+        if (audioBuffer == nullptr || markerOverlay.getNumMarkers () <= kEndMarker)
+            return;
+        const auto startX { view.sampleToX (markerOverlay.getPosition (kStartMarker)) };
+        const auto endX { view.sampleToX (markerOverlay.getPosition (kEndMarker)) };
+        const auto height { static_cast<float> (view.getHeight ()) };
+        g.setColour (findColour (SquidColours::waveformShade));
+        if (startX > 0.0f)
+            g.fillRect (juce::Rectangle<float> { 0.0f, 0.0f, startX, height });
+        if (endX < static_cast<float> (view.getWidth ()))
+            g.fillRect (juce::Rectangle<float> { endX, 0.0f, static_cast<float> (view.getWidth ()) - endX, height });
+    };
     waveformView.onViewChanged = [this] () { syncTimelineToView (); };
     addAndMakeVisible (waveformView);
 
@@ -64,45 +78,78 @@ void WaveformDisplay::init (juce::ValueTree rootPropertiesVT)
 
 void WaveformDisplay::setupColours ()
 {
-    // Every part of the waveform is drawn in the one foreground colour, so the
-    // peak envelope, the RMS body inside it and the per-sample line all read as
-    // the single black trace this editor has always shown.
+    // Every part of the waveform is drawn in the one trace colour, so the peak
+    // envelope, the RMS body inside it and the per-sample line all read as the
+    // same trace.
+    const auto kBackgroundColour { findColour (SquidColours::waveformBackground) };
+    const auto kForegroundColour { findColour (SquidColours::waveformForeground) };
+
     WaveformView::ColourScheme waveformColours;
     waveformColours.background = kBackgroundColour;
     waveformColours.peak = kForegroundColour;
     waveformColours.rms = kForegroundColour;
     waveformColours.sampleLine = kForegroundColour;
     waveformColours.sampleDot = kForegroundColour;
-    // The old display had no centre line at all, so keep it to a hint of the
-    // foreground rather than a line that competes with the waveform.
-    waveformColours.centreLine = kForegroundColour.withAlpha (0.25f);
+    waveformColours.centreLine = findColour (SquidColours::waveformCentreLine);
     waveformView.setColourScheme (waveformColours);
+    waveformView.setGrid (kGridDivisions, findColour (SquidColours::waveformGrid));
 
+    // The timeline is a ruler rather than part of the waveform, so it takes the
+    // chrome colours instead of the trace colour.
     TimelineComponent::ColourScheme timelineColours;
-    timelineColours.background = kBackgroundColour;
-    timelineColours.majorTick = kForegroundColour;
-    timelineColours.minorTick = kForegroundColour.withAlpha (0.55f);
-    timelineColours.text = kForegroundColour;
+    timelineColours.background = findColour (SquidColours::listBackground);
+    timelineColours.majorTick = findColour (SquidColours::menuHeaderText);
+    timelineColours.minorTick = findColour (SquidColours::textGhost);
+    timelineColours.text = findColour (SquidColours::menuHeaderText);
     timeline.setColourScheme (timelineColours);
+    timeline.setLabelStyle ({ SquidType::ruler (), true, true });
+
+    MarkerOverlay::Appearance markerAppearance;
+    markerAppearance.handleOutline = juce::Colours::transparentBlack;
+    markerAppearance.labelFont = SquidType::markerLabel ();
+    markerAppearance.labelSeparator = ": ";
+    markerAppearance.labelPlate = juce::Colours::transparentBlack;
+    markerAppearance.labelGap = 8.0f;
+    markerOverlay.setAppearance (markerAppearance);
+
+    // The markers are added once, by setupMarkers; re-tint them in place rather
+    // than rebuilding, so a palette change cannot duplicate them.
+    const int markerColourIds [] { SquidColours::markerStart, SquidColours::markerLoop, SquidColours::markerEnd };
+    for (auto markerIndex { 0 }; markerIndex < markerOverlay.getNumMarkers (); ++markerIndex)
+    {
+        auto style { markerOverlay.getStyle (markerIndex) };
+        style.colour = findColour (markerColourIds [markerIndex]);
+        markerOverlay.setStyle (markerIndex, style);
+    }
+}
+
+void WaveformDisplay::lookAndFeelChanged ()
+{
+    juce::Component::lookAndFeelChanged ();
+    setupColours ();
 }
 
 void WaveformDisplay::setupMarkers ()
 {
     // Start and end bracket the cue set, so their handles point inwards, which
     // keeps them apart and readable when the two markers meet. The loop point
-    // hangs off the bottom edge on a dashed line, as it always has, so it never
-    // reads as one of that pair.
+    // hangs off the bottom edge, so it never reads as one of that pair.
     MarkerOverlay::Style startStyle;
-    startStyle.colour = kMarkerColour;
+    startStyle.colour = findColour (SquidColours::markerStart);
+    startStyle.lineThickness = 1.0f;
+    startStyle.handleWidth = 9.0f;
+    startStyle.handleHeight = 15.0f;
     startStyle.shape = MarkerOverlay::HandleShape::rectangle;
     startStyle.placement = MarkerOverlay::HandlePlacement::top;
     startStyle.alignment = MarkerOverlay::HandleAlignment::rightOfLine;
+    startStyle.label = MarkerOverlay::LabelVisibility::always;
 
     auto loopStyle { startStyle };
-    loopStyle.dashed = true;
+    loopStyle.colour = findColour (SquidColours::markerLoop);
     loopStyle.placement = MarkerOverlay::HandlePlacement::bottom;
 
     auto endStyle { startStyle };
+    endStyle.colour = findColour (SquidColours::markerEnd);
     endStyle.alignment = MarkerOverlay::HandleAlignment::leftOfLine;
 
     auto addMarker = [this] (juce::StringRef name, const MarkerOverlay::Style& style)
@@ -112,9 +159,9 @@ void WaveformDisplay::setupMarkers ()
         marker.style = style;
         markerOverlay.addMarker (marker);
     };
-    addMarker ("Start", startStyle); // kStartMarker
-    addMarker ("Loop", loopStyle);   // kLoopMarker
-    addMarker ("End", endStyle);     // kEndMarker
+    addMarker ("START", startStyle); // kStartMarker
+    addMarker ("LOOP", loopStyle);   // kLoopMarker
+    addMarker ("END", endStyle);     // kEndMarker
 }
 
 void WaveformDisplay::setChannelIndex (int theChannelIndex)
@@ -149,6 +196,7 @@ void WaveformDisplay::setCueEndPoint (uint32_t newCueEnd)
     LogWaveformDisplay ("setCueEndPoint");
     cueEnd = newCueEnd;
     markerOverlay.setPosition (kEndMarker, cueEnd);
+    waveformView.repaint ();
 }
 
 void WaveformDisplay::setCueLoopPoint (uint32_t newCueLoop)
@@ -172,6 +220,19 @@ void WaveformDisplay::setCueStartPoint (uint32_t newCueStart)
     LogWaveformDisplay ("setCueStartPoint");
     cueStart = newCueStart;
     markerOverlay.setPosition (kStartMarker, cueStart);
+    waveformView.repaint ();
+}
+
+void WaveformDisplay::fitToView ()
+{
+    waveformView.zoomToFit ();
+    // zoomToFit does not report a view change, so the ruler and markers are told here
+    syncTimelineToView ();
+}
+
+void WaveformDisplay::resetVerticalZoom ()
+{
+    waveformView.setVerticalZoom (1.0f);
 }
 
 void WaveformDisplay::setTimelineUnit (TimelineComponent::Unit unit)
@@ -207,6 +268,8 @@ double WaveformDisplay::constrainMarker (int markerIndex, double proposedPositio
 void WaveformDisplay::markerMoved (int markerIndex)
 {
     const auto newPosition { static_cast<uint32_t> (markerOverlay.getPosition (markerIndex)) };
+    // the wash outside the cue set follows the markers
+    waveformView.repaint ();
     switch (markerIndex)
     {
         case kStartMarker:
@@ -258,6 +321,7 @@ void WaveformDisplay::updateMarkerPositions ()
     markerOverlay.setPosition (kStartMarker, cueStart);
     markerOverlay.setPosition (kLoopMarker, cueLoop);
     markerOverlay.setPosition (kEndMarker, cueEnd);
+    waveformView.repaint ();
 }
 
 void WaveformDisplay::syncTimelineToView ()
@@ -272,19 +336,17 @@ void WaveformDisplay::syncTimelineToView ()
 void WaveformDisplay::resized ()
 {
     LogWaveformDisplay ("resized");
-    // The children sit inside the border this component draws around them.
-    auto bounds { getLocalBounds ().reduced (1) };
+    // the card this sits in draws the edges, so the children take every pixel
+    auto bounds { getLocalBounds () };
     timeline.setBounds (bounds.removeFromTop (kTimelineHeight));
     waveformView.setBounds (bounds);
     markerOverlay.setBounds (bounds);
     syncTimelineToView ();
 }
 
-void WaveformDisplay::paint (juce::Graphics& g)
+void WaveformDisplay::paint (juce::Graphics&)
 {
-    // The children cover everything but the border.
-    g.setColour (kMarkerColour);
-    g.drawRect (getLocalBounds ());
+    // the children cover every pixel
 }
 
 void WaveformDisplay::paintOverChildren (juce::Graphics& g)
@@ -294,28 +356,18 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
     constexpr auto dropMsgFontSizeSingle { 30.f };
     constexpr auto dropMsgFontSizeDouble { 20.f };
     constexpr auto dropDetailsFontSize   { 15.f };
-    auto setBackgroundColor = [this, &g] ()
-    {
-        if (supportedFile)
-            g.setColour (juce::Colours::white.withAlpha (0.7f));
-        else
-            g.setColour (juce::Colours::black.withAlpha (0.7f));
-    };
     auto setTextColor = [this, &g] ()
     {
-        if (supportedFile)
-            g.setColour (juce::Colours::black);
-        else
-            g.setColour (juce::Colours::red.darker (0.5f));
+        g.setColour (SquidPaint::messageInk (*this, ! supportedFile));
     };
     if (draggingFilesCount > 0)
     {
         jassert (dropType != DropType::none);
         if (audioBuffer == nullptr)
         {
-            g.fillAll (juce::Colours::white.withAlpha (0.1f));
+            g.fillAll (findColour (SquidColours::dropOverlay).withAlpha (0.1f));
             g.setFont (dropMsgFontSizeSingle);
-            g.setColour (juce::Colours::black);
+            g.setColour (SquidPaint::messageInk (*this));
             if (draggingFilesCount == 1)
                 g.drawText ("Assign sample to Channel " + juce::String (channelIndex + 1), getLocalBounds (), juce::Justification::centred, false);
             else
@@ -323,19 +375,18 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
         }
         else
         {
-            auto displayTextWithBackground = [&g, this, &setBackgroundColor, &setTextColor] (juce::StringRef text, float fontSize, const juce::Rectangle<int>& bounds)
+            auto displayTextWithBackground = [&g, this, &setTextColor] (juce::StringRef text, float fontSize, const juce::Rectangle<int>& bounds)
             {
                 g.setFont (fontSize);
-                setBackgroundColor ();
                 // TODO - replace hardcoded 10.f with value derived from text height
                 auto stringWidthPixels { juce::GlyphArrangement::getStringWidth (g.getCurrentFont (), text) + 10.f };
                 auto center { bounds.getCentre () };
-                g.fillRoundedRectangle ({ static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
+                SquidPaint::messagePlate (g, *this, { static_cast<float> (center.getX ()) - (stringWidthPixels / 2.f), static_cast<float> (center.getY ()) - (fontSize / 2.f), stringWidthPixels, fontSize + 5.f }, 10.f);
                 setTextColor ();
                 g.drawText (text, bounds, juce::Justification::centred, false);
             };
             auto localBounds { getLocalBounds () };
-            juce::Colour fillColor { juce::Colours::white };
+            juce::Colour fillColor { findColour (SquidColours::dropOverlay).withAlpha (1.0f) };
             const float activeAlpha { 0.1f };
             const float nonActiveAlpha { 0.5f };
             g.setColour (fillColor.withAlpha (dropType == DropType::replace ? activeAlpha : nonActiveAlpha));
@@ -381,8 +432,7 @@ void WaveformDisplay::paintOverChildren (juce::Graphics& g)
                     return maxStringPixels;
                 } ();
                 auto dropDetailsDisplayBounds { juce::Rectangle<int> { 0, 0, static_cast<int> (maxDetailsWidthPixels), backgroundLines * static_cast<int> (dropDetailsFontSize) }.withCentre (dropDetailsBounds.getCentre ()) };
-                setBackgroundColor ();
-                g.fillRoundedRectangle (dropDetailsDisplayBounds.toFloat (), 10.f);
+                SquidPaint::messagePlate (g, *this, dropDetailsDisplayBounds.toFloat (), 10.f);
                 setTextColor ();
                 dropDetailsDisplayBounds.removeFromTop (static_cast<int> (dropDetailsFontSize / 2));
                 for (auto curDropDetailLineIndex { 0 }; curDropDetailLineIndex < linesToDisplay; ++curDropDetailLineIndex)
@@ -465,13 +515,23 @@ void WaveformDisplay::updateDropMessage (const juce::StringArray& files)
         auto draggedFile { juce::File (fileName) };
         if (editManager->isSquidManagerSupportedAudioFile (draggedFile))
         {
-            auto reader { editManager->getReaderFor (draggedFile) };
-            const double ratio { kSquidSampleRate / reader->sampleRate };
-            const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
+            // The extension only says what a file claims to be. One that is damaged,
+            // empty, not really audio, or a cloud placeholder that has not been
+            // downloaded yet has no reader, and cannot be used.
+            if (auto reader { editManager->getReaderFor (draggedFile) }; reader != nullptr)
+            {
+                const double ratio { kSquidSampleRate / reader->sampleRate };
+                const int actualNumSamples { static_cast<int> (reader->lengthInSamples * ratio) };
 
-            totalSize += actualNumSamples;
-            if (totalSize < kMaxSampleLength)
-                ++filesConcatenated;
+                totalSize += actualNumSamples;
+                if (totalSize < kMaxSampleLength)
+                    ++filesConcatenated;
+            }
+            else
+            {
+                updateDropDetails ("Cannot read: " + draggedFile.getFileName ());
+                supportedFile = false;
+            }
         }
         else
         {

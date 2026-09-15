@@ -21,7 +21,7 @@ int AppProperties::getNumMRUEntries ()
 {
     auto mruListVT { getMRUListChildVT () };
     auto count { 0 };
-    ValueTreeHelpers::forEachChildOfType (mruListVT, MRUEntryTypeId , [this, &count] (juce::ValueTree child)
+    ValueTreeHelpers::forEachChildOfType (mruListVT, MRUEntryTypeId , [this, &count] ([[maybe_unused]] juce::ValueTree child)
     {
         ++count;
         return true;

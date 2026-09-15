@@ -1,17 +1,21 @@
 #include "CvAssignParameter.h"
+#include "../../Theme/SquidColourIds.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/CvParameterProperties.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
 
 CvAssignParameter::CvAssignParameter ()
 {
+    // set as the parameter labels in the panel above, which name the same parameters
+    parameterLabel.setFont (SquidType::parameterLabel ());
+    parameterLabel.setBorderSize ({ 0, 0, 0, 0 });
     parameterLabel.setJustificationType (juce::Justification::centred);
     parameterLabel.setText ("---", juce::NotificationType::dontSendNotification);
     addAndMakeVisible (parameterLabel);
 
     // ENABLE BUTTON
-    assignEnableLabel.setText ("ON", juce::NotificationType::dontSendNotification);
-    addAndMakeVisible (assignEnableLabel);
+    assignEnableButton.setThumbShape (RoundedSlideSwitch::ThumbShape::circle);
     assignEnableButton.setTooltip ("CV Assign Enable. Enables control of this parameter via CV.");
     assignEnableButton.onClick = [this] () { cvAssignEnableUiChanged (assignEnableButton.getToggleState ()); };
     assignEnableButton.onPopupMenuCallback = [this] ()
@@ -39,10 +43,18 @@ CvAssignParameter::CvAssignParameter ()
 
     // ATTENUATE TEXT EDITOR
     cvAttenuateLabel.setText ("ATN", juce::NotificationType::dontSendNotification);
+    cvAttenuateLabel.setFont (SquidType::cvFieldLabel ());
+    cvAttenuateLabel.setBorderSize ({ 0, 0, 0, 0 });
+    cvAttenuateLabel.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (cvAttenuateLabel);
     cvAttenuateEditor.setTooltip ("Attenuate CV Input. Adjusts the amount of attenuation applied to the CV before sending it to this parameter. Attenuation can be postive or negative.");
     cvAttenuateEditor.getMinValueCallback = [this] () { return -99; };
     cvAttenuateEditor.getMaxValueCallback = [this] () { return 99; };
+    cvAttenuateEditor.setFont (SquidType::cvValue ());
+    cvAttenuateEditor.setJustification (juce::Justification::centredRight);
+    cvAttenuateEditor.setBorder ({ 0, 5, 0, 5 });
+    cvAttenuateEditor.setIndents (0, 0);
+    HoverHighlight::attach (cvAttenuateEditor);
     cvAttenuateEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvAttenuateEditor.updateDataCallback = [this] (int value) { cvAssignAttenuateUiChanged (value); };
     cvAttenuateEditor.onDragCallback = [this] (double valueDelta)
@@ -75,10 +87,18 @@ CvAssignParameter::CvAssignParameter ()
 
     // OFFSET TEXT EDITOR
     cvOffsetLabel.setText ("OFS", juce::NotificationType::dontSendNotification);
+    cvOffsetLabel.setFont (SquidType::cvFieldLabel ());
+    cvOffsetLabel.setBorderSize ({ 0, 0, 0, 0 });
+    cvOffsetLabel.setJustificationType (juce::Justification::centredRight);
     addAndMakeVisible (cvOffsetLabel);
     cvOffsetEditor.setTooltip ("Offset CV Input. Adjusts the amount of offset applied to the CV before sending it to this parameter.");
     cvOffsetEditor.getMinValueCallback = [this] () { return 0; };
     cvOffsetEditor.getMaxValueCallback = [this] () { return 99; };
+    cvOffsetEditor.setFont (SquidType::cvValue ());
+    cvOffsetEditor.setJustification (juce::Justification::centredRight);
+    cvOffsetEditor.setBorder ({ 0, 5, 0, 5 });
+    cvOffsetEditor.setIndents (0, 0);
+    HoverHighlight::attach (cvOffsetEditor);
     cvOffsetEditor.toStringCallback = [this] (int value) { return juce::String (value); };
     cvOffsetEditor.updateDataCallback = [this] (int value) { cvAssignOffsetUiChanged (value); };
     cvOffsetEditor.onDragCallback = [this] (double valueDelta)
@@ -108,6 +128,9 @@ CvAssignParameter::CvAssignParameter ()
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
     addAndMakeVisible (cvOffsetEditor);
+
+    cvAttenuateLabelWidth = SquidPaint::textWidth (cvAttenuateLabel.getFont (), cvAttenuateLabel.getText ()) + 1;
+    cvOffsetLabelWidth = SquidPaint::textWidth (cvOffsetLabel.getFont (), cvOffsetLabel.getText ()) + 1;
 }
 
 CvAssignParameter::~CvAssignParameter ()
@@ -210,7 +233,6 @@ void CvAssignParameter::enablementChanged ()
 {
     const auto enabled { isEnabled () };
     parameterLabel.setEnabled (enabled);
-    assignEnableLabel.setEnabled (enabled);
     assignEnableButton.setEnabled (enabled);
     cvAttenuateLabel.setEnabled (enabled);
     cvAttenuateEditor.setEnabled (enabled);
@@ -218,38 +240,47 @@ void CvAssignParameter::enablementChanged ()
     cvOffsetEditor.setEnabled (enabled);
 }
 
-void CvAssignParameter::paint (juce::Graphics& g)
+void CvAssignParameter::lookAndFeelChanged ()
 {
-    g.setColour (juce::Colours::white.darker (0.3f));
-    g.drawRect (getLocalBounds ());
+    juce::Component::lookAndFeelChanged ();
+    for (auto* label : { &parameterLabel, &cvAttenuateLabel, &cvOffsetLabel })
+        label->setColour (juce::Label::textColourId, findColour (SquidColours::textDim));
 }
 
 void CvAssignParameter::paintOverChildren (juce::Graphics& g)
 {
     if (! isEnabled ())
     {
-        g.setColour (juce::Colours::white.withAlpha (0.5f));
+        g.setColour (findColour (SquidColours::disabledOverlay));
         g.fillAll ();
     }
 }
 
 void CvAssignParameter::resized ()
 {
-    auto localBounds { getLocalBounds ().reduced (2,4) };
-    const auto lineHeight { localBounds.getHeight () / 4 };
-    parameterLabel.setBounds (localBounds.removeFromTop (lineHeight));
-    localBounds.removeFromTop (1);
-    auto assignEnableLine { localBounds.removeFromTop (lineHeight).withTrimmedBottom (1) };
-    assignEnableLabel.setBounds (assignEnableLine.removeFromLeft (assignEnableLine.getWidth () / 2));
-    assignEnableButton.setBounds (assignEnableLine.withTrimmedTop (3).withTrimmedBottom (5).withTrimmedRight (3));
+    // name, switch, then the two values, all centred in the column
+    static constexpr auto kGap { 5 };
+    static constexpr auto kNameHeight { 14 };
+    static constexpr auto kSwitchWidth { 28 };
+    static constexpr auto kSwitchHeight { 15 };
+    static constexpr auto kValueHeight { 17 };
+    static constexpr auto kValueWidth { 32 };
+    static constexpr auto kLabelGap { 4 };
 
-    localBounds.removeFromTop (1);
-    auto cvAttenuateBounds { localBounds.removeFromTop (lineHeight) };
-    cvAttenuateLabel.setBounds (cvAttenuateBounds.removeFromLeft (cvAttenuateBounds.getWidth () / 2));
-    cvAttenuateEditor.setBounds (cvAttenuateBounds);
+    auto localBounds { getLocalBounds ().withTrimmedTop (6).reduced (5, 0) };
+    parameterLabel.setBounds (localBounds.removeFromTop (kNameHeight));
+    localBounds.removeFromTop (kGap);
+    assignEnableButton.setBounds (localBounds.removeFromTop (kSwitchHeight).withSizeKeepingCentre (kSwitchWidth, kSwitchHeight));
 
-    localBounds.removeFromTop (1);
-    auto cvOffsetBounds { localBounds.removeFromTop (lineHeight) };
-    cvOffsetLabel.setBounds (cvOffsetBounds.removeFromLeft (cvOffsetBounds.getWidth () / 2));
-    cvOffsetEditor.setBounds (cvOffsetBounds);
+    auto placeValue = [&localBounds] (juce::Label& label, int labelWidth, juce::Component& editor)
+    {
+        localBounds.removeFromTop (kGap);
+        auto row { localBounds.removeFromTop (kValueHeight)
+                              .withSizeKeepingCentre (std::min (localBounds.getWidth (), labelWidth + kLabelGap + kValueWidth), kValueHeight) };
+        label.setBounds (row.removeFromLeft (labelWidth));
+        row.removeFromLeft (kLabelGap);
+        editor.setBounds (row);
+    };
+    placeValue (cvAttenuateLabel, cvAttenuateLabelWidth, cvAttenuateEditor);
+    placeValue (cvOffsetLabel, cvOffsetLabelWidth, cvOffsetEditor);
 }

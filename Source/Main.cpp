@@ -3,6 +3,7 @@
 #include "SystemServices.h"
 #include "GUI/GuiProperties.h"
 #include "GUI/MainComponent.h"
+#include "GUI/Theme/ThemeController.h"
 #include "SquidSalmple/Audio/AudioPlayer.h"
 #include "SquidSalmple/Bank/BankManagerProperties.h"
 #include "SquidSalmple/SquidBankProperties.h"
@@ -106,7 +107,6 @@ public:
         initSquidSalmple ();
         initAudio ();
         initSystemServices ();
-
         initUi ();
 
         //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) { DebugLog ("main", text); });
@@ -213,6 +213,7 @@ public:
     void initUi ()
     {
         guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::owner, GuiProperties::EnableCallbacks::no);
+        themeController.init (rootProperties.getValueTree ());
         mainWindow.reset (new MainWindow (getApplicationName () + " - " + getVersionDisplayString (), rootProperties.getValueTree ()));
     }
 
@@ -301,6 +302,7 @@ public:
         // connect services to the SystemServices VTW
         SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::owner, SystemServices::EnableCallbacks::no);
         systemServices.setEditManager (&editManager);
+        systemServices.setAudioDeviceManager (&audioPlayer.getAudioDeviceManager ());
 
         // the directory scanner knows nothing about Squid Salmple samples, so the audio file type is
         // registered here, where the EditManager that decides what counts as one is available.
@@ -407,6 +409,7 @@ private:
     std::unique_ptr<juce::FileLogger> fileLogger;
     std::atomic<RuntimeRootProperties::QuitState> localQuitState { RuntimeRootProperties::QuitState::idle };
     std::unique_ptr<MainWindow> mainWindow;
+    ThemeController themeController;
     AudioPlayer audioPlayer;
 #if ENABLE_MESSAGE_THREAD_STALL_MONITOR
     std::unique_ptr<MessageThreadStallMonitor> messageThreadStallMonitor;

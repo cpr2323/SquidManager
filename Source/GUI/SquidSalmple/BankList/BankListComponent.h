@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 #include "BankListProperties.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "oolib/Core/LambdaThread.h"
@@ -17,6 +18,9 @@ public:
     ~BankListComponent () = default;
     void init (juce::ValueTree rootPropertiesVT);
 
+    // narrow enough that the header still fits its title, tool and count
+    int getMinimumWidth () const;
+
     std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
 
 private:
@@ -28,8 +32,10 @@ private:
     EditManager* editManager { nullptr };
     juce::File copyDirectory;
 
-    juce::ToggleButton showAllBanks { "Show All" };
+    PaneHeader paneHeader { "BANKS" };
+    ChromeButton showAllBanks { "ALL" };
     juce::ListBox bankListBox { {}, this };
+    ListRowHover rowHover { bankListBox };
     std::array<std::tuple <int, bool, juce::String>, kMaxBanks> bankInfoList;
     int numBanks { kMaxBanks };
     juce::File currentFolder;
@@ -50,6 +56,10 @@ private:
     std::vector<BankDirectoryEntry> bankDirectorySnapshot;
     juce::File snapshotRootFolder;
     bool snapshotShowAllBanks { true };
+    // whether the directory scan had filled in the root folder when the snapshot was
+    // taken, so that finding no banks means there are none, rather than not yet
+    bool rootScanComplete { false };
+    bool snapshotRootScanComplete { false };
 
     void copyBank (int bankNumber);
     void checkBanks ();
