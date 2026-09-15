@@ -218,7 +218,7 @@ void ChannelEditorComponent::setupComponents ()
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
-    auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters, juce::String parameterName)
+    auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters, [[maybe_unused]] juce::String parameterName)
     {
         textEditor.setJustification (justification);
         textEditor.setFont (SquidType::value ());
@@ -229,7 +229,7 @@ void ChannelEditorComponent::setupComponents ()
         //textEditor.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         addAndMakeVisible (textEditor);
     };
-    auto setupComboBox = [this] (juce::ComboBox& comboBox, juce::String parameterName, std::function<void ()> onChangeCallback)
+    auto setupComboBox = [this] (juce::ComboBox& comboBox, [[maybe_unused]] juce::String parameterName, std::function<void ()> onChangeCallback)
     {
         jassert (onChangeCallback != nullptr);
         //comboBox.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
@@ -237,7 +237,7 @@ void ChannelEditorComponent::setupComponents ()
         HoverHighlight::attach (comboBox);
         addAndMakeVisible (comboBox);
     };
-    auto setupButton = [this] (juce::TextButton& textButton, juce::String text, juce::String parameterName, std::function<void ()> onClickCallback)
+    auto setupButton = [this] (juce::TextButton& textButton, juce::String text, [[maybe_unused]] juce::String parameterName, std::function<void ()> onClickCallback)
     {
         textButton.setButtonText (text);
         textButton.setClickingTogglesState (true);
@@ -1577,7 +1577,7 @@ void ChannelEditorComponent::initializeCallbacks ()
     squidChannelProperties.onStepsChange = [this] (int steps) { stepsDataChanged (steps); };
     squidChannelProperties.onXfadeChange = [this] (int xfade) { xfadeDataChanged (xfade); };
 
-    squidChannelProperties.onSampleDataAudioBufferChange = [this] (AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
+    squidChannelProperties.onSampleDataAudioBufferChange = [this] ([[maybe_unused]] AudioBufferRefCounted::RefCountedPtr audioBufferPtr)
     {
         updateLoopPointsView ();
         if (squidChannelProperties.getSampleDataAudioBuffer () != nullptr)

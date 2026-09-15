@@ -21,12 +21,7 @@ void AudioPlayer::init (juce::ValueTree rootPropertiesVT)
 
     appProperties.wrap (persistentRootProperties.getValueTree (), AppProperties::WrapperType::owner, AppProperties::EnableCallbacks::yes);
 
-    audioSettingsProperties.wrap (persistentRootProperties.getValueTree (), AudioSettingsProperties::WrapperType::owner, AudioSettingsProperties::EnableCallbacks::yes);
-    audioSettingsProperties.onConfigChange = [this] (juce::String config)
-    {
-            // TODO - do we need this callback?
-        //configureAudioDevice (deviceName);
-    };
+    audioSettingsProperties.wrap (persistentRootProperties.getValueTree (), AudioSettingsProperties::WrapperType::owner, AudioSettingsProperties::EnableCallbacks::no);
 
     audioPlayerProperties.wrap (runtimeRootProperties.getValueTree (), AudioPlayerProperties::WrapperType::owner, AudioPlayerProperties::EnableCallbacks::yes);
 
