@@ -1,8 +1,8 @@
 #include "CvAssignParameter.h"
 #include "../../Theme/SquidColourIds.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../SystemServices.h"
 #include "../../../SquidSalmple/CvParameterProperties.h"
-#include "../../Theme/UiComponents.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
 
 CvAssignParameter::CvAssignParameter ()

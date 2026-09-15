@@ -1,9 +1,9 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../AppProperties.h"
 #include "GuiProperties.h"
 #include "Theme/UiComponents.h"
+#include "../AppProperties.h"
 #include "oolib/Directory/DirectoryDataProperties.h"
 
 /*

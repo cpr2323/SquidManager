@@ -1,11 +1,11 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../Theme/SquidColourIds.h"
-#include "../Theme/SquidLookAndFeel.h"
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
 #include "LoopPoints/LoopPointsView.h"
+#include "../Theme/SquidColourIds.h"
+#include "../Theme/SquidLookAndFeel.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
@@ -13,7 +13,6 @@
 #include "oolib/GUI/CustomComboBox.h"
 #include "oolib/GUI/CustomTextEditor.h"
 #include "oolib/GUI/FileSelectLabel.h"
-#include "oolib/GUI/NoArrowComboBoxLnF.h"
 #include "oolib/GUI/RoundedSlideSwitch.h"
 
 class ChannelEditorComponent : public juce::Component,
@@ -21,7 +20,6 @@ class ChannelEditorComponent : public juce::Component,
 {
 public:
     ChannelEditorComponent ();
-    ~ChannelEditorComponent ();
 
     void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void initCueSetTabs ();

@@ -179,7 +179,7 @@ ChannelEditorComponent::ChannelEditorComponent ()
                         waveformDisplay.setCuePoints (SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getStartCueSet (0)),
                                                       SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getLoopCueSet (0)),
                                                       SquidChannelProperties::byteOffsetToSampleOffset (squidChannelProperties.getEndCueSet (0)));
-                                      });
+                    });
                 }
                 cueSetsMenu.addSubMenu ("Chop", chopMenu);
             }
@@ -204,10 +204,6 @@ ChannelEditorComponent::ChannelEditorComponent ()
     setupComponents ();
 }
 
-ChannelEditorComponent::~ChannelEditorComponent ()
-{
-}
-
 void ChannelEditorComponent::setupComponents ()
 {
     auto setupLabel = [this] (juce::Label& label, juce::String text)
@@ -218,7 +214,7 @@ void ChannelEditorComponent::setupComponents ()
         label.setText (text, juce::NotificationType::dontSendNotification);
         addAndMakeVisible (label);
     };
-    auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters, [[maybe_unused]] juce::String parameterName)
+    auto setupTextEditor = [this] (juce::TextEditor& textEditor, juce::Justification justification, int maxLen, juce::String validInputCharacters)
     {
         textEditor.setJustification (justification);
         textEditor.setFont (SquidType::value ());
@@ -226,24 +222,14 @@ void ChannelEditorComponent::setupComponents ()
         textEditor.setIndents (0, 0);
         HoverHighlight::attach (textEditor);
         textEditor.setInputRestrictions (maxLen, validInputCharacters);
-        //textEditor.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         addAndMakeVisible (textEditor);
     };
-    auto setupComboBox = [this] (juce::ComboBox& comboBox, [[maybe_unused]] juce::String parameterName, std::function<void ()> onChangeCallback)
+    auto setupComboBox = [this] (juce::ComboBox& comboBox, std::function<void ()> onChangeCallback)
     {
         jassert (onChangeCallback != nullptr);
-        //comboBox.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
         comboBox.onChange = onChangeCallback;
         HoverHighlight::attach (comboBox);
         addAndMakeVisible (comboBox);
-    };
-    auto setupButton = [this] (juce::TextButton& textButton, juce::String text, [[maybe_unused]] juce::String parameterName, std::function<void ()> onClickCallback)
-    {
-        textButton.setButtonText (text);
-        textButton.setClickingTogglesState (true);
-        //textButton.setTooltip (parameterToolTipData.getToolTip ("Channel", parameterName));
-        textButton.onClick = onClickCallback;
-        addAndMakeVisible (textButton);
     };
     auto setupHeaderLabel = [this] (juce::Label& label, juce::String text)
     {
@@ -302,7 +288,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     channelSourceComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setChannelSource (squidChannelProperties.getChannelSource (), false);
@@ -310,18 +296,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setChannelSource (defaultChannelProperties.getChannelSource (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setChannelSource (uneditedChannelProperties.getChannelSource (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (channelSourceComboBox, "SampleChannel", [this] () { channelSourceUiChanged (static_cast<uint8_t> (channelSourceComboBox.getSelectedItemIndex ())); });
+    setupComboBox (channelSourceComboBox, [this] () { channelSourceUiChanged (static_cast<uint8_t> (channelSourceComboBox.getSelectedItemIndex ())); });
 
     // BITS
     setupLabel (bitsLabel, "BITS");
@@ -337,7 +323,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     bitsTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setBits (squidChannelProperties.getBits (), false);
@@ -345,18 +331,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setBits (defaultChannelProperties.getBits (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setBits (uneditedChannelProperties.getBits (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (bitsTextEditor, juce::Justification::centredRight, 0, "0123456789", "Bits"); // 1-16
+    setupTextEditor (bitsTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 1-16
     // RATE
     setupLabel (rateLabel, "RATE");
     rateComboBox.getProperties ().set (SquidLnFProperties::valueUnit, "kHz");
@@ -376,7 +362,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     rateComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setRate (squidChannelProperties.getRate (), false);
@@ -384,18 +370,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setRate (defaultChannelProperties.getRate (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setRate (uneditedChannelProperties.getRate (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (rateComboBox, "Rate", [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
+    setupComboBox (rateComboBox, [this] () { rateUiChanged (rateComboBox.getSelectedId () - 1); }); // 4,6,7,9,11,14,22,44
     // SPEED
     setupLabel (speedLabel, "SPEED");
     speedTextEditor.setTooltip ("Speed. Linear playback speed control. From 1 to 100, where 50 is normal speed. Available for Channels 1-5. Can be changed on the module in the Quality settings.");
@@ -410,7 +396,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     speedTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setSpeed (squidChannelProperties.getSpeed (), false);
@@ -418,18 +404,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setSpeed (defaultChannelProperties.getSpeed (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setSpeed (uneditedChannelProperties.getSpeed (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (speedTextEditor, juce::Justification::centredRight, 0, "0123456789", "Speed"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
+    setupTextEditor (speedTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 1 - 99 (50 is normal, below that is negative speed? above is positive?)
     // QUANTIZE
     setupLabel (quantLabel, "QUANT");
     quantComboBox.setTooltip ("Quantization. This applies pitch quantisation to the sample playback (speed). Note the original pitch of the sample file serves as the scale's root note. Available for Channels 6-8.");
@@ -458,7 +444,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     quantComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setQuant (squidChannelProperties.getQuant (), false);
@@ -466,18 +452,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setQuant (defaultChannelProperties.getQuant (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setQuant (uneditedChannelProperties.getQuant (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (quantComboBox, "Quantize", [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
+    setupComboBox (quantComboBox, [this] () { quantUiChanged (quantComboBox.getSelectedId () - 1); }); // 0-14 (Off, 12, OT, MA, mi, Hm, PM, Pm, Ly, Ph, Jp, P5, C1, C4, C5)
 
     // PITCH SHIFT
     setupLabel (pitchShiftLabel, "PITCH");
@@ -495,25 +481,25 @@ void ChannelEditorComponent::setupComponents ()
     pitchShiftTextEditor.onPopupMenuCallback = [this] ()
     {
         auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
-        [this] (SquidChannelProperties& destChannelProperties)
-        {
-            destChannelProperties.setPitchShift (squidChannelProperties.getPitchShift (), false);
-        },
-        [this] ()
-        {
-            SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                             SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            squidChannelProperties.setPitchShift (defaultChannelProperties.getPitchShift (), true);
-        },
-        [this] ()
-        {
-            SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                              SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            squidChannelProperties.setPitchShift (uneditedChannelProperties.getPitchShift (), true);
-        }) };
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setPitchShift (squidChannelProperties.getPitchShift (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setPitchShift (defaultChannelProperties.getPitchShift (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setPitchShift (uneditedChannelProperties.getPitchShift (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (pitchShiftTextEditor, juce::Justification::centredRight, 0, "0123456789.", "Pitch");
+    setupTextEditor (pitchShiftTextEditor, juce::Justification::centredRight, 0, "0123456789.");
 
     // FILTER TYPE
     setupLabel (filterTypeLabel, "TYPE");
@@ -533,7 +519,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterTypeComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setFilterType (squidChannelProperties.getFilterType (), false);
@@ -541,18 +527,18 @@ void ChannelEditorComponent::setupComponents ()
             [this] ()
             {
                 SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                 SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setFilterType (defaultChannelProperties.getFilterType (), true);
             },
             [this] ()
             {
                 SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                  SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
                 squidChannelProperties.setFilterType (uneditedChannelProperties.getFilterType (), true);
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (filterTypeComboBox, "Filter", [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
+    setupComboBox (filterTypeComboBox, [this] () { filterTypeUiChanged (filterTypeComboBox.getSelectedId () - 1); }); // Off, LP, BP, NT, HP (0-4)
     // FILTER FREQUENCY
     setupLabel (filterFrequencyLabel, "FREQ");
     filterFrequencyTextEditor.setTooltip ("Filter Frequency. Adjusts the cut off frequency of the filter, only appears when a filter type is selected.");
@@ -567,7 +553,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterFrequencyTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setFilterFrequency (squidChannelProperties.getFilterFrequency (), false);
@@ -586,7 +572,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (filterFrequencyTextEditor, juce::Justification::centredRight, 0, "0123456789", "Frequency"); // 1-99?
+    setupTextEditor (filterFrequencyTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 1-99?
 
     // FILTER RESONANCE
     setupLabel (filterResonanceLabel, "RESO");
@@ -602,7 +588,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     filterResonanceTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setFilterResonance (squidChannelProperties.getFilterResonance (), false);
@@ -621,7 +607,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (filterResonanceTextEditor, juce::Justification::centredRight, 0, "0123456789", "Resonance"); // 1-99?
+    setupTextEditor (filterResonanceTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 1-99?
     // LEVEL
     setupLabel (levelLabel, "LEVEL");
     levelTextEditor.setTooltip ("Level. Adjust the playback volume of a sample. At 50 is unity gain. below will attenuate, above increase. Use this setting to avoid digital clipping when mixed. Value defaults to 30 as to conservatively avoid digital clipping.");
@@ -636,7 +622,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     levelTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setLevel (squidChannelProperties.getLevel (), false);
@@ -655,7 +641,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (levelTextEditor, juce::Justification::centredRight, 0, "0123456789", "Level"); // 1-99
+    setupTextEditor (levelTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 1-99
     // ATTACK
     setupLabel (attackLabel, "ATTACK");
     attackTextEditor.setTooltip ("Add a simple attack envelope to control volume at the beginning of sample playback. Behaves similar to Decay if the sample is set to loop.");
@@ -670,7 +656,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     attackTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setAttack (squidChannelProperties.getAttack (), false);
@@ -689,7 +675,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (attackTextEditor, juce::Justification::centredRight, 0, "0123456789", "Attack"); // 0-99
+    setupTextEditor (attackTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 0-99
     // DECAY
     setupLabel (decayLabel, "DECAY");
     decayTextEditor.setTooltip ("Add a simple decay envelope to fade out the volume of the sample. Decay time shortens as value rises. If a sample is set to loop the envelope will effect the loop as a whole (rather than single sample) with max decay time being 10 seconds.");
@@ -704,7 +690,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     decayTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setDecay (squidChannelProperties.getDecay (), false);
@@ -723,7 +709,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (decayTextEditor, juce::Justification::centredRight, 0, "0123456789", "Decay"); // 0-99
+    setupTextEditor (decayTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 0-99
     // LOOP MODE
     setupLabel (loopModeLabel, "MODE");
     {
@@ -742,7 +728,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     loopModeComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setLoopMode (squidChannelProperties.getLoopMode (), false);
@@ -761,7 +747,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (loopModeComboBox, "LoopMode", [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
+    setupComboBox (loopModeComboBox, [this] () { loopModeUiChanged (loopModeComboBox.getSelectedItemIndex ()); }); // none, normal, zigZag, gate, zigZagGate (0-4)
     // XFADE
     setupLabel (xfadeLabel, "XFADE");
     xfadeTextEditor.setTooltip ("Loop Crossfade. Adds a simple cross fade between the sample end and loop points as to smooth out loops.");
@@ -776,7 +762,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     xfadeTextEditor.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setXfade (squidChannelProperties.getXfade (), false);
@@ -795,14 +781,14 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (xfadeTextEditor, juce::Justification::centredRight, 0, "0123456789", "XFade"); // 0 -99
+    setupTextEditor (xfadeTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 0 -99
     // REVERSE
     setupLabel (reverseLabel, "REVERSE");
     reverseButton.setTooltip ("Reverse. Reverses the sample");
     reverseButton.onClick = [this] () { reverseUiChanged (reverseButton.getToggleState ()); };
     reverseButton.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setReverse (squidChannelProperties.getReverse (), false);
@@ -888,7 +874,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (startCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "Start"); // 0 - sample length?
+    setupTextEditor (startCueTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 0 - sample length?
     // LOOP
     setupLabel (loopCueLabel, "LOOP");
     loopCueLabel.setFont (SquidType::cuePointLabel ());
@@ -949,7 +935,7 @@ void ChannelEditorComponent::setupComponents ()
         }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (loopCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "Loop"); // 0 - sample length?, or sampleStart - sampleEnd
+    setupTextEditor (loopCueTextEditor, juce::Justification::centredRight, 0, "0123456789"); // 0 - sample length?, or sampleStart - sampleEnd
     // END
     setupLabel (endCueLabel, "END");
     endCueLabel.setFont (SquidType::cuePointLabel ());
@@ -998,25 +984,25 @@ void ChannelEditorComponent::setupComponents ()
             adjustMenu.addSubMenu ("Zero Crossing", zeroCrossingMenuOptions);
         }
         auto editMenu { editManager->createChannelEditMenu (adjustMenu, squidChannelProperties.getChannelIndex (),
-        [this] (SquidChannelProperties& destChannelProperties)
-        {
-            destChannelProperties.setEndCue (squidChannelProperties.getEndCue (), false);
-        },
-        [this] ()
-        {
-            SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            squidChannelProperties.setEndCue (defaultChannelProperties.getEndCue (), true);
-        },
-        [this] ()
-        {
-            SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
-                                                                SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
-            squidChannelProperties.setEndCue (uneditedChannelProperties.getEndCue (), true);
-        }) };
+            [this] (SquidChannelProperties& destChannelProperties)
+            {
+                destChannelProperties.setEndCue (squidChannelProperties.getEndCue (), false);
+            },
+            [this] ()
+            {
+                SquidChannelProperties defaultChannelProperties (editManager->getDefaultChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setEndCue (defaultChannelProperties.getEndCue (), true);
+            },
+            [this] ()
+            {
+                SquidChannelProperties uneditedChannelProperties (editManager->getUneditedChannelProperties (squidChannelProperties.getChannelIndex ()),
+                                                                    SquidChannelProperties::WrapperType::client, SquidChannelProperties::EnableCallbacks::no);
+                squidChannelProperties.setEndCue (uneditedChannelProperties.getEndCue (), true);
+            }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupTextEditor (endCueTextEditor, juce::Justification::centredRight, 0, "0123456789", "End"); // sampleStart - sample length
+    setupTextEditor (endCueTextEditor, juce::Justification::centredRight, 0, "0123456789"); // sampleStart - sample length
     // CHOKE
     setupLabel (chokeLabel, "CHOKE");
     chokeComboBox.setTooltip ("Choke. Select a channel that will stop playing when this channel plays.");
@@ -1028,7 +1014,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     chokeComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setChoke (squidChannelProperties.getChoke (), false);
@@ -1047,7 +1033,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (chokeComboBox, "Choke", [this] () { chokeUiChanged (chokeComboBox.getSelectedId () - 1); }); // Off, C1, C2, C3, C4, C5, C6, C7, C8
+    setupComboBox (chokeComboBox, [this] () { chokeUiChanged (chokeComboBox.getSelectedId () - 1); }); // Off, C1, C2, C3, C4, C5, C6, C7, C8
     // ETrig
     setupLabel (eTrigLabel, "EOS TRIG");
     eTrigComboBox.setTooltip ("EOS Trigger. Selecting a channel will start playback of that channel when this one ends. Selecting On will cause a trigger to happen on the Trigger Output.");
@@ -1062,7 +1048,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     eTrigComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setETrig (squidChannelProperties.getETrig (), false);
@@ -1081,7 +1067,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (eTrigComboBox, "EOS Trig", [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
+    setupComboBox (eTrigComboBox, [this] () { eTrigUiChanged (eTrigComboBox.getSelectedItemIndex ()); }); // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     // Steps
     setupLabel (stepsLabel, "STEPS");
     stepsComboBox.setTooltip ("Steps. Cycles incoming triggers across specified adjacent channels in a stepped round robin fashion. This allows for polyphonic type triggering of samples.");
@@ -1095,7 +1081,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     stepsComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 destChannelProperties.setSteps (squidChannelProperties.getSteps (), false);
@@ -1114,7 +1100,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (stepsComboBox, "Steps", [this] () { stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
+    setupComboBox (stepsComboBox, [this] () { stepsUiChanged (stepsComboBox.getSelectedItemIndex ()); }); // 0-7 (Off, - 2, - 3, - 4, - 5, - 6, - 7, - 8)
     // Output
     setupLabel (outputLabel, "OUTPUT");
     outputComboBox.setTooltip ("Neighbour Output. Select with the original channel output, or assign it to it's neighbor. Chans 1-4 to the 1+2 output or 3+4 output and channels 5-8 to the 5+6 output or 7+8 output.");
@@ -1127,7 +1113,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     outputComboBox.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setAltOutput (destChannelProperties.getChannelIndex (), editManager->isAltOutput (squidChannelProperties.getChannelIndex ()));
@@ -1142,7 +1128,7 @@ void ChannelEditorComponent::setupComponents ()
             }) };
         editMenu.showMenuAsync ({}, [this] (int) {});
     };
-    setupComboBox (outputComboBox, "Output", [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
+    setupComboBox (outputComboBox, [this] () { outputUiChanged (outputComboBox.getSelectedItemIndex ()); });
     // CUE RANDOM
     setupLabel (cueRandomLabel, "RANDOM");
     cueRandomButton.setTooltip ("Random Cue Selection. Enabling will cause a random Cue Set to be selected each time the channel is triggered.");
@@ -1152,7 +1138,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     cueRandomButton.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setCueRandom (destChannelProperties.getChannelIndex (), editManager->isCueRandomOn (squidChannelProperties.getChannelIndex ()));
@@ -1177,7 +1163,7 @@ void ChannelEditorComponent::setupComponents ()
     };
     cueStepButton.onPopupMenuCallback = [this] ()
     {
-            auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
+        auto editMenu { editManager->createChannelEditMenu ({}, squidChannelProperties.getChannelIndex (),
             [this] (SquidChannelProperties& destChannelProperties)
             {
                 editManager->setCueStep (destChannelProperties.getChannelIndex (), editManager->isCueStepOn (squidChannelProperties.getChannelIndex ()));

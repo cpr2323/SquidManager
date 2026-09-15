@@ -1,8 +1,8 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "../../Theme/UiComponents.h"
 #include "BankListProperties.h"
+#include "../../Theme/UiComponents.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "oolib/Core/LambdaThread.h"
