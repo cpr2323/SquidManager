@@ -107,10 +107,6 @@ public:
         initSquidSalmple ();
         initAudio ();
         initSystemServices ();
-        // after the property roots exist, so it can pick up the stored ground level,
-        // and before any component is built, so they all resolve through the palette
-        themeController.init (rootProperties.getValueTree ());
-
         initUi ();
 
         //ValueTreeHelpers::dumpValueTreeContent (rootProperties.getValueTree (), false, [] (juce::String text) { DebugLog ("main", text); });
@@ -217,6 +213,7 @@ public:
     void initUi ()
     {
         guiProperties.wrap (persistentRootProperties.getValueTree (), GuiProperties::WrapperType::owner, GuiProperties::EnableCallbacks::no);
+        themeController.init (rootProperties.getValueTree ());
         mainWindow.reset (new MainWindow (getApplicationName () + " - " + getVersionDisplayString (), rootProperties.getValueTree ()));
     }
 
