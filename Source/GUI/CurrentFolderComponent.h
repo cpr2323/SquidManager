@@ -4,6 +4,7 @@
 #include "../AppProperties.h"
 #include "GuiProperties.h"
 #include "Theme/UiComponents.h"
+#include "oolib/Directory/DirectoryDataProperties.h"
 
 /*
     The strip along the top of the window: where you are, which output you are
@@ -25,10 +26,13 @@ public:
 private:
     AppProperties appProperties;
     GuiProperties guiProperties;
+    DirectoryDataProperties directoryDataProperties;
     juce::AudioDeviceManager* audioDeviceManager { nullptr };
 
     static constexpr int kPadding { 9 };
     juce::StringArray pathSegments;
+    // the last crumb is picked out only when it names the open bank
+    bool pathEndsInBank { false };
 
     ChromeButton outputButton { "OUT", ChromeButton::Size::chip };
     ChromeButton settingsButton { "SETTINGS", ChromeButton::Size::chip };

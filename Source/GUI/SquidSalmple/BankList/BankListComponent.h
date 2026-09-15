@@ -56,6 +56,10 @@ private:
     std::vector<BankDirectoryEntry> bankDirectorySnapshot;
     juce::File snapshotRootFolder;
     bool snapshotShowAllBanks { true };
+    // whether the directory scan had filled in the root folder when the snapshot was
+    // taken, so that finding no banks means there are none, rather than not yet
+    bool rootScanComplete { false };
+    bool snapshotRootScanComplete { false };
 
     void copyBank (int bankNumber);
     void checkBanks ();

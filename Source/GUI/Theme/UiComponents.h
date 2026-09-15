@@ -258,7 +258,10 @@ public:
         listBox.removeMouseListener (this);
     }
 
-    int getRow () const noexcept { return row; }
+    // -1 unless the pointer is actually over the list. A modal dialog, such as the
+    // unsaved bank warning, takes the pointer without the list ever seeing it leave,
+    // so the last row it saw would otherwise stay outlined after the list changed.
+    int getRow () const { return listBox.isMouseOver (true) ? row : -1; }
 
     // outline drawn by a row painter for the hovered row
     static void paintOutline (juce::Graphics& g, const juce::Component& colourSource, int width, int height)

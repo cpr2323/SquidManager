@@ -53,6 +53,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
         // clear list
         juce::MessageManager::callAsync ([this] ()
         {
+            rootScanComplete = true;
             if (! checkBanksThread.isThreadRunning ())
             {
                 checkForFolderChange ();
@@ -116,6 +117,7 @@ void BankListComponent::snapshotBankDirectories ()
     bankDirectorySnapshot = std::move (snapshot);
     snapshotRootFolder = rootFolderFile;
     snapshotShowAllBanks = showAllBanks.getToggleState ();
+    snapshotRootScanComplete = rootScanComplete;
 }
 
 void BankListComponent::startCheckBanksThread ()
@@ -186,11 +188,13 @@ void BankListComponent::checkBanks ()
     auto bankDirectories { std::vector<BankDirectoryEntry> () };
     auto scannedFolder { juce::File () };
     auto showAll { true };
+    auto rootScanned { false };
     {
         juce::ScopedLock sl (bankDirectorySnapshotCS);
         bankDirectories = bankDirectorySnapshot;
         scannedFolder = snapshotRootFolder;
         showAll = snapshotShowAllBanks;
+        rootScanned = snapshotRootScanComplete;
     }
 
     // the results are built up locally, and applied on the message thread, so that the bank list
@@ -226,10 +230,11 @@ void BankListComponent::checkBanks ()
     }
     sendStatusUpdate ("");
 
-    // the first bank can only be loaded once we actually have banks to load. a scan that ran before
-    // the directory contents were available finds none, and must leave the load for the next pass
+    // A pass that ran before the directory contents were available finds no banks, and must leave the
+    // load for the next pass. Once the folder has been scanned, finding none means the folder has none,
+    // and the editor is cleared to a default bank rather than keeping the previous folder's bank.
     const auto foundBanks { ! bankDirectories.empty () };
-    juce::MessageManager::callAsync ([this, newBankInfoList, newNumBanks, scannedFolder, foundBanks] ()
+    juce::MessageManager::callAsync ([this, newBankInfoList, newNumBanks, scannedFolder, foundBanks, rootScanned] ()
     {
         bankInfoList = newBankInfoList;
         numBanks = newNumBanks;
@@ -244,7 +249,7 @@ void BankListComponent::checkBanks ()
         resized ();
 
         bankListBox.updateContent ();
-        if (foundBanks && firstBankLoadPending)
+        if ((foundBanks || rootScanned) && firstBankLoadPending)
         {
             LogBankList ("checkBanks - loading first bank of " + scannedFolder.getFileName ());
             firstBankLoadPending = false;

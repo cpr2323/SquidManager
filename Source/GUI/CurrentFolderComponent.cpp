@@ -28,6 +28,11 @@ void CurrentFolderComponent::init (juce::ValueTree rootPropertiesVT)
     SystemServices systemServices (runtimeRootProperties.getValueTree (), SystemServices::WrapperType::client, SystemServices::EnableCallbacks::no);
     audioDeviceManager = systemServices.getAudioDeviceManager ();
 
+    // a bank folder that did not exist yet appears when the folder is rescanned, such
+    // as after the first save of a new bank
+    directoryDataProperties.wrap (runtimeRootProperties.getValueTree (), DirectoryDataProperties::WrapperType::client, DirectoryDataProperties::EnableCallbacks::yes);
+    directoryDataProperties.onRootScanComplete = [this] () { refreshPath (); };
+
     refreshPath ();
     refreshOutputName ();
 }
@@ -40,10 +45,13 @@ void CurrentFolderComponent::refreshPath ()
     pathSegments.removeEmptyStrings ();
 
     // Banks are the numbered folders inside the folder being viewed, so the last
-    // bank opened is only still open if it is one of those.
+    // bank opened is only still open if it is one of those. A folder with no banks
+    // opens a default bank in the first slot, which is not shown until it is saved.
     const auto lastBankOpened { appProperties.getRecentlyUsedFile (0) };
-    if (viewedFolder.isNotEmpty () && lastBankOpened.isNotEmpty ()
-        && juce::File (lastBankOpened).getParentDirectory () == juce::File (viewedFolder))
+    pathEndsInBank = viewedFolder.isNotEmpty () && lastBankOpened.isNotEmpty ()
+                     && juce::File (lastBankOpened).getParentDirectory () == juce::File (viewedFolder)
+                     && juce::File (lastBankOpened).isDirectory ();
+    if (pathEndsInBank)
         pathSegments.add (juce::File (lastBankOpened).getFileName ());
 
     repaint ();
@@ -101,7 +109,8 @@ void CurrentFolderComponent::paint (juce::Graphics& g)
     g.setColour (findColour (SquidColours::outline));
     g.drawHorizontalLine (getHeight () - 1, 0.0f, static_cast<float> (getWidth ()));
 
-    // breadcrumbs: everything before the current folder is context, so it is dimmed
+    // breadcrumbs: the folders are context, so they are dimmed; the open bank, when
+    // there is one, is the part that matters, so it is not
     const auto separator { juce::String (juce::CharPointer_UTF8 ("\xe2\x80\xba")) };
     constexpr auto kGap { 5 };
     const auto contextFont { SquidType::body () };
@@ -113,14 +122,15 @@ void CurrentFolderComponent::paint (juce::Graphics& g)
     for (auto segmentIndex { 0 }; segmentIndex < pathSegments.size (); ++segmentIndex)
     {
         const auto isLast { segmentIndex == pathSegments.size () - 1 };
+        const auto isBank { isLast && pathEndsInBank };
         const auto segment { pathSegments [segmentIndex] };
-        const auto& font { isLast ? currentFont : contextFont };
+        const auto& font { isBank ? currentFont : contextFont };
         const auto segmentWidth { SquidPaint::textWidth (font, segment) };
         if (x + segmentWidth > rightEdge)
             break;
 
         g.setFont (font);
-        g.setColour (findColour (isLast ? SquidColours::text : SquidColours::textDim));
+        g.setColour (findColour (isBank ? SquidColours::text : SquidColours::textDim));
         g.drawText (segment, textArea.withX (x).withWidth (segmentWidth + 1), juce::Justification::centredLeft, false);
         x += segmentWidth + kGap;
 
