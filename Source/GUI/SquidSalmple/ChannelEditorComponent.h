@@ -4,6 +4,8 @@
 #include "CueSets/WaveformDisplay.h"
 #include "CvAssigns/CvAssignEditor.h"
 #include "LoopPoints/LoopPointsView.h"
+#include "../Theme/SquidColourIds.h"
+#include "../Theme/SquidLookAndFeel.h"
 #include "../../AppProperties.h"
 #include "../../SquidSalmple/Audio/AudioPlayerProperties.h"
 #include "../../SquidSalmple/EditManager/EditManager.h"
@@ -11,7 +13,6 @@
 #include "oolib/GUI/CustomComboBox.h"
 #include "oolib/GUI/CustomTextEditor.h"
 #include "oolib/GUI/FileSelectLabel.h"
-#include "oolib/GUI/NoArrowComboBoxLnF.h"
 #include "oolib/GUI/RoundedSlideSwitch.h"
 
 class ChannelEditorComponent : public juce::Component,
@@ -19,7 +20,6 @@ class ChannelEditorComponent : public juce::Component,
 {
 public:
     ChannelEditorComponent ();
-    ~ChannelEditorComponent ();
 
     void init (juce::ValueTree squidChannelPropertiesVT, juce::ValueTree rootPropertiesVT);
     void initCueSetTabs ();
@@ -39,8 +39,11 @@ private:
 
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
 
-    juce::TextButton toolsButton;
-    juce::Label sampleLengthLabel;
+    MenuButton toolsButton { "CHANNEL TOOLS", ActionButton::Size::small };
+    // the sample length, painted beside the file chip: numbers in the dim ink,
+    // their units in the muted one
+    juce::String sampleSecondsText;
+    juce::String sampleCountText;
 
     // Edit fields
     juce::Label attackLabel;
@@ -58,7 +61,93 @@ private:
     juce::Label eTrigLabel;
     CustomComboBox eTrigComboBox; // Off, > 1, > 2, > 3, > 4, > 5, > 6, > 7, > 8, On
     juce::Label sampleFileNameLabel;
-    FileSelectLabel sampleFileNameSelectLabel;
+
+    /*
+        The sample file, as a chip. Only the name is shown: .wav is the only type
+        the Squid plays, so the extension would say nothing. Click it to browse.
+
+        A channel can play another channel's sample. Then the name is dimmed, since
+        it cannot be changed from here, and the channel it comes from is named at
+        the right hand end, as (C2), in normal ink.
+    */
+    class SampleFileChip : public FileSelectLabel
+    {
+    public:
+        SampleFileChip () { setRepaintsOnMouseActivity (true); }
+
+        void setFileName (const juce::String& fileName)
+        {
+            name = juce::File (fileName).getFileNameWithoutExtension ();
+            setText (name, juce::NotificationType::dontSendNotification);
+            repaint ();
+        }
+
+        // the channel the sample is taken from, or -1 when it is this channel's own
+        void setSourceChannel (int newSourceChannelIndex)
+        {
+            sourceTag = newSourceChannelIndex < 0 ? juce::String () : "(C" + juce::String (newSourceChannelIndex + 1) + ")";
+            repaint ();
+        }
+
+        int getIdealWidth () const
+        {
+            const auto chipFont { SquidType::fileName () };
+            auto width { SquidPaint::textWidth (chipFont, name.isEmpty () ? juce::String (kNoSampleText) : name) + (kPadding * 2) + 2 };
+            if (sourceTag.isNotEmpty ())
+                width += kTagGap + SquidPaint::textWidth (chipFont, sourceTag);
+            return width;
+        }
+
+        void paint (juce::Graphics& g) override
+        {
+            const auto area { getLocalBounds ().toFloat ().reduced (0.5f) };
+            const auto enabled { isEnabled () };
+            g.setColour (findColour (SquidColours::fieldBackground));
+            g.fillRoundedRectangle (area, 2.0f);
+            g.setColour (findColour (enabled && isMouseOver (true) ? SquidColours::accentDeep : SquidColours::outline));
+            g.drawRoundedRectangle (area, 2.0f, 1.0f);
+
+            auto content { getLocalBounds ().reduced (kPadding, 0) };
+            const auto chipFont { SquidType::fileName () };
+            g.setFont (chipFont);
+
+            const auto ink { findColour (SquidColours::text) };
+            if (sourceTag.isNotEmpty ())
+            {
+                g.setColour (ink);
+                g.drawText (sourceTag, content.removeFromRight (SquidPaint::textWidth (chipFont, sourceTag)), juce::Justification::centredRight, false);
+                content.removeFromRight (kTagGap);
+            }
+
+            if (name.isEmpty ())
+            {
+                g.setColour (findColour (SquidColours::textGhost));
+                g.drawText (kNoSampleText, content, juce::Justification::centredLeft, true);
+                return;
+            }
+
+            // Dimmed by mixing the text toward the field it sits on, rather than using
+            // the dim ink. That ink is tuned to be legible on its own, so in the middle
+            // of the background slider it comes out nearly as strong as normal text;
+            // a mix keeps the dimmed name clearly weaker at every background level.
+            g.setColour (enabled ? ink : ink.interpolatedWith (findColour (SquidColours::fieldBackground), kDimmedMix));
+            g.drawText (name, content, juce::Justification::centredLeft, true);
+        }
+
+    private:
+        static constexpr const char* kNoSampleText { "no sample" };
+        static constexpr int kPadding { 9 };
+        static constexpr int kTagGap { 8 };
+        // how far toward the field a dimmed name goes: at 0.45 it stays at least 1.8
+        // times less contrasty than normal text, and above 2.4:1, across the slider
+        static constexpr float kDimmedMix { 0.45f };
+        juce::String name;
+        juce::String sourceTag;
+
+        // the outline FileSelectLabel draws is part of the chip here
+        void paintOverChildren (juce::Graphics&) override {}
+    };
+    SampleFileChip sampleFileNameSelectLabel;
     juce::Label filterTypeLabel;
     CustomComboBox filterTypeComboBox; // Off, LP, BP, NT, HP (0-4)
     juce::Label filterFrequencyLabel;
@@ -95,70 +184,143 @@ private:
     RoundedSlideSwitch cueStepButton;
 
     LoopPointsView loopPointsView;
-    juce::TextButton oneShotPlayButton;
-    juce::TextButton loopPlayButton;
+    TransportButton oneShotPlayButton { "ONCE", TransportButton::Glyph::play };
+    TransportButton loopPlayButton { "LOOP", TransportButton::Glyph::loop };
+
+    // Names the groups the parameters are divided into. These carry the accent
+    // colour rather than the default text colour, so they are refreshed in
+    // applyExplicitColours when the palette changes.
+    juce::Label levelEnvHeaderLabel;
+    juce::Label filterHeaderLabel;
+    juce::Label qualityHeaderLabel;
+    juce::Label loopHeaderLabel;
+    juce::Label triggerHeaderLabel;
+    juce::Label cueTriggerHeaderLabel;
+    juce::Label cuePointsHeaderLabel;
+    juce::Label loopTunerHeaderLabel;
+
+    /*
+        A short colour bar beside a cue point field, drawn in the same colour as
+        that point's marker on the waveform, so the number and the thing it moves
+        read as one object. It resolves at paint time, so it follows the palette
+        with no extra work.
+    */
+    class MarkerSwatch : public juce::Component
+    {
+    public:
+        explicit MarkerSwatch (int theColourId) : colourId (theColourId) {}
+        void paint (juce::Graphics& g) override
+        {
+            g.setColour (findColour (colourId));
+            g.fillRoundedRectangle (getLocalBounds ().toFloat (), 1.0f);
+        }
+    private:
+        int colourId;
+    };
+    MarkerSwatch startCueSwatch { SquidColours::markerStart };
+    MarkerSwatch loopCueSwatch { SquidColours::markerLoop };
+    MarkerSwatch endCueSwatch { SquidColours::markerEnd };
+
+    // set in resized, drawn in paint - the section cards, the hairlines that
+    // separate the six parameter groups, and the bands inside the cue card
+    juce::Rectangle<int> sampleCardBounds;
+    juce::Rectangle<int> sampleMetaBounds;
+    juce::Rectangle<int> parameterPanelBounds;
+    juce::Rectangle<int> cueSetsCardBounds;
+    juce::Rectangle<int> cueHeaderBounds;
+    juce::Rectangle<int> topCueChipBounds;
+    juce::Rectangle<int> bottomCueChipBounds;
+    juce::Rectangle<int> cueToolBounds;
+    juce::Rectangle<int> cvAssignCardBounds;
+    std::array<int, 5> parameterDividerX { { 0, 0, 0, 0, 0 } };
 
     // LOWER PANE
     WaveformDisplay waveformDisplay;
+    /*
+        One chip per cue set. The current set is filled with the accent; a set
+        that does not exist yet is dimmed and cannot be picked.
+    */
     class CueSetButton : public juce::TextButton
     {
     public:
-        CueSetButton ()
-            : TextButton ()
+        void paintButton (juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
         {
-            setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
-            setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            setColour (juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::white);
-            setColour (juce::TextButton::ColourIds::textColourOnId, juce::Colours::black);
+            const auto area { getLocalBounds ().toFloat ().reduced (0.5f) };
+            const auto enabled { isEnabled () };
+            const auto current { enabled && getToggleState () };
+            const auto hovered { enabled && ! current && (isMouseOver || isMouseDown) };
+
+            g.setColour (findColour (current ? SquidColours::accent
+                                             : (enabled ? SquidColours::buttonBackground : SquidColours::listBackground)));
+            g.fillRoundedRectangle (area, 2.0f);
+            g.setColour (findColour (current ? SquidColours::accentEdge
+                                             : (hovered ? SquidColours::accentDeep
+                                                        : (enabled ? SquidColours::outline : SquidColours::outlineDim))));
+            g.drawRoundedRectangle (area, 2.0f, 1.0f);
+
+            g.setFont (current ? SquidType::cueChipActive () : SquidType::cueChip ());
+            g.setColour (findColour (current ? SquidColours::accentInk
+                                             : (! enabled ? SquidColours::textGhost
+                                                          : (hovered ? SquidColours::text : SquidColours::menuHeaderText))));
+            g.drawText (getButtonText (), getLocalBounds (), juce::Justification::centred, false);
         }
-        void enablementChanged () override
+    };
+
+    /*
+        The tools stacked beside the waveform: the waveform menu, level with the
+        ruler, then add and delete cue set. Deleting is the one destructive tool in
+        the editor, so it warns in red under the pointer.
+    */
+    class CueToolButton : public juce::Button
+    {
+    public:
+        CueToolButton (juce::String glyphText, bool isDestructive)
+            : juce::Button ({}), glyph (std::move (glyphText)), destructive (isDestructive)
         {
-            if (isEnabled ())
-            {
-                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::darkgrey);
-                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            }
-            else
-            {
-                setColour (juce::TextButton::ColourIds::buttonColourId, juce::Colours::black);
-                setColour (juce::TextButton::ColourIds::textColourOffId, juce::Colours::white);
-            }
         }
+
+        // an empty glyph draws a gear
+        static inline const juce::String kGear {};
+
+        void paintButton (juce::Graphics& g, bool isMouseOver, bool isMouseDown) override
+        {
+            const auto enabled { isEnabled () };
+            const auto hovered { enabled && (isMouseOver || isMouseDown) };
+            g.fillAll (findColour (hovered ? (destructive ? SquidColours::dangerBackground : SquidColours::hoverBackground)
+                                           : SquidColours::panelHeader));
+            if (hovered)
+            {
+                g.setColour (findColour (SquidColours::accentDeep));
+                g.drawRect (getLocalBounds (), 1);
+            }
+            g.setColour (findColour (! enabled ? SquidColours::textGhost
+                                               : (hovered ? (destructive ? SquidColours::danger : SquidColours::text)
+                                                          : SquidColours::textDim)));
+            if (glyph.isEmpty ())
+            {
+                SquidPaint::gear (g, getLocalBounds ().toFloat ().withSizeKeepingCentre (11.0f, 11.0f));
+                return;
+            }
+            g.setFont (SquidType::glyph ());
+            g.drawText (glyph, getLocalBounds (), juce::Justification::centred, false);
+        }
+
+    private:
+        juce::String glyph;
+        bool destructive;
     };
     std::array<CueSetButton, 64> cueSetButtons;
     CvAssignEditor cvAssignEditor;
 
-    NoArrowComboBoxLnF noArrowComboBoxLnF;
 
-    class CueEditButtonLnF : public juce::LookAndFeel_V4
-    {
-    public:
-        juce::Font getTextButtonFont (juce::TextButton&, int /*buttonHeight*/) override
-        {
-            return juce::Font (juce::FontOptions (11.0f));
-        }
-
-        // the default implementation reserves an indent on each side of the text, which on these
-        // 15 pixel wide buttons leaves only 5 pixels for the glyph. that is narrower than the '+'
-        // needs, so it gets squashed to the minimum horizontal scale and becomes unreadable. these
-        // buttons hold a single character, so the text is drawn across the full width instead
-        void drawButtonText (juce::Graphics& g, juce::TextButton& button, bool, bool) override
-        {
-            g.setFont (getTextButtonFont (button, button.getHeight ()));
-            g.setColour (button.findColour (button.getToggleState () ? juce::TextButton::textColourOnId
-                                                                    : juce::TextButton::textColourOffId)
-                               .withMultipliedAlpha (button.isEnabled () ? 1.0f : 0.5f));
-            g.drawText (button.getButtonText (), button.getLocalBounds (), juce::Justification::centred, false);
-        }
-    };
-    CueEditButtonLnF cueEditButtonLnF;
-
-    juce::TextButton addCueSetButton;
-    juce::TextButton deleteCueSetButton;
+    CueToolButton waveformToolsButton { CueToolButton::kGear, false };
+    CueToolButton addCueSetButton { "+", false };
+    CueToolButton deleteCueSetButton { juce::String (juce::CharPointer_UTF8 ("\xe2\x88\x92")), true };
 
     int curCueSetIndex { 0 };
 
     void appendCueSet ();
+    void showWaveformToolsMenu ();
     void configFileSelectorFromChannelSource ();
     void deleteCueSet (int cueSetIndex);
     int getFilterFrequencyUiValue (int internalValue);
@@ -231,6 +393,8 @@ private:
     void fileDragExit (const juce::StringArray& files) override;
 
     void resized () override;
+    void lookAndFeelChanged () override;
+    void applyExplicitColours ();
     void paint (juce::Graphics& g) override;
     void paintOverChildren (juce::Graphics& g) override;
 };

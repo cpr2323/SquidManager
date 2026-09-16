@@ -1,4 +1,5 @@
 #include "FileViewComponent.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SystemServices.h"
 #include "oolib/Properties/PersistentRootProperties.h"
 #include "oolib/Properties/RuntimeRootProperties.h"
@@ -11,22 +12,24 @@
 #endif
 
 const auto kDialogTextEditorName { "foldername" };
+constexpr auto kRowHeight { 24 };
+constexpr auto kToolGap { 6 };
 
 FileViewComponent::FileViewComponent ()
 {
     setOpaque (true);
-    openFolderButton.setButtonText ("Open");
+    addAndMakeVisible (paneHeader);
     openFolderButton.setTooltip ("Navigate to a specific folder");
     openFolderButton.onClick = [this] () { openFolder (); };
     addAndMakeVisible (openFolderButton);
-    newFolderButton.setButtonText ("New");
     newFolderButton.setTooltip ("Create a new folder");
     newFolderButton.onClick = [this] () { newFolder (); };
     addAndMakeVisible (newFolderButton);
-    directoryContentsListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
+    directoryContentsListBox.setRowHeight (kRowHeight);
+    directoryContentsListBox.setOutlineThickness (0);
     addAndMakeVisible (directoryContentsListBox);
+    showAllFiles.setClickingTogglesState (true);
     showAllFiles.setToggleState (false, juce::NotificationType::dontSendNotification);
-    showAllFiles.setButtonText ("Show All");
     showAllFiles.setTooltip ("Show all files, or show just Squid Salmple files");
     showAllFiles.onClick = [this] () { updateFromNewData (); };
     addAndMakeVisible (showAllFiles);
@@ -51,31 +54,6 @@ void FileViewComponent::init (juce::ValueTree rootPropertiesVT)
         isRootFolder = juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory () == juce::File (directoryDataProperties.getRootFolder ());
         updateFromNewData ();
     };
-
-//     directoryDataProperties.onStatusChange = [this] (DirectoryDataProperties::ScanStatus status)
-//     {
-//         switch (status)
-//         {
-//             case DirectoryDataProperties::ScanStatus::empty:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::scanning:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::canceled:
-//             {
-//             }
-//             break;
-//             case DirectoryDataProperties::ScanStatus::done:
-//             {
-//                 isRootFolder = juce::File (directoryDataProperties.getRootFolder ()).getParentDirectory () == juce::File (directoryDataProperties.getRootFolder ());
-//                 updateFromNewData ();
-//             }
-//             break;
-//         }
-//     };
 
     updateFromNewData ();
 }
@@ -159,44 +137,62 @@ juce::ValueTree FileViewComponent::getDirectoryEntryVT (int row)
     return directoryListQuickLookupList [quickLookupIndex];
 }
 
+void FileViewComponent::selectedRowsChanged (int lastRowSelected)
+{
+    // The list is for navigating, not choosing: clicking a folder opens it, and
+    // nothing in the list stays marked as active afterwards. The ListBox selects a
+    // row on every click before telling the model, so the selection is undone here.
+    if (lastRowSelected >= 0)
+        directoryContentsListBox.deselectAllRows ();
+}
+
 void FileViewComponent::paintListBoxItem (int row, juce::Graphics& g, int width, int height, [[maybe_unused]] bool rowIsSelected)
 {
     if (row >= getNumRows ())
         return;
 
-    if (rowIsSelected)
-        lastSelectedRow = row;
-
-    juce::Colour textColor { juce::Colours::whitesmoke };
-    juce::String fileListItem;
+    // A folder row is marked with a triangle and a folder, as a place that opens;
+    // a file row keeps the same indent so the names line up.
+    auto isFolder { true };
+    auto isAudio { false };
+    auto textColourId { static_cast<int> (SquidColours::textDim) };
+    juce::String name;
     if (! isRootFolder && row == 0)
     {
-        fileListItem = " >  ..";
+        name = "..";
     }
     else
     {
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
-        juce::String filePrefix;
-        if (FolderProperties::isFolderVT (directoryEntryVT))
-        {
-            filePrefix = "> ";
-        }
-        else if (isAudioFile (directoryEntryVT))
-        {
-            filePrefix = "-  ";
-            textColor = juce::Colours::forestgreen;
-        }
-        else
-        {
-            filePrefix = "   ";
-            textColor = textColor.darker (0.4f);
-        }
-        auto file { juce::File (directoryEntryVT.getProperty ("name").toString ()) };
-        fileListItem = " " + filePrefix + file.getFileName ();
+        isFolder = FolderProperties::isFolderVT (directoryEntryVT);
+        isAudio = ! isFolder && isAudioFile (directoryEntryVT);
+        if (! isFolder)
+            textColourId = isAudio ? SquidColours::textSupported : SquidColours::textGhost;
+        name = juce::File (directoryEntryVT.getProperty ("name").toString ()).getFileName ();
     }
 
-    g.setColour (textColor);
-    g.drawText (fileListItem, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
+    const auto hovered { row == rowHover.getRow () };
+
+    auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
+    const auto folderArea { rowBounds.removeFromLeft (9).toFloat () };
+    rowBounds.removeFromLeft (6);
+    if (isFolder)
+    {
+        g.setColour (findColour (SquidColours::accentDeep));
+        SquidPaint::folder (g, folderArea.withSizeKeepingCentre (9.0f, 8.0f));
+    }
+    else if (isAudio)
+    {
+        g.setColour (findColour (SquidColours::textSupported));
+        SquidPaint::audioFile (g, folderArea.withSizeKeepingCentre (9.0f, 10.0f));
+    }
+
+    g.setFont (SquidType::body ());
+    g.setColour (findColour (hovered ? SquidColours::text : textColourId));
+    g.drawText (name, rowBounds, juce::Justification::centredLeft, true);
+
+    if (hovered)
+        ListRowHover::paintOutline (g, *this, width, height);
 }
 
 juce::String FileViewComponent::getTooltipForRow (int row)
@@ -244,10 +240,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
             return;
         const auto directoryEntryVT { getDirectoryEntryVT (row) };
         auto folder { juce::File (directoryEntryVT.getProperty ("name").toString ()) };
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
-        pm.setLookAndFeel (popupMenuLnF);
         pm.addSectionHeader (folder.getFileName ());
         pm.addSeparator ();
         pm.addItem ("Rename", true, false, [this, folder] ()
@@ -289,7 +282,7 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
                 }
             }));
         });
-        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        pm.showMenuAsync ({});
     }
     else
     {
@@ -310,12 +303,8 @@ void FileViewComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
 
         if (overwriteBankOrCancel != nullptr)
         {
-            auto cancelSelection = [this] ()
-            {
-                directoryContentsListBox.selectRow (lastSelectedRow, false, true);
-            };
-
-            overwriteBankOrCancel (completeSelection, cancelSelection);
+            // nothing was marked when the folder was clicked, so there is nothing to put back
+            overwriteBankOrCancel (completeSelection, [] () {});
         }
         else
         {
@@ -337,22 +326,38 @@ void FileViewComponent::listBoxItemDoubleClicked (int row, [[maybe_unused]] cons
     }
 }
 
+int FileViewComponent::getMinimumWidth () const
+{
+    const auto toolsWidth { openFolderButton.getIdealWidth () + newFolderButton.getIdealWidth () + showAllFiles.getIdealWidth () + (2 * kToolGap) };
+    // plus the outline on either side
+    return paneHeader.getRequiredWidth (toolsWidth) + 2;
+}
+
 void FileViewComponent::resized ()
 {
-    auto localBounds { getLocalBounds () };
-    localBounds.reduce (3, 3);
-    auto toolRow { localBounds.removeFromTop (25) };
-    openFolderButton.setBounds (toolRow.removeFromLeft (50));
-    toolRow.removeFromLeft (5);
-    newFolderButton.setBounds (toolRow.removeFromLeft (50));
-    showAllFiles.setBounds (toolRow);
+    // inside the pane's outline
+    auto localBounds { getLocalBounds ().reduced (1) };
+    auto headerBounds { localBounds.removeFromTop (PaneHeader::kHeight) };
+    paneHeader.setBounds (headerBounds);
 
-    localBounds.removeFromTop (3);
+    // the pane tools live in the header strip, right aligned
+    auto toolRow { paneHeader.getFreeBounds () + headerBounds.getPosition () };
+    auto placeTool = [&toolRow] (ChromeButton& tool)
+    {
+        tool.setBounds (toolRow.removeFromRight (tool.getIdealWidth ()));
+        toolRow.removeFromRight (kToolGap);
+    };
+    placeTool (showAllFiles);
+    placeTool (newFolderButton);
+    placeTool (openFolderButton);
+
     directoryContentsListBox.setBounds (localBounds);
 }
 
 void FileViewComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    // opaque, so the background behind the rounded corners is this component's to paint
+    g.fillAll (findColour (SquidColours::windowBackground));
+    SquidPaint::card (g, *this, getLocalBounds ());
 }
 

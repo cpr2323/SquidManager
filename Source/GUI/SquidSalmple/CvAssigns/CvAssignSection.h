@@ -14,5 +14,6 @@ private:
     juce::Label cvAssignLabel;
     //std::vector<CvAssignParameter> cvAssignParameterList;
 
+    void paintOverChildren (juce::Graphics& g) override;
     void resized () override;
 };

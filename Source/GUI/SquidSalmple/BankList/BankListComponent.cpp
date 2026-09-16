@@ -1,4 +1,5 @@
 #include "BankListComponent.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SquidSalmple/Bank/BankManagerProperties.h"
 #include "../../../SystemServices.h"
 #include "oolib/Debug/DebugLog.h"
@@ -16,12 +17,14 @@
 BankListComponent::BankListComponent ()
 {
     setOpaque (true);
+    addAndMakeVisible (paneHeader);
+    showAllBanks.setClickingTogglesState (true);
     showAllBanks.setToggleState (true, juce::NotificationType::dontSendNotification);
-    showAllBanks.setButtonText ("Show All");
     showAllBanks.setTooltip ("Show all Banks, Show only existing Banks");
     showAllBanks.onClick = [this] () { startCheckBanksThread (); };
     addAndMakeVisible (showAllBanks);
-    bankListBox.setColour (juce::ListBox::ColourIds::backgroundColourId, juce::Colours::black);
+    bankListBox.setRowHeight (24);
+    bankListBox.setOutlineThickness (0);
     addAndMakeVisible (bankListBox);
 
     checkBanksThread.onThreadLoop = [this] ()
@@ -50,6 +53,7 @@ void BankListComponent::init (juce::ValueTree rootPropertiesVT)
         // clear list
         juce::MessageManager::callAsync ([this] ()
         {
+            rootScanComplete = true;
             if (! checkBanksThread.isThreadRunning ())
             {
                 checkForFolderChange ();
@@ -113,6 +117,7 @@ void BankListComponent::snapshotBankDirectories ()
     bankDirectorySnapshot = std::move (snapshot);
     snapshotRootFolder = rootFolderFile;
     snapshotShowAllBanks = showAllBanks.getToggleState ();
+    snapshotRootScanComplete = rootScanComplete;
 }
 
 void BankListComponent::startCheckBanksThread ()
@@ -183,11 +188,13 @@ void BankListComponent::checkBanks ()
     auto bankDirectories { std::vector<BankDirectoryEntry> () };
     auto scannedFolder { juce::File () };
     auto showAll { true };
+    auto rootScanned { false };
     {
         juce::ScopedLock sl (bankDirectorySnapshotCS);
         bankDirectories = bankDirectorySnapshot;
         scannedFolder = snapshotRootFolder;
         showAll = snapshotShowAllBanks;
+        rootScanned = snapshotRootScanComplete;
     }
 
     // the results are built up locally, and applied on the message thread, so that the bank list
@@ -223,16 +230,26 @@ void BankListComponent::checkBanks ()
     }
     sendStatusUpdate ("");
 
-    // the first bank can only be loaded once we actually have banks to load. a scan that ran before
-    // the directory contents were available finds none, and must leave the load for the next pass
+    // A pass that ran before the directory contents were available finds no banks, and must leave the
+    // load for the next pass. Once the folder has been scanned, finding none means the folder has none,
+    // and the editor is cleared to a default bank rather than keeping the previous folder's bank.
     const auto foundBanks { ! bankDirectories.empty () };
-    juce::MessageManager::callAsync ([this, newBankInfoList, newNumBanks, scannedFolder, foundBanks] ()
+    juce::MessageManager::callAsync ([this, newBankInfoList, newNumBanks, scannedFolder, foundBanks, rootScanned] ()
     {
         bankInfoList = newBankInfoList;
         numBanks = newNumBanks;
         currentFolder = scannedFolder;
+
+        auto banksWithContent { 0 };
+        for (auto bankIndex { 0 }; bankIndex < numBanks; ++bankIndex)
+            if (std::get<1> (bankInfoList [static_cast<size_t> (bankIndex)]))
+                ++banksWithContent;
+        paneHeader.setCountText (juce::String (banksWithContent) + "/" + juce::String (numBanks));
+        // the tool button is placed against the count, which may have changed width
+        resized ();
+
         bankListBox.updateContent ();
-        if (foundBanks && firstBankLoadPending)
+        if ((foundBanks || rootScanned) && firstBankLoadPending)
         {
             LogBankList ("checkBanks - loading first bank of " + scannedFolder.getFileName ());
             firstBankLoadPending = false;
@@ -287,17 +304,28 @@ void BankListComponent::loadBank (juce::File bankDirectory)
     editManager->loadBank (bankDirectory);
 }
 
+int BankListComponent::getMinimumWidth () const
+{
+    // plus the outline on either side
+    return paneHeader.getRequiredWidth (showAllBanks.getIdealWidth ()) + 2;
+}
+
 void BankListComponent::resized ()
 {
-    auto localBounds { getLocalBounds () };
-    auto toolRow { localBounds.removeFromTop (25) };
-    showAllBanks.setBounds (toolRow.removeFromLeft (100));
+    // inside the pane's outline
+    auto localBounds { getLocalBounds ().reduced (1) };
+    auto headerBounds { localBounds.removeFromTop (PaneHeader::kHeight) };
+    paneHeader.setBounds (headerBounds);
+    // right aligned against the count, as the folder tools are against the pane edge
+    showAllBanks.setBounds ((paneHeader.getFreeBounds () + headerBounds.getPosition ()).removeFromRight (showAllBanks.getIdealWidth ()));
     bankListBox.setBounds (localBounds);
 }
 
 void BankListComponent::paint (juce::Graphics& g)
 {
-    g.fillAll (juce::Colours::black);
+    // opaque, so the background behind the rounded corners is this component's to paint
+    g.fillAll (findColour (SquidColours::windowBackground));
+    SquidPaint::card (g, *this, getLocalBounds ());
 }
 
 int BankListComponent::getNumRows ()
@@ -309,20 +337,13 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
 {
     if (row < numBanks)
     {
-        juce::Colour textColor;
-        juce::Colour rowColor;
         if (rowIsSelected)
-        {
             lastSelectedBankIndex = row;
-            rowColor = juce::Colours::black;
-            textColor = juce::Colours::yellow;
-        }
-        else
-        {
-            rowColor = juce::Colours::black;
-            textColor = juce::Colours::whitesmoke;
-        }
+        const auto hovered { row == rowHover.getRow () };
+
         auto [bankNumber, thisBankExists, bankName] { bankInfoList [row] };
+        auto nameColourId { static_cast<int> (rowIsSelected ? SquidColours::accentText
+                                                            : (hovered ? SquidColours::text : SquidColours::textDim)) };
         if (thisBankExists)
         {
             if (bankName.isEmpty ())
@@ -330,11 +351,37 @@ void BankListComponent::paintListBoxItem (int row, juce::Graphics& g, int width,
         }
         else
         {
-            bankName = "(empty)";
-            textColor = textColor.withAlpha (0.5f);
+            bankName = "empty";
+            if (! rowIsSelected)
+                nameColourId = SquidColours::textGhost;
         }
-        g.setColour (textColor);
-        g.drawText ("  " + juce::String (bankNumber) + "-" + bankName, juce::Rectangle<float>{ 0.0f, 0.0f, (float) width, (float) height }, juce::Justification::centredLeft, true);
+
+        if (rowIsSelected)
+        {
+            g.fillAll (findColour (SquidColours::selectedRow));
+            g.setColour (findColour (SquidColours::accent));
+            g.fillRect (0, 0, 2, height);
+        }
+
+        auto rowBounds { juce::Rectangle<int> { 0, 0, width, height }.reduced (8, 0) };
+
+        // the lit dot says the bank holds something, so the name does not have to
+        const auto ledBounds { rowBounds.removeFromRight (static_cast<int> (StatusLed::kDiameter)).toFloat ()
+                                        .withSizeKeepingCentre (StatusLed::kDiameter, StatusLed::kDiameter) };
+        StatusLed::draw (g, ledBounds, thisBankExists, *this);
+        rowBounds.removeFromRight (7);
+
+        g.setFont (SquidType::bankNumber ());
+        g.setColour (findColour (rowIsSelected ? SquidColours::accentText : SquidColours::textGhost));
+        g.drawText (juce::String (bankNumber), rowBounds.removeFromLeft (20), juce::Justification::centredRight, false);
+        rowBounds.removeFromLeft (7);
+
+        g.setFont (SquidType::body ());
+        g.setColour (findColour (nameColourId));
+        g.drawText (bankName, rowBounds, juce::Justification::centredLeft, true);
+
+        if (hovered)
+            ListRowHover::paintOutline (g, *this, width, height);
     }
 }
 
@@ -453,16 +500,13 @@ void BankListComponent::listBoxItemClicked (int row, [[maybe_unused]] const juce
         if (! thisBankExists)
             bankName = "(empty)";
 
-        auto* popupMenuLnF { new juce::LookAndFeel_V4 };
-        popupMenuLnF->setColour (juce::PopupMenu::ColourIds::headerTextColourId, juce::Colours::white.withAlpha (0.3f));
         juce::PopupMenu pm;
-        pm.setLookAndFeel (popupMenuLnF);
         pm.addSectionHeader (juce::String (bankNumber) + " - " + bankName);
         pm.addSeparator ();
         pm.addItem ("Copy", thisBankExists, false, [this, bankNumber = bankNumber] () { copyBank (bankNumber); });
         pm.addItem ("Paste", copyDirectory != juce::File (), false, [this, bankNumber = bankNumber] () { pasteBank (bankNumber); });
         pm.addItem ("Delete", thisBankExists, false, [this, bankNumber = bankNumber] () { deleteBank (bankNumber); });
-        pm.showMenuAsync ({}, [this, popupMenuLnF] (int) { delete popupMenuLnF; });
+        pm.showMenuAsync ({});
     }
     else
     {
