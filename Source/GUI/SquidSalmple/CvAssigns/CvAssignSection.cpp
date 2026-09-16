@@ -1,4 +1,5 @@
 #include "CvAssignSection.h"
+#include "../../Theme/SquidColourIds.h"
 #include "../../../SquidSalmple/Metadata/SquidSalmpleDefs.h"
 
 const auto kParameterDisplayOrderList { std::vector<int>
@@ -65,10 +66,21 @@ void CvAssignSection::setEnableState (int cvParameterId, bool enabled)
 
 void CvAssignSection::resized ()
 {
-    const auto assignParameterWidth { static_cast<int> (getWidth () / getNumChildComponents ()) };
+    // the leftover pixels are shared out, so the last column meets the edge
+    const auto assignParameterWidth { static_cast<float> (getWidth ()) / static_cast<float> (getNumChildComponents ()) };
     for (auto curCvAssignParameter { 0 }; curCvAssignParameter < getNumChildComponents (); ++curCvAssignParameter)
     {
         auto curParameterComponent { dynamic_cast<CvAssignParameter*> (getChildComponent (curCvAssignParameter)) };
-        curParameterComponent->setBounds (assignParameterWidth * curCvAssignParameter, 0, assignParameterWidth, getHeight ());
+        const auto left { juce::roundToInt (assignParameterWidth * static_cast<float> (curCvAssignParameter)) };
+        const auto right { juce::roundToInt (assignParameterWidth * static_cast<float> (curCvAssignParameter + 1)) };
+        curParameterComponent->setBounds (left, 0, right - left, getHeight ());
     }
+}
+
+void CvAssignSection::paintOverChildren (juce::Graphics& g)
+{
+    // quiet dividers between the columns, none after the last
+    g.setColour (findColour (SquidColours::outlineDim));
+    for (auto curCvAssignParameter { 1 }; curCvAssignParameter < getNumChildComponents (); ++curCvAssignParameter)
+        g.fillRect (getChildComponent (curCvAssignParameter)->getX () - 1, 0, 1, getHeight ());
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "../../Theme/UiComponents.h"
 #include "../../../AppProperties.h"
 #include "../../../SquidSalmple/EditManager/EditManager.h"
 #include "oolib/Directory/DirectoryDataProperties.h"
@@ -13,6 +14,9 @@ public:
     ~FileViewComponent () = default;
 
     void init (juce::ValueTree rootPropertiesVT);
+
+    // narrow enough that the header still fits its title and tools
+    int getMinimumWidth () const;
 
     std::function<void (juce::File audioFile)> onAudioFileSelected;
     std::function<void (std::function<void ()>, std::function<void ()>)> overwriteBankOrCancel;
@@ -28,15 +32,16 @@ private:
     // built and read only on the message thread, so it needs no lock or double buffering
     std::vector<juce::ValueTree> directoryListQuickLookupList;
 
-    juce::TextButton openFolderButton;
-    juce::TextButton newFolderButton;
-    juce::ToggleButton showAllFiles { "Show All" };
+    PaneHeader paneHeader { "FOLDERS" };
+    ChromeButton openFolderButton { "OPEN" };
+    ChromeButton newFolderButton { "NEW" };
+    ChromeButton showAllFiles { "ALL" };
     std::unique_ptr<juce::FileChooser> fileChooser;
     juce::ListBox directoryContentsListBox { {}, this };
+    ListRowHover rowHover { directoryContentsListBox };
     juce::CriticalSection queuedFolderLock;
     juce::File queuedFolderToScan;
     bool isRootFolder { false };
-    int lastSelectedRow { -1 };
     std::unique_ptr<juce::AlertWindow> renameAlertWindow;
     std::unique_ptr<juce::AlertWindow> newAlertWindow;
 
@@ -54,5 +59,6 @@ private:
     void listBoxItemClicked (int row, const juce::MouseEvent& me) override;
     void listBoxItemDoubleClicked (int row, const juce::MouseEvent& me) override;
     void paintListBoxItem (int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected) override;
+    void selectedRowsChanged (int lastRowSelected) override;
 };
     
