@@ -1,6 +1,21 @@
 cmake_minimum_required(VERSION 3.22)
 
+<<<<<<< Updated upstream
 project(SquidManager VERSION 1.4.0)
+=======
+# macOS builds are universal binaries, so the one .app runs natively on both Apple silicon
+# and Intel Macs. This has to be set before project(), because that is where CMake inspects
+# the compiler and decides which architectures the build - including JUCE and every other
+# subdirectory - is configured for. It is ignored by the Windows and Linux generators.
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Architectures to build for on macOS")
+
+# arm64 did not exist before macOS 11, and the slices of a universal binary cannot have
+# different deployment targets. Without this CMake would default to the version of macOS
+# doing the building, which makes the app refuse to launch on anything older.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version to build for")
+
+project(SquidManager VERSION 1.4)
+>>>>>>> Stashed changes
 
 # Submodules must be initialised before building:
 #   git submodule update --init --recursive
