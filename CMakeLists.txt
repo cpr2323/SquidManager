@@ -11,6 +11,20 @@ set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Architectures to build 
 # doing the building, which makes the app refuse to launch on anything older.
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version to build for")
 
+# The line above only supplies a default: it does nothing if the cache already holds a value,
+# such as the empty one left in a build folder configured before it was added, or an older
+# version passed with -D. Treat 11.0 as a floor rather than a suggestion - a newer target is
+# still allowed.
+if(CMAKE_OSX_DEPLOYMENT_TARGET STREQUAL "" OR CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "11.0")
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version to build for" FORCE)
+endif()
+
+# CMake gives the Xcode Debug configuration ONLY_ACTIVE_ARCH=YES, which builds just the
+# architecture of the machine doing the building - so a Debug build on an Apple silicon Mac
+# silently produces an arm64-only app. Forcing it off keeps every configuration universal,
+# whether the Xcode destination is set to "My Mac" or "Any Mac".
+set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
+
 project(SquidManager VERSION 1.4)
 
 # Submodules must be initialised before building:
@@ -36,6 +50,14 @@ juce_generate_juce_header(SquidManager)
 # "Unable to start program ... ALL_BUILD. Access is denied." — ALL_BUILD is a
 # utility target with nothing to launch.
 set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" PROPERTY VS_STARTUP_PROJECT SquidManager)
+
+# The Xcode equivalent of the line above, as near as Xcode allows. Xcode has no "startup
+# project" setting - the selected scheme is per-user state CMake never writes - but with
+# scheme generation left off everywhere else, SquidManager is the only target CMake writes
+# a scheme for, so Xcode has nothing else to land on. Turn off "Autocreate schemes" in
+# Xcode (Product > Scheme > Manage Schemes) or it will keep inventing one per target,
+# SquidManagerBinaryData and ZERO_CHECK included.
+set_target_properties(SquidManager PROPERTIES XCODE_GENERATE_SCHEME ON)
 
 set(SOURCE_FILES
     Source/AppProperties.cpp
