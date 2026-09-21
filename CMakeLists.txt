@@ -37,10 +37,11 @@ add_subdirectory(submodules/JUCE builds/JUCE)
 include(submodules/oolib/oolib.cmake)
 
 juce_add_gui_app(SquidManager
-    PRODUCT_NAME "SquidManager"
-    COMPANY_NAME "OmOhmProductions"
-    ICON_BIG     "Source/GUI/sqedit2_2.png"
-    ICON_SMALL   "Source/GUI/sqedit2_2.png")
+    PRODUCT_NAME    "SquidManager"
+    COMPANY_NAME    "OmOhmProductions"
+    COMPANY_WEBSITE "https://cpr2323.github.io/"
+    ICON_BIG        "Source/GUI/sqedit2_2.png"
+    ICON_SMALL      "Source/GUI/sqedit2_2.png")
 
 # The sources include <JuceHeader.h> rather than the individual module headers,
 # so the header the Projucer used to generate is still needed.
@@ -88,6 +89,14 @@ set(GUI_FILES
     Source/GUI/Theme/ThemeController.cpp
     Source/GUI/Theme/ThemeController.h
     Source/GUI/sqedit2_2.png)
+
+# The app's type. IBM Plex is embedded rather than asked of the system, so the
+# app looks the same on every machine it runs on.
+set(FONT_FILES
+    Assets/Fonts/IBM-Plex-Mono-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-Regular.ttf
+    Assets/Fonts/IBM-Plex-Sans-Condensed-SemiBold.ttf)
 
 set(GUI_SQUIDSALMPLE_FILES
     Source/GUI/SquidSalmple/ChannelEditorComponent.cpp
@@ -179,11 +188,8 @@ set(SRC_FILES
 # shows them next to the code they belong with.
 set(RESOURCE_FILES
     Source/GUI/sqedit2_2.png
-    Assets/Fonts/IBM-Plex-Mono-Regular.ttf
-    Assets/Fonts/IBM-Plex-Sans-Regular.ttf
-    Assets/Fonts/IBM-Plex-Sans-Condensed-Regular.ttf
-    Assets/Fonts/IBM-Plex-Sans-Condensed-SemiBold.ttf
-    ${SQUIDSALMPLE_DATA_FILES})
+    ${SQUIDSALMPLE_DATA_FILES}
+    ${FONT_FILES})
 
 set_source_files_properties(${RESOURCE_FILES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
@@ -204,13 +210,15 @@ source_group("Source/SquidSalmple/Data"           FILES ${SQUIDSALMPLE_DATA_FILE
 source_group("Source/SquidSalmple/EditManager"    FILES ${SQUIDSALMPLE_EDITMANAGER_FILES})
 source_group("Source/SquidSalmple/Metadata"       FILES ${SQUIDSALMPLE_METADATA_FILES})
 source_group("Source/SRC"                         FILES ${SRC_FILES})
+source_group("Assets/Fonts"                       FILES ${FONT_FILES})
 # oolib keeps its own Category folders, so let the IDE mirror them rather than flattening the list
-source_group(TREE "${OOLIB_INCLUDE_DIR}" FILES ${OOLIB_SOURCES})
+source_group(TREE ${OOLIB_INCLUDE_DIR}/oolib PREFIX "oolib" FILES ${OOLIB_SOURCES})
 
 target_sources(SquidManager
     PRIVATE
         ${SOURCE_FILES}
         ${GUI_FILES}
+        ${FONT_FILES}
         ${GUI_SQUIDSALMPLE_FILES}
         ${GUI_BANKLIST_FILES}
         ${GUI_CUESETS_FILES}
