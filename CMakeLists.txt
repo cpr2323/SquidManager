@@ -25,7 +25,7 @@ endif()
 # whether the Xcode destination is set to "My Mac" or "Any Mac".
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH "NO")
 
-project(SquidManager VERSION 1.4.1)
+project(SquidManager VERSION 1.4.2)
 
 # Submodules must be initialised before building:
 #   git submodule update --init --recursive
